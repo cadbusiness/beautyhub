@@ -19,6 +19,12 @@ export const institutModule: ModuleManifest = {
       icon: "shopping-cart",
       roles: ["platform_admin", "brand_owner", "tenant_owner", "staff"],
     },
+    {
+      label: "Parametres",
+      href: "/institut/parametres",
+      icon: "settings",
+      roles: ["platform_admin", "brand_owner", "tenant_owner"],
+    },
   ],
   aiActions: [
     defineAction({

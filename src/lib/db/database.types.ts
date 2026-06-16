@@ -212,6 +212,62 @@ export type Database = {
           },
         ]
       }
+      inst_products: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          image_url: string | null
+          name: string
+          price_cents: number
+          sku: string | null
+          status: string
+          stock_quantity: number | null
+          synced_at: string | null
+          tenant_id: string
+          updated_at: string
+          woo_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          price_cents?: number
+          sku?: string | null
+          status?: string
+          stock_quantity?: number | null
+          synced_at?: string | null
+          tenant_id: string
+          updated_at?: string
+          woo_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          price_cents?: number
+          sku?: string | null
+          status?: string
+          stock_quantity?: number | null
+          synced_at?: string | null
+          tenant_id?: string
+          updated_at?: string
+          woo_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_products_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_resources: {
         Row: {
           created_at: string
@@ -240,6 +296,109 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "inst_resources_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_sale_items: {
+        Row: {
+          id: string
+          name: string
+          product_id: string | null
+          quantity: number
+          sale_id: string
+          tenant_id: string
+          unit_price_cents: number
+        }
+        Insert: {
+          id?: string
+          name: string
+          product_id?: string | null
+          quantity?: number
+          sale_id: string
+          tenant_id: string
+          unit_price_cents?: number
+        }
+        Update: {
+          id?: string
+          name?: string
+          product_id?: string | null
+          quantity?: number
+          sale_id?: string
+          tenant_id?: string
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_sale_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "inst_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "inst_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_sale_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_sales: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          status: string
+          tenant_id: string
+          total_cents: number
+          updated_at: string
+          woo_order_id: number | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: string
+          tenant_id: string
+          total_cents?: number
+          updated_at?: string
+          woo_order_id?: number | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: string
+          tenant_id?: string
+          total_cents?: number
+          updated_at?: string
+          woo_order_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_sales_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_sales_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

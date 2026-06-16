@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { decryptCredentials } from "./crypto";
+import type { Json } from "@/lib/db/database.types";
+import { decryptCredentials, encryptCredentials } from "./crypto";
 
 export type ConnectionScope = "platform" | "brand" | "tenant";
 
@@ -63,4 +64,76 @@ export async function resolveConnection(
   }
 
   return null;
+}
+
+/** Statut d'une connexion tenant (sans dechiffrer les credentials). */
+export async function getTenantConnectionStatus(
+  tenantId: string,
+  provider: string,
+): Promise<{ status: "connected" | "disconnected"; config: Record<string, unknown> } | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("connections")
+    .select("status, config")
+    .eq("scope_type", "tenant")
+    .eq("scope_id", tenantId)
+    .eq("provider", provider)
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    status: data.status as "connected" | "disconnected",
+    config: (data.config as Record<string, unknown>) ?? {},
+  };
+}
+
+/** Cree ou met a jour une connexion tenant avec credentials chiffres. */
+export async function saveTenantConnection(
+  tenantId: string,
+  provider: string,
+  credentials: Record<string, unknown>,
+  config: Record<string, unknown> = {},
+  status: "connected" | "disconnected" = "connected",
+): Promise<void> {
+  const supabase = await createClient();
+  const enc = encryptCredentials(credentials);
+
+  const { data: existing } = await supabase
+    .from("connections")
+    .select("id")
+    .eq("scope_type", "tenant")
+    .eq("scope_id", tenantId)
+    .eq("provider", provider)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("connections")
+      .update({ credentials: enc as Json, config: config as Json, status })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from("connections").insert({
+      scope_type: "tenant",
+      scope_id: tenantId,
+      provider,
+      credentials: enc as Json,
+      config: config as Json,
+      status,
+    });
+    if (error) throw new Error(error.message);
+  }
+}
+
+/** Marque une connexion tenant comme deconnectee (sans supprimer les credentials). */
+export async function disconnectTenantConnection(
+  tenantId: string,
+  provider: string,
+): Promise<void> {
+  const supabase = await createClient();
+  await supabase
+    .from("connections")
+    .update({ status: "disconnected" })
+    .eq("scope_type", "tenant")
+    .eq("scope_id", tenantId)
+    .eq("provider", provider);
 }

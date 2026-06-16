@@ -767,9 +767,6 @@ export type Database = {
           name: string
           slug: string
           updated_at: string
-          woo_key: string | null
-          woo_secret: string | null
-          woo_url: string | null
         }
         Insert: {
           brand_id: string
@@ -780,9 +777,6 @@ export type Database = {
           name: string
           slug: string
           updated_at?: string
-          woo_key?: string | null
-          woo_secret?: string | null
-          woo_url?: string | null
         }
         Update: {
           brand_id?: string
@@ -793,9 +787,6 @@ export type Database = {
           name?: string
           slug?: string
           updated_at?: string
-          woo_key?: string | null
-          woo_secret?: string | null
-          woo_url?: string | null
         }
         Relationships: [
           {

@@ -128,6 +128,264 @@ export type Database = {
         }
         Relationships: []
       }
+      inst_appointments: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          notes: string | null
+          price_cents: number | null
+          resource_id: string | null
+          service_id: string | null
+          staff_id: string | null
+          starts_at: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          notes?: string | null
+          price_cents?: number | null
+          resource_id?: string | null
+          service_id?: string | null
+          staff_id?: string | null
+          starts_at: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          notes?: string | null
+          price_cents?: number | null
+          resource_id?: string | null
+          service_id?: string | null
+          staff_id?: string | null
+          starts_at?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_appointments_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "inst_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_appointments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "inst_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_appointments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "inst_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_appointments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_resources: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_resources_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_services: {
+        Row: {
+          color: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          duration_min: number
+          id: string
+          is_active: boolean
+          name: string
+          price_cents: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_min?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price_cents?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_min?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_cents?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_services_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_staff: {
+        Row: {
+          color: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          is_active: boolean
+          tenant_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean
+          tenant_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_staff_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_working_hours: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          staff_id: string | null
+          start_time: string
+          tenant_id: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          staff_id?: string | null
+          start_time: string
+          tenant_id: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          staff_id?: string | null
+          start_time?: string
+          tenant_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_working_hours_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "inst_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_working_hours_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           brand_id: string | null
@@ -401,11 +659,11 @@ export type Database = {
       get_public_tenant: {
         Args: { p_host: string; p_slug: string | null }
         Returns: {
+          brand_id: string
+          branding: Json
           id: string
           name: string
           slug: string
-          branding: Json
-          brand_id: string
         }[]
       }
     }

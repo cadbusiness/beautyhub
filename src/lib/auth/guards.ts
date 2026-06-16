@@ -52,3 +52,19 @@ export async function requireModule(moduleId: string): Promise<TenantSession> {
   }
   return session;
 }
+
+export interface PlatformSession {
+  userId: string;
+  email: string | null;
+}
+
+/**
+ * Garde pour le back-office super-admin (zone plateforme, domaine racine).
+ * Exige un utilisateur connecte avec un role platform_admin. Pas de tenant requis.
+ */
+export async function requirePlatformAdmin(): Promise<PlatformSession> {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (!(await isPlatformAdmin())) redirect("/dashboard");
+  return { userId: user.id, email: user.email ?? null };
+}

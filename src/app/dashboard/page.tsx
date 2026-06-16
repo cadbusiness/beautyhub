@@ -35,11 +35,21 @@ export default async function DashboardPage() {
             {user.email} {role ? `· ${role}` : "· aucun role"}
           </p>
         </div>
-        <form action={signOut}>
-          <Button variant="outline" type="submit">
-            Deconnexion
-          </Button>
-        </form>
+        <div className="flex items-center gap-3">
+          {platformAdmin ? (
+            <a
+              href="/admin"
+              className="inline-flex h-10 items-center rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+            >
+              Administration
+            </a>
+          ) : null}
+          <form action={signOut}>
+            <Button variant="outline" type="submit">
+              Deconnexion
+            </Button>
+          </form>
+        </div>
       </header>
 
       {!tenant && !platformAdmin ? (

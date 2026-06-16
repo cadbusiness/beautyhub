@@ -1,0 +1,237 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { requirePlatformAdmin } from "@/lib/auth/guards";
+import type { Json } from "@/lib/db/database.types";
+
+export interface ActionResult {
+  error?: string;
+  ok?: boolean;
+  message?: string;
+}
+
+const LIMIT_KEYS = ["staff", "clients", "appointments_per_month", "students"] as const;
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function eurosToCents(value: string): number {
+  const n = Number.parseFloat(value.replace(",", "."));
+  return Number.isFinite(n) ? Math.round(n * 100) : 0;
+}
+
+function parseLimits(formData: FormData): Record<string, number | null> {
+  const limits: Record<string, number | null> = {};
+  for (const key of LIMIT_KEYS) {
+    const raw = String(formData.get(`limit_${key}`) ?? "").trim();
+    limits[key] = raw === "" ? null : Math.max(0, Number.parseInt(raw, 10) || 0);
+  }
+  return limits;
+}
+
+async function enablePlanModules(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  moduleIds: string[],
+) {
+  if (moduleIds.length === 0) return;
+  await supabase.from("tenant_modules").upsert(
+    moduleIds.map((module_id) => ({
+      tenant_id: tenantId,
+      module_id,
+      enabled: true,
+    })),
+    { onConflict: "tenant_id,module_id" },
+  );
+}
+
+export async function createTenant(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requirePlatformAdmin();
+  const supabase = await createClient();
+
+  const name = String(formData.get("name") ?? "").trim();
+  const slug = slugify(String(formData.get("slug") ?? "") || name);
+  const planId = String(formData.get("plan_id") ?? "") || null;
+  const ownerEmail = String(formData.get("owner_email") ?? "").trim();
+  const ownerPassword = String(formData.get("owner_password") ?? "");
+
+  if (!name || !slug) return { error: "Nom et identifiant (slug) requis." };
+
+  const { data: brand } = await supabase
+    .from("brands")
+    .select("id")
+    .eq("is_platform", true)
+    .maybeSingle();
+  if (!brand) return { error: "Brand plateforme introuvable." };
+
+  const { data: tenant, error: tErr } = await supabase
+    .from("tenants")
+    .insert({ name, slug, brand_id: brand.id })
+    .select("id")
+    .single();
+  if (tErr || !tenant) {
+    return {
+      error: tErr?.message.includes("duplicate")
+        ? `L'identifiant "${slug}" est deja pris.`
+        : (tErr?.message ?? "Erreur creation institut."),
+    };
+  }
+
+  if (planId) {
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("modules")
+      .eq("id", planId)
+      .maybeSingle();
+    await supabase
+      .from("subscriptions")
+      .upsert(
+        { tenant_id: tenant.id, plan_id: planId, status: "active" },
+        { onConflict: "tenant_id" },
+      );
+    if (plan?.modules) await enablePlanModules(supabase, tenant.id, plan.modules);
+  }
+
+  if (ownerEmail && ownerPassword) {
+    try {
+      const service = createServiceClient();
+      const { data: created, error: uErr } = await service.auth.admin.createUser({
+        email: ownerEmail,
+        password: ownerPassword,
+        email_confirm: true,
+      });
+      if (uErr || !created.user) {
+        throw new Error(uErr?.message ?? "creation utilisateur impossible");
+      }
+      await supabase.from("memberships").insert({
+        user_id: created.user.id,
+        tenant_id: tenant.id,
+        role: "tenant_owner",
+      });
+    } catch (e) {
+      revalidatePath("/admin/tenants");
+      return {
+        ok: true,
+        message: `Institut cree, mais proprietaire non cree: ${(e as Error).message}.`,
+      };
+    }
+  }
+
+  revalidatePath("/admin/tenants");
+  redirect(`/admin/tenants/${tenant.id}`);
+}
+
+export async function updateTenant(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requirePlatformAdmin();
+  const supabase = await createClient();
+
+  const id = String(formData.get("tenant_id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const slug = slugify(String(formData.get("slug") ?? ""));
+  if (!id || !name || !slug) return { error: "Champs requis manquants." };
+
+  const { error } = await supabase
+    .from("tenants")
+    .update({ name, slug })
+    .eq("id", id);
+  if (error) {
+    return {
+      error: error.message.includes("duplicate")
+        ? `L'identifiant "${slug}" est deja pris.`
+        : error.message,
+    };
+  }
+  revalidatePath(`/admin/tenants/${id}`);
+  return { ok: true, message: "Institut mis a jour." };
+}
+
+export async function setTenantPlan(formData: FormData): Promise<void> {
+  await requirePlatformAdmin();
+  const supabase = await createClient();
+  const tenantId = String(formData.get("tenant_id") ?? "");
+  const planId = String(formData.get("plan_id") ?? "") || null;
+  if (!tenantId) return;
+
+  await supabase
+    .from("subscriptions")
+    .upsert(
+      { tenant_id: tenantId, plan_id: planId, status: "active" },
+      { onConflict: "tenant_id" },
+    );
+
+  if (planId) {
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("modules")
+      .eq("id", planId)
+      .maybeSingle();
+    if (plan?.modules) await enablePlanModules(supabase, tenantId, plan.modules);
+  }
+  revalidatePath(`/admin/tenants/${tenantId}`);
+}
+
+export async function toggleTenantModule(formData: FormData): Promise<void> {
+  await requirePlatformAdmin();
+  const supabase = await createClient();
+  const tenantId = String(formData.get("tenant_id") ?? "");
+  const moduleId = String(formData.get("module_id") ?? "");
+  const enabled = String(formData.get("enabled") ?? "") === "true";
+  if (!tenantId || !moduleId) return;
+
+  await supabase
+    .from("tenant_modules")
+    .upsert(
+      { tenant_id: tenantId, module_id: moduleId, enabled },
+      { onConflict: "tenant_id,module_id" },
+    );
+  revalidatePath(`/admin/tenants/${tenantId}`);
+}
+
+export async function savePlan(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requirePlatformAdmin();
+  const supabase = await createClient();
+
+  const id = String(formData.get("plan_id") ?? "") || null;
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: "Nom de la formule requis." };
+
+  const payload = {
+    name,
+    price_cents: eurosToCents(String(formData.get("price") ?? "0")),
+    interval: String(formData.get("interval") ?? "month") === "year" ? "year" : "month",
+    is_active: String(formData.get("is_active") ?? "") === "on",
+    modules: formData.getAll("modules").map(String),
+    limits: parseLimits(formData) as Json,
+  };
+
+  if (id) {
+    const { error } = await supabase.from("plans").update(payload).eq("id", id);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase
+      .from("plans")
+      .insert({ ...payload, brand_id: null });
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath("/admin/plans");
+  redirect("/admin/plans");
+}

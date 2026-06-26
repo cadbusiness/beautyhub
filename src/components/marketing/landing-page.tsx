@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 const modules = [
   {
@@ -43,8 +42,6 @@ const steps = [
 ];
 
 export function LandingPage() {
-  const configured = isSupabaseConfigured();
-
   return (
     <div className="min-h-dvh bg-slate-950 text-slate-100">
       {/* Header */}
@@ -68,14 +65,6 @@ export function LandingPage() {
           </nav>
         </div>
       </header>
-
-      {!configured ? (
-        <div className="border-b border-amber-900/50 bg-amber-950/40 px-6 py-2 text-center text-xs text-amber-200">
-          Déploiement incomplet — configure{" "}
-          <code className="rounded bg-amber-900/50 px-1">NEXT_PUBLIC_SUPABASE_*</code> sur
-          Vercel puis redeploie.
-        </div>
-      ) : null}
 
       {/* Hero */}
       <section className="relative overflow-hidden px-6 pb-20 pt-16">

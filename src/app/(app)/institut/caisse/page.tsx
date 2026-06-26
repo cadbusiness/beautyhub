@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getTenantConnectionStatus } from "@/lib/connections";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { getStripeAccountForTenant } from "@/lib/stripe/index";
+import { buildCatalog } from "@/lib/institut/pos";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PosTerminal } from "./pos-terminal";
@@ -14,14 +15,20 @@ export default async function CaissePage() {
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
-  const [woo, stripeAccount, productsRes, clientsRes] = await Promise.all([
+  const [woo, stripeAccount, servicesRes, productsRes, clientsRes] = await Promise.all([
     getTenantConnectionStatus(tenantId, WOO_PROVIDER),
     getStripeAccountForTenant(tenantId),
     supabase
-      .from("inst_products")
-      .select("id, name, price_cents, image_url, synced_at")
+      .from("inst_services")
+      .select("id, name, price_cents, color, duration_min")
       .eq("tenant_id", tenantId)
-      .eq("status", "publish")
+      .eq("is_active", true)
+      .order("name"),
+    supabase
+      .from("inst_products")
+      .select("id, name, price_cents, image_url, source, sku, status, woo_id")
+      .eq("tenant_id", tenantId)
+      .in("status", ["active", "publish"])
       .order("name"),
     supabase
       .from("clients")
@@ -31,7 +38,7 @@ export default async function CaissePage() {
   ]);
 
   const connected = woo?.status === "connected";
-  const products = productsRes.data ?? [];
+  const catalog = buildCatalog(servicesRes.data ?? [], productsRes.data ?? []);
   const clients = (clientsRes.data ?? []).map((c) => ({
     id: c.id,
     label: c.full_name ? `${c.full_name} (${c.email})` : c.email,
@@ -42,61 +49,68 @@ export default async function CaissePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
           Caisse
         </h1>
-        {connected ? (
-          <form action={syncWooProducts}>
-            <Button variant="outline" type="submit">
-              Synchroniser les produits
+        <div className="flex flex-wrap gap-2">
+          <Link href="/institut/caisse/historique">
+            <Button variant="outline" type="button">
+              Historique
             </Button>
-          </form>
-        ) : null}
-      </div>
-
-      {!connected && !stripeEnabled ? (
-        <Card className="space-y-3">
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Connecte WooCommerce ou Stripe dans les parametres pour encaisser des ventes.
-          </p>
-          <Link href="/institut/parametres">
-            <Button>Ouvrir les parametres</Button>
           </Link>
-        </Card>
-      ) : connected && products.length === 0 ? (
-        <Card className="space-y-3">
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Boutique connectee, mais aucun produit synchronise. Lance la synchronisation.
-          </p>
-          <form action={syncWooProducts}>
-            <Button type="submit">Synchroniser les produits</Button>
-          </form>
-        </Card>
-      ) : products.length === 0 && stripeEnabled ? (
-        <Card className="space-y-3">
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Stripe est connecte, mais aucun produit n&apos;est disponible. Synchronise
-            WooCommerce ou ajoute des produits dans ta boutique.
-          </p>
+          <Link href="/institut/caisse/produits">
+            <Button variant="outline" type="button">
+              Produits internes
+            </Button>
+          </Link>
           {connected ? (
             <form action={syncWooProducts}>
-              <Button type="submit">Synchroniser les produits</Button>
+              <Button variant="outline" type="submit">
+                Sync WooCommerce
+              </Button>
             </form>
-          ) : (
-            <Link href="/institut/parametres">
-              <Button variant="outline">Parametres</Button>
+          ) : null}
+        </div>
+      </div>
+
+      {!connected && catalog.length === 0 ? (
+        <Card className="space-y-3">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Commence par ajouter des prestations, des produits internes ou connecter WooCommerce
+            dans les parametres.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/institut/prestations">
+              <Button variant="outline">Prestations</Button>
             </Link>
-          )}
+            <Link href="/institut/caisse/produits">
+              <Button variant="outline">Produits internes</Button>
+            </Link>
+            <Link href="/institut/parametres">
+              <Button>Parametres</Button>
+            </Link>
+          </div>
         </Card>
       ) : (
-        <PosTerminal
-          products={products}
-          clients={clients}
-          stripeEnabled={stripeEnabled}
-          stripePublishableKey={stripePublishableKey}
-          stripeAccountId={stripeAccount?.accountId}
-        />
+        <>
+          {!connected ? (
+            <p className="text-sm text-slate-500">
+              WooCommerce non connecte — seules les prestations et produits internes sont
+              disponibles.{" "}
+              <Link href="/institut/parametres" className="underline">
+                Connecter la boutique
+              </Link>
+            </p>
+          ) : null}
+          <PosTerminal
+            catalog={catalog}
+            clients={clients}
+            stripeEnabled={stripeEnabled}
+            stripePublishableKey={stripePublishableKey}
+            stripeAccountId={stripeAccount?.accountId}
+          />
+        </>
       )}
     </div>
   );

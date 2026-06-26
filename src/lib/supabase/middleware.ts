@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/db/database.types";
+import { getSupabaseEnv } from "@/lib/supabase/env";
 
 /**
  * Rafraichit la session Supabase et renvoie la reponse + l'utilisateur courant.
@@ -9,9 +10,14 @@ import type { Database } from "@/lib/db/database.types";
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  const env = getSupabaseEnv();
+  if (!env) {
+    return { response, user: null, supabase: null };
+  }
+
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.url,
+    env.anonKey,
     {
       cookies: {
         getAll() {

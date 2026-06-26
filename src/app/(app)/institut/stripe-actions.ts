@@ -75,6 +75,7 @@ export async function syncStripeConnectStatus(tenantId: string): Promise<{
 
   revalidatePath("/institut/parametres");
   revalidatePath("/institut/caisse");
+  revalidatePath("/institut/caisse/historique");
   return { connected: chargesEnabled, chargesEnabled };
 }
 
@@ -104,12 +105,11 @@ export async function disconnectStripe(): Promise<void> {
   await disconnectTenantConnection(session.tenant.id, STRIPE_CONNECT_PROVIDER);
   revalidatePath("/institut/parametres");
   revalidatePath("/institut/caisse");
+  revalidatePath("/institut/caisse/historique");
 }
 
-export interface CartLine {
-  productId: string;
-  qty: number;
-}
+import { parsePosCart, resolveCartLines } from "@/lib/institut/pos";
+import { processPosCheckout } from "./caisse-actions";
 
 export interface PaymentIntentResult {
   error?: string;
@@ -130,27 +130,20 @@ export async function createStripePaymentIntent(
 
   let cart: Record<string, number>;
   try {
-    cart = JSON.parse(cartJson);
+    cart = parsePosCart(cartJson);
   } catch {
     return { error: "Panier invalide." };
   }
-
-  const productIds = Object.keys(cart);
-  if (productIds.length === 0) return { error: "Panier vide." };
+  if (Object.keys(cart).length === 0) return { error: "Panier vide." };
 
   const supabase = await createClient();
-  const { data: products } = await supabase
-    .from("inst_products")
-    .select("id, price_cents")
-    .eq("tenant_id", session.tenant.id)
-    .in("id", productIds);
-  if (!products?.length) return { error: "Produits introuvables." };
-
-  let total = 0;
-  for (const p of products) {
-    const qty = Math.max(1, Number(cart[p.id]) || 1);
-    total += p.price_cents * qty;
+  let lines;
+  try {
+    lines = await resolveCartLines(supabase, session.tenant.id, cart);
+  } catch (e) {
+    return { error: (e as Error).message };
   }
+  const total = lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0);
   if (total <= 0) return { error: "Montant invalide." };
 
   const stripe = getStripe();
@@ -197,68 +190,25 @@ export async function finalizeStripeCheckout(
 
   let cart: Record<string, number>;
   try {
-    cart = JSON.parse(cartJson);
+    cart = parsePosCart(cartJson);
   } catch {
     return { error: "Panier invalide." };
   }
 
-  const productIds = Object.keys(cart);
-  if (productIds.length === 0) return { error: "Panier vide." };
+  let lines;
+  try {
+    const supabase = await createClient();
+    lines = await resolveCartLines(supabase, session.tenant.id, cart);
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
 
-  const supabase = await createClient();
-  const { data: products } = await supabase
-    .from("inst_products")
-    .select("id, woo_id, name, price_cents")
-    .eq("tenant_id", session.tenant.id)
-    .in("id", productIds);
-  if (!products?.length) return { error: "Produits introuvables." };
-
-  let total = 0;
-  const items = products.map((p) => {
-    const qty = Math.max(1, Number(cart[p.id]) || 1);
-    total += p.price_cents * qty;
-    return { product: p, qty };
-  });
-
+  const total = lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0);
   if (total !== pi.amount) {
     return { error: "Montant du panier incompatible avec le paiement." };
   }
 
-  const { data: existingSale } = await supabase
-    .from("inst_sales")
-    .select("id")
-    .eq("tenant_id", session.tenant.id)
-    .eq("stripe_payment_intent_id", paymentIntentId)
-    .maybeSingle();
-  if (existingSale) {
-    return { ok: true, message: "Vente deja enregistree." };
-  }
-
-  const { data: sale, error: saleErr } = await supabase
-    .from("inst_sales")
-    .insert({
-      tenant_id: session.tenant.id,
-      client_id: clientId,
-      total_cents: total,
-      status: "paid",
-      stripe_payment_intent_id: paymentIntentId,
-    })
-    .select("id")
-    .single();
-  if (saleErr || !sale) return { error: saleErr?.message ?? "Erreur vente." };
-
-  const { error: itemsErr } = await supabase.from("inst_sale_items").insert(
-    items.map((i) => ({
-      tenant_id: session.tenant.id,
-      sale_id: sale.id,
-      product_id: i.product.id,
-      name: i.product.name,
-      quantity: i.qty,
-      unit_price_cents: i.product.price_cents,
-    })),
-  );
-  if (itemsErr) return { error: itemsErr.message };
-
-  revalidatePath("/institut/caisse");
-  return { ok: true, message: "Paiement carte enregistre." };
+  return processPosCheckout(cartJson, clientId, "stripe", {
+    stripePaymentIntentId: paymentIntentId,
+  });
 }

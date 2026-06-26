@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import { requireSupabaseEnv } from "@/lib/supabase/env";
 
 /**
  * Client "service role" — bypasse RLS. A n'utiliser QUE cote serveur,
@@ -11,9 +12,8 @@ export function createServiceClient() {
   if (!key) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY manquante (operation serveur).");
   }
-  return createSupabaseClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    key,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  );
+  const env = requireSupabaseEnv();
+  return createSupabaseClient<Database>(env.url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 }

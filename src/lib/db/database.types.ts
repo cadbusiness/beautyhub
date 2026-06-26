@@ -320,6 +320,7 @@ export type Database = {
           name: string
           price_cents: number
           sku: string | null
+          source: string
           status: string
           stock_quantity: number | null
           synced_at: string | null
@@ -335,6 +336,7 @@ export type Database = {
           name: string
           price_cents?: number
           sku?: string | null
+          source?: string
           status?: string
           stock_quantity?: number | null
           synced_at?: string | null
@@ -350,6 +352,7 @@ export type Database = {
           name?: string
           price_cents?: number
           sku?: string | null
+          source?: string
           status?: string
           stock_quantity?: number | null
           synced_at?: string | null
@@ -404,29 +407,38 @@ export type Database = {
       }
       inst_sale_items: {
         Row: {
+          appointment_id: string | null
           id: string
+          item_type: string
           name: string
           product_id: string | null
           quantity: number
           sale_id: string
+          service_id: string | null
           tenant_id: string
           unit_price_cents: number
         }
         Insert: {
+          appointment_id?: string | null
           id?: string
+          item_type?: string
           name: string
           product_id?: string | null
           quantity?: number
           sale_id: string
+          service_id?: string | null
           tenant_id: string
           unit_price_cents?: number
         }
         Update: {
+          appointment_id?: string | null
           id?: string
+          item_type?: string
           name?: string
           product_id?: string | null
           quantity?: number
           sale_id?: string
+          service_id?: string | null
           tenant_id?: string
           unit_price_cents?: number
         }
@@ -446,6 +458,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inst_sale_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "inst_services"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inst_sale_items_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -461,6 +480,8 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          notes: string | null
+          payment_method: string
           status: string
           stripe_payment_intent_id: string | null
           tenant_id: string
@@ -474,6 +495,8 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          notes?: string | null
+          payment_method?: string
           status?: string
           stripe_payment_intent_id?: string | null
           tenant_id: string
@@ -487,6 +510,8 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          notes?: string | null
+          payment_method?: string
           status?: string
           stripe_payment_intent_id?: string | null
           tenant_id?: string

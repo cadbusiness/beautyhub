@@ -13,7 +13,6 @@ import {
   finalizeStripeCheckout,
 } from "../stripe-actions";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/input";
 import { formatPrice } from "@/lib/utils";
 
 interface Option {
@@ -92,6 +91,7 @@ function PaymentForm({
 
 export function StripePosPayment({
   cartJson,
+  clientId: initialClientId,
   totalCents,
   clients,
   publishableKey,
@@ -100,6 +100,7 @@ export function StripePosPayment({
   onSuccess,
 }: {
   cartJson: string;
+  clientId: string;
   totalCents: number;
   clients: Option[];
   publishableKey: string;
@@ -108,7 +109,6 @@ export function StripePosPayment({
   onSuccess: (message: string) => void;
 }) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [clientId, setClientId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -135,7 +135,7 @@ export function StripePosPayment({
       <Elements stripe={stripePromise} options={{ clientSecret }}>
         <PaymentForm
           cartJson={cartJson}
-          clientId={clientId}
+          clientId={initialClientId}
           totalCents={totalCents}
           onSuccess={onSuccess}
           onCancel={() => setClientSecret(null)}
@@ -146,18 +146,6 @@ export function StripePosPayment({
 
   return (
     <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800">
-      <Select
-        value={clientId}
-        onChange={(e) => setClientId(e.target.value)}
-        aria-label="Client"
-      >
-        <option value="">— Sans client —</option>
-        {clients.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.label}
-          </option>
-        ))}
-      </Select>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <Button
         type="button"
@@ -166,7 +154,7 @@ export function StripePosPayment({
         disabled={disabled || loading}
         onClick={startPayment}
       >
-        {loading ? "Preparation..." : `Payer par carte ${formatPrice(totalCents)}`}
+        {loading ? "Preparation..." : `Stripe · ${formatPrice(totalCents)}`}
       </Button>
     </div>
   );

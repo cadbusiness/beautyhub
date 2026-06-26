@@ -87,6 +87,7 @@ export async function syncWooProducts(): Promise<void> {
       stock_quantity: p.stock_quantity,
       image_url: p.images?.[0]?.src ?? null,
       status: p.status,
+      source: "woocommerce" as const,
       synced_at: now,
     }));
 
@@ -100,85 +101,3 @@ export async function syncWooProducts(): Promise<void> {
   revalidatePath("/institut/caisse");
 }
 
-export async function checkout(
-  _prev: ActionResult,
-  formData: FormData,
-): Promise<ActionResult> {
-  const session = await requireModule("institut");
-  const supabase = await createClient();
-
-  let cart: Record<string, number>;
-  try {
-    cart = JSON.parse(String(formData.get("cart") ?? "{}"));
-  } catch {
-    return { error: "Panier invalide." };
-  }
-  const productIds = Object.keys(cart);
-  if (productIds.length === 0) return { error: "Panier vide." };
-
-  const { data: products } = await supabase
-    .from("inst_products")
-    .select("id, woo_id, name, price_cents")
-    .eq("tenant_id", session.tenant.id)
-    .in("id", productIds);
-  if (!products || products.length === 0) return { error: "Produits introuvables." };
-
-  let total = 0;
-  const items = products.map((p) => {
-    const qty = Math.max(1, Number(cart[p.id]) || 1);
-    total += p.price_cents * qty;
-    return { product: p, qty };
-  });
-
-  const clientId = String(formData.get("client_id") ?? "") || null;
-
-  // Commande WooCommerce si la boutique est connectee.
-  let wooOrderId: number | null = null;
-  const client = await getWooClientForTenant(session.tenant.id);
-  if (client) {
-    const lineItems = items
-      .filter((i) => i.product.woo_id)
-      .map((i) => ({ product_id: Number(i.product.woo_id), quantity: i.qty }));
-    if (lineItems.length > 0) {
-      try {
-        const order = await client.createOrder(lineItems, { setPaid: true });
-        wooOrderId = order.id;
-      } catch (e) {
-        return { error: `Commande WooCommerce echouee: ${(e as Error).message}` };
-      }
-    }
-  }
-
-  const { data: sale, error: saleErr } = await supabase
-    .from("inst_sales")
-    .insert({
-      tenant_id: session.tenant.id,
-      client_id: clientId,
-      woo_order_id: wooOrderId,
-      total_cents: total,
-      status: "paid",
-    })
-    .select("id")
-    .single();
-  if (saleErr || !sale) return { error: saleErr?.message ?? "Erreur vente." };
-
-  const { error: itemsErr } = await supabase.from("inst_sale_items").insert(
-    items.map((i) => ({
-      tenant_id: session.tenant.id,
-      sale_id: sale.id,
-      product_id: i.product.id,
-      name: i.product.name,
-      quantity: i.qty,
-      unit_price_cents: i.product.price_cents,
-    })),
-  );
-  if (itemsErr) return { error: itemsErr.message };
-
-  revalidatePath("/institut/caisse");
-  return {
-    ok: true,
-    message: wooOrderId
-      ? `Vente enregistree (commande Woo #${wooOrderId}).`
-      : "Vente enregistree.",
-  };
-}

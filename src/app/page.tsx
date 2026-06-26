@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 const pillars = [
   {
@@ -22,8 +23,18 @@ const pillars = [
 ];
 
 export default function Home() {
+  const configured = isSupabaseConfigured();
+
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-12 px-6 py-16">
+      {!configured ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Supabase non configure sur ce deploiement. Ajoutez{" "}
+          <code className="rounded bg-amber-100 px-1">NEXT_PUBLIC_SUPABASE_URL</code> et{" "}
+          <code className="rounded bg-amber-100 px-1">NEXT_PUBLIC_SUPABASE_ANON_KEY</code>{" "}
+          dans Vercel &gt; Settings &gt; Environment Variables, puis redeployez.
+        </div>
+      ) : null}
       <section className="space-y-4">
         <span className="inline-flex rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white dark:bg-white dark:text-slate-900">
           BeautyHub

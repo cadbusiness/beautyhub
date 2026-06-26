@@ -24,14 +24,32 @@ export default async function TenantDetailPage({
     .maybeSingle();
   if (!tenant) notFound();
 
-  const [{ data: sub }, { data: plans }, { data: modules }, { data: tenantModules }, { data: memberships }] =
+  const [{ data: sub }, { data: plans }, { data: modules }, { data: tenantModules }, { data: memberships }, apptCount] =
     await Promise.all([
-      supabase.from("subscriptions").select("plan_id, status").eq("tenant_id", id).maybeSingle(),
+      supabase.from("subscriptions").select("plan_id, status, plans(name, limits, features)").eq("tenant_id", id).maybeSingle(),
       supabase.from("plans").select("id, name").eq("is_active", true).order("price_cents"),
       supabase.from("modules").select("id, name, description").order("name"),
       supabase.from("tenant_modules").select("module_id, enabled").eq("tenant_id", id),
       supabase.from("memberships").select("role").eq("tenant_id", id),
+      (async () => {
+        const start = new Date();
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
+        const { count } = await supabase
+          .from("inst_appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", id)
+          .gte("created_at", start.toISOString())
+          .neq("status", "cancelled");
+        return count ?? 0;
+      })(),
     ]);
+
+  const planData = sub?.plans as
+    | { name?: string; limits?: Record<string, number | null>; features?: Record<string, boolean> }
+    | null;
+  const rdvLimit = planData?.limits?.appointments_per_month;
+  const rdvUsage = apptCount as number;
 
   const enabledMap = new Map(
     (tenantModules ?? []).map((m) => [m.module_id, m.enabled]),
@@ -54,6 +72,23 @@ export default async function TenantDetailPage({
         <p className="text-xs text-slate-400">
           Acces institut: <code>{tenant.slug}</code>.localhost:3000
         </p>
+      </Card>
+
+      <Card className="space-y-4">
+        <h2 className="font-medium text-slate-900 dark:text-white">Usage rendez-vous</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          Ce mois-ci : <strong>{rdvUsage}</strong>
+          {rdvLimit != null ? ` / ${rdvLimit} (formule ${planData?.name ?? "—"})` : " (illimite)"}
+        </p>
+        {planData?.features ? (
+          <ul className="text-xs text-slate-500">
+            {Object.entries(planData.features).map(([k, v]) => (
+              <li key={k}>
+                {k}: {v ? "active" : "desactive"}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </Card>
 
       <Card className="space-y-4">

@@ -17,7 +17,7 @@ export default async function PlanEditPage({
   const [{ data: plan }, { data: modules }] = await Promise.all([
     supabase
       .from("plans")
-      .select("id, name, price_cents, interval, is_active, modules, limits")
+      .select("id, name, price_cents, interval, is_active, modules, limits, features")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("modules").select("id, name").order("name"),
@@ -46,6 +46,7 @@ export default async function PlanEditPage({
             is_active: plan.is_active,
             modules: plan.modules,
             limits: (plan.limits as Record<string, number | null>) ?? {},
+            features: (plan.features as Record<string, boolean>) ?? {},
           }}
         />
       </Card>

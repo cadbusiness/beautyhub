@@ -456,6 +456,7 @@ export type Database = {
       }
       inst_sales: {
         Row: {
+          appointment_id: string | null
           client_id: string | null
           created_at: string
           currency: string
@@ -468,6 +469,7 @@ export type Database = {
           woo_order_id: number | null
         }
         Insert: {
+          appointment_id?: string | null
           client_id?: string | null
           created_at?: string
           currency?: string
@@ -480,6 +482,7 @@ export type Database = {
           woo_order_id?: number | null
         }
         Update: {
+          appointment_id?: string | null
           client_id?: string | null
           created_at?: string
           currency?: string
@@ -510,6 +513,8 @@ export type Database = {
       }
       inst_services: {
         Row: {
+          buffer_after_min: number
+          buffer_before_min: number
           color: string | null
           created_at: string
           currency: string
@@ -517,12 +522,16 @@ export type Database = {
           duration_min: number
           id: string
           is_active: boolean
+          max_advance_days: number
+          min_advance_hours: number
           name: string
           price_cents: number
           tenant_id: string
           updated_at: string
         }
         Insert: {
+          buffer_after_min?: number
+          buffer_before_min?: number
           color?: string | null
           created_at?: string
           currency?: string
@@ -530,12 +539,16 @@ export type Database = {
           duration_min?: number
           id?: string
           is_active?: boolean
+          max_advance_days?: number
+          min_advance_hours?: number
           name: string
           price_cents?: number
           tenant_id: string
           updated_at?: string
         }
         Update: {
+          buffer_after_min?: number
+          buffer_before_min?: number
           color?: string | null
           created_at?: string
           currency?: string
@@ -543,6 +556,8 @@ export type Database = {
           duration_min?: number
           id?: string
           is_active?: boolean
+          max_advance_days?: number
+          min_advance_hours?: number
           name?: string
           price_cents?: number
           tenant_id?: string
@@ -721,6 +736,7 @@ export type Database = {
           brand_id: string | null
           created_at: string
           currency: string
+          features: Json
           id: string
           interval: string
           is_active: boolean
@@ -734,6 +750,7 @@ export type Database = {
           brand_id?: string | null
           created_at?: string
           currency?: string
+          features?: Json
           id?: string
           interval?: string
           is_active?: boolean
@@ -747,6 +764,7 @@ export type Database = {
           brand_id?: string | null
           created_at?: string
           currency?: string
+          features?: Json
           id?: string
           interval?: string
           is_active?: boolean
@@ -917,6 +935,42 @@ export type Database = {
           name: string
           slug: string
         }[]
+      }
+      get_public_services: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          id: string
+          name: string
+          description: string | null
+          duration_min: number
+          price_cents: number
+          color: string | null
+        }[]
+      }
+      get_public_staff_for_service: {
+        Args: { p_tenant_id: string; p_service_id: string }
+        Returns: { id: string; full_name: string; color: string | null }[]
+      }
+      get_public_available_slots: {
+        Args: {
+          p_tenant_id: string
+          p_service_id: string
+          p_date: string
+          p_staff_id?: string
+        }
+        Returns: { starts_at: string; ends_at: string; staff_id: string }[]
+      }
+      book_public_appointment: {
+        Args: {
+          p_tenant_id: string
+          p_service_id: string
+          p_staff_id: string
+          p_starts_at: string
+          p_email: string
+          p_full_name: string
+          p_phone?: string
+        }
+        Returns: string
       }
     }
     Enums: {

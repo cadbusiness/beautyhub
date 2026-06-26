@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/auth/guards";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
+import { checkAppointmentConflict, fetchAppointmentsInRange } from "@/lib/institut/slots";
 import { WEEKDAYS } from "./equipe/constants";
 
 export interface ActionResult {
@@ -99,19 +100,32 @@ export async function createAppointment(
 
   const { data: service } = await supabase
     .from("inst_services")
-    .select("duration_min, price_cents")
+    .select("duration_min, price_cents, buffer_before_min, buffer_after_min")
     .eq("id", serviceId)
     .maybeSingle();
   if (!service) return { error: "Prestation introuvable." };
 
   const startsAt = new Date(startsAtRaw);
   const endsAt = new Date(startsAt.getTime() + service.duration_min * 60_000);
+  const staffId = String(formData.get("staff_id") ?? "") || null;
+  const resourceId = String(formData.get("resource_id") ?? "") || null;
+
+  const conflict = await checkAppointmentConflict(supabase, session.tenant.id, {
+    staffId,
+    resourceId,
+    startsAt,
+    endsAt,
+    bufferBeforeMin: service.buffer_before_min ?? 0,
+    bufferAfterMin: service.buffer_after_min ?? 0,
+  });
+  if (conflict) return { error: conflict };
 
   const { error } = await supabase.from("inst_appointments").insert({
     tenant_id: session.tenant.id,
     client_id: String(formData.get("client_id") ?? "") || null,
     service_id: serviceId,
-    staff_id: String(formData.get("staff_id") ?? "") || null,
+    staff_id: staffId,
+    resource_id: resourceId,
     starts_at: startsAt.toISOString(),
     ends_at: endsAt.toISOString(),
     price_cents: service.price_cents,
@@ -120,6 +134,85 @@ export async function createAppointment(
   if (error) return { error: error.message };
   revalidatePath("/institut/rendez-vous");
   return { ok: true };
+}
+
+export async function updateAppointmentDetails(formData: FormData): Promise<ActionResult> {
+  await requireModule("institut");
+  const supabase = await createClient();
+  const id = String(formData.get("id") ?? "");
+  const { error } = await supabase
+    .from("inst_appointments")
+    .update({
+      status: String(formData.get("status")),
+      notes: String(formData.get("notes") ?? "").trim() || null,
+    })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/institut/rendez-vous");
+  return { ok: true };
+}
+
+export async function moveAppointment(formData: FormData): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  const id = String(formData.get("id") ?? "");
+  const startsAt = new Date(String(formData.get("starts_at")));
+  const endsAt = new Date(String(formData.get("ends_at")));
+  const staffId = String(formData.get("staff_id") ?? "") || null;
+  const resourceId = String(formData.get("resource_id") ?? "") || null;
+
+  const { data: appt } = await supabase
+    .from("inst_appointments")
+    .select("service_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  let bufferBefore = 0;
+  let bufferAfter = 0;
+  if (appt?.service_id) {
+    const { data: svc } = await supabase
+      .from("inst_services")
+      .select("buffer_before_min, buffer_after_min")
+      .eq("id", appt.service_id)
+      .maybeSingle();
+    bufferBefore = svc?.buffer_before_min ?? 0;
+    bufferAfter = svc?.buffer_after_min ?? 0;
+  }
+
+  const conflict = await checkAppointmentConflict(supabase, session.tenant.id, {
+    staffId,
+    resourceId,
+    startsAt,
+    endsAt,
+    bufferBeforeMin: bufferBefore,
+    bufferAfterMin: bufferAfter,
+    excludeId: id,
+  });
+  if (conflict) return { error: conflict };
+
+  const { error } = await supabase
+    .from("inst_appointments")
+    .update({
+      starts_at: startsAt.toISOString(),
+      ends_at: endsAt.toISOString(),
+      ...(formData.has("staff_id") ? { staff_id: staffId } : {}),
+      ...(formData.has("resource_id") ? { resource_id: resourceId } : {}),
+    })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/institut/rendez-vous");
+  return { ok: true };
+}
+
+export async function getCalendarAppointments(rangeStart: string, rangeEnd: string) {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  return fetchAppointmentsInRange(
+    supabase,
+    session.tenant.id,
+    new Date(rangeStart),
+    new Date(rangeEnd),
+  );
 }
 
 export async function setAppointmentStatus(formData: FormData): Promise<void> {

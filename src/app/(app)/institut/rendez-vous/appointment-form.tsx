@@ -16,10 +16,12 @@ export function AppointmentForm({
   clients,
   services,
   staff,
+  resources = [],
 }: {
   clients: Option[];
   services: Option[];
   staff: Option[];
+  resources?: Option[];
 }) {
   const [state, action, pending] = useActionState(createAppointment, initial);
   const formRef = useRef<HTMLFormElement>(null);
@@ -62,6 +64,18 @@ export function AppointmentForm({
           ))}
         </Select>
       </Field>
+      {resources.length > 0 ? (
+        <Field label="Cabine" htmlFor="resource_id">
+          <Select id="resource_id" name="resource_id" defaultValue="">
+            <option value="">— Aucune —</option>
+            {resources.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      ) : null}
       <Field label="Date et heure" htmlFor="starts_at">
         <Input id="starts_at" name="starts_at" type="datetime-local" required />
       </Field>

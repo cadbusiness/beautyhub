@@ -15,6 +15,20 @@ export interface ActionResult {
 
 const LIMIT_KEYS = ["staff", "clients", "appointments_per_month", "students"] as const;
 
+const FEATURE_KEYS = [
+  { key: "calendar_enabled", label: "Calendrier RDV" },
+  { key: "client_booking_enabled", label: "Reservation client en ligne" },
+  { key: "sms_enabled", label: "Notifications SMS" },
+] as const;
+
+function parseFeatures(formData: FormData): Record<string, boolean> {
+  const features: Record<string, boolean> = {};
+  for (const f of FEATURE_KEYS) {
+    features[f.key] = formData.get(`feature_${f.key}`) === "on";
+  }
+  return features;
+}
+
 function slugify(value: string): string {
   return value
     .toLowerCase()
@@ -220,6 +234,7 @@ export async function savePlan(
     is_active: String(formData.get("is_active") ?? "") === "on",
     modules: formData.getAll("modules").map(String),
     limits: parseLimits(formData) as Json,
+    features: parseFeatures(formData) as Json,
   };
 
   if (id) {

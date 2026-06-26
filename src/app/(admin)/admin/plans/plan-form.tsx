@@ -22,7 +22,14 @@ export interface PlanDefaults {
   is_active?: boolean;
   modules?: string[];
   limits?: Record<string, number | null>;
+  features?: Record<string, boolean>;
 }
+
+const FEATURE_FIELDS = [
+  { key: "calendar_enabled", label: "Calendrier RDV" },
+  { key: "client_booking_enabled", label: "Reservation client en ligne" },
+  { key: "sms_enabled", label: "Notifications SMS" },
+];
 
 export function PlanForm({
   plan,
@@ -33,6 +40,7 @@ export function PlanForm({
 }) {
   const [state, action, pending] = useActionState(savePlan, initial);
   const selected = new Set(plan?.modules ?? []);
+  const features = plan?.features ?? {};
 
   return (
     <form action={action} className="space-y-5">
@@ -80,6 +88,27 @@ export function PlanForm({
                 defaultChecked={selected.has(m.id)}
               />
               {m.name}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+          Fonctionnalites RDV
+        </p>
+        <div className="flex flex-wrap gap-3">
+          {FEATURE_FIELDS.map((f) => (
+            <label
+              key={f.key}
+              className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700"
+            >
+              <input
+                type="checkbox"
+                name={`feature_${f.key}`}
+                defaultChecked={features[f.key] !== false}
+              />
+              {f.label}
             </label>
           ))}
         </div>

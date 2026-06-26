@@ -14,6 +14,12 @@ export const institutModule: ModuleManifest = {
     { label: "Prestations", href: "/institut/prestations", icon: "sparkles" },
     { label: "Clients", href: "/institut/clients", icon: "users" },
     {
+      label: "Equipe",
+      href: "/institut/equipe",
+      icon: "user-cog",
+      roles: ["platform_admin", "brand_owner", "tenant_owner"],
+    },
+    {
       label: "Caisse",
       href: "/institut/caisse",
       icon: "shopping-cart",

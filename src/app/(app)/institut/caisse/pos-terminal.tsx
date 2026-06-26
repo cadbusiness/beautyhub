@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/input";
 import { formatPrice } from "@/lib/utils";
+import { StripePosPayment } from "./stripe-pos-payment";
 
 interface Product {
   id: string;
@@ -23,11 +24,18 @@ const initial: ActionResult = {};
 export function PosTerminal({
   products,
   clients,
+  stripeEnabled,
+  stripePublishableKey,
+  stripeAccountId,
 }: {
   products: Product[];
   clients: Option[];
+  stripeEnabled?: boolean;
+  stripePublishableKey?: string;
+  stripeAccountId?: string;
 }) {
   const [cart, setCart] = useState<Record<string, number>>({});
+  const [stripeMessage, setStripeMessage] = useState<string | null>(null);
   const [state, action, pending] = useActionState(checkout, initial);
 
   const total = useMemo(
@@ -40,11 +48,15 @@ export function PosTerminal({
   );
 
   const lines = products.filter((p) => cart[p.id]);
+  const cartJson = JSON.stringify(cart);
+  const cartEmpty = lines.length === 0;
 
   function add(id: string) {
+    setStripeMessage(null);
     setCart((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
   }
   function remove(id: string) {
+    setStripeMessage(null);
     setCart((c) => {
       const next = { ...c };
       const q = (next[id] ?? 0) - 1;
@@ -53,6 +65,17 @@ export function PosTerminal({
       return next;
     });
   }
+
+  function handleStripeSuccess(message: string) {
+    setCart({});
+    setStripeMessage(message);
+  }
+
+  const showStripe =
+    stripeEnabled &&
+    stripePublishableKey &&
+    stripeAccountId &&
+    !cartEmpty;
 
   return (
     <div className="grid gap-6 md:grid-cols-[1fr_320px]">
@@ -114,8 +137,12 @@ export function PosTerminal({
           </span>
         </div>
 
+        {stripeMessage ? (
+          <p className="text-sm text-green-600">{stripeMessage}</p>
+        ) : null}
+
         <form action={action} className="space-y-3">
-          <input type="hidden" name="cart" value={JSON.stringify(cart)} />
+          <input type="hidden" name="cart" value={cartJson} />
           <Select name="client_id" defaultValue="">
             <option value="">— Sans client —</option>
             {clients.map((c) => (
@@ -126,10 +153,22 @@ export function PosTerminal({
           </Select>
           {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
           {state.ok ? <p className="text-sm text-green-600">{state.message}</p> : null}
-          <Button type="submit" className="w-full" disabled={pending || lines.length === 0}>
+          <Button type="submit" className="w-full" disabled={pending || cartEmpty}>
             {pending ? "Encaissement..." : `Encaisser ${formatPrice(total)}`}
           </Button>
         </form>
+
+        {showStripe ? (
+          <StripePosPayment
+            cartJson={cartJson}
+            totalCents={total}
+            clients={clients}
+            publishableKey={stripePublishableKey}
+            stripeAccountId={stripeAccountId}
+            disabled={cartEmpty}
+            onSuccess={handleStripeSuccess}
+          />
+        ) : null}
       </Card>
     </div>
   );

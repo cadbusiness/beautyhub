@@ -44,12 +44,24 @@ async function getUsage(tenantId: string, key: string): Promise<number> {
     }
     case "staff": {
       const { count } = await supabase
-        .from("memberships")
+        .from("inst_staff")
         .select("id", { count: "exact", head: true })
-        .eq("tenant_id", tenantId);
+        .eq("tenant_id", tenantId)
+        .eq("is_active", true);
       return count ?? 0;
     }
-    // appointments_per_month, students: tables arrivant en Phase 1/2.
+    case "appointments_per_month": {
+      const start = new Date();
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      const { count } = await supabase
+        .from("inst_appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId)
+        .gte("created_at", start.toISOString())
+        .neq("status", "cancelled");
+      return count ?? 0;
+    }
     default:
       return 0;
   }

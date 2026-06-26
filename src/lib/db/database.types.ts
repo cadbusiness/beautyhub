@@ -362,6 +362,7 @@ export type Database = {
           currency: string
           id: string
           status: string
+          stripe_payment_intent_id: string | null
           tenant_id: string
           total_cents: number
           updated_at: string
@@ -373,6 +374,7 @@ export type Database = {
           currency?: string
           id?: string
           status?: string
+          stripe_payment_intent_id?: string | null
           tenant_id: string
           total_cents?: number
           updated_at?: string
@@ -384,6 +386,7 @@ export type Database = {
           currency?: string
           id?: string
           status?: string
+          stripe_payment_intent_id?: string | null
           tenant_id?: string
           total_cents?: number
           updated_at?: string

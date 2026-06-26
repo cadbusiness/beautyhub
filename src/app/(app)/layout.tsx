@@ -23,6 +23,7 @@ export default async function AppLayout({
         </div>
         <nav className="flex-1 space-y-1">
           <NavLink href="/dashboard" label="Accueil" />
+          <NavLink href="/assistant" label="Assistant IA" />
           {nav.map((item) => (
             <NavLink
               key={`${item.moduleId}-${item.href}`}

@@ -12,6 +12,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      acad_courses: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          is_published: boolean
+          price_cents: number
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          price_cents?: number
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          price_cents?: number
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acad_courses_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      acad_enrollments: {
+        Row: {
+          client_id: string | null
+          course_id: string
+          created_at: string
+          id: string
+          status: string
+          student_email: string
+          student_name: string
+          tenant_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          student_email: string
+          student_name: string
+          tenant_id: string
+        }
+        Update: {
+          client_id?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          student_email?: string
+          student_name?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acad_enrollments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acad_enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "acad_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acad_enrollments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           branding: Json

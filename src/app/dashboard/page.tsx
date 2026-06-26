@@ -97,16 +97,26 @@ export default async function DashboardPage() {
           {aiActions.length === 0 ? (
             <p className="mt-3 text-sm text-slate-500">Aucune action IA.</p>
           ) : (
-            <ul className="mt-3 space-y-2">
-              {aiActions.map((action) => (
-                <li key={action.name} className="text-sm">
-                  <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-                    {action.name}
-                  </code>
-                  <span className="ml-2 text-slate-500">{action.description}</span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="mt-3 space-y-2">
+                {aiActions.map((action) => (
+                  <li key={action.name} className="text-sm">
+                    <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                      {action.name}
+                    </code>
+                    <span className="ml-2 text-slate-500">{action.description}</span>
+                  </li>
+                ))}
+              </ul>
+              {tenant ? (
+                <a
+                  href="/assistant"
+                  className="mt-4 inline-flex text-sm font-medium text-slate-700 hover:underline dark:text-slate-300"
+                >
+                  Ouvrir l&apos;assistant IA →
+                </a>
+              ) : null}
+            </>
           )}
         </Card>
       </section>

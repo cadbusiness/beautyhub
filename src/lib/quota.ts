@@ -62,6 +62,14 @@ async function getUsage(tenantId: string, key: string): Promise<number> {
         .neq("status", "cancelled");
       return count ?? 0;
     }
+    case "students": {
+      const { count } = await supabase
+        .from("acad_enrollments")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId)
+        .neq("status", "cancelled");
+      return count ?? 0;
+    }
     default:
       return 0;
   }

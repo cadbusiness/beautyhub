@@ -70,42 +70,62 @@ function ProgramStatusBadge({ status, label }: { status: ProgramStatus; label: s
   );
 }
 
-function SetupStepsInline({
-  steps,
+function GuideHeader({
+  title,
+  action,
+  status,
+  statusLabel,
 }: {
-  steps: { label: string; done: boolean; current: boolean }[];
+  title: string;
+  action?: string;
+  status: ProgramStatus;
+  statusLabel: string;
 }) {
   return (
-    <ol className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1 text-xs text-slate-500">
-      {steps.map((step, index) => (
-        <li key={step.label} className="flex items-center gap-1">
-          {index > 0 ? <span className="text-slate-300">→</span> : null}
-          <span
-            className={cn(
-              step.done && "text-green-700",
-              step.current && "font-medium text-slate-900",
-              !step.done && !step.current && "text-slate-400",
-            )}
-          >
-            {step.done ? "✓ " : null}
-            {step.label}
-          </span>
-        </li>
-      ))}
-    </ol>
+    <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-medium text-slate-900">{title}</p>
+        <ProgramStatusBadge status={status} label={statusLabel} />
+      </div>
+      {action ? <p className="mt-1 text-sm text-slate-500">{action}</p> : null}
+    </div>
   );
 }
 
-function StatCell({ label, value, hint }: { label: string; value: number; hint: string }) {
+function EmptyRow({
+  message,
+  actionLabel,
+  onAction,
+}: {
+  message: string;
+  actionLabel: string;
+  onAction: () => void;
+}) {
   return (
-    <div className="px-4 py-3 lg:px-6">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">
-        {value.toLocaleString()}
-      </p>
-      <p className="mt-0.5 text-xs text-slate-500">{hint}</p>
-    </div>
+    <tr>
+      <td colSpan={5} className={dataTableCell}>
+        <div className="flex flex-wrap items-center justify-between gap-3 py-1">
+          <span className="text-slate-500">{message}</span>
+          <Button type="button" onClick={onAction} className="h-8 shrink-0">
+            + {actionLabel}
+          </Button>
+        </div>
+      </td>
+    </tr>
   );
+}
+
+type SetupPhase = 1 | 2 | 3 | "live";
+
+function getSetupPhase(
+  hasRules: boolean,
+  hasRewards: boolean,
+  isActive: boolean,
+): SetupPhase {
+  if (isActive && hasRules) return "live";
+  if (hasRules && hasRewards) return 3;
+  if (hasRules) return 2;
+  return 1;
 }
 
 export function LoyaltyManager({
@@ -168,87 +188,46 @@ export function LoyaltyManager({
   const hasRules = rules.length > 0;
   const hasRewards = rewards.length > 0;
   const programStatus = deriveProgramStatus(hasRules, hasRewards, program.is_active);
+  const phase = getSetupPhase(hasRules, hasRewards, program.is_active);
+  const isLive = phase === "live";
+  const showRewards = hasRules;
+  const showProgram = hasRules && hasRewards;
 
-  const setupSteps = [
-    { label: t("setup.step1"), done: hasRules, current: !hasRules },
-    { label: t("setup.step2"), done: hasRewards, current: hasRules && !hasRewards },
-    {
-      label: t("setup.step3"),
-      done: program.is_active,
-      current: hasRules && hasRewards && !program.is_active,
-    },
-  ];
+  const guideTitle = isLive
+    ? t("guide.liveTitle")
+    : phase === 1
+      ? t("guide.phase1Title")
+      : phase === 2
+        ? t("guide.phase2Title")
+        : t("guide.phase3Title");
+
+  const guideAction = isLive
+    ? undefined
+    : phase === 1
+      ? t("guide.phase1Action")
+      : phase === 2
+        ? t("guide.phase2Action")
+        : t("guide.phase3Action");
 
   return (
     <>
-      <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <p className="min-w-0 text-sm text-slate-500">{t("description")}</p>
-          <ProgramStatusBadge
-            status={programStatus}
-            label={t(`programStatus.${programStatus}`)}
-          />
-        </div>
-        <SetupStepsInline steps={setupSteps} />
-      </div>
+      <GuideHeader
+        title={guideTitle}
+        action={guideAction}
+        status={programStatus}
+        statusLabel={t(`programStatus.${programStatus}`)}
+      />
 
-      <div className="grid divide-y border-b border-slate-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-        <StatCell
-          label={t("stats.clientsWithPoints")}
-          value={stats.clientsWithPoints}
-          hint={t("stats.clientsHint")}
-        />
-        <StatCell
-          label={t("stats.pointsOutstanding", { label: program.points_label })}
-          value={stats.totalPointsOutstanding}
-          hint={t("stats.pointsHint", { label: program.points_label })}
-        />
-      </div>
-
-      <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
-        <p className="text-sm font-medium text-slate-700">{t("program.title")}</p>
-        <p className="mt-0.5 text-xs text-slate-500">{t("program.description")}</p>
-      </div>
-      <form
-        action={programAction}
-        className="space-y-4 border-b border-slate-200 px-4 py-4 lg:px-6"
-      >
-        {programState.error ? (
-          <p className="text-sm text-red-600">{programState.error}</p>
-        ) : null}
-        {programState.ok ? (
-          <p className="text-sm text-green-600">{programState.message ?? t("program.saved")}</p>
-        ) : null}
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={t("program.name")} htmlFor="loyalty_name">
-            <Input id="loyalty_name" name="name" defaultValue={program.name} required />
-          </Field>
-          <Field label={t("program.pointsLabel")} htmlFor="loyalty_points_label">
-            <Input
-              id="loyalty_points_label"
-              name="points_label"
-              defaultValue={program.points_label}
-              required
-            />
-          </Field>
-        </div>
-
-        <label className="flex items-center gap-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            name="is_active"
-            value="1"
-            defaultChecked={program.is_active}
-            className="rounded border-slate-300"
-          />
-          {t("program.active")}
-        </label>
-
-        <Button type="submit" className="h-9" disabled={programPending}>
-          {programPending ? tCommon("saving") : tCommon("save")}
-        </Button>
-      </form>
+      {isLive ? (
+        <p className="border-b border-slate-200 px-4 py-2 text-sm tabular-nums text-slate-600 lg:px-6">
+          {t("guide.liveSummary", {
+            clients: stats.clientsWithPoints,
+            clientsLabel: t("clientsLabel", { count: stats.clientsWithPoints }),
+            points: stats.totalPointsOutstanding,
+            label: program.points_label,
+          })}
+        </p>
+      ) : null}
 
       <ListToolbar
         action={
@@ -257,10 +236,7 @@ export function LoyaltyManager({
           </Button>
         }
       >
-        <div>
-          <p className="text-sm font-medium text-slate-700">{t("rules.title")}</p>
-          <p className="text-xs text-slate-500">{t("rules.sectionDescription")}</p>
-        </div>
+        <p className="text-sm font-medium text-slate-700">{t("rules.title")}</p>
       </ListToolbar>
       <DataTable>
         <table className="w-full text-sm">
@@ -275,11 +251,11 @@ export function LoyaltyManager({
           </thead>
           <tbody>
             {rules.length === 0 ? (
-              <tr>
-                <td colSpan={5} className={`${dataTableCell} text-slate-500`}>
-                  {t("rules.empty")}
-                </td>
-              </tr>
+              <EmptyRow
+                message={t("rules.empty")}
+                actionLabel={t("rules.add")}
+                onAction={openCreateRule}
+              />
             ) : (
               rules.map((rule) => (
                 <tr key={rule.id} className={dataTableRow}>
@@ -314,99 +290,139 @@ export function LoyaltyManager({
           </tbody>
         </table>
       </DataTable>
-      <ListPanelFooter>{t("rules.footer", { count: rules.length })}</ListPanelFooter>
+      {rules.length > 0 ? (
+        <ListPanelFooter>{t("rules.footer", { count: rules.length })}</ListPanelFooter>
+      ) : null}
 
-      <ListToolbar
-        action={
-          <Button onClick={openCreateReward} className="h-9 w-full sm:w-auto">
-            + {t("rewards.add")}
-          </Button>
-        }
-      >
-        <div>
-          <p className="text-sm font-medium text-slate-700">{t("rewards.title")}</p>
-          <p className="text-xs text-slate-500">{t("rewards.sectionDescription")}</p>
-        </div>
-      </ListToolbar>
-      <DataTable>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className={dataTableRow}>
-              <th className={dataTableHead}>{t("rewards.columns.name")}</th>
-              <th className={dataTableHead}>{t("rewards.columns.type")}</th>
-              <th className={dataTableHead}>{t("rewards.columns.cost")}</th>
-              <th className={dataTableHead}>{t("rewards.columns.status")}</th>
-              <th className={dataTableHead}>{tCommon("actions")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rewards.length === 0 ? (
-              <tr>
-                <td colSpan={5} className={`${dataTableCell} text-slate-500`}>
-                  {t("rewards.empty")}
-                </td>
-              </tr>
-            ) : (
-              rewards.map((reward) => (
-                <tr key={reward.id} className={dataTableRow}>
-                  <td className={`${dataTableCell} font-medium text-slate-900`}>{reward.name}</td>
-                  <td className={dataTableCell}>{formatRewardType(reward, services, t)}</td>
-                  <td className={dataTableCell}>
-                    {reward.points_cost} {program.points_label}
-                  </td>
-                  <td className={dataTableCell}>
-                    {reward.is_active ? t("status.active") : t("status.inactive")}
-                  </td>
-                  <td className={dataTableCell}>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openEditReward(reward)}
-                        className="text-sm text-slate-600 hover:text-slate-900"
-                      >
-                        {tCommon("edit")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteReward(reward.id)}
-                        disabled={pendingDelete}
-                        className="text-sm text-red-600 hover:text-red-700"
-                      >
-                        {tCommon("delete")}
-                      </button>
-                    </div>
-                  </td>
+      {showRewards ? (
+        <>
+          <ListToolbar
+            action={
+              <Button onClick={openCreateReward} className="h-9 w-full sm:w-auto">
+                + {t("rewards.add")}
+              </Button>
+            }
+          >
+            <p className="text-sm font-medium text-slate-700">{t("rewards.title")}</p>
+          </ListToolbar>
+          <DataTable>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className={dataTableRow}>
+                  <th className={dataTableHead}>{t("rewards.columns.name")}</th>
+                  <th className={dataTableHead}>{t("rewards.columns.type")}</th>
+                  <th className={dataTableHead}>{t("rewards.columns.cost")}</th>
+                  <th className={dataTableHead}>{t("rewards.columns.status")}</th>
+                  <th className={dataTableHead}>{tCommon("actions")}</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </DataTable>
-      <ListPanelFooter>{t("rewards.footer", { count: rewards.length })}</ListPanelFooter>
-      <p className="border-t border-slate-200 px-4 py-2.5 text-xs text-slate-500 lg:px-6">
-        {t("rewards.redeemHint")}
-      </p>
+              </thead>
+              <tbody>
+                {rewards.length === 0 ? (
+                  <EmptyRow
+                    message={t("rewards.empty")}
+                    actionLabel={t("rewards.add")}
+                    onAction={openCreateReward}
+                  />
+                ) : (
+                  rewards.map((reward) => (
+                    <tr key={reward.id} className={dataTableRow}>
+                      <td className={`${dataTableCell} font-medium text-slate-900`}>
+                        {reward.name}
+                      </td>
+                      <td className={dataTableCell}>{formatRewardType(reward, services, t)}</td>
+                      <td className={dataTableCell}>
+                        {reward.points_cost} {program.points_label}
+                      </td>
+                      <td className={dataTableCell}>
+                        {reward.is_active ? t("status.active") : t("status.inactive")}
+                      </td>
+                      <td className={dataTableCell}>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openEditReward(reward)}
+                            className="text-sm text-slate-600 hover:text-slate-900"
+                          >
+                            {tCommon("edit")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReward(reward.id)}
+                            disabled={pendingDelete}
+                            className="text-sm text-red-600 hover:text-red-700"
+                          >
+                            {tCommon("delete")}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </DataTable>
+          {rewards.length > 0 ? (
+            <ListPanelFooter>{t("rewards.footer", { count: rewards.length })}</ListPanelFooter>
+          ) : null}
+        </>
+      ) : null}
 
-      <div className="border-t border-slate-200 px-4 py-2.5 lg:px-6">
-        <p className="text-sm font-medium text-slate-700">{t("share.title")}</p>
-        <p className="text-xs text-slate-500">{t("share.description")}</p>
-      </div>
-      <ul className="divide-y divide-slate-100 border-t border-slate-200 text-sm">
-        <li className="flex items-center justify-between gap-3 px-4 py-2.5 lg:px-6">
-          <div className="min-w-0">
-            <p className="font-medium text-slate-900">{t("share.qrTitle")}</p>
-            <p className="text-xs text-slate-500">{t("share.qrDescription")}</p>
+      {showProgram ? (
+        <>
+          <div className="border-t border-slate-200 px-4 py-3 lg:px-6">
+            <p className="text-sm font-medium text-slate-700">{t("program.title")}</p>
           </div>
-          <span className="shrink-0 text-xs text-slate-400">{t("share.comingSoon")}</span>
-        </li>
-        <li className="flex items-center justify-between gap-3 px-4 py-2.5 lg:px-6">
-          <div className="min-w-0">
-            <p className="font-medium text-slate-900">{t("share.walletTitle")}</p>
-            <p className="text-xs text-slate-500">{t("share.walletDescription")}</p>
-          </div>
-          <span className="shrink-0 text-xs text-slate-400">{t("share.comingSoon")}</span>
-        </li>
-      </ul>
+          <form
+            action={programAction}
+            className={cn(
+              "space-y-4 border-t border-slate-200 px-4 py-4 lg:px-6",
+              phase === 3 && "bg-slate-50/80",
+            )}
+          >
+            {programState.error ? (
+              <p className="text-sm text-red-600">{programState.error}</p>
+            ) : null}
+            {programState.ok ? (
+              <p className="text-sm text-green-600">{programState.message ?? t("program.saved")}</p>
+            ) : null}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("program.name")} htmlFor="loyalty_name">
+                <Input id="loyalty_name" name="name" defaultValue={program.name} required />
+              </Field>
+              <Field label={t("program.pointsLabel")} htmlFor="loyalty_points_label">
+                <Input
+                  id="loyalty_points_label"
+                  name="points_label"
+                  defaultValue={program.points_label}
+                  required
+                />
+              </Field>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                name="is_active"
+                value="1"
+                defaultChecked={program.is_active}
+                className="rounded border-slate-300"
+              />
+              {t("program.active")}
+            </label>
+
+            <Button type="submit" className="h-9" disabled={programPending}>
+              {programPending ? tCommon("saving") : tCommon("save")}
+            </Button>
+          </form>
+        </>
+      ) : null}
+
+      {isLive ? (
+        <p className="border-t border-slate-200 px-4 py-2.5 text-xs text-slate-500 lg:px-6">
+          {t("rewards.redeemHint")}
+        </p>
+      ) : null}
 
       <EarnRuleDialog
         open={ruleDialogOpen}

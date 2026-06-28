@@ -520,30 +520,30 @@
       },
       "loyalty": {
         "title": "Loyaliteitsprogramma",
-        "description": "Beloon vaste klanten: ze sparen punten bij elk bezoek of aankoop en wisselen die in voor voordelen.",
+        "description": "Punten per bezoek of aankoop, inwisselbaar voor voordelen.",
+        "guide": {
+          "phase1Title": "Stap 1 — Hoe klanten punten verdienen",
+          "phase1Action": "Klik op « Nieuwe regel ». Voorbeeld: 10 punten per afspraak.",
+          "phase2Title": "Stap 2 — Wat ze kunnen krijgen",
+          "phase2Action": "Voeg een beloning toe. Voorbeeld: −10 % bij 100 punten.",
+          "phase3Title": "Stap 3 — Online zetten",
+          "phase3Action": "Vink « Programma actief » aan en sla op.",
+          "liveTitle": "Programma actief",
+          "liveSummary": "{clients} {clientsLabel} · {points} {label}"
+        },
+        "clientsLabel": "{count, plural, one {klant} other {klanten}}",
         "programStatus": {
           "draft": "Concept",
           "ready": "Klaar om te activeren",
           "live": "Actief"
         },
-        "setup": {
-          "title": "In 3 stappen opzetten",
-          "step1": "Bepalen hoe punten worden verdiend",
-          "step1Hint": "Afspraak, kassa, webshop…",
-          "step2": "Beloningen aanbieden",
-          "step2Hint": "Kortingen of gratis behandelingen",
-          "step3": "Programma activeren",
-          "step3Hint": "Punten worden automatisch toegekend"
-        },
         "stats": {
           "clientsWithPoints": "Deelnemende klanten",
-          "pointsOutstanding": "{label} in omloop",
-          "clientsHint": "Klanten die al punten hebben gespaard in uw instituut.",
-          "pointsHint": "Totaal aan {label} gespaard door uw klanten, nog niet ingewisseld."
+          "pointsOutstanding": "{label} in omloop"
         },
         "program": {
-          "title": "Programma",
-          "description": "Activeer het programma zodra regels en beloningen zijn ingesteld.",
+          "title": "Instellingen",
+          "description": "",
           "name": "Naam van het programma",
           "pointsLabel": "Label van de punten",
           "active": "Programma actief",
@@ -569,10 +569,9 @@
           "connectHint": "Koppel uw winkel om deze bron te activeren:"
         },
         "rules": {
-          "title": "Verdiensregels",
-          "sectionDescription": "Kies wanneer en hoeveel punten uw klanten verdienen.",
+          "title": "Punten verdienen",
           "add": "Nieuwe regel",
-          "empty": "Geen regels. Voeg een bron toe om punten toe te kennen.",
+          "empty": "Nog geen regels.",
           "footer": "{count, plural, one {# regel} other {# regels}}",
           "createTitle": "Nieuwe verdiensregel",
           "editTitle": "Regel bewerken",
@@ -599,11 +598,10 @@
         },
         "rewards": {
           "title": "Beloningen",
-          "sectionDescription": "Bepaal wat klanten krijgen in ruil voor hun punten.",
           "add": "Nieuwe beloning",
-          "empty": "Geen beloningen geconfigureerd.",
+          "empty": "Nog geen beloningen.",
           "footer": "{count, plural, one {# beloning} other {# beloningen}}",
-          "redeemHint": "Punten inwisselen aan kassa en reservering komt binnenkort.",
+          "redeemHint": "Punten inwisselen aan de kassa komt binnenkort.",
           "createTitle": "Nieuwe beloning",
           "editTitle": "Beloning bewerken",
           "deleteConfirm": "Deze beloning verwijderen?",
@@ -631,23 +629,6 @@
             "service": "Gratis behandeling",
             "active": "Beloning actief"
           }
-        },
-        "emptyRules": {
-          "title": "Begin met een verdiensregel",
-          "description": "Voorbeeld: 10 punten per afspraak, of 1 punt per uitgegeven euro aan de kassa."
-        },
-        "emptyRewards": {
-          "title": "Bied een eerste beloning aan",
-          "description": "Voorbeeld: −10 % na 100 punten, of een gratis manicure."
-        },
-        "share": {
-          "title": "Delen met uw klanten",
-          "description": "Tools om uw programma bekend te maken in het instituut.",
-          "qrTitle": "Loyaliteits-QR-code",
-          "qrDescription": "Hang een QR bij de ingang: klanten scannen en zien het programma.",
-          "walletTitle": "Wallet-kaart",
-          "walletDescription": "Laat klanten het programma toevoegen aan hun telefoon (Apple / Google Wallet).",
-          "comingSoon": "Binnenkort"
         }
       },
       "website": {

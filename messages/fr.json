@@ -143,7 +143,12 @@
   },
   "account": {
     "title": "Mon compte",
-    "subtitle": "Profil et sécurité",
+    "subtitle": "Gérez votre profil et la sécurité de votre accès.",
+    "nav": {
+      "ariaLabel": "Sections du compte",
+      "profile": "Profil",
+      "security": "Sécurité"
+    },
     "profile": {
       "sectionTitle": "Profil",
       "sectionDescription": "Vos informations personnelles visibles dans l'équipe.",

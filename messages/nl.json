@@ -143,7 +143,12 @@
   },
   "account": {
     "title": "Mijn account",
-    "subtitle": "Profiel en beveiliging",
+    "subtitle": "Beheer uw profiel en de beveiliging van uw toegang.",
+    "nav": {
+      "ariaLabel": "Accountsecties",
+      "profile": "Profiel",
+      "security": "Beveiliging"
+    },
     "profile": {
       "sectionTitle": "Profiel",
       "sectionDescription": "Uw persoonlijke gegevens zichtbaar voor het team.",

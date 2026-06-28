@@ -4,6 +4,9 @@ export type Locale = (typeof locales)[number];
 
 export const defaultLocale: Locale = "fr";
 
+/** Fuseau pour dates/heures affichées (aligne SSR Vercel UTC et navigateur client). */
+export const defaultTimeZone = "Europe/Paris";
+
 export const LOCALE_COOKIE = "NEXT_LOCALE";
 
 export const localeLabels: Record<Locale, string> = {

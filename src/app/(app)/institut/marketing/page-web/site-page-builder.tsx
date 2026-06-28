@@ -3,8 +3,13 @@
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { saveSitePageBuilder, uploadSiteGalleryImage, type ActionResult } from "./site-actions";
+import { saveSitePageBuilder, applyPageLayout, uploadSiteGalleryImage, type ActionResult } from "./site-actions";
 import { loadPublicServices, type PublicService } from "@/app/(public)/reserver/actions";
+import {
+  layoutVisualStyle,
+  layoutsForPageType,
+} from "@/lib/institut/site-page-layouts";
+import { SiteLayoutPickerCard } from "@/components/site/site-page-thumbnail";
 import {
   SitePageRenderer,
   type FormattedOpeningDay,
@@ -13,13 +18,11 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import {
   SITE_BLOCK_TYPES,
-  SITE_TEMPLATES,
   type SiteBlock,
   type SiteBlockType,
   type SiteGalleryBlock,
   type SiteGalleryImage,
   type SitePageRow,
-  type SiteTemplateId,
 } from "@/lib/institut/site-pages";
 
 const initial: ActionResult = {};
@@ -78,21 +81,15 @@ export function SitePageBuilder({
   page,
   previewServices,
   scheduleDays = [],
-  globalTemplateId,
 }: {
   page: SitePageRow;
   previewServices: PublicService[];
   scheduleDays?: FormattedOpeningDay[];
-  globalTemplateId: SiteTemplateId;
 }) {
   const t = useTranslations("institut.marketing.website.builder");
   const tCommon = useTranslations("common");
   const [state, action, pending] = useActionState(saveSitePageBuilder, initial);
-  const hasTemplateOverride = page.template_id !== globalTemplateId;
-  const [templateOverride, setTemplateOverride] = useState(hasTemplateOverride);
-  const [templateId, setTemplateId] = useState<SiteTemplateId>(
-    hasTemplateOverride ? page.template_id : globalTemplateId,
-  );
+  const [layoutPending, startLayoutTransition] = useTransition();
   const [title, setTitle] = useState(page.title);
   const [blocks, setBlocks] = useState<SiteBlock[]>(page.content);
   const [seoTitle, setSeoTitle] = useState(page.seo_title ?? "");
@@ -135,7 +132,17 @@ export function SitePageBuilder({
     setBlocks((prev) => [...prev, newBlock(type)]);
   }
 
-  const previewTemplateId = templateOverride ? templateId : globalTemplateId;
+  function handleApplyLayout(layoutId: string) {
+    if (layoutId === page.layout_id) return;
+    if (!confirm(t("layoutChangeConfirm"))) return;
+    startLayoutTransition(async () => {
+      const res = await applyPageLayout(page.id, layoutId, true);
+      if (res.error) alert(res.error);
+      else window.location.reload();
+    });
+  }
+
+  const previewTemplateId = layoutVisualStyle(page.layout_id);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -154,51 +161,26 @@ export function SitePageBuilder({
 
         <form action={action} className="space-y-6 overflow-y-auto px-4 py-4 lg:max-h-[calc(100dvh-8rem)]">
           <input type="hidden" name="id" value={page.id} />
-          <input type="hidden" name="template_id" value={templateId} />
-          <input type="hidden" name="template_override" value={templateOverride ? "1" : "0"} />
           <input type="hidden" name="blocks_json" value={blocksJson} />
 
           {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
           {state.ok ? <p className="text-sm text-green-600">{state.message ?? t("saved")}</p> : null}
 
-          <section className="space-y-3">
-            <p className="text-sm text-slate-600">
-              {t("globalTemplate")}:{" "}
-              <span className="font-medium text-slate-900">{t(`templates.${globalTemplateId}`)}</span>
-              {" · "}
-              <Link href="/institut/marketing/page-web/theme" className="text-slate-700 underline">
-                {t("editTheme")}
-              </Link>
-            </p>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={templateOverride}
-                onChange={(e) => {
-                  setTemplateOverride(e.target.checked);
-                  if (!e.target.checked) setTemplateId(globalTemplateId);
-                }}
-              />
-              {t("templateOverride")}
-            </label>
-            {templateOverride ? (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {SITE_TEMPLATES.map((tpl) => (
-                  <button
-                    key={tpl.id}
-                    type="button"
-                    onClick={() => setTemplateId(tpl.id)}
-                    className={`rounded-lg border p-3 text-left text-sm ${
-                      templateId === tpl.id
-                        ? "border-slate-900 bg-slate-50"
-                        : "border-slate-200 hover:border-slate-300"
-                    }`}
-                  >
-                    <p className="font-medium">{t(`templates.${tpl.id}`)}</p>
-                  </button>
-                ))}
-              </div>
-            ) : null}
+          <section className="space-y-2">
+            <h3 className="text-sm font-semibold text-slate-900">{t("pageLayout")}</h3>
+            <p className="text-xs text-slate-500">{t("pageLayoutHint")}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {layoutsForPageType(page.page_type).map((layout) => (
+                <SiteLayoutPickerCard
+                  key={layout.id}
+                  pageType={page.page_type}
+                  layoutId={layout.id}
+                  selected={page.layout_id === layout.id}
+                  disabled={pending || layoutPending}
+                  onSelect={() => handleApplyLayout(layout.id)}
+                />
+              ))}
+            </div>
           </section>
 
           <section className="space-y-3">

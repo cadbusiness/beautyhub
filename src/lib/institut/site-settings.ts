@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
-import type { SiteTemplateId } from "@/lib/institut/site-pages";
 import { publicPagePath, type SitePageRow } from "@/lib/institut/site-pages";
 import type { TenantContext } from "@/lib/tenant/context";
 
@@ -8,7 +7,6 @@ type Db = SupabaseClient<Database>;
 
 export interface SiteSettingsRow {
   tenant_id: string;
-  template_id: SiteTemplateId;
   primary_color: string;
   display_name: string | null;
   logo_url: string | null;
@@ -16,7 +14,6 @@ export interface SiteSettingsRow {
 }
 
 export interface PublicSiteSettings {
-  template_id: SiteTemplateId;
   primary_color: string;
   display_name: string | null;
   logo_url: string | null;
@@ -33,7 +30,6 @@ export interface PublicSiteNavItem {
 }
 
 export const DEFAULT_SITE_SETTINGS: Omit<SiteSettingsRow, "tenant_id"> = {
-  template_id: "elegant",
   primary_color: "#0f172a",
   display_name: null,
   logo_url: null,
@@ -70,7 +66,6 @@ export async function fetchPublicSiteSettings(
   const { data } = await supabase.rpc("get_public_site_settings", { p_tenant_id: tenantId }).maybeSingle();
   if (!data) return null;
   return {
-    template_id: (data.template_id as SiteTemplateId) ?? "elegant",
     primary_color: data.primary_color ?? "#0f172a",
     display_name: data.display_name,
     logo_url: data.logo_url,
@@ -109,7 +104,6 @@ export function resolveSiteBranding(
   displayName: string;
   primaryColor: string;
   logoUrl: string | null;
-  templateId: SiteTemplateId;
   footerText: string | null;
 } {
   const legacy = tenantBranding as { appName?: string; primaryColor?: string };
@@ -117,7 +111,6 @@ export function resolveSiteBranding(
     displayName: settings?.display_name ?? legacy.appName ?? tenantName,
     primaryColor: settings?.primary_color ?? legacy.primaryColor ?? "#0f172a",
     logoUrl: settings?.logo_url ?? null,
-    templateId: settings?.template_id ?? "elegant",
     footerText: settings?.footer_text ?? null,
   };
 }

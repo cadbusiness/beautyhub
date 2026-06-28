@@ -13,8 +13,9 @@ import {
   groupOpeningHoursByWeekday,
   weekdayMessageKey,
 } from "@/lib/institut/opening-hours";
-import type { SiteBlock, SiteTemplateId } from "@/lib/institut/site-pages";
+import type { SiteBlock, SitePageType } from "@/lib/institut/site-pages";
 import { normalizeSiteBlocks } from "@/lib/institut/site-pages";
+import { layoutVisualStyle } from "@/lib/institut/site-page-layouts";
 import type { TenantContext } from "@/lib/tenant/context";
 import { loadPublicSiteShellData } from "@/lib/institut/site-settings";
 
@@ -49,7 +50,8 @@ export async function PublicSiteView({
 }: {
   tenant: TenantContext;
   page: {
-    template_id: SiteTemplateId;
+    page_type: SitePageType;
+    layout_id: string;
     title: string;
     content: SiteBlock[];
     seo_title: string | null;
@@ -76,7 +78,7 @@ export async function PublicSiteView({
     <PublicSiteShell shell={shell} activePath={activePath}>
       <SitePageRenderer
         blocks={normalizeSiteBlocks(page.content)}
-        templateId={page.template_id}
+        templateId={layoutVisualStyle(page.layout_id)}
         services={services}
         scheduleDays={scheduleDays}
         accent={shell.primaryColor}

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { loadSitePageForBuilder, loadSiteSettingsAdmin } from "../../site-actions";
+import { loadSitePageForBuilder } from "../../site-actions";
 import { SitePageBuilder } from "../../site-page-builder";
 import type { PublicService } from "@/app/(public)/reserver/actions";
 import type { FormattedOpeningDay } from "@/components/site/site-page-renderer";
@@ -40,25 +40,20 @@ export default async function SitePageBuilderPage({
 }) {
   const session = await requireModule("institut");
   const { pageId } = await params;
-  const [page, settings] = await Promise.all([
-    loadSitePageForBuilder(pageId),
-    loadSiteSettingsAdmin(),
-  ]);
-  if (!page) notFound();
-
   const supabase = await createClient();
-  const [{ data: services }, scheduleDays] = await Promise.all([
+  const [page, services, scheduleDays] = await Promise.all([
+    loadSitePageForBuilder(pageId),
     supabase.rpc("get_public_services", { p_tenant_id: session.tenant.id }),
     loadScheduleDays(session.tenant.id),
   ]);
+  if (!page) notFound();
 
   return (
     <div className="-mx-4 flex min-h-[calc(100dvh-7rem)] flex-col lg:-mx-6">
       <SitePageBuilder
         page={page}
-        previewServices={(services ?? []) as PublicService[]}
+        previewServices={(services.data ?? []) as PublicService[]}
         scheduleDays={scheduleDays}
-        globalTemplateId={settings.template_id}
       />
     </div>
   );

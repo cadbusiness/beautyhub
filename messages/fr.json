@@ -298,6 +298,7 @@
       "today": "Aujourd'hui",
       "weekOf": "Semaine du {date}",
       "loadError": "Impossible de charger le calendrier.",
+      "retry": "Réessayer",
       "newAppointment": "Nouveau RDV",
       "dialogTitle": "Nouveau rendez-vous",
       "emptyStaff": "Ajoute du personnel dans Équipe pour afficher le calendrier.",

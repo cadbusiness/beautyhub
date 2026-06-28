@@ -1492,7 +1492,6 @@ export type Database = {
           footer_text: string | null
           logo_url: string | null
           primary_color: string
-          template_id: string
           tenant_id: string
           updated_at: string
         }
@@ -1502,7 +1501,6 @@ export type Database = {
           footer_text?: string | null
           logo_url?: string | null
           primary_color?: string
-          template_id?: string
           tenant_id: string
           updated_at?: string
         }
@@ -1512,7 +1510,6 @@ export type Database = {
           footer_text?: string | null
           logo_url?: string | null
           primary_color?: string
-          template_id?: string
           tenant_id?: string
           updated_at?: string
         }
@@ -2164,7 +2161,6 @@ export type Database = {
           footer_text: string | null
           logo_url: string | null
           primary_color: string
-          template_id: string
         }[]
       }
       get_public_site_nav: {

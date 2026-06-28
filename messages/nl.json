@@ -298,6 +298,7 @@
       "today": "Vandaag",
       "weekOf": "Week van {date}",
       "loadError": "Kalender kon niet worden geladen.",
+      "retry": "Opnieuw proberen",
       "newAppointment": "Nieuwe afspraak",
       "dialogTitle": "Nieuwe afspraak",
       "emptyStaff": "Voeg personeel toe in Team om de kalender te tonen.",

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
+import { todayDateString } from "@/lib/date";
 import { fetchAppointmentsInRange } from "@/lib/institut/slots";
 import { ListPanel } from "@/components/ui/list-panel";
 import { PageTabLinks } from "@/components/ui/page-tabs";
@@ -156,7 +157,7 @@ export default async function RendezVousPage({
           staff={staff}
           resources={resources}
           clients={clients}
-          initialDate={now.toISOString().slice(0, 10)}
+          initialDate={todayDateString()}
         />
       ) : (
         <AppointmentsList

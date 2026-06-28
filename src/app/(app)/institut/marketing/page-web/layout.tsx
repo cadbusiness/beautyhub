@@ -19,7 +19,7 @@ export default async function PageWebLayout({
   const t = await getTranslations("institut.marketing.website");
   const tabs: PageTabLinkItem[] = [
     { href: "/institut/marketing/page-web", exact: true, label: t("tabs.pages") },
-    { href: "/institut/marketing/page-web/theme", label: t("tabs.theme") },
+    { href: "/institut/marketing/page-web/theme", label: t("tabs.branding") },
   ];
 
   return (

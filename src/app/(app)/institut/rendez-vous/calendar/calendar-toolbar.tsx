@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -47,9 +48,15 @@ export function CalendarToolbar({
   const t = useTranslations("appointments.calendar");
   const tCommon = useTranslations("common");
   const format = useFormatter();
+  const [mounted, setMounted] = useState(false);
 
-  const dateLabel =
-    viewMode === "month"
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const dateLabel = useMemo(() => {
+    if (!mounted) return null;
+    return viewMode === "month"
       ? format.dateTime(anchor, { month: "long", year: "numeric" })
       : viewMode === "week"
         ? t("weekOf", {
@@ -65,6 +72,7 @@ export function CalendarToolbar({
             month: "long",
             year: "numeric",
           });
+  }, [anchor, format, mounted, t, viewMode]);
 
   const navStep = viewMode === "month" ? 30 : viewMode === "week" ? 7 : 1;
 
@@ -169,7 +177,9 @@ export function CalendarToolbar({
           <Button type="button" variant="outline" className="h-8" onClick={onToday}>
             {t("today")}
           </Button>
-          <span className="min-w-48 text-center text-sm text-slate-600">{dateLabel}</span>
+          <span className="min-w-48 text-center text-sm text-slate-600">
+            {dateLabel ?? "\u00a0"}
+          </span>
           <Button type="button" variant="outline" className="h-8 px-2" onClick={() => onAnchorChange(navStep)}>
             →
           </Button>

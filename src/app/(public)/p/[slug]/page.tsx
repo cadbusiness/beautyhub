@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { PublicSiteView } from "@/components/site/public-site-view";
 import { loadPublicServices } from "@/app/(public)/reserver/actions";
 import { getPublicSiteTenant } from "@/lib/tenant/public-site";
-import { parseSiteBlocks } from "@/lib/institut/site-pages";
+import { parseSiteBlocks, type SitePageType } from "@/lib/institut/site-pages";
+import { normalizeLayoutId } from "@/lib/institut/site-page-layouts";
 
 export default async function PublicSiteSlugPage({
   params,
@@ -28,7 +29,8 @@ export default async function PublicSiteSlugPage({
     <PublicSiteView
       tenant={tenant}
       page={{
-        template_id: page.template_id as "elegant" | "modern",
+        page_type: page.page_type as SitePageType,
+        layout_id: normalizeLayoutId(page.page_type as SitePageType, page.template_id),
         title: page.title,
         content: parseSiteBlocks(page.content),
         seo_title: page.seo_title,

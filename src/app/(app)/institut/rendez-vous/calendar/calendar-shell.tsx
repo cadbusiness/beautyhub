@@ -23,7 +23,7 @@ import type {
   CalendarViewMode,
   ColumnMode,
 } from "./types";
-import { getRangeForView, startOfDay } from "./utils";
+import { getRangeForView, parseDateOnly, startOfDay, todayDateString } from "./utils";
 
 type MovePayload = {
   id: string;
@@ -56,7 +56,7 @@ export function CalendarShell({
   const tCal = useTranslations("appointments.calendar");
   const [viewMode, setViewMode] = useState<CalendarViewMode>("day");
   const [columnMode, setColumnMode] = useState<ColumnMode>("staff");
-  const [anchor, setAnchor] = useState(() => startOfDay(new Date(initialDate)));
+  const [anchor, setAnchor] = useState(() => parseDateOnly(initialDate));
   const [serviceFilter, setServiceFilter] = useState("");
   const [staffDropdownFilter, setStaffDropdownFilter] = useState("");
   const [staffChipFilter, setStaffChipFilter] = useState<string | null>(null);
@@ -129,7 +129,7 @@ export function CalendarShell({
   }
 
   function handleToday() {
-    setAnchor(startOfDay(new Date()));
+    setAnchor(parseDateOnly(todayDateString()));
   }
 
   function handleSelectDay(day: Date) {

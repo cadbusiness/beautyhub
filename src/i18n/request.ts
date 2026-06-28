@@ -2,6 +2,7 @@ import { getRequestConfig } from "next-intl/server";
 import { cookies, headers } from "next/headers";
 import { getProfilePreferredLocale } from "@/lib/i18n/resolve-locale";
 import {
+  defaultTimeZone,
   isLocale,
   LOCALE_COOKIE,
   resolveLocaleFromAcceptLanguage,
@@ -24,6 +25,7 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
+    timeZone: defaultTimeZone,
     messages: (await import(`../../messages/${locale}.json`)).default,
   };
 });

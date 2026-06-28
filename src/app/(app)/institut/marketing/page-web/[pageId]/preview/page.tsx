@@ -4,8 +4,8 @@ import Link from "next/link";
 import { requireModule } from "@/lib/auth/guards";
 import { PublicSiteView } from "@/components/site/public-site-view";
 import { loadPublicServices } from "@/app/(public)/reserver/actions";
-import { loadSitePageForBuilder, loadSiteSettingsAdmin } from "../../site-actions";
-import { normalizeSiteBlocks, type SiteTemplateId } from "@/lib/institut/site-pages";
+import { loadSitePageForBuilder } from "../../site-actions";
+import { normalizeSiteBlocks } from "@/lib/institut/site-pages";
 
 export default async function SitePagePreviewPage({
   params,
@@ -15,17 +15,10 @@ export default async function SitePagePreviewPage({
   const session = await requireModule("institut");
   const t = await getTranslations("institut.marketing.website.previewPanel");
   const { pageId } = await params;
-  const [page, settings] = await Promise.all([
-    loadSitePageForBuilder(pageId),
-    loadSiteSettingsAdmin(),
-  ]);
+  const page = await loadSitePageForBuilder(pageId);
   if (!page) notFound();
 
   const services = await loadPublicServices();
-
-  const templateId = (
-    page.template_id !== settings.template_id ? page.template_id : settings.template_id
-  ) as SiteTemplateId;
 
   return (
     <div className="relative">
@@ -39,7 +32,8 @@ export default async function SitePagePreviewPage({
       <PublicSiteView
         tenant={session.tenant}
         page={{
-          template_id: templateId,
+          page_type: page.page_type,
+          layout_id: page.layout_id,
           title: page.title,
           content: normalizeSiteBlocks(page.content),
           seo_title: page.seo_title,

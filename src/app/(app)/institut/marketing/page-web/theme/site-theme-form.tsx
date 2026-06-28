@@ -6,7 +6,6 @@ import { saveSiteTheme, uploadSiteLogo, type ActionResult } from "../site-action
 import { SitePageRenderer } from "@/components/site/site-page-renderer";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/input";
-import { SITE_TEMPLATES, type SiteTemplateId } from "@/lib/institut/site-pages";
 import type { SiteSettingsRow } from "@/lib/institut/site-settings";
 
 const initial: ActionResult = {};
@@ -32,7 +31,6 @@ export function SiteThemeForm({
   const t = useTranslations("institut.marketing.website.theme");
   const tCommon = useTranslations("common");
   const [state, action, pending] = useActionState(saveSiteTheme, initial);
-  const [templateId, setTemplateId] = useState<SiteTemplateId>(settings.template_id);
   const [primaryColor, setPrimaryColor] = useState(settings.primary_color);
   const [displayName, setDisplayName] = useState(settings.display_name ?? "");
   const [logoUrl, setLogoUrl] = useState(settings.logo_url ?? "");
@@ -57,34 +55,15 @@ export function SiteThemeForm({
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
       <form action={action} className="w-full space-y-6 lg:max-w-md lg:shrink-0">
-        <input type="hidden" name="template_id" value={templateId} />
         <input type="hidden" name="primary_color" value={primaryColor} />
         <input type="hidden" name="display_name" value={displayName} />
         <input type="hidden" name="logo_url" value={logoUrl} />
         <input type="hidden" name="footer_text" value={footerText} />
 
+        <p className="text-sm text-slate-600">{t("description")}</p>
+
         {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
         {state.ok ? <p className="text-sm text-green-600">{state.message ?? t("saved")}</p> : null}
-
-        <section className="space-y-3">
-          <h3 className="text-sm font-semibold text-slate-900">{t("template")}</h3>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {SITE_TEMPLATES.map((tpl) => (
-              <button
-                key={tpl.id}
-                type="button"
-                onClick={() => setTemplateId(tpl.id)}
-                className={`rounded-lg border p-3 text-left text-sm ${
-                  templateId === tpl.id
-                    ? "border-slate-900 bg-slate-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <p className="font-medium">{t(`templates.${tpl.id}`)}</p>
-              </button>
-            ))}
-          </div>
-        </section>
 
         <Field label={t("displayName")} htmlFor="display_name">
           <Input
@@ -169,7 +148,7 @@ export function SiteThemeForm({
           </header>
           <SitePageRenderer
             blocks={SAMPLE_BLOCKS}
-            templateId={templateId}
+            templateId="elegant"
             services={[]}
             accent={primaryColor}
           />

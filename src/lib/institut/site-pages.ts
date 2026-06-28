@@ -83,7 +83,8 @@ export interface SitePageRow {
   tenant_id: string;
   page_type: SitePageType;
   slug: string;
-  template_id: SiteTemplateId;
+  /** Modèle de page (ex. home-vitrine). Stocké en base dans `template_id`. */
+  layout_id: string;
   title: string;
   is_published: boolean;
   is_home: boolean;
@@ -100,7 +101,7 @@ export interface PublicSitePage {
   id: string;
   page_type: SitePageType;
   slug: string;
-  template_id: SiteTemplateId;
+  layout_id: string;
   title: string;
   content: SiteBlock[];
   seo_title: string | null;

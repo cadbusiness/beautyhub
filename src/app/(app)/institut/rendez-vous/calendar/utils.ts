@@ -1,6 +1,8 @@
 import type { CalendarViewMode } from "./types";
 import { HOUR_END, HOUR_START, SLOT_MINUTES, SLOT_PX } from "./types";
 
+export { parseDateOnly, todayDateString } from "@/lib/date";
+
 export function startOfDay(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);

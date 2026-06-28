@@ -6,6 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getTenantPublicBaseUrl } from "@/lib/tenant/public-site";
 import type { Json } from "@/lib/db/database.types";
 import {
+  defaultLayoutId,
+  getLayoutDef,
+  normalizeLayoutId,
+} from "@/lib/institut/site-page-layouts";
+import {
   defaultBlocksForPageType,
   defaultTitleForPageType,
   parseSiteBlocks,
@@ -14,7 +19,6 @@ import {
   type SiteBlock,
   type SitePageRow,
   type SitePageType,
-  type SiteTemplateId,
 } from "@/lib/institut/site-pages";
 import {
   ensureSiteSettings,
@@ -44,14 +48,20 @@ function mapRow(row: {
 }): SitePageRow {
   const pageType = row.page_type as SitePageType;
   const defaults = SITE_PAGE_TYPE_SORT[pageType] ?? { sort_order: 0, show_in_nav: true };
+  const { template_id: _dbLayout, ...rest } = row;
   return {
-    ...row,
+    ...rest,
     page_type: pageType,
-    template_id: row.template_id as SitePageRow["template_id"],
+    layout_id: normalizeLayoutId(pageType, row.template_id),
     show_in_nav: row.show_in_nav ?? defaults.show_in_nav,
     sort_order: row.sort_order ?? defaults.sort_order,
     content: parseSiteBlocks(row.content),
   };
+}
+
+function layoutBlocks(pageType: SitePageType, layoutId: string, instituteName: string): SiteBlock[] {
+  const layout = getLayoutDef(pageType, layoutId);
+  return layout?.blocks(instituteName) ?? defaultBlocksForPageType(pageType, instituteName);
 }
 
 export async function ensureDefaultSitePages(tenantId: string, instituteName: string): Promise<void> {
@@ -63,18 +73,21 @@ export async function ensureDefaultSitePages(tenantId: string, instituteName: st
 
   if ((count ?? 0) > 0) return;
 
-  const inserts = SITE_PAGE_TYPES.map((def) => ({
-    tenant_id: tenantId,
-    page_type: def.type,
-    slug: def.defaultSlug,
-    title: defaultTitleForPageType(def.type, instituteName),
-    is_home: def.type === "home",
-    is_published: def.type === "home",
-    show_in_nav: SITE_PAGE_TYPE_SORT[def.type].show_in_nav,
-    sort_order: SITE_PAGE_TYPE_SORT[def.type].sort_order,
-    template_id: "elegant" as SiteTemplateId,
-    content: defaultBlocksForPageType(def.type, instituteName) as unknown as Json,
-  }));
+  const inserts = SITE_PAGE_TYPES.map((def) => {
+    const layoutId = defaultLayoutId(def.type);
+    return {
+      tenant_id: tenantId,
+      page_type: def.type,
+      slug: def.defaultSlug,
+      title: defaultTitleForPageType(def.type, instituteName),
+      is_home: def.type === "home",
+      is_published: def.type === "home",
+      show_in_nav: SITE_PAGE_TYPE_SORT[def.type].show_in_nav,
+      sort_order: SITE_PAGE_TYPE_SORT[def.type].sort_order,
+      template_id: layoutId,
+      content: layoutBlocks(def.type, layoutId, instituteName) as unknown as Json,
+    };
+  });
 
   await supabase.from("inst_site_pages").insert(inserts);
 }
@@ -193,7 +206,6 @@ export async function saveSiteTheme(
 ): Promise<ActionResult> {
   const session = await requireModule("institut");
   const supabase = await createClient();
-  const templateId = String(formData.get("template_id") ?? "elegant") as SiteTemplateId;
   const primaryColor = String(formData.get("primary_color") ?? "#0f172a").trim();
   const displayName = String(formData.get("display_name") ?? "").trim() || null;
   const logoUrl = String(formData.get("logo_url") ?? "").trim() || null;
@@ -204,7 +216,6 @@ export async function saveSiteTheme(
   const { error } = await supabase
     .from("inst_site_settings")
     .update({
-      template_id: templateId,
       primary_color: primaryColor,
       display_name: displayName,
       logo_url: logoUrl,
@@ -214,14 +225,50 @@ export async function saveSiteTheme(
 
   if (error) return { error: error.message };
 
-  await supabase
-    .from("inst_site_pages")
-    .update({ template_id: templateId })
-    .eq("tenant_id", session.tenant.id);
-
   revalidatePath(ADMIN_PATH);
   revalidatePath(`${ADMIN_PATH}/theme`);
-  return { ok: true, message: "Thème enregistré." };
+  return { ok: true, message: "Identité visuelle enregistrée." };
+}
+
+export async function applyPageLayout(
+  pageId: string,
+  layoutId: string,
+  resetContent: boolean,
+): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+
+  const { data: page } = await supabase
+    .from("inst_site_pages")
+    .select("page_type")
+    .eq("id", pageId)
+    .eq("tenant_id", session.tenant.id)
+    .maybeSingle();
+
+  if (!page) return { error: "Page introuvable." };
+
+  const pageType = page.page_type as SitePageType;
+  const normalized = normalizeLayoutId(pageType, layoutId);
+  const layout = getLayoutDef(pageType, normalized);
+  if (!layout) return { error: "Modèle invalide." };
+
+  const update: { template_id: string; content?: Json } = { template_id: normalized };
+  if (resetContent) {
+    update.content = layoutBlocks(pageType, normalized, session.tenant.name) as unknown as Json;
+  }
+
+  const { error } = await supabase
+    .from("inst_site_pages")
+    .update(update)
+    .eq("id", pageId)
+    .eq("tenant_id", session.tenant.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(ADMIN_PATH);
+  revalidatePath(`${ADMIN_PATH}/${pageId}/builder`);
+  revalidatePath(`${ADMIN_PATH}/${pageId}/preview`);
+  return { ok: true };
 }
 
 export async function toggleSitePagePublished(
@@ -299,7 +346,7 @@ export async function createSitePage(pageType: SitePageType): Promise<ActionResu
     if (existing) return { error: "Une page d'accueil existe déjà." };
   }
 
-  const settings = await ensureSiteSettings(supabase, session.tenant.id);
+  const layoutId = defaultLayoutId(pageType);
   const sort = SITE_PAGE_TYPE_SORT[pageType];
 
   const { data, error } = await supabase
@@ -312,8 +359,8 @@ export async function createSitePage(pageType: SitePageType): Promise<ActionResu
       is_home: pageType === "home",
       show_in_nav: sort.show_in_nav,
       sort_order: sort.sort_order,
-      template_id: settings.template_id,
-      content: defaultBlocksForPageType(pageType, session.tenant.name) as unknown as Json,
+      template_id: layoutId,
+      content: layoutBlocks(pageType, layoutId, session.tenant.name) as unknown as Json,
     })
     .select("id")
     .single();
@@ -335,10 +382,6 @@ export async function saveSitePageBuilder(
   const seoTitle = String(formData.get("seo_title") ?? "").trim() || null;
   const seoDescription = String(formData.get("seo_description") ?? "").trim() || null;
   const isPublished = formData.get("is_published") === "1";
-  const templateOverride = formData.get("template_override") === "1";
-  const templateId = templateOverride
-    ? (String(formData.get("template_id") ?? "elegant") as SiteTemplateId)
-    : null;
 
   if (!id || !title) return { error: "Données invalides." };
 
@@ -349,32 +392,15 @@ export async function saveSitePageBuilder(
     return { error: "Contenu invalide." };
   }
 
-  const update: {
-    title: string;
-    content: Json;
-    seo_title: string | null;
-    seo_description: string | null;
-    is_published: boolean;
-    template_id: SiteTemplateId;
-  } = {
-    title,
-    content: blocks as unknown as Json,
-    seo_title: seoTitle,
-    seo_description: seoDescription,
-    is_published: isPublished,
-    template_id: "elegant",
-  };
-
-  if (templateOverride && templateId) {
-    update.template_id = templateId;
-  } else {
-    const settings = await ensureSiteSettings(supabase, session.tenant.id);
-    update.template_id = settings.template_id;
-  }
-
   const { error } = await supabase
     .from("inst_site_pages")
-    .update(update)
+    .update({
+      title,
+      content: blocks as unknown as Json,
+      seo_title: seoTitle,
+      seo_description: seoDescription,
+      is_published: isPublished,
+    })
     .eq("id", id)
     .eq("tenant_id", session.tenant.id);
 

@@ -4,7 +4,8 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { LandingPage } from "@/components/marketing/landing-page";
 import { PublicSiteView } from "@/components/site/public-site-view";
 import { getPublicTenantFromHost, loadPublicSiteHome } from "@/lib/tenant/public-site";
-import { parseSiteBlocks } from "@/lib/institut/site-pages";
+import { parseSiteBlocks, type SitePageType } from "@/lib/institut/site-pages";
+import { normalizeLayoutId } from "@/lib/institut/site-page-layouts";
 import { loadPublicServices } from "@/app/(public)/reserver/actions";
 
 export default async function Home() {
@@ -18,7 +19,8 @@ export default async function Home() {
         <PublicSiteView
           tenant={publicTenant}
           page={{
-            template_id: home.template_id as "elegant" | "modern",
+            page_type: "home" as SitePageType,
+            layout_id: normalizeLayoutId("home", home.template_id),
             title: home.title,
             content: parseSiteBlocks(home.content),
             seo_title: home.seo_title,

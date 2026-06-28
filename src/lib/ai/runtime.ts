@@ -2,6 +2,7 @@ import { getAiActionsFor } from "@/modules";
 import type { ActionContext } from "@/modules/types";
 import { createClient } from "@/lib/supabase/server";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
+import { getTranslations } from "next-intl/server";
 import type { ExecuteActionContext, ExecuteActionResult } from "./types";
 
 /**
@@ -14,12 +15,13 @@ export async function executeAction(
   ctx: ExecuteActionContext,
   options?: { confirmed?: boolean },
 ): Promise<ExecuteActionResult> {
+  const t = await getTranslations("assistant.runtime");
   const actions = getAiActionsFor(ctx.enabledModuleIds, ctx.role);
   const action = actions.find((a) => a.name === actionName);
   if (!action) {
     return {
       ok: false,
-      error: `Action inconnue ou non autorisee : ${actionName}`,
+      error: t("unknownAction", { action: actionName }),
     };
   }
 
@@ -34,7 +36,7 @@ export async function executeAction(
   const parsed = action.parameters.safeParse(params);
   if (!parsed.success) {
     const msg = parsed.error.issues.map((i) => i.message).join("; ");
-    return { ok: false, error: msg || "Parametres invalides." };
+    return { ok: false, error: msg || t("invalidParams") };
   }
 
   if (action.quotaKey) {

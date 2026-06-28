@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { resolveConnection } from "@/lib/connections";
 import { createClient } from "@/lib/supabase/server";
@@ -60,7 +61,8 @@ export async function saveLoyaltyProgramSettings(
 
   const name = String(formData.get("name") ?? "").trim();
   const pointsLabel = String(formData.get("points_label") ?? "").trim();
-  if (!name || !pointsLabel) return { error: "Champs requis manquants." };
+  const t = await getTranslations("institut.marketing.loyalty.actions");
+  if (!name || !pointsLabel) return { error: t("missingFields") };
 
   const { error } = await supabase
     .from("inst_loyalty_programs")
@@ -74,7 +76,8 @@ export async function saveLoyaltyProgramSettings(
 
   if (error) return { error: error.message };
   revalidatePath(LOYALTY_PATH);
-  return { ok: true, message: "Programme enregistré." };
+  const tSaved = await getTranslations("institut.marketing.loyalty.program");
+  return { ok: true, message: tSaved("saved") };
 }
 
 export async function saveLoyaltyEarnRule(
@@ -91,19 +94,20 @@ export async function saveLoyaltyEarnRule(
   const calcMode = String(formData.get("calc_mode") ?? "") as LoyaltyCalcMode;
   const pointsValue = Number(formData.get("points_value"));
   const minAmountEur = Number(formData.get("min_amount_eur") ?? 0);
+  const t = await getTranslations("institut.marketing.loyalty.actions");
 
   if (!name || !sourceType || !calcMode || !Number.isFinite(pointsValue) || pointsValue <= 0) {
-    return { error: "Règle invalide." };
+    return { error: t("invalidRule") };
   }
 
   if (sourceType === "shopify_order") {
-    return { error: "Shopify n'est pas encore disponible." };
+    return { error: t("shopifyUnavailable") };
   }
 
   if (sourceType === "woocommerce_order") {
     const woo = await resolveConnection(session.tenant.id, WOO_PROVIDER);
     if (woo?.status !== "connected") {
-      return { error: "Connectez WooCommerce pour utiliser cette source." };
+      return { error: t("wooRequired") };
     }
   }
 
@@ -167,9 +171,10 @@ export async function saveLoyaltyReward(
   const rewardType = String(formData.get("reward_type") ?? "") as LoyaltyRewardType;
   const pointsCost = Number(formData.get("points_cost"));
   const description = String(formData.get("description") ?? "").trim() || null;
+  const t = await getTranslations("institut.marketing.loyalty.actions");
 
   if (!name || !rewardType || !Number.isFinite(pointsCost) || pointsCost <= 0) {
-    return { error: "Récompense invalide." };
+    return { error: t("invalidReward") };
   }
 
   type RewardInsert = Database["public"]["Tables"]["inst_loyalty_rewards"]["Insert"];
@@ -189,15 +194,15 @@ export async function saveLoyaltyReward(
 
   if (rewardType === "discount_percent") {
     const pct = Number(formData.get("discount_percent"));
-    if (!Number.isFinite(pct) || pct <= 0 || pct > 100) return { error: "Pourcentage invalide." };
+    if (!Number.isFinite(pct) || pct <= 0 || pct > 100) return { error: t("invalidPercent") };
     payload.discount_percent = Math.round(pct);
   } else if (rewardType === "discount_fixed") {
     const eur = Number(formData.get("discount_eur"));
-    if (!Number.isFinite(eur) || eur <= 0) return { error: "Montant invalide." };
+    if (!Number.isFinite(eur) || eur <= 0) return { error: t("invalidAmount") };
     payload.discount_cents = Math.round(eur * 100);
   } else {
     const serviceId = String(formData.get("service_id") ?? "").trim();
-    if (!serviceId) return { error: "Prestation requise." };
+    if (!serviceId) return { error: t("serviceRequired") };
     payload.service_id = serviceId;
   }
 

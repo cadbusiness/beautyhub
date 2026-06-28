@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 export type HelpArticle = {
   id: string;
   title: string;
@@ -7,92 +9,137 @@ export type HelpArticle = {
   keywords: string[];
 };
 
-export const HELP_ARTICLES: HelpArticle[] = [
+const ARTICLE_META = [
   {
     id: "add_service",
-    title: "Ajouter une prestation",
-    summary: "Créez une prestation depuis le menu Prestations.",
-    steps: [
-      "Ouvrez Prestations dans le menu latéral.",
-      "Cliquez sur « + Nouvelle prestation ».",
-      "Renseignez le nom, la durée et le tarif, puis enregistrez.",
-    ],
     href: "/institut/prestations",
-    keywords: ["prestation", "service", "ajouter", "creer", "créer", "nouveau", "nouvelle", "tarif"],
+    keywords: [
+      "prestation",
+      "service",
+      "ajouter",
+      "creer",
+      "créer",
+      "nouveau",
+      "nouvelle",
+      "tarif",
+      "add",
+      "create",
+      "treatment",
+    ],
   },
   {
     id: "add_client",
-    title: "Ajouter un client",
-    summary: "Enregistrez un client depuis la liste Clients.",
-    steps: [
-      "Ouvrez Clients dans le menu.",
-      "Cliquez sur « + Nouveau client ».",
-      "Renseignez nom, email et téléphone.",
-    ],
     href: "/institut/clients",
-    keywords: ["client", "ajouter", "creer", "créer", "nouveau", "nouvelle", "fiche"],
+    keywords: [
+      "client",
+      "ajouter",
+      "creer",
+      "créer",
+      "nouveau",
+      "nouvelle",
+      "fiche",
+      "add",
+      "create",
+      "customer",
+    ],
   },
   {
     id: "open_pos",
-    title: "Ouvrir la caisse",
-    summary: "Une session caisse doit être ouverte avant d'encaisser.",
-    steps: [
-      "Allez dans Caisse → Session.",
-      "Cliquez sur « Ouvrir la session ».",
-      "Indiquez le fond de caisse initial si besoin.",
-    ],
     href: "/institut/caisse/session",
-    keywords: ["caisse", "ouvrir", "session", "fond", "demarrer", "démarrer", "encaisser"],
+    keywords: [
+      "caisse",
+      "ouvrir",
+      "session",
+      "fond",
+      "demarrer",
+      "démarrer",
+      "encaisser",
+      "pos",
+      "register",
+      "open",
+      "checkout",
+    ],
   },
   {
     id: "appointments",
-    title: "Gérer les rendez-vous",
-    summary: "Consultez le calendrier et créez des RDV.",
-    steps: [
-      "Ouvrez Rendez-vous dans le menu.",
-      "Utilisez le calendrier pour voir les créneaux.",
-      "Cliquez sur un créneau libre pour créer un RDV.",
-    ],
     href: "/institut/rendez-vous",
-    keywords: ["rdv", "rendez-vous", "rendez vous", "calendrier", "creneau", "créneau", "planning"],
+    keywords: [
+      "rdv",
+      "rendez-vous",
+      "rendez vous",
+      "calendrier",
+      "creneau",
+      "créneau",
+      "planning",
+      "appointment",
+      "calendar",
+      "booking",
+    ],
   },
   {
     id: "team_time_off",
-    title: "Planifier une absence",
-    summary: "Déclarez congés ou indisponibilités depuis Équipe.",
-    steps: [
-      "Ouvrez Équipe dans le menu.",
-      "Section absences : ajoutez une période pour un praticien ou l'institut.",
-      "Vous pouvez aussi me demander en langage naturel (ex. « Léa en congé 5 jours »).",
-    ],
     href: "/institut/equipe",
-    keywords: ["absence", "conge", "congé", "vacance", "indisponible", "fermeture", "equipe", "équipe"],
+    keywords: [
+      "absence",
+      "conge",
+      "congé",
+      "vacance",
+      "indisponible",
+      "fermeture",
+      "equipe",
+      "équipe",
+      "time off",
+      "leave",
+      "vacation",
+    ],
   },
   {
     id: "courses",
-    title: "Créer une formation",
-    summary: "Publiez une formation depuis le module Académie.",
-    steps: [
-      "Ouvrez Académie → Formations.",
-      "Cliquez sur « + Nouvelle formation ».",
-      "Renseignez titre, description et tarif.",
-    ],
     href: "/academie/formations",
-    keywords: ["formation", "cours", "academie", "académie", "eleve", "élève", "cree", "créer"],
+    keywords: [
+      "formation",
+      "cours",
+      "academie",
+      "académie",
+      "eleve",
+      "élève",
+      "cree",
+      "créer",
+      "course",
+      "training",
+    ],
   },
   {
     id: "pos_checkout",
-    title: "Enregistrer une vente",
-    summary: "Encaissez depuis le terminal caisse.",
-    steps: [
-      "Vérifiez qu'une session caisse est ouverte.",
-      "Allez dans Caisse (terminal).",
-      "Ajoutez prestations/produits au panier et validez le paiement.",
-    ],
     href: "/institut/caisse",
-    keywords: ["vente", "encaisser", "checkout", "panier", "payer", "ticket"],
+    keywords: [
+      "vente",
+      "encaisser",
+      "checkout",
+      "panier",
+      "payer",
+      "ticket",
+      "sale",
+      "pay",
+      "cart",
+    ],
   },
-];
+] as const;
+
+type ArticleId = (typeof ARTICLE_META)[number]["id"];
+
+export async function loadHelpArticles(): Promise<HelpArticle[]> {
+  const t = await getTranslations("assistant.knowledge.articles");
+
+  return ARTICLE_META.map((meta) => ({
+    id: meta.id,
+    href: meta.href,
+    keywords: [...meta.keywords],
+    title: t(`${meta.id}.title`),
+    summary: t(`${meta.id}.summary`),
+    steps: [t(`${meta.id}.step1`), t(`${meta.id}.step2`), t(`${meta.id}.step3`)],
+  }));
+}
 
 function normalize(text: string): string {
   return text
@@ -101,12 +148,12 @@ function normalize(text: string): string {
     .toLowerCase();
 }
 
-export function findHelpArticle(message: string): HelpArticle | null {
+export function findHelpArticle(message: string, articles: HelpArticle[]): HelpArticle | null {
   const norm = normalize(message);
   let best: HelpArticle | null = null;
   let bestScore = 0;
 
-  for (const article of HELP_ARTICLES) {
+  for (const article of articles) {
     let score = 0;
     for (const kw of article.keywords) {
       if (norm.includes(normalize(kw))) score += 1;
@@ -125,18 +172,22 @@ export function formatHelpArticle(article: HelpArticle): string {
   return `${article.summary}\n\n${steps}`;
 }
 
-export function buildKnowledgeCatalog(): string {
-  return HELP_ARTICLES.map(
-    (a) => `- ${a.id}: ${a.title} — ${a.summary} (lien: ${a.href})`,
-  ).join("\n");
+export function buildKnowledgeCatalog(articles: HelpArticle[]): string {
+  return articles
+    .map((a) => `- ${a.id}: ${a.title} — ${a.summary} (lien: ${a.href})`)
+    .join("\n");
 }
 
 export function looksLikeHelpQuestion(message: string): boolean {
   const norm = normalize(message);
   return (
-    /^(comment|ou |où |aide|help|je ne sais|je sais pas|explique|procedure|procédure)/.test(
+    /^(comment|ou |où |aide|help|je ne sais|je sais pas|explique|procedure|procédure|how|what)/.test(
       norm,
-    ) || norm.includes("comment faire") || norm.includes("comment on")
+    ) ||
+    norm.includes("comment faire") ||
+    norm.includes("comment on") ||
+    norm.includes("how do") ||
+    norm.includes("how to")
   );
 }
 
@@ -145,13 +196,22 @@ export function looksLikeSupportIssue(message: string): boolean {
   return (
     norm.includes("bug") ||
     norm.includes("erreur") ||
+    norm.includes("error") ||
     norm.includes("marche pas") ||
     norm.includes("ne fonctionne") ||
+    norm.includes("not working") ||
     norm.includes("probleme") ||
     norm.includes("problème") ||
+    norm.includes("problem") ||
     norm.includes("bloque") ||
     norm.includes("bloqué") ||
+    norm.includes("blocked") ||
     norm.includes("support") ||
-    norm.includes("aide technique")
+    norm.includes("aide technique") ||
+    norm.includes("technical help")
   );
+}
+
+export function getArticleById(articles: HelpArticle[], id: ArticleId): HelpArticle | undefined {
+  return articles.find((a) => a.id === id);
 }

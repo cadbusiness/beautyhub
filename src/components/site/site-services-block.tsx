@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { formatPrice } from "@/lib/utils";
 import type { PublicService } from "@/lib/public/booking-load";
 import type { SiteServicesBlock, SiteTemplateId } from "@/lib/institut/site-pages";
@@ -16,6 +17,7 @@ export function SiteServicesBlockView({
   services: PublicService[];
   template: SiteTemplateId;
 }) {
+  const t = useTranslations("public.site.blocks");
   const [query, setQuery] = useState("");
   const showImages = block.showImages ?? true;
   const showSearch = block.showSearch ?? false;
@@ -81,7 +83,7 @@ export function SiteServicesBlockView({
           ))}
         </div>
         {filtered.length === 0 ? (
-          <p className="mt-6 text-sm text-slate-500">Aucune prestation trouvée.</p>
+          <p className="mt-6 text-sm text-slate-500">{t("noServices")}</p>
         ) : null}
       </div>
     </section>

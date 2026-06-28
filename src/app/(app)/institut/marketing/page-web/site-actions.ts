@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { getTenantPublicBaseUrl } from "@/lib/tenant/public-site";
@@ -110,7 +111,12 @@ async function uploadSiteMediaFile(
   file: File,
 ): Promise<{ error?: string; url?: string; kind?: SiteMediaKind }> {
   const validation = validateSiteMediaFile(file);
-  if (validation.error || !validation.kind) return { error: validation.error };
+  if (validation.errorKey || !validation.kind) {
+    const tMedia = await getTranslations("institut.marketing.website.media");
+    return {
+      error: validation.errorKey ? tMedia(validation.errorKey) : tMedia("unsupportedFormat"),
+    };
+  }
 
   const supabase = await createClient();
   const path = `${tenantId}/${folder}/${crypto.randomUUID()}.${extForSiteMedia(file.type)}`;
@@ -130,9 +136,10 @@ export async function uploadSiteBlockMedia(
   formData: FormData,
 ): Promise<{ error?: string; url?: string; kind?: SiteMediaKind }> {
   const session = await requireModule("institut");
+  const t = await getTranslations("institut.marketing.website.actions");
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
-    return { error: "Fichier requis." };
+    return { error: t("fileRequired") };
   }
   return uploadSiteMediaFile(session.tenant.id, "media", file);
 }
@@ -141,13 +148,14 @@ export async function uploadSiteGalleryImage(
   formData: FormData,
 ): Promise<{ error?: string; url?: string }> {
   const session = await requireModule("institut");
+  const t = await getTranslations("institut.marketing.website.actions");
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
-    return { error: "Fichier requis." };
+    return { error: t("fileRequired") };
   }
   const res = await uploadSiteMediaFile(session.tenant.id, "gallery", file);
   if (res.kind && res.kind !== "image") {
-    return { error: "Seules les images sont acceptées pour la galerie." };
+    return { error: t("galleryImagesOnly") };
   }
   return { error: res.error, url: res.url };
 }
@@ -156,13 +164,14 @@ export async function uploadSiteLogo(
   formData: FormData,
 ): Promise<{ error?: string; url?: string }> {
   const session = await requireModule("institut");
+  const t = await getTranslations("institut.marketing.website.actions");
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
-    return { error: "Fichier requis." };
+    return { error: t("fileRequired") };
   }
   const res = await uploadSiteMediaFile(session.tenant.id, "logo", file);
   if (res.kind && res.kind !== "image") {
-    return { error: "Seules les images sont acceptées pour le logo." };
+    return { error: t("logoImagesOnly") };
   }
   return { error: res.error, url: res.url };
 }
@@ -237,7 +246,8 @@ export async function saveSiteTheme(
 
   revalidatePath(ADMIN_PATH);
   revalidatePath(`${ADMIN_PATH}/theme`);
-  return { ok: true, message: "Identité visuelle enregistrée." };
+  const t = await getTranslations("institut.marketing.website.actions");
+  return { ok: true, message: t("brandingSaved") };
 }
 
 export async function applyPageLayout(
@@ -246,6 +256,7 @@ export async function applyPageLayout(
   resetContent: boolean,
 ): Promise<ActionResult> {
   const session = await requireModule("institut");
+  const t = await getTranslations("institut.marketing.website.actions");
   const supabase = await createClient();
 
   const { data: page } = await supabase
@@ -255,12 +266,12 @@ export async function applyPageLayout(
     .eq("tenant_id", session.tenant.id)
     .maybeSingle();
 
-  if (!page) return { error: "Page introuvable." };
+  if (!page) return { error: t("pageNotFound") };
 
   const pageType = page.page_type as SitePageType;
   const normalized = normalizeLayoutId(pageType, layoutId);
   const layout = getLayoutDef(pageType, normalized);
-  if (!layout) return { error: "Modèle invalide." };
+  if (!layout) return { error: t("layoutInvalid") };
 
   const update: { template_id: string; content?: Json } = { template_id: normalized };
   if (resetContent) {
@@ -305,6 +316,7 @@ export async function toggleSitePageNav(
   showInNav: boolean,
 ): Promise<ActionResult> {
   const session = await requireModule("institut");
+  const t = await getTranslations("institut.marketing.website.actions");
   const supabase = await createClient();
 
   const { data: page } = await supabase
@@ -314,8 +326,8 @@ export async function toggleSitePageNav(
     .eq("tenant_id", session.tenant.id)
     .maybeSingle();
 
-  if (!page) return { error: "Page introuvable." };
-  if (page.is_home) return { error: "L'accueil est toujours dans le menu." };
+  if (!page) return { error: t("pageNotFound") };
+  if (page.is_home) return { error: t("homeAlwaysInNav") };
 
   const { error } = await supabase
     .from("inst_site_pages")
@@ -342,9 +354,10 @@ export async function loadSitePageForBuilder(pageId: string): Promise<SitePageRo
 
 export async function createSitePage(pageType: SitePageType): Promise<ActionResult> {
   const session = await requireModule("institut");
+  const t = await getTranslations("institut.marketing.website.actions");
   const supabase = await createClient();
   const def = SITE_PAGE_TYPES.find((p) => p.type === pageType);
-  if (!def) return { error: "Type de page invalide." };
+  if (!def) return { error: t("pageTypeInvalid") };
 
   if (pageType === "home") {
     const { data: existing } = await supabase
@@ -353,7 +366,7 @@ export async function createSitePage(pageType: SitePageType): Promise<ActionResu
       .eq("tenant_id", session.tenant.id)
       .eq("page_type", "home")
       .maybeSingle();
-    if (existing) return { error: "Une page d'accueil existe déjà." };
+    if (existing) return { error: t("homeAlreadyExists") };
   }
 
   const layoutId = defaultLayoutId(pageType);
@@ -385,6 +398,7 @@ export async function saveSitePageBuilder(
   formData: FormData,
 ): Promise<ActionResult> {
   const session = await requireModule("institut");
+  const t = await getTranslations("institut.marketing.website.actions");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
   const title = String(formData.get("title") ?? "").trim();
@@ -394,7 +408,7 @@ export async function saveSitePageBuilder(
   const isPublished = formData.get("is_published") === "1";
   const pageStyleJson = String(formData.get("page_style_json") ?? "{}");
 
-  if (!id || !title) return { error: "Données invalides." };
+  if (!id || !title) return { error: t("invalidData") };
 
   let blocks: SiteBlock[];
   let pageStyle: SitePageStyle;
@@ -402,7 +416,7 @@ export async function saveSitePageBuilder(
     blocks = parseSiteBlocks(JSON.parse(blocksJson));
     pageStyle = parseSitePageStyle(JSON.parse(pageStyleJson));
   } catch {
-    return { error: "Contenu invalide." };
+    return { error: t("invalidContent") };
   }
 
   const { error } = await supabase
@@ -422,11 +436,12 @@ export async function saveSitePageBuilder(
   revalidatePath(ADMIN_PATH);
   revalidatePath(`${ADMIN_PATH}/${id}/builder`);
   revalidatePath(`${ADMIN_PATH}/${id}/preview`);
-  return { ok: true, message: "Page enregistrée." };
+  return { ok: true, message: t("pageSaved") };
 }
 
 export async function deleteSitePage(pageId: string): Promise<ActionResult> {
   const session = await requireModule("institut");
+  const t = await getTranslations("institut.marketing.website.actions");
   const supabase = await createClient();
 
   const { data: page } = await supabase
@@ -436,8 +451,8 @@ export async function deleteSitePage(pageId: string): Promise<ActionResult> {
     .eq("tenant_id", session.tenant.id)
     .maybeSingle();
 
-  if (!page) return { error: "Page introuvable." };
-  if (page.is_home) return { error: "La page d'accueil ne peut pas être supprimée." };
+  if (!page) return { error: t("pageNotFound") };
+  if (page.is_home) return { error: t("homeCannotDelete") };
 
   const { error } = await supabase
     .from("inst_site_pages")

@@ -19,6 +19,11 @@ import type {
 import { normalizeHoursBlock, normalizeServicesBlock } from "@/lib/institut/site-pages";
 import { SiteServicesBlockView } from "./site-services-block";
 
+export interface SiteBlockLabels {
+  noImages: string;
+  hoursByAppointment: string;
+}
+
 export interface FormattedOpeningDay {
   label: string;
   ranges: string;
@@ -167,7 +172,7 @@ function AboutBlock({ block, template }: { block: SiteAboutBlock; template: Site
   );
 }
 
-function GalleryBlock({ block }: { block: SiteGalleryBlock }) {
+function GalleryBlock({ block, labels }: { block: SiteGalleryBlock; labels: SiteBlockLabels }) {
   const cols =
     block.columns === 4
       ? "grid-cols-2 lg:grid-cols-4"
@@ -180,7 +185,7 @@ function GalleryBlock({ block }: { block: SiteGalleryBlock }) {
       <div className="mx-auto max-w-5xl">
         <h2 className="text-2xl font-semibold text-slate-900">{block.title}</h2>
         {block.images.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-500">Aucune image.</p>
+          <p className="mt-4 text-sm text-slate-500">{labels.noImages}</p>
         ) : (
           <div className={`mt-8 grid gap-3 ${cols}`}>
             {block.images.map((img) => (
@@ -202,9 +207,11 @@ function GalleryBlock({ block }: { block: SiteGalleryBlock }) {
 function HoursBlock({
   block,
   scheduleDays,
+  labels,
 }: {
   block: SiteHoursBlock;
   scheduleDays: FormattedOpeningDay[];
+  labels: SiteBlockLabels;
 }) {
   const normalized = normalizeHoursBlock(block);
 
@@ -222,7 +229,7 @@ function HoursBlock({
             ))}
           </dl>
         ) : (
-          <p className="mt-2 text-slate-600">{block.note || "Horaires sur rendez-vous."}</p>
+          <p className="mt-2 text-slate-600">{block.note || labels.hoursByAppointment}</p>
         )}
         {block.note && normalized.useSchedule ? (
           <p className="mt-4 text-sm text-slate-500">{block.note}</p>
@@ -380,6 +387,7 @@ export function SitePageRenderer({
   scheduleDays = [],
   accent = "#0f172a",
   compactHero = false,
+  blockLabels,
 }: {
   blocks: SiteBlock[];
   templateId: SiteTemplateId;
@@ -387,6 +395,7 @@ export function SitePageRenderer({
   scheduleDays?: FormattedOpeningDay[];
   accent?: string;
   compactHero?: boolean;
+  blockLabels: SiteBlockLabels;
 }) {
   return (
     <div>
@@ -424,9 +433,16 @@ export function SitePageRenderer({
               />
             );
           case "gallery":
-            return <GalleryBlock key={block.id} block={block} />;
+            return <GalleryBlock key={block.id} block={block} labels={blockLabels} />;
           case "hours":
-            return <HoursBlock key={block.id} block={block} scheduleDays={scheduleDays} />;
+            return (
+              <HoursBlock
+                key={block.id}
+                block={block}
+                scheduleDays={scheduleDays}
+                labels={blockLabels}
+              />
+            );
           case "contact":
             return <ContactBlock key={block.id} block={block} />;
           case "cta":

@@ -46,7 +46,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
           type="button"
           onClick={() => pick(code)}
           className={cn(
-            "flex h-8 min-w-[2.25rem] items-center justify-center rounded-md px-2 text-xs font-medium transition-colors",
+            "flex h-7 min-w-[1.75rem] items-center justify-center rounded-md px-1.5 text-[10px] font-medium transition-colors sm:h-8 sm:min-w-[2rem] sm:px-2 sm:text-xs",
             selected === code
               ? "bg-slate-900 text-white"
               : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",

@@ -471,6 +471,7 @@
       "timeOffStaffRequired": "Sélectionnez un membre du personnel.",
       "timeOffResourceRequired": "Sélectionnez une cabine.",
       "invalidCart": "Panier invalide.",
+      "extrasInvalid": "Extras invalides.",
       "emptyCart": "Panier vide.",
       "invalidAmount": "Montant invalide.",
       "saleAlreadyRecorded": "Vente déjà enregistrée.",
@@ -625,7 +626,7 @@
         },
         "program": {
           "title": "Paramètres",
-          "description": "",
+          "description": "Nom, libellé des points et activation du programme.",
           "name": "Nom du programme",
           "pointsLabel": "Libellé des points",
           "active": "Programme actif",
@@ -711,6 +712,16 @@
             "service": "Prestation offerte",
             "active": "Récompense active"
           }
+        },
+        "actions": {
+          "missingFields": "Champs requis manquants.",
+          "invalidRule": "Règle invalide.",
+          "shopifyUnavailable": "Shopify n'est pas encore disponible.",
+          "wooRequired": "Connectez WooCommerce pour utiliser cette source.",
+          "invalidReward": "Récompense invalide.",
+          "invalidPercent": "Pourcentage invalide.",
+          "invalidAmount": "Montant invalide.",
+          "serviceRequired": "Prestation requise."
         }
       },
       "website": {
@@ -964,6 +975,26 @@
             "widthMedium": "Moyenne",
             "widthSmall": "Petite"
           }
+        },
+        "actions": {
+          "fileRequired": "Fichier requis.",
+          "galleryImagesOnly": "Seules les images sont acceptées pour la galerie.",
+          "logoImagesOnly": "Seules les images sont acceptées pour le logo.",
+          "brandingSaved": "Identité visuelle enregistrée.",
+          "pageNotFound": "Page introuvable.",
+          "layoutInvalid": "Modèle invalide.",
+          "homeAlwaysInNav": "L'accueil est toujours dans le menu.",
+          "pageTypeInvalid": "Type de page invalide.",
+          "homeAlreadyExists": "Une page d'accueil existe déjà.",
+          "invalidData": "Données invalides.",
+          "invalidContent": "Contenu invalide.",
+          "pageSaved": "Page enregistrée.",
+          "homeCannotDelete": "La page d'accueil ne peut pas être supprimée."
+        },
+        "media": {
+          "unsupportedFormat": "Format non supporté (JPEG, PNG, WebP, GIF, MP4, WebM).",
+          "videoTooLarge": "Vidéo trop volumineuse (max 25 Mo).",
+          "imageTooLarge": "Image trop volumineuse (max 5 Mo)."
         }
       },
       "promos": {
@@ -1740,6 +1771,9 @@
     "support": {
       "title": "Support client",
       "description": "Demandes transmises par les instituts via l'assistant IA.",
+      "actions": {
+        "ticketMissing": "Ticket manquant."
+      },
       "filterAll": "Toutes",
       "empty": "Aucune demande pour le moment.",
       "footerCount": "{count} demande(s)",
@@ -1913,6 +1947,11 @@
         "home": "Accueil",
         "book": "Réserver",
         "account": "Mon compte"
+      },
+      "blocks": {
+        "noImages": "Aucune image.",
+        "noServices": "Aucune prestation trouvée.",
+        "hoursByAppointment": "Horaires sur rendez-vous."
       }
     },
     "booking": {
@@ -2158,6 +2197,96 @@
         "title": "Lister les clients",
         "limit": "Limite"
       }
+    },
+    "knowledge": {
+      "articles": {
+        "add_service": {
+          "title": "Ajouter une prestation",
+          "summary": "Créez une prestation depuis le menu Prestations.",
+          "step1": "Ouvrez Prestations dans le menu latéral.",
+          "step2": "Cliquez sur « + Nouvelle prestation ».",
+          "step3": "Renseignez le nom, la durée et le tarif, puis enregistrez."
+        },
+        "add_client": {
+          "title": "Ajouter un client",
+          "summary": "Enregistrez un client depuis la liste Clients.",
+          "step1": "Ouvrez Clients dans le menu.",
+          "step2": "Cliquez sur « + Nouveau client ».",
+          "step3": "Renseignez nom, email et téléphone."
+        },
+        "open_pos": {
+          "title": "Ouvrir la caisse",
+          "summary": "Une session caisse doit être ouverte avant d'encaisser.",
+          "step1": "Allez dans Caisse → Session.",
+          "step2": "Cliquez sur « Ouvrir la session ».",
+          "step3": "Indiquez le fond de caisse initial si besoin."
+        },
+        "appointments": {
+          "title": "Gérer les rendez-vous",
+          "summary": "Consultez le calendrier et créez des RDV.",
+          "step1": "Ouvrez Rendez-vous dans le menu.",
+          "step2": "Utilisez le calendrier pour voir les créneaux.",
+          "step3": "Cliquez sur un créneau libre pour créer un RDV."
+        },
+        "team_time_off": {
+          "title": "Planifier une absence",
+          "summary": "Déclarez congés ou indisponibilités depuis Équipe.",
+          "step1": "Ouvrez Équipe dans le menu.",
+          "step2": "Section absences : ajoutez une période pour un praticien ou l'institut.",
+          "step3": "Vous pouvez aussi me demander en langage naturel (ex. « Léa en congé 5 jours »)."
+        },
+        "courses": {
+          "title": "Créer une formation",
+          "summary": "Publiez une formation depuis le module Académie.",
+          "step1": "Ouvrez Académie → Formations.",
+          "step2": "Cliquez sur « + Nouvelle formation ».",
+          "step3": "Renseignez titre, description et tarif."
+        },
+        "pos_checkout": {
+          "title": "Enregistrer une vente",
+          "summary": "Encaissez depuis le terminal caisse.",
+          "step1": "Vérifiez qu'une session caisse est ouverte.",
+          "step2": "Allez dans Caisse (terminal).",
+          "step3": "Ajoutez prestations/produits au panier et validez le paiement."
+        }
+      }
+    },
+    "router": {
+      "emptyMessage": "Que souhaitez-vous faire ?",
+      "unknownWithKey": "Je n'ai pas reconnu cette demande. Reformulez, choisissez une action rapide, ou décrivez un problème pour contacter le support.",
+      "unknownNoKey": "Je n'ai pas reconnu cette demande. Configurez la clé OpenAI dans Admin → Réglages, ou choisissez une action rapide.",
+      "actionNotAllowed": "Action non autorisée.",
+      "posClosedHelp": "La caisse semble fermée — c'est souvent la cause du problème.\n\n1. Allez dans Caisse → Session.\n2. Ouvrez une session avec le fond de caisse initial.\n3. Réessayez votre opération.",
+      "openPosSessionLink": "Ouvrir la session caisse",
+      "supportBugSummary": "Ce problème ressemble à un dysfonctionnement. Je peux transmettre votre demande au support BeautyHub.",
+      "supportConfigSummary": "Je n'ai pas trouvé la cause exacte. Je peux transmettre votre demande au support pour qu'on vous aide.",
+      "listSales": "Lister les ventes caisse",
+      "listGiftCards": "Lister les bons cadeaux",
+      "listCreditNotes": "Lister les avoirs",
+      "listProducts": "Lister les produits caisse",
+      "listClients": "Lister les clients",
+      "listAppointments": "Lister les rendez-vous",
+      "listStaff": "Lister le personnel",
+      "listResources": "Lister les cabines",
+      "listServices": "Lister les prestations",
+      "listSchedules": "Lister les grilles horaires",
+      "listTimeOff": "Lister les absences",
+      "generateXReport": "Générer un rapport X",
+      "closeSessionClarify": "Indiquez le montant espèces compté en caisse pour la clôture (ex. « clôture caisse avec 250 € »).",
+      "giftCardClarify": "Quel montant pour le bon cadeau ? (ex. « bon cadeau 50 € »)",
+      "posSessionOpenSummary": "Résumé session caisse ouverte",
+      "posSessionStatusSummary": "État de la caisse",
+      "openSessionSummary": "Ouvrir la session caisse",
+      "openSessionWithFloat": "Ouvrir la session caisse avec {amount} € de fond",
+      "closeSessionSummary": "Clôturer la session caisse ({amount} € comptés)",
+      "giftCardSummary": "Émettre un bon cadeau de {amount} €",
+      "timeOffStaffSummary": "Congés pour {name} du {start} au {end}",
+      "timeOffTenantSummary": "Absence institut du {start} au {end}",
+      "vacationReason": "Vacances"
+    },
+    "runtime": {
+      "unknownAction": "Action inconnue ou non autorisée : {action}",
+      "invalidParams": "Paramètres invalides."
     }
   },
   "pos": {

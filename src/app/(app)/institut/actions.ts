@@ -121,7 +121,8 @@ export async function createService(
         if (extraErr) return { error: extraErr };
       }
     } catch {
-      return { error: "Extras invalides." };
+      const t = await getTranslations("institut.actions");
+      return { error: t("extrasInvalid") };
     }
   }
 

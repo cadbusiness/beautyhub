@@ -72,6 +72,11 @@ export async function PublicSiteView({
 }) {
   const supabase = await createClient();
   const tNav = await getTranslations("public.site.nav");
+  const tBlocks = await getTranslations("public.site.blocks");
+  const blockLabels = {
+    noImages: tBlocks("noImages"),
+    hoursByAppointment: tBlocks("hoursByAppointment"),
+  };
   const [shell, scheduleDays] = await Promise.all([
     loadPublicSiteShellData(supabase, tenant, {
       home: tNav("home"),
@@ -93,6 +98,7 @@ export async function PublicSiteView({
           scheduleDays={scheduleDays}
           accent={shell.primaryColor}
           compactHero={compactHero}
+          blockLabels={blockLabels}
         />
         {children}
       </SitePageStyleWrapper>

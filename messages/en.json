@@ -1,0 +1,2701 @@
+{
+  "academie": {
+    "courses": {
+      "columns": {
+        "actions": "Actions",
+        "price": "Price",
+        "status": "Status",
+        "title": "Title"
+      },
+      "delete": "DELETE",
+      "dialogTitle": "New training",
+      "draft": "Draft",
+      "empty": "No training at the moment.",
+      "footer": "{count, plural, one {# formation} other {# formations}}",
+      "form": {
+        "descriptionPlaceholder": "Optional",
+        "priceEur": "Price (EUR)",
+        "publishImmediately": "Publish immediately",
+        "submit": "Create the training",
+        "submitting": "Creation…",
+        "title": "Title",
+        "titlePlaceholder": "My training"
+      },
+      "new": "New training",
+      "noResults": "No results for this search.",
+      "published": "Published",
+      "searchPlaceholder": "Search by title…"
+    },
+    "enrollments": {
+      "title": "Registrations"
+    },
+    "overview": {
+      "courses": "Training",
+      "enrolledStudents": "Registered students",
+      "published": "Published"
+    },
+    "students": {
+      "columns": {
+        "course": "Training",
+        "status": "Status",
+        "student": "Pupil"
+      },
+      "dialogTitle": "New registration",
+      "empty": "No registration at the moment.",
+      "footer": "{count, plural, one {# inscription} other {# inscriptions}}",
+      "form": {
+        "chooseCourse": "Choose…",
+        "course": "Training",
+        "emailPlaceholder": "marie@email.com",
+        "linkClient": "Link to a customer (optional)",
+        "noCourses": "Create a course first before enrolling a student.",
+        "studentName": "Student Name",
+        "studentNamePlaceholder": "Marie Durand",
+        "submit": "Register the student",
+        "submitting": "Registration…"
+      },
+      "newEnrollment": "New registration",
+      "noResults": "No results for this search.",
+      "searchPlaceholder": "Student search, email, training…",
+      "status": {
+        "cancelled": "Canceled",
+        "completed": "Finished",
+        "enrolled": "Registered"
+      }
+    }
+  },
+  "account": {
+    "actions": {
+      "notAuthenticated": "Session expired. ",
+      "passwordMismatch": "Passwords do not match.",
+      "passwordSaved": "Password updated.",
+      "passwordTooShort": "The password must contain at least 8 characters.",
+      "profileSaved": "Saved profile."
+    },
+    "nav": {
+      "ariaLabel": "Account Sections",
+      "institut": "Institute",
+      "pos": "Box",
+      "profile": "Profile",
+      "security": "Security",
+      "stripe": "StripeConnect",
+      "woocommerce": "WooCommerce"
+    },
+    "password": {
+      "confirmPassword": "Confirm password",
+      "newPassword": "New Password",
+      "sectionDescription": "Choose a password of at least 8 characters.",
+      "sectionTitle": "Password",
+      "submit": "Update password",
+      "submitting": "Update…"
+    },
+    "profile": {
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Marie Durand",
+      "phonePlaceholder": "06 12 34 56 78",
+      "sectionDescription": "Your personal information visible in the team.",
+      "sectionTitle": "Profile"
+    },
+    "subtitle": "Institute profile, security and settings.",
+    "title": "My account"
+  },
+  "admin": {
+    "brands": {
+      "columns": {
+        "brand": "Brand",
+        "slug": "Identifier",
+        "tenants": "Institutes",
+        "type": "Kind"
+      },
+      "created": "Brand created.",
+      "dialogTitle": "New brand",
+      "edit": "To modify",
+      "empty": "No marks.",
+      "errors": {
+        "notFound": "Brand not found.",
+        "platformBrand": "The platform brand cannot be changed.",
+        "required": "Name and ID required.",
+        "slugTaken": "Identifier “{slug}” already taken."
+      },
+      "footerCount": "{count} brand(s)",
+      "form": {
+        "create": "Create",
+        "name": "Name",
+        "slug": "Identifier",
+        "submit": "Save",
+        "submitting": "Registration…"
+      },
+      "new": "New brand",
+      "platform": "Platform",
+      "reseller": "Dealer",
+      "searchPlaceholder": "Brand search…",
+      "updated": "Updated branding."
+    },
+    "dashboard": {
+      "description": "Overview of the platform.",
+      "managePlans": "Manage formulas",
+      "manageSettings": "Platform settings",
+      "manageSubscriptions": "View subscriptions",
+      "manageTeam": "Platform team",
+      "manageTenants": "Manage institutes",
+      "stats": {
+        "activeSubscriptions": "Active subscriptions",
+        "brands": "Brands",
+        "catalogModules": "Modules in the catalog",
+        "openTickets": "Open tickets",
+        "plans": "Formulas",
+        "tenants": "Institutes"
+      },
+      "title": "Dashboard"
+    },
+    "layout": {
+      "backToApp": "Back to app",
+      "subtitle": "Platform administration"
+    },
+    "modules": {
+      "active": "Active",
+      "columns": {
+        "category": "Category",
+        "module": "Module",
+        "status": "Status",
+        "tenants": "Institutes",
+        "version": "Version"
+      },
+      "disable": "Disable",
+      "empty": "No module in the catalog.",
+      "enable": "Enable",
+      "errors": {
+        "required": "Identifier and name required."
+      },
+      "footerCount": "{count} module(s)",
+      "form": {
+        "category": "Category",
+        "description": "Description",
+        "isActive": "Active module in the catalog",
+        "name": "Name",
+        "submit": "Save",
+        "submitting": "Registration…",
+        "version": "Version"
+      },
+      "inactive": "Inactive",
+      "searchPlaceholder": "Search module…",
+      "updated": "Updated module."
+    },
+    "plans": {
+      "active": "Active",
+      "back": "← Formulas",
+      "columns": {
+        "modules": "Modules",
+        "plan": "Formula",
+        "price": "Price",
+        "status": "Status"
+      },
+      "dialogTitle": "New formula",
+      "empty": "No formula.",
+      "footerCount": "{count} formula(s)",
+      "form": {
+        "createSubmit": "Create the formula",
+        "editSubmit": "Save",
+        "featureCalendar": "Appointment calendar",
+        "featureClientBooking": "Online customer reservation",
+        "featureSms": "SMS notifications",
+        "includedModules": "Modules included",
+        "interval": "Periodicity",
+        "isActive": "Active formula (available to institutes)",
+        "limitAppointments": "Appointment / month",
+        "limitClients": "Customer files",
+        "limitStaff": "Team Members",
+        "limitStudents": "Students (academy)",
+        "monthly": "Monthly",
+        "namePlaceholder": "Pro",
+        "priceEur": "Price (EUR)",
+        "pricePlaceholder": "59",
+        "quotas": "Quotas",
+        "quotasHint": "(empty = unlimited)",
+        "rdvFeatures": "Meeting features",
+        "submitting": "Registration…",
+        "unlimitedPlaceholder": "∞",
+        "yearly": "Annual"
+      },
+      "inactive": "Inactive",
+      "new": "New formula",
+      "noResults": "No results.",
+      "searchPlaceholder": "Search formula…"
+    },
+    "settings": {
+      "aiDescription": "The OpenAI key is base encrypted. ",
+      "aiEnabled": "AI Assistant Enabled",
+      "aiModel": "OpenAI model",
+      "aiTitle": "AI Assistant",
+      "clearOpenAiKey": "Delete saved key",
+      "description": "Setting up AI assistant and customer support.",
+      "openAiKey": "OpenAI API Key",
+      "openAiKeyConfigured": "A key is already configured.",
+      "openAiKeyHint": "Required for advanced natural language and intelligent diagnosis.",
+      "openAiKeyPlaceholder": "sk-…",
+      "openAiKeyPlaceholderSet": "Leave blank to keep the current key",
+      "save": "Save",
+      "saved": "Saved settings.",
+      "saving": "Registration…",
+      "supportDescription": "Requests escalated from the wizard appear in Support.",
+      "supportNotifyEmail": "Email notification (optional)",
+      "supportNotifyEmailPlaceholder": "support@votredomaine.fr",
+      "supportTitle": "Customer support",
+      "title": "Platform settings"
+    },
+    "subscriptions": {
+      "applyPlan": "Apply",
+      "applyStatus": "Status",
+      "columns": {
+        "actions": "Actions",
+        "periodEnd": "End of period",
+        "plan": "Formula",
+        "status": "Status",
+        "tenant": "Institute"
+      },
+      "empty": "No subscription.",
+      "filterAll": "All statuses",
+      "footerCount": "{count} subscription(s)",
+      "noPlan": "- None -",
+      "status": {
+        "active": "Active",
+        "canceled": "Terminated",
+        "past_due": "Unpaid",
+        "trialing": "Essay"
+      }
+    },
+    "support": {
+      "actions": {
+        "ticketMissing": "Missing ticket."
+      },
+      "category": {
+        "bug": "Bug",
+        "config": "Configuration",
+        "feature_request": "Evolution",
+        "help": "Help"
+      },
+      "columns": {
+        "date": "Date",
+        "status": "Status",
+        "subject": "Subject",
+        "tenant": "Institute"
+      },
+      "description": "Requests sent by institutes via the AI ​​assistant.",
+      "detail": {
+        "conversation": "Assistant history",
+        "message": "Message",
+        "notes": "Internal notes",
+        "page": "Page",
+        "save": "To update",
+        "saving": "Update…",
+        "status": "Status"
+      },
+      "empty": "No requests at the moment.",
+      "filterAll": "All",
+      "footerCount": "{count} request(s)",
+      "status": {
+        "closed": "Closed",
+        "in_progress": "In progress",
+        "open": "Open",
+        "resolved": "Solved"
+      },
+      "title": "Customer support"
+    },
+    "team": {
+      "columns": {
+        "email": "E-mail",
+        "since": "From"
+      },
+      "dialogTitle": "Invite a super admin",
+      "empty": "No super admins yet.",
+      "errors": {
+        "createUser": "Unable to create user.",
+        "required": "Email and password required.",
+        "selfRevoke": "You cannot revoke your own access."
+      },
+      "footerCount": "{count} member(s)",
+      "form": {
+        "email": "E-mail",
+        "password": "Password",
+        "submit": "Invite",
+        "submitting": "Invitation…"
+      },
+      "invite": "Invite a super admin",
+      "invited": "Great guest admin.",
+      "revoke": "Revoke",
+      "you": "YOU"
+    },
+    "tenants": {
+      "brandFilterHint": "Active brand filter.",
+      "clearBrandFilter": "Show all",
+      "columns": {
+        "activeModules": "Active modules",
+        "brand": "Brand",
+        "institut": "Institute",
+        "plan": "Formula",
+        "slug": "Identifier",
+        "subscription": "Subscription"
+      },
+      "detail": {
+        "accessHint": "Institute access: {slug}.localhost:3000",
+        "activePlan": "Active formula",
+        "applyPlan": "Apply",
+        "applyPlanHint": "Applying a plan automatically activates its included modules.",
+        "back": "← Institutes",
+        "brandLabel": "Brand",
+        "disable": "Disable",
+        "enable": "Enable",
+        "featureActive": "active",
+        "featureInactive": "disabled",
+        "info": "Information",
+        "modules": "Modules",
+        "noPlan": "- None -",
+        "subscription": "Subscription",
+        "team": "Team",
+        "teamCount": "{count} member(s): {roles}",
+        "teamNone": "none",
+        "usage": "Appointment use",
+        "usageLimit": "/ {limit} (formula {plan})",
+        "usageThisMonth": "This month: {count}",
+        "usageUnlimited": "(unlimited)"
+      },
+      "dialogTitle": "New institute",
+      "empty": "No institute at the moment.",
+      "footerCount": "{count} institute(s)",
+      "form": {
+        "name": "Institute name",
+        "namePlaceholder": "Lyon Beauty Institute",
+        "noPlan": "— None at the moment —",
+        "ownerEmailPlaceholder": "proprio@institut.fr",
+        "ownerLegend": "Owner account (optional)",
+        "ownerPasswordPlaceholder": "min. ",
+        "plan": "Formula",
+        "slug": "Identifier (subdomain)",
+        "slugPlaceholder": "beaute-lyon",
+        "submit": "Create the institute",
+        "submitting": "Creation…"
+      },
+      "new": "New institute",
+      "noResults": "No results.",
+      "searchPlaceholder": "Institute search, identifier…",
+      "subscriptionStatus": {
+        "active": "Active",
+        "canceled": "Terminated",
+        "past_due": "Unpaid",
+        "trialing": "Essay"
+      }
+    }
+  },
+  "appointments": {
+    "bookingPublic": {
+      "backToCalendar": "Back to calendar",
+      "columns": {
+        "actions": "Actions",
+        "name": "Name",
+        "slug": "URL",
+        "status": "Status"
+      },
+      "copy": "Copy",
+      "createTitle": "New route",
+      "defaultBadge": "By default",
+      "defaultSlug": "/to book",
+      "draft": "Draft",
+      "editTitle": "Edit route",
+      "embedCode": "iframe code",
+      "embedLink": "Embed URL",
+      "empty": "No route configured.",
+      "footer": "{count, plural, one {# parcours} other {# parcours}}",
+      "form": {
+        "allowedServices": "Authorized services",
+        "allowedServicesHint": "Leave blank for all services in the public catalog.",
+        "defaultSlugHint": "The default route is accessible on /reserver",
+        "name": "Course name",
+        "processTitle": "Customer journey",
+        "published": "Published (viewable online)",
+        "requirePhone": "Telephone required",
+        "requireStaff": "Mandatory practitioner",
+        "setDefault": "Set as default route",
+        "showExtrasStep": "Supplements/extras stage",
+        "showStaffPicker": "Propose the choice of practitioner",
+        "slug": "URL segment",
+        "slugHint": "Accessible at /reserver/{slug}",
+        "slugPlaceholder": "ex. "
+      },
+      "intro": "Configure one or more online booking journeys: form rules, direct links and embed code for your site.",
+      "newFlow": "New route",
+      "openPreview": "Open page",
+      "publicLink": "Public link",
+      "published": "Published",
+      "setDefault": "Set as default",
+      "share": "Link & embed",
+      "shareTitle": "Share — {name}",
+      "title": "Public reservation"
+    },
+    "calendar": {
+      "allServices": "All services",
+      "allStaff": "The whole team",
+      "columnMode": {
+        "resource": "Cabins",
+        "staff": "Practitioners"
+      },
+      "dialogTitle": "New appointment",
+      "editTitle": "Edit appointment",
+      "emptyResources": "Adds cabins in Team to display the calendar.",
+      "emptyStaff": "Adds staff to Team to view the calendar.",
+      "loadError": "Unable to load calendar.",
+      "monthAppointments": "{count, plural, one {# RDV} other {# RDV}}",
+      "newAppointment": "New appointment",
+      "publicPage": "Reservation settings",
+      "retry": "Try again",
+      "slotClickHint": "Click to create an appointment",
+      "today": "Today",
+      "views": {
+        "day": "Day",
+        "month": "Month",
+        "week": "Week"
+      },
+      "weekOf": "Week of {date}",
+      "weekdaysShort": {
+        "fri": "Fri",
+        "mon": "Mon",
+        "sat": "Sat",
+        "sun": "Sun",
+        "thu": "Game",
+        "tue": "Mar",
+        "wed": "Sea"
+      }
+    },
+    "form": {
+      "addService": "New service",
+      "anyStaff": "— Indifferent —",
+      "chooseService": "Choose a service",
+      "client": "Customer",
+      "create": "Create the appointment",
+      "endsAt": "End date and time",
+      "endsAtExtrasHint": "Leave blank to automatically recalculate based on extras.",
+      "extras": "Options/extras",
+      "noClient": "— Without customers —",
+      "noResource": "- None -",
+      "noServicesHint": "No services available — create one to schedule an appointment.",
+      "notes": "Notes",
+      "resource": "Cabin",
+      "scheduleWarningConfirm": "Confirm despite the schedule being out of schedule",
+      "service": "Benefit",
+      "staff": "Employee)",
+      "startsAt": "Start date and time",
+      "status": "Status"
+    },
+    "list": {
+      "columns": {
+        "actions": "Actions",
+        "client": "Customer",
+        "date": "Date",
+        "service": "Benefit",
+        "staff": "Practitioner",
+        "status": "Status"
+      },
+      "confirmStatus": "Okay",
+      "dialogTitle": "New appointment",
+      "empty": "No appointment.",
+      "new": "New appointment",
+      "noResults": "No results for this search.",
+      "searchPlaceholder": "Looking for service, client, practitioner…"
+    },
+    "status": {
+      "booked": "Reserve",
+      "cancelled": "Canceled",
+      "completed": "Finished",
+      "confirmed": "Confirmed",
+      "no_show": "Absent"
+    },
+    "tabs": {
+      "bookingPublic": "Public reservation",
+      "calendar": "Calendar",
+      "list": "List"
+    }
+  },
+  "assistant": {
+    "knowledge": {
+      "articles": {
+        "add_client": {
+          "step1": "Open Clients from the menu.",
+          "step2": "Click on “+ New customer”.",
+          "step3": "Enter name, email and telephone number.",
+          "summary": "Register a customer from the Customers list.",
+          "title": "Add a customer"
+        },
+        "add_service": {
+          "step1": "Open Services in the side menu.",
+          "step2": "Click on “+ New service”.",
+          "step3": "Enter the name, duration and price, then save.",
+          "summary": "Create a service from the Services menu.",
+          "title": "Add a service"
+        },
+        "appointments": {
+          "step1": "Open Appointments from the menu.",
+          "step2": "Use the calendar to see the slots.",
+          "step3": "Click on a free slot to create an appointment.",
+          "summary": "View the calendar and create appointments.",
+          "title": "Manage appointments"
+        },
+        "courses": {
+          "step1": "Open Academy → Trainings.",
+          "step2": "Click on “+ New training”.",
+          "step3": "Enter title, description and price.",
+          "summary": "Publish training from the Academy module.",
+          "title": "Create training"
+        },
+        "open_pos": {
+          "step1": "Go to Checkout → Session.",
+          "step2": "Click “Login”.",
+          "step3": "Indicate the initial cash balance if necessary.",
+          "summary": "A cash register session must be opened before cashing out.",
+          "title": "Open checkout"
+        },
+        "pos_checkout": {
+          "step1": "Verify that a checkout session is open.",
+          "step2": "Go to Cashier (terminal).",
+          "step3": "Add services/products to the basket and validate the payment.",
+          "summary": "Cash out from the cash terminal.",
+          "title": "Save a sale"
+        },
+        "team_time_off": {
+          "step1": "Open Team from the menu.",
+          "step2": "Absences section: add a period for a practitioner or the institute.",
+          "step3": "You can also ask me in natural language (e.g. “Léa on leave for 5 days”).",
+          "summary": "Declare leave or unavailability from Team.",
+          "title": "Plan an absence"
+        }
+      }
+    },
+    "page": {
+      "action": "Action",
+      "availableActions": "Actions available",
+      "conversation": "Conversation",
+      "createClient": {
+        "emailPlaceholder": "marie@email.com",
+        "fullName": "Full name",
+        "fullNamePlaceholder": "Marie Durand",
+        "phonePlaceholder": "06 12 34 56 78",
+        "title": "Create a customer"
+      },
+      "invalidJson": "Invalid JSON.",
+      "listClients": {
+        "limit": "Limit",
+        "title": "List customers"
+      },
+      "noActions": "No AI action.",
+      "paramsJson": "Parameters (JSON)",
+      "systemHint": "Describe your request in natural language or choose an action below."
+    },
+    "panel": {
+      "actions": {
+        "assignResourceSchedule": "Assign schedules to a cabin",
+        "assignStaffSchedule": "Assign schedules to staff",
+        "cancelAppointment": "Cancel an appointment",
+        "createAppointment": "Create an appointment",
+        "createClient": "Create a customer",
+        "createCourse": "New training",
+        "createSchedule": "Create a schedule",
+        "createTimeOff": "Plan an absence",
+        "deleteTimeOff": "Delete an absence",
+        "listAppointments": "List appointments",
+        "listClients": "List customers",
+        "listCourses": "See the training",
+        "listResources": "List cabins",
+        "listSchedules": "List timetables",
+        "listServices": "List the services",
+        "listStaff": "List staff",
+        "listTimeOff": "List absences",
+        "posAddMovement": "Cash movement",
+        "posCheckout": "Save a sale",
+        "posCloseSession": "Close the crate (Z)",
+        "posCreateCreditNote": "Create a credit",
+        "posCreateProduct": "Create a product",
+        "posGenerateXReport": "X report",
+        "posGetSettings": "Cash register settings",
+        "posIssueGiftCard": "Issue a gift voucher",
+        "posListCreditNotes": "Active assets",
+        "posListGiftCards": "Active gift vouchers",
+        "posListProducts": "Crate products",
+        "posListSales": "Recent sales",
+        "posOpenSession": "Open checkout",
+        "posPayBalance": "Collect a balance",
+        "posSessionStatus": "Checkout session status",
+        "updateScheduleBlocks": "Edit time slots"
+      },
+      "browseAllActions": "All actions",
+      "closeChat": "Close chat",
+      "closeOverlay": "Close the wizard",
+      "confirmFallback": "This action requires your confirmation.",
+      "confirmNo": "Cancel",
+      "confirmPrompt": "Confirm this action?",
+      "confirmYes": "Confirm",
+      "confirming": "Execution: {summary}",
+      "fabLabel": "Assistant",
+      "greeting": "Good morning ! ",
+      "messagePlaceholder": "Your message…",
+      "modules": {
+        "academie": "Academy",
+        "institut": "Institute"
+      },
+      "noActionResults": "No actions found.",
+      "notRecognized": "I did not recognize this request. ",
+      "open": "Open AI Assistant",
+      "quickActions": "Quick Actions",
+      "searchActions": "Search for an action…",
+      "send": "Send",
+      "sendPending": "…",
+      "subtitle": "Management of the institute",
+      "support": {
+        "cancel": "No thanks",
+        "confirm": "Send to support",
+        "prompt": "Would you like to send this request to BeautyHub Support?",
+        "submitError": "Unable to send request at this time.",
+        "submitted": "Your request has been forwarded to support. "
+      },
+      "thinking": "Reflection…",
+      "title": "AI Assistant"
+    },
+    "router": {
+      "actionNotAllowed": "Unauthorized action.",
+      "closeSessionClarify": "Indicate the cash amount counted in cash for closing (e.g. “cash closing with €250”).",
+      "closeSessionSummary": "Close the checkout session ({amount} € counted)",
+      "emptyMessage": "What do you want to do?",
+      "generateXReport": "Generate X report",
+      "giftCardClarify": "How much is the gift voucher? ",
+      "giftCardSummary": "Issue a gift voucher of €{amount}",
+      "listAppointments": "List appointments",
+      "listClients": "List customers",
+      "listCreditNotes": "List assets",
+      "listGiftCards": "List gift vouchers",
+      "listProducts": "List checkout products",
+      "listResources": "List cabins",
+      "listSales": "List cash sales",
+      "listSchedules": "List timetables",
+      "listServices": "List the services",
+      "listStaff": "List staff",
+      "listTimeOff": "List absences",
+      "openPosSessionLink": "Open checkout session",
+      "openSessionSummary": "Open checkout session",
+      "openSessionWithFloat": "Open checkout session with €{amount} background",
+      "posClosedHelp": "The register appears closed — this is often the cause of the problem.\n\n",
+      "posSessionOpenSummary": "Open checkout session summary",
+      "posSessionStatusSummary": "Cash register status",
+      "supportBugSummary": "This problem looks like a malfunction. ",
+      "supportConfigSummary": "I haven't found the exact cause. ",
+      "timeOffStaffSummary": "Leave for {name} from {start} to {end}",
+      "timeOffTenantSummary": "Absence from institute from {start} to {end}",
+      "unknownNoKey": "I did not recognize this request. ",
+      "unknownWithKey": "I did not recognize this request. ",
+      "vacationReason": "Vacation"
+    },
+    "runtime": {
+      "invalidParams": "Invalid parameters.",
+      "unknownAction": "Unknown or unauthorized action: {action}"
+    }
+  },
+  "auth": {
+    "backToHome": "← BeautyHub",
+    "email": "E-mail",
+    "password": "Password",
+    "setupRequired": "Database not connected on this deployment. ",
+    "submit": "Log in",
+    "submitting": "Connection…",
+    "subtitle": "Back office institute & platform.",
+    "supabaseNotConfigured": "Service unavailable: Supabase not configured on this deployment.",
+    "testAccounts": {
+      "roles": {
+        "brandOwner": "Owner brand",
+        "demoCoach": "Demo academy coach",
+        "demoOwner": "Owner demo institute",
+        "demoStaff": "Staff institute demo",
+        "platformAdmin": "Super platform admin"
+      },
+      "sharedPassword": "Common password:",
+      "title": "Test accounts"
+    },
+    "title": "Team Connection"
+  },
+  "common": {
+    "actions": "Actions",
+    "active": "Active",
+    "add": "Add",
+    "adding": "Addition…",
+    "all": "All",
+    "apply": "Apply",
+    "appointment": "Appointment",
+    "appointmentShort": "Appointment",
+    "back": "Back",
+    "cabin": "Cabin",
+    "cancel": "Cancel",
+    "card": "Map",
+    "cash": "Species",
+    "choose": "Choose…",
+    "client": "Customer",
+    "close": "Close",
+    "color": "Color",
+    "confirm": "Confirm",
+    "connect": "Connect",
+    "connected": "Connected",
+    "contactAdmin": "Contact your administrator to activate the institute or academy modules.",
+    "continue": "Continue",
+    "countOfTotal": "{count} on {total}",
+    "create": "Create",
+    "creating": "Creation…",
+    "dash": "—",
+    "date": "Date",
+    "delete": "DELETE",
+    "description": "Description",
+    "disconnect": "Disconnect",
+    "draft": "Draft",
+    "duration": "Duration",
+    "edit": "To modify",
+    "email": "E-mail",
+    "execute": "Execute",
+    "executing": "Execution…",
+    "extras": "Extras",
+    "hidden": "Masked",
+    "history": "Historical",
+    "inactive": "Inactive",
+    "internal": "Internal",
+    "interval": "Periodicity",
+    "loading": "Loading…",
+    "loadingError": "Loading error",
+    "modules": "Modules",
+    "monthly": "Monthly",
+    "name": "Name",
+    "no": "No",
+    "noClient": "Without customers",
+    "none": "None",
+    "notConnected": "Not connected",
+    "note": "Note",
+    "notes": "Notes",
+    "ok": "Okay",
+    "optional": "Optional",
+    "overview": "Overview",
+    "pagination": {
+      "next": "Next.",
+      "pageOf": "{page} / {totalPages}",
+      "prev": "Prev.",
+      "showing": "{from}–{to} on {total}"
+    },
+    "password": "Password",
+    "pay": "Pay",
+    "perMonth": "month",
+    "perYear": "year",
+    "phone": "Phone",
+    "plan": "Formula",
+    "practitioner": "Practitioner",
+    "prepare": "Preparation…",
+    "price": "Price",
+    "products": "Products",
+    "published": "Published",
+    "refresh": "Refresh",
+    "save": "Save",
+    "saved": "Registered",
+    "saving": "Registration…",
+    "search": "To research",
+    "searchArticles": "Search for an article…",
+    "sections": "Sections",
+    "send": "Send",
+    "service": "Benefit",
+    "settings": "Settings",
+    "sku": "SKUs",
+    "slug": "Identifier",
+    "staff": "Employee)",
+    "status": "Status",
+    "step": "Step {n}",
+    "stock": "Stock",
+    "stripe": "stripe",
+    "success": "Success",
+    "team": "Team",
+    "terminal": "Terminal",
+    "testAndSave": "Testing and recording…",
+    "title": "Title",
+    "total": "Total",
+    "unlimited": "Unlimited",
+    "visible": "Visible",
+    "woo": "Woo",
+    "woocommerce": "WooCommerce",
+    "yearly": "Annual",
+    "yes": "Yes"
+  },
+  "dashboard": {
+    "analytics": {
+      "appointmentMix": "Distribution of appointments",
+      "appointments": "Appointment",
+      "appointmentsChart": "Appointments",
+      "cancellationRate": "{rate} % of cancellations",
+      "description": "Your business at a glance — today's numbers and trends.",
+      "emptyAppointments": "No appointments during this period.",
+      "emptyChart": "No data yet for this period.",
+      "healthHint": "Today's figures for your institute.",
+      "healthScore": "Activity index",
+      "healthTitle": "Today",
+      "mood": {
+        "good": "Good dynamics",
+        "great": "Very good day",
+        "low": "Calm day",
+        "noActivity": "No activity yet",
+        "ok": "OK day"
+      },
+      "newClients": "New customers",
+      "noComparison": "No comparison",
+      "noShowCount": "{count, plural, =0 {Aucune absence} one {# absence} other {# absences}}",
+      "periodHint": {
+        "month": "The last 30 days.",
+        "today": "Hour-by-hour detail of your day.",
+        "week": "The last 7 days.",
+        "year": "The last 12 months."
+      },
+      "periodOverview": "View of the period",
+      "periods": {
+        "month": "Month",
+        "today": "Today",
+        "week": "Week",
+        "year": "Year"
+      },
+      "revenue": "Turnover",
+      "revenueChart": "CA generated",
+      "sales": "Sales",
+      "status": {
+        "cancelled": "Canceled",
+        "completed": "Completed",
+        "noShow": "Absent",
+        "scheduled": "Future"
+      },
+      "title": "Statistics",
+      "todayAppointments": "Meeting of the day",
+      "todayCancelled": "Cancellations",
+      "todayCompleted": "Completed",
+      "todayNewClients": "New customers",
+      "todayRevenue": "Generated today",
+      "todaySales": "{count, plural, =0 {Aucune vente} one {# vente} other {# ventes}}"
+    },
+    "assistant": {
+      "description": "Customers, training, planning — place a request or choose a predefined action in the wizard.",
+      "heading": "AI-assisted piloting",
+      "open": "Open the wizard",
+      "openShort": "Assistant",
+      "title": "Assistant"
+    },
+    "kpis": {
+      "clients": "Customers",
+      "description": "Key figures for your institute.",
+      "services": "Services",
+      "title": "Indicators",
+      "upcomingAppointments": "Upcoming appointments"
+    },
+    "modules": {
+      "emptyDescription": "No active modules at the moment.",
+      "emptyHint": "Contact your administrator to activate the institute or academy modules.",
+      "title": "Modules"
+    },
+    "posSession": {
+      "closedDescription": "Log in to collect and track today's cash.",
+      "closedTitle": "Closed checkout",
+      "expectedCash": "Expected species",
+      "goToPos": "Cash in on a sale",
+      "manageSession": "Manage session",
+      "openSession": "Open checkout",
+      "openSince": "Open",
+      "openTitle": "Open checkout",
+      "revenue": "CA incl. VAT",
+      "sales": "Sales"
+    },
+    "quickActions": {
+      "appointments": {
+        "description": "Planning and reservations",
+        "label": "Appointment"
+      },
+      "clients": {
+        "description": "Sheets and contact details",
+        "label": "Customers"
+      },
+      "courses": {
+        "description": "Academy catalog",
+        "label": "Training"
+      },
+      "description": "The most frequent tasks, without going through the entire menu.",
+      "pos": {
+        "description": "Cash in on a sale",
+        "label": "Box"
+      },
+      "services": {
+        "description": "Services and prices",
+        "label": "Services"
+      },
+      "students": {
+        "description": "Registrations in progress",
+        "label": "Students"
+      },
+      "title": "Quick Actions"
+    },
+    "shortcuts": {
+      "description": "Direct access to the pages you use most.",
+      "title": "Shortcuts"
+    },
+    "subtitle": "Overview — use the menu on the left to navigate."
+  },
+  "errors": {
+    "quota": {
+      "exceeded": "Limit reached for \"{key}\" (max {limit}). "
+    }
+  },
+  "institut": {
+    "actions": {
+      "accountAlreadyExists": "An account already exists for this email.",
+      "accountCreateError": "Account creation error.",
+      "accountNotFound": "Customer ID not found.",
+      "allFieldsRequired": "All fields are required.",
+      "balancePaid": "Balance received",
+      "cartAmountMismatch": "Cart amount incompatible with payment.",
+      "clientEmailExists": "A customer with this email already exists.",
+      "clientPinRegenerateFailed": "Unable to regenerate PIN code.",
+      "clientSelfRegisterDisabled": "Account creation is done via your institute. ",
+      "connectionFailed": "Connection failed: {message}",
+      "courseNotFound": "Training not found.",
+      "creditAmountInvalid": "Amount of disabled credit.",
+      "creditNoteCreated": "Having created",
+      "creditNoteExpired": "Have expired.",
+      "creditNoteInsufficient": "Insufficient credit balance.",
+      "creditNoteInvalid": "Have a disability.",
+      "creditNoteRefRequired": "Required credit number.",
+      "durationInvalid": "Invalid duration.",
+      "emailPasswordRequired": "Email and password required.",
+      "emptyCart": "Empty basket.",
+      "enrollmentFieldsRequired": "Training, name and email required.",
+      "extrasInvalid": "Invalid extras.",
+      "giftCardCodeRequired": "Gift voucher code required.",
+      "giftCardExpired": "Gift voucher expired.",
+      "giftCardInsufficient": "Insufficient gift voucher balance.",
+      "giftCardInvalid": "Invalid gift voucher.",
+      "giftCardIssued": "Gift voucher issued",
+      "invalidAmount": "Invalid amount.",
+      "invalidCart": "Invalid basket.",
+      "invalidCredentials": "Incorrect identifiers.",
+      "invalidJsonParams": "Invalid JSON for parameters.",
+      "invalidLoginId": "Invalid customer ID.",
+      "invalidMovementType": "Invalid movement type.",
+      "invalidPayments": "Invalid payments.",
+      "invalidPin": "The PIN code must be 4 digits long.",
+      "loginIdPinRequired": "Customer ID and PIN required.",
+      "missingFields": "Missing required fields.",
+      "missingRequiredFields": "Missing required fields.",
+      "movementRecorded": "Movement recorded.",
+      "nameRequired": "Name required.",
+      "nameSlugRequired": "Name and ID (slug) required.",
+      "noOpenSession": "No log in — open checkout first.",
+      "noPayments": "Add at least one payment.",
+      "overpaid": "Total payments exceed the amount owed.",
+      "passwordMinLength": "Password: 8 characters minimum.",
+      "paymentCard": "(TPE card)",
+      "paymentCash": "(species)",
+      "paymentCreateFailed": "Unable to create Stripe payment.",
+      "paymentMethodDisabled": "Disabled payment method: {method}",
+      "paymentNotConfirmed": "Payment not confirmed.",
+      "paymentStripe": "(Stripe card)",
+      "planNameRequired": "Formula name required.",
+      "platformBrandNotFound": "Brand platform not found.",
+      "posSettingsSaved": "Cash register settings saved.",
+      "productNotFoundInCart": "Product not found: {id}",
+      "reasonRequired": "Reason required.",
+      "reportFailed": "Unable to generate report.",
+      "saleAlreadyRecorded": "Sale already registered.",
+      "saleError": "Sales error.",
+      "saleNotFound": "Sale not found.",
+      "saleNotPartial": "This sale is not a pending deposit.",
+      "saleRecorded": "Registered sale",
+      "scheduleBlocksInvalid": "Invalid time slot format.",
+      "scheduleNameRequired": "Grid name required.",
+      "scheduleNotFound": "Schedule not found.",
+      "serverConfigIncomplete": "Incomplete server configuration (service role).",
+      "serviceDateRequired": "Service and date/time required.",
+      "serviceNotFound": "Service not found.",
+      "serviceNotFoundInCart": "Service not found: {id}",
+      "sessionAlreadyOpen": "A session is already open.",
+      "sessionClosed": "Z fence completed",
+      "sessionOpened": "Open checkout session.",
+      "slugTaken": "The identifier \"{slug}\" is already taken.",
+      "stripeNotConfigured": "Stripe Connect not configured for this institute.",
+      "stripeNotConfiguredShort": "Stripe Connect not configured.",
+      "teamInviteAlreadyPending": "An invitation is already pending for this email.",
+      "teamInviteExpired": "This invitation has expired.",
+      "teamInviteForbidden": "Only the owner can invite members.",
+      "teamInviteInvalid": "Invalid or already used invitation.",
+      "teamRoleForbidden": "Only the owner can manage roles.",
+      "teamRoleNotFound": "Role not found.",
+      "teamRoleSlugTaken": "A role with this identifier already exists.",
+      "tenantCreateError": "Institute creation error.",
+      "tenantCreatedOwnerFailed": "Institute created, but owner not created: {message}.",
+      "tenantNotFound": "Institute not found.",
+      "tenantUpdated": "Institute updated.",
+      "timeOffDatesRequired": "Start and end dates required.",
+      "timeOffEndBeforeStart": "The end must be after the beginning.",
+      "timeOffResourceRequired": "Select a cabin.",
+      "timeOffStaffRequired": "Select a staff member.",
+      "titleRequired": "Title required.",
+      "urlKeySecretRequired": "URL, key and secret required.",
+      "varianceNotesRequired": "A cash discrepancy requires an explanatory note.",
+      "wooConnected": "Connected WooCommerce store.",
+      "wooOrderFailed": "WooCommerce order failed: {message}",
+      "workingHoursEndBeforeStart": "{day}: End time must be after start.",
+      "workingHoursSaved": "Schedules recorded."
+    },
+    "clients": {
+      "badgeAccount": "Active account",
+      "badgeEcommerce": "E-commerce",
+      "badgeUpcoming": "{count, plural, one {# RDV} other {# RDV}}",
+      "columns": {
+        "appointments": "Appointment",
+        "email": "E-mail",
+        "name": "Name",
+        "phone": "Phone",
+        "spent": "Spent"
+      },
+      "detail": {
+        "accessHint": "Communicate the identifier and PIN code to the customer for the mobile app or online customer area.",
+        "accessTitle": "Customer access",
+        "activityTitle": "Activity",
+        "address": "Address",
+        "backToList": "Return to customers",
+        "badgeAccount": "Online account",
+        "badgeEcommerce": "E-commerce customer",
+        "clientId": "Customer ID",
+        "columns": {
+          "date": "Date",
+          "items": "Items",
+          "price": "Price",
+          "service": "Benefit",
+          "source": "Source",
+          "staff": "Practitioner",
+          "status": "Status",
+          "ticket": "Ticket",
+          "total": "Total"
+        },
+        "contactTitle": "Contact details",
+        "copy": "Copy",
+        "dateOfBirth": "Date of birth",
+        "edit": "To modify",
+        "editTitle": "Modify the customer file",
+        "emailsComingSoon": "Email history — coming soon",
+        "emailsHint": "Campaigns and transactional emails will appear here.",
+        "enrollmentsTitle": "Academy training",
+        "historyTitle": "Historical",
+        "loginId": "Login ID",
+        "marketingOptIn": "Marketing",
+        "memberSince": "Customer since",
+        "noAppointments": "No appointments recorded.",
+        "noSales": "No purchases recorded.",
+        "noUpcoming": "No upcoming appointments.",
+        "notesTitle": "Notes",
+        "pinCode": "PIN code",
+        "portalAccount": "Customer area account",
+        "portalActive": "Active — connection by identifier + PIN",
+        "portalInactive": "Inactive — generate access below",
+        "protocolsComingSoon": "Protocols — coming soon",
+        "protocolsHint": "You will be able to associate personalized treatment protocols with each client.",
+        "regeneratePin": "Regenerate PIN",
+        "regeneratePinSubmitting": "Regeneration…",
+        "serviceCount": "{count, plural, one {# fois} other {# fois}}",
+        "sourceEcommerce": "E-commerce",
+        "sourcePos": "Box",
+        "stats": {
+          "appointments": "Appointment",
+          "bookingRate": "Attendance rate",
+          "cancelled": "Canceled",
+          "completed": "Completed",
+          "ecommerceSpent": "E-commerce purchases",
+          "loyaltyPoints": "Loyalty points",
+          "noShow": "Absences",
+          "posSpent": "Purchasing in institute",
+          "totalSpent": "Total spent",
+          "upcoming": "Upcoming appointments"
+        },
+        "tabs": {
+          "access": "Access & emails",
+          "appointments": "Appointment",
+          "overview": "Overview",
+          "quotes": "Estimate",
+          "sales": "Bills & purchases"
+        },
+        "topServices": "Most reserved services",
+        "upcomingTitle": "Next meetings"
+      },
+      "dialogEditTitle": "Edit customer",
+      "dialogTitle": "New customer",
+      "editClient": "To modify",
+      "empty": "No customers at the moment.",
+      "filterAll": "All",
+      "filterEcommerce": "E-commerce",
+      "filterUpcoming": "Upcoming appointments",
+      "filterWithAccount": "Online account",
+      "filterWithPurchases": "With purchases",
+      "footer": "{count, plural, one {# client} other {# clients}}",
+      "form": {
+        "addressLine1": "Address",
+        "addressLine1Placeholder": "12 rue de la Paix",
+        "addressLine2": "Additional address",
+        "city": "City",
+        "dateOfBirth": "Date of birth",
+        "emailPlaceholder": "marie@email.com",
+        "fullName": "Full name",
+        "fullNamePlaceholder": "Marie Durand",
+        "marketingOptIn": "Accepts marketing communications",
+        "notes": "Internal notes",
+        "notesPlaceholder": "Preferences, contraindications, remarks…",
+        "phonePlaceholder": "06 12 34 56 78",
+        "postalCode": "Postcode",
+        "submit": "Add customer",
+        "submitEdit": "Save",
+        "submitting": "Addition…",
+        "submittingEdit": "Registration…",
+        "tags": "Badges",
+        "tagsHint": "Separate badges with commas (max. 10).",
+        "tagsPlaceholder": "VIP, Allergy, New client…"
+      },
+      "new": "New customer",
+      "noResults": "No results for this search.",
+      "searchPlaceholder": "Search for name, email, telephone, badge…"
+    },
+    "extras": {
+      "decrease": "Decrease",
+      "increase": "Increase",
+      "lineMeta": "{min} min · {price}",
+      "noImage": "—",
+      "optionalMax": "Optional, max. ",
+      "requiredMin": "Mandatory: {min} to {max}",
+      "total": "Total: {min} min · {price}"
+    },
+    "marketing": {
+      "loyalty": {
+        "actions": {
+          "invalidAmount": "Invalid amount.",
+          "invalidPercent": "Invalid percentage.",
+          "invalidReward": "Invalid reward.",
+          "invalidRule": "Invalid rule.",
+          "missingFields": "Missing required fields.",
+          "serviceRequired": "Service required.",
+          "shopifyUnavailable": "Shopify is not yet available.",
+          "wooRequired": "Connect WooCommerce to use this source."
+        },
+        "calcModes": {
+          "fixed_per_event": "Fixed points per event",
+          "per_euro_spent": "Points per euro spent"
+        },
+        "clientsLabel": "{count, plural, one {cliente} other {clientes}}",
+        "description": "Points for each visit or purchase, exchangeable for benefits.",
+        "guide": {
+          "liveSummary": "{clients} {clientsLabel} · {points} {label}",
+          "liveTitle": "Online program",
+          "phase1Action": "Click “New Rule”. ",
+          "phase1Title": "Step 1 — How your customers earn points",
+          "phase2Action": "Add a reward. ",
+          "phase2Title": "Step 2 — What they can get",
+          "phase3Action": "Check “Active program” then save.",
+          "phase3Title": "Step 3 — Upload"
+        },
+        "integrations": {
+          "comingSoon": "Soon",
+          "connectHint": "Connect your store to activate this source:",
+          "wooDisconnected": "not connected"
+        },
+        "program": {
+          "active": "Active program",
+          "description": "Name, wording of points and activation of the program.",
+          "name": "Program name",
+          "pointsLabel": "Point wording",
+          "saved": "Recorded program.",
+          "title": "Settings"
+        },
+        "programStatus": {
+          "draft": "Draft",
+          "live": "Online",
+          "ready": "Ready to activate"
+        },
+        "rewards": {
+          "add": "New reward",
+          "columns": {
+            "cost": "Cost",
+            "name": "Name",
+            "status": "Status",
+            "type": "Kind"
+          },
+          "createTitle": "New reward",
+          "deleteConfirm": "Remove this reward?",
+          "editTitle": "Edit reward",
+          "empty": "No rewards yet.",
+          "footer": "{count, plural, one {# récompense} other {# récompenses}}",
+          "form": {
+            "active": "Active reward",
+            "description": "Description",
+            "discountEur": "Amount of reduction (€)",
+            "discountPercent": "Discount percentage",
+            "name": "Name",
+            "pointsCost": "Cost in {label}",
+            "service": "Service offered",
+            "type": "Type of reward"
+          },
+          "redeemHint": "Using points at checkout is coming soon.",
+          "title": "Awards",
+          "types": {
+            "discountFixed": "−{amount}",
+            "discountFixedLabel": "Fixed reduction",
+            "discountPercent": "−{percent} %",
+            "discountPercentLabel": "Reduction in %",
+            "freeService": "Offered: {service}",
+            "freeServiceLabel": "Service offered"
+          }
+        },
+        "rules": {
+          "add": "New rule",
+          "columns": {
+            "earning": "Gain",
+            "name": "Name",
+            "source": "Source",
+            "status": "Status"
+          },
+          "createTitle": "New winning rule",
+          "deleteConfirm": "Remove this winning rule?",
+          "earningFixed": "{points} pts / event",
+          "earningPerEuro": "{points} pt / € (ex. €50 → {example} pts)",
+          "editTitle": "Edit rule",
+          "empty": "No rules yet.",
+          "footer": "{count, plural, one {# règle} other {# règles}}",
+          "form": {
+            "active": "Active rule",
+            "calcMode": "Calculation method",
+            "minAmount": "Minimum amount (€)",
+            "name": "Rule name",
+            "namePlaceholder": "Ex. Points per visit",
+            "pointsFixed": "Points ({label})",
+            "pointsPerEuro": "Points per euro ({label})",
+            "preview": "Example: €50 expense → {points} {label}",
+            "source": "Based on"
+          },
+          "title": "Gain points"
+        },
+        "sources": {
+          "appointment_completed": "Appointment completed",
+          "pos_sale": "Purchase in institute (cash desk)",
+          "shopify_order": "Shopify order",
+          "woocommerce_order": "WooCommerce Order"
+        },
+        "stats": {
+          "clientsWithPoints": "Participating clients",
+          "pointsOutstanding": "{label} in circulation"
+        },
+        "status": {
+          "active": "Active",
+          "inactive": "Inactive"
+        },
+        "title": "Loyalty program"
+      },
+      "overview": {
+        "available": "Available",
+        "comingSoon": "Soon",
+        "description": "Build customer loyalty, promote your institute online and launch targeted offers.",
+        "tools": {
+          "campaigns": {
+            "description": "Emails and SMS to follow up, inform or fill your calendar.",
+            "title": "Campaigns"
+          },
+          "loyalty": {
+            "description": "Configurable points: appointments, checkout, WooCommerce and rewards.",
+            "title": "Loyalty"
+          },
+          "promos": {
+            "description": "Promo codes, limited offers and discounts on services.",
+            "title": "Promos"
+          },
+          "referral": {
+            "description": "Reward customers who bring in new customers.",
+            "title": "Sponsorship"
+          },
+          "reviews": {
+            "description": "Collection and promotion of Google and internal reviews.",
+            "title": "Notice"
+          },
+          "website": {
+            "description": "Your online showcase: reservation, presentation and branding.",
+            "title": "Web page"
+          }
+        }
+      },
+      "promos": {
+        "description": "Create promo codes and limited time offers.",
+        "hint": "This feature is coming soon. ",
+        "title": "Promotions"
+      },
+      "website": {
+        "actions": {
+          "brandingSaved": "Registered visual identity.",
+          "fileRequired": "File required.",
+          "galleryImagesOnly": "Only images are accepted for the gallery.",
+          "homeAlreadyExists": "A home page already exists.",
+          "homeAlwaysInNav": "Hospitality is always on the menu.",
+          "homeCannotDelete": "The home page cannot be deleted.",
+          "invalidContent": "Invalid content.",
+          "invalidData": "Invalid data.",
+          "layoutInvalid": "Invalid model.",
+          "logoImagesOnly": "Only images are accepted for the logo.",
+          "pageNotFound": "Page not found.",
+          "pageSaved": "Saved page.",
+          "pageTypeInvalid": "Invalid page type."
+        },
+        "addPage": "New page",
+        "builder": {
+          "addBlock": "Add a block…",
+          "back": "Websites",
+          "backgroundClear": "None",
+          "backgroundColor": "Color",
+          "blockSubAdd": "Add",
+          "blockSubContent": "Content",
+          "blockSubEdit": "Settings",
+          "blockSubStructure": "Structure",
+          "blockTypes": {
+            "about": "Text",
+            "columns": "Columns",
+            "contact": "Contact",
+            "cta": "Call to action",
+            "divider": "Separator",
+            "gallery": "Gallery",
+            "hero": "Banner",
+            "hours": "Schedules",
+            "image": "Picture",
+            "services": "Services",
+            "spacer": "Spacer",
+            "text": "Paragraph"
+          },
+          "blocks": "Content blocks",
+          "borderRadius": "Rounded corners (px)",
+          "borderRadiusShort": "Rounded",
+          "editTheme": "Change theme",
+          "emptyCanvas": "Add a block from the left panel to get started.",
+          "fields": {
+            "addImage": "Add a picture",
+            "address": "Address",
+            "align": "Alignment",
+            "alignCenter": "Center",
+            "alignLeft": "LEFT",
+            "alt": "Alternative text",
+            "background": "Bottom",
+            "backgroundImage": "Picture",
+            "backgroundNone": "None",
+            "backgroundVideo": "Video",
+            "body": "Text",
+            "caption": "Legend",
+            "columnN": "Column {n}",
+            "columns": "Columns",
+            "ctaHref": "Button link",
+            "ctaLabel": "Button label",
+            "dividerLine": "Line",
+            "dividerSpace": "Space",
+            "email": "E-mail",
+            "galleryCols2": "2 columns",
+            "galleryCols3": "3 columns",
+            "galleryCols4": "4 columns",
+            "heading": "Title",
+            "headline": "Main title",
+            "height": "Height",
+            "hoursNote": "Additional note",
+            "imageUrl": "URL background image",
+            "limit": "Limit",
+            "link": "Link",
+            "maxImageSize": "Max 5 MB · JPEG, PNG, WebP, GIF",
+            "maxVideoSize": "Max 25 MB · MP4, WebM",
+            "note": "Note",
+            "phone": "Phone",
+            "removeImage": "Withdraw",
+            "removeMedia": "Withdraw",
+            "showImages": "Show photos",
+            "showPrices": "Show prices",
+            "showSearch": "Search bar",
+            "style": "Style",
+            "subheadline": "Subtitle",
+            "title": "Title",
+            "uploadBackgroundImage": "Upload an image",
+            "uploadBackgroundVideo": "Upload a video",
+            "uploadImage": "Upload an image",
+            "uploading": "Sending…",
+            "useSchedule": "Schedules from the schedule",
+            "width": "Width",
+            "widthFull": "Full width",
+            "widthMedium": "Average",
+            "widthSmall": "Small"
+          },
+          "globalTemplate": "Site template",
+          "inspectorBlock": "Block",
+          "inspectorPage": "Page",
+          "layoutChangeConfirm": "Apply this model? ",
+          "marginX": "Outer margin (px)",
+          "marginXShort": "Ext. margin",
+          "maxWidth": "Width",
+          "maxWidth4xl": "896",
+          "maxWidth5xl": "1024",
+          "maxWidth6xl": "1280",
+          "maxWidthFull": "100%",
+          "modeLabel": "Builder mode",
+          "paddingX": "Horizontal padding (px)",
+          "paddingXShort": "Padding H",
+          "paddingY": "Vertical padding (px)",
+          "paddingYShort": "Padding V",
+          "pageLayout": "Page template",
+          "pageLayoutHint": "Choose the structure of this page.",
+          "pageStyleHint": "These settings apply to the body of the page, as on the published site.",
+          "pageStyleTitle": "Layout",
+          "pageSubLayout": "Model",
+          "pageSubSettings": "Settings",
+          "pageSubStyle": "Layout",
+          "pageTitle": "Page title",
+          "previewFull": "Full screen preview",
+          "previewLabel": "Live preview",
+          "published": "Publish the page",
+          "saved": "Saved page.",
+          "selectBlockHint": "Select a block from the preview or list above.",
+          "seoDescription": "SEO description",
+          "seoTitle": "SEO Title",
+          "structure": "Structure",
+          "structureEmpty": "No blocks. ",
+          "structureHint": "Order of sections on the page. ",
+          "styleSectionBackground": "Bottom",
+          "styleSectionLayout": "Dimensions",
+          "styleSectionSpacing": "Spacing",
+          "template": "Template",
+          "templateOverride": "Specific template for this page",
+          "templates": {
+            "elegant": "Elegant",
+            "elegantDesc": "Classic and refined",
+            "modern": "Modern",
+            "modernDesc": "Contrast and impact"
+          },
+          "widgetCatContent": "Content",
+          "widgetCatInstitut": "Institute",
+          "widgetCatLayout": "Layout",
+          "widgetCatMedia": "Media",
+          "widgetHintColumns": "2 or 3 columns of text",
+          "widgetHintDivider": "Separator line or space",
+          "widgetHintImage": "Image with caption and link",
+          "widgetHintSpacer": "Adjustable vertical space",
+          "widgetHintText": "Title and free paragraph",
+          "widgets": "Blocks",
+          "widgetsHint": "Drag or click to add"
+        },
+        "changeLayout": "Change model",
+        "chooseType": "Page type",
+        "columns": {
+          "status": "Status",
+          "template": "Template",
+          "title": "Title",
+          "type": "Kind"
+        },
+        "currentLayout": "Model",
+        "customDomain": "Custom domain",
+        "deleteConfirm": "Delete this page?",
+        "description": "Create and personalize your institute's public pages: home, catalog, contact.",
+        "editBuilder": "Builder",
+        "footer": "{count, plural, one {# page} other {# pages}}",
+        "hideLayouts": "Hide templates",
+        "homeBadge": "Welcome",
+        "hub": {
+          "brandingLink": "Visual identity",
+          "editHome": "Edit Home",
+          "sitePreview": "Site Overview",
+          "themeLink": "Customize the theme",
+          "title": "Your online site"
+        },
+        "layoutChangeConfirm": "Apply this model? ",
+        "layouts": {
+          "bookingDirect": "Direct",
+          "bookingDirectDesc": "Compact title, immediate wizard",
+          "bookingGuide": "With guide",
+          "bookingGuideDesc": "Intro + steps before the wizard",
+          "catalogGrille": "Photo grid",
+          "catalogGrilleDesc": "Catalog with search and images",
+          "catalogListe": "Simple list",
+          "catalogListeDesc": "Prices without photos, with search",
+          "catalogVitrine": "Care showcase",
+          "catalogVitrineDesc": "Visual highlighting + CTA",
+          "contactComplet": "Complete",
+          "contactCompletDesc": "Automatic schedules + contact details",
+          "contactSimple": "Simple",
+          "contactSimpleDesc": "Essential contact details",
+          "homeImpact": "Visual impact",
+          "homeImpactDesc": "Dark hero, benefits and CTA",
+          "homeMinimal": "Minimal",
+          "homeMinimalDesc": "Hero and booking button",
+          "homeVitrine": "Classic showcase",
+          "homeVitrineDesc": "Hero, presentation, services and call to action"
+        },
+        "media": {
+          "imageTooLarge": "Image too large (max 5 MB).",
+          "unsupportedFormat": "Unsupported format (JPEG, PNG, WebP, GIF, MP4, WebM).",
+          "videoTooLarge": "Video too large (max 25 MB)."
+        },
+        "pagesTitle": "My pages",
+        "previewBtn": "Preview",
+        "previewFull": "Full screen preview",
+        "previewPage": "Page Preview",
+        "previewPanel": {
+          "backToBuilder": "Back to builder",
+          "bannerDraft": "Preview mode — unpublished draft",
+          "bannerPublished": "Preview mode — published page",
+          "desktop": "Desk",
+          "mobile": "Mobile",
+          "openFull": "Open",
+          "title": "Preview"
+        },
+        "publicBase": "Public site",
+        "status": {
+          "draft": "Draft",
+          "published": "Published"
+        },
+        "tabs": {
+          "branding": "Visual identity",
+          "pages": "Pages",
+          "theme": "Theme"
+        },
+        "templates": {
+          "elegant": "Elegant",
+          "elegantDesc": "Serif typography, airy layout",
+          "modern": "Modern",
+          "modernDesc": "Strong contrast, dark hero"
+        },
+        "theme": {
+          "description": "Colors, logo and name displayed throughout the site. ",
+          "displayName": "Display Name",
+          "footerText": "Footer text",
+          "logo": "Logo",
+          "navSample": {
+            "book": "To book",
+            "home": "Welcome"
+          },
+          "previewLabel": "Theme Overview",
+          "primaryColor": "Main color",
+          "removeLogo": "Remove logo",
+          "replaceLogo": "Replace logo",
+          "saved": "Saved theme.",
+          "template": "Site template",
+          "templates": {
+            "elegant": "Elegant",
+            "modern": "Modern"
+          },
+          "uploadLogo": "Upload a logo",
+          "uploading": "Sending…"
+        },
+        "title": "Websites",
+        "toggles": {
+          "published": "Published",
+          "showInNav": "Show in menu"
+        },
+        "types": {
+          "booking": "Reservation",
+          "bookingDesc": "Online appointment booking process",
+          "catalog": "Catalog",
+          "catalogDesc": "List of services",
+          "contact": "Contact",
+          "contactDesc": "Contact details and times",
+          "home": "Welcome",
+          "homeDesc": "Institute showcase page"
+        },
+        "viewLive": "View online"
+      }
+    },
+    "overview": {
+      "clients": "Customers",
+      "services": "Services",
+      "upcomingAppointments": "Upcoming appointments"
+    },
+    "pos": {
+      "connectShop": "Connect the store",
+      "emptyCatalog": "Start by adding services, internal products or connecting WooCommerce in the settings.",
+      "linkProducts": "Internal products",
+      "linkServices": "Services",
+      "linkSettings": "Settings",
+      "settingsButton": "Cash register settings",
+      "syncWoo": "Sync WooCommerce",
+      "wooNotConnected": "WooCommerce not connected — only internal services and products are available."
+    },
+    "posSettings": {
+      "configured": "Configurable",
+      "description": "VAT, means of payment, legal notices and ticket model.",
+      "form": {
+        "country": "Country",
+        "currency": "Currency",
+        "defaultOpeningFloat": "Default cash base (€)",
+        "defaultVat": "Default rate (%)",
+        "fiscalRegime": "Tax regime",
+        "generalTitle": "General",
+        "legalAddress": "Address",
+        "legalName": "Company name",
+        "legalTitle": "Legal notices",
+        "paymentMethods": {
+          "card": "TPE card",
+          "cash": "Species",
+          "gift_card": "Gift voucher",
+          "stripe": "Stripe (online)",
+          "transfer": "Payment"
+        },
+        "paymentsTitle": "Payment methods",
+        "priceDisplay": "Price display",
+        "priceHt": "Excl. VAT (VAT added to collection)",
+        "priceTtc": "Tax included (list price including VAT)",
+        "productVat": "Products (%)",
+        "regimeBeGks": "Belgium — GKS (horeca)",
+        "regimeBeVat": "Belgium — VAT",
+        "regimeNf525": "France — NF525 preparation",
+        "regimeStandard": "Standard",
+        "requireOpenSession": "Mandatory session to cash out",
+        "saved": "Saved settings.",
+        "serviceVat": "Benefits (%)",
+        "sessionTitle": "Checkout session",
+        "siret": "SIRET / BCE",
+        "ticketFooter": "Ticket foot",
+        "ticketHeader": "Ticket header",
+        "ticketPrefix": "Dialing prefix",
+        "ticketTitle": "Cash receipt",
+        "vatNumber": "Intracommunity VAT number",
+        "vatTitle": "VAT"
+      },
+      "title": "Cash register settings"
+    },
+    "quotes": {
+      "actions": {
+        "clientRequired": "Customer required.",
+        "createError": "Error creating the quote.",
+        "linesRequired": "Add at least one line.",
+        "numberError": "Unable to generate quote number.",
+        "quoteNotFound": "Quote not found."
+      },
+      "columns": {
+        "actions": "Actions",
+        "date": "Date",
+        "number": "No.",
+        "status": "Status",
+        "total": "Total",
+        "type": "Kind"
+      },
+      "copied": "Copy",
+      "copyLink": "Copy link",
+      "createFromRequest": "Create a quote",
+      "empty": "No quotes at the moment.",
+      "eventDate": "Desired date:",
+      "form": {
+        "addLine": "Add a line",
+        "clientMessage": "Message from the customer",
+        "internalNotes": "Internal notes",
+        "lineLabel": "Description",
+        "lines": "Lines",
+        "submit": "Create the quote",
+        "submitting": "Creation…",
+        "template": "Model",
+        "templates": {
+          "artist": "Professional artist",
+          "elegant": "Elegant",
+          "minimal": "Minimal",
+          "wedding": "Marriage"
+        },
+        "title": "New quote",
+        "validUntil": "Valid until"
+      },
+      "hint": "Proposals and quotes for tailor-made services.",
+      "newQuote": "New quote",
+      "pendingRequests": "Pending requests",
+      "send": "Send",
+      "status": {
+        "accepted": "Accepted",
+        "cancelled": "Canceled",
+        "converted": "Converted",
+        "declined": "Denied",
+        "draft": "Draft",
+        "expired": "Expired",
+        "pending": "On hold",
+        "sent": "Sent"
+      },
+      "typeQuote": "Estimate",
+      "typeRequest": "Request"
+    },
+    "scheduling": {
+      "conflict": {
+        "resourceBusy": "This cabin is already booked in this slot.",
+        "staffBusy": "This practitioner already has an appointment in this niche."
+      },
+      "schedule": {
+        "noHoursToday": "No opening hours today for this service provider.",
+        "outsideSchedule": "The selected period does not correspond to the service provider's schedule."
+      }
+    },
+    "services": {
+      "columns": {
+        "actions": "Actions",
+        "duration": "Duration",
+        "price": "Price",
+        "status": "Status",
+        "title": "Title"
+      },
+      "deleteConfirm": "Delete “{name}”? ",
+      "deleteShort": "Delete",
+      "dialog": {
+        "bookingMode": "Reservation method",
+        "bookingModeHint": "Wedding make-up, events: choose “Request a quote” to replace the public calendar.",
+        "bookingModeInstant": "Online reservation (calendar)",
+        "bookingModeManual": "Contact / custom",
+        "bookingModeQuote": "Quote request",
+        "bookingWindowHint": "Check the online reservation window for this service.",
+        "bufferAfter": "Buffer after (min)",
+        "bufferBefore": "Front buffer (min)",
+        "bufferHint": "Tampons block out time before and after each appointment.",
+        "createSubmit": "Create the service",
+        "createTitle": "New service",
+        "descriptionPlaceholder": "Optional — visible internally",
+        "durationMin": "Duration (min)",
+        "editSubmit": "Save",
+        "editTitle": "Modify service",
+        "extras": {
+          "afterTime": "After choosing the niche",
+          "beforeTime": "Before choosing the niche",
+          "extraOnlyBadge": "Extra",
+          "hint": "Choose other services to offer as an upsell with this one. ",
+          "maxQty": "Max",
+          "minQty": "Min",
+          "noCandidates": "Create other services (catalog or “extra only”) to offer them here.",
+          "noSearchResults": "No service matches.",
+          "saveExtras": "Save extras",
+          "searchPlaceholder": "Search for a service…",
+          "selectedCount": "{count, plural, one {# extra sélectionné} other {# extras sélectionnés}}",
+          "stepPosition": "Extras step in booking"
+        },
+        "image": {
+          "hint": "JPEG, PNG, WebP or GIF — max 5 MB. Visible in reservation and checkout.",
+          "noImage": "No pictures",
+          "pendingUpload": "Image ready — will be sent to creation.",
+          "remove": "DELETE",
+          "replace": "Replace",
+          "upload": "Upload an image",
+          "uploading": "Sending…"
+        },
+        "imageAfterCreate": "Save the performance, then add an image by modifying it.",
+        "imageLabel": "Picture",
+        "maxAdvanceDays": "Max reservation (days)",
+        "minAdvanceHours": "Minimum delay (h)",
+        "namePlaceholder": "Facial",
+        "priceEur": "Price (EUR)",
+        "submitting": "Registration…",
+        "tabs": {
+          "advanced": "Advance",
+          "extras": "Extras",
+          "general": "General",
+          "time": "Schedules"
+        },
+        "visibility": "Catalog visibility",
+        "visibilityCatalog": "Customer catalog (main service)",
+        "visibilityExtraOnly": "Extra only (hidden from catalog)",
+        "visibleHint": "Disabled to hide from customers and checkout.",
+        "visibleLabel": "Visible",
+        "wizard": {
+          "durationRequired": "Enter a valid duration (minimum 1 min).",
+          "nameRequired": "Enter a name to save.",
+          "navHint": "Click on a step to go directly to it.",
+          "navLabel": "Creation steps",
+          "stepOf": "Step {current} to {total}"
+        }
+      },
+      "durationMin": "{min} min",
+      "edit": "To modify",
+      "empty": "No services at the moment.",
+      "extraBadge": "Extra",
+      "filterActive": "Visible",
+      "filterAll": "All",
+      "filterInactive": "Masked",
+      "footer": "{count, plural, one {# prestation} other {# prestations}}",
+      "hidden": "Masked",
+      "hiddenBadge": "Masked",
+      "new": "New service",
+      "noResults": "No results for this search.",
+      "quickForm": {
+        "duration": "Duration (min)",
+        "name": "Name",
+        "namePlaceholder": "Facial",
+        "price": "Price (€)",
+        "submit": "Create the service",
+        "title": "Create a service"
+      },
+      "searchPlaceholder": "Search by name…",
+      "visible": "Visible"
+    },
+    "settings": {
+      "securityNote": "WooCommerce API keys are encrypted (AES-256-GCM) before storage. "
+    },
+    "stripe": {
+      "account": "Account :",
+      "active": "Active",
+      "connect": "Connect Stripe",
+      "description": "Card collection at checkout (institute Express account).",
+      "disconnect": "Disconnect Stripe",
+      "missingKeyRedirect": "Stripe platform key missing.",
+      "missingPlatformKey": "STRIPE_SECRET_KEY not configured on the platform. ",
+      "notConnected": "Not connected",
+      "onboardingIncomplete": "· Incomplete onboarding",
+      "paymentsActive": "· Active payments",
+      "resumeOnboarding": "Resume Stripe onboarding",
+      "title": "StripeConnect"
+    },
+    "team": {
+      "absences": {
+        "chooseResource": "Choose…",
+        "chooseStaff": "Choose…",
+        "columns": {
+          "actions": "Actions",
+          "period": "Period",
+          "reason": "Pattern",
+          "scope": "Who/what"
+        },
+        "delete": "DELETE",
+        "empty": "No absences during this period.",
+        "endsAt": "END",
+        "formDescription": "Closure of the institute, leave of a practitioner or unavailability of a cabin.",
+        "formTitle": "Plan an absence",
+        "listTitle": "Planned absences",
+        "reason": "Pattern (optional)",
+        "reasonPlaceholder": "Holidays, training, work…",
+        "resource": "Cabin",
+        "saved": "Absence recorded.",
+        "scope": "Scope",
+        "scopeInstitute": "Institute (closure)",
+        "scopeResource": "Cabin",
+        "scopeStaff": "Staff",
+        "staff": "Member",
+        "startsAt": "Beginning",
+        "submit": "Add absence",
+        "submitting": "Addition…"
+      },
+      "access": {
+        "columns": {
+          "actions": "Actions",
+          "email": "E-mail",
+          "expires": "Expires",
+          "name": "Name",
+          "role": "Role",
+          "status": "Status"
+        },
+        "copyLink": "Copy link",
+        "email": "E-mail",
+        "emailComingSoon": "Automatic sending by email will be available soon.",
+        "emailPlaceholder": "sophie@institut.fr",
+        "invitationsTitle": "Pending invitations",
+        "inviteDescription": "Send an invitation to {name} to access the institute space.",
+        "inviteHint": "Copy the invitation link or resend it. ",
+        "inviteSubmit": "Create the invitation",
+        "inviteSubmitting": "Creation…",
+        "inviteTitle": "Invite to the team",
+        "membersTitle": "Active accounts",
+        "noInvitations": "No invitations pending.",
+        "noMembers": "No team accounts at the moment.",
+        "resend": "Renew",
+        "revoke": "Cancel",
+        "role": "Role",
+        "statusActive": "Accepted"
+      },
+      "assignments": {
+        "columns": {
+          "name": "Name",
+          "schedule": "Timetable"
+        },
+        "defaultShort": "default",
+        "description": "Without an assigned grid, staff and cabins use the default grid ({defaultName}).",
+        "noResources": "No cabins.",
+        "noStaff": "No staff members.",
+        "noneDefault": "no default grid",
+        "resourcesTitle": "Cabins",
+        "save": "Apply",
+        "saved": "Subpoena recorded.",
+        "saving": "…",
+        "staffTitle": "Staff",
+        "useDefault": "Default Grid"
+      },
+      "cabines": {
+        "add": "Add a cabin",
+        "columns": {
+          "actions": "Actions",
+          "name": "Name"
+        },
+        "delete": "DELETE",
+        "dialogTitle": "Add a cabin",
+        "empty": "No cabins configured.",
+        "footer": "{count, plural, one {# cabine} other {# cabines}}",
+        "form": {
+          "name": "Cabin/Resource Name",
+          "namePlaceholder": "Cabin 1",
+          "submit": "Add",
+          "submitting": "Addition…"
+        },
+        "subtitle": "Treatment cabins and rooms"
+      },
+      "horairesTabs": {
+        "absences": "Absences & closures",
+        "assignations": "Subpoenas",
+        "grilles": "Timetables"
+      },
+      "personnel": {
+        "accessActive": "Active",
+        "accessNone": "Uninvited",
+        "accessPending": "Pending invitation",
+        "add": "Add staff",
+        "columns": {
+          "access": "App access",
+          "actions": "Actions",
+          "color": "Color",
+          "email": "E-mail",
+          "name": "Name"
+        },
+        "delete": "DELETE",
+        "dialogEditTitle": "Edit staff",
+        "dialogTitle": "Add staff",
+        "edit": "To modify",
+        "empty": "No staff members.",
+        "footer": "{count, plural, one {# membre} other {# membres}}",
+        "form": {
+          "colorOptional": "Color (optional)",
+          "emailOptional": "Email (optional)",
+          "emailPlaceholder": "sophie@institut.fr",
+          "fullName": "Full name",
+          "fullNamePlaceholder": "Sophie Martin",
+          "submit": "Add",
+          "submitEdit": "Save",
+          "submitting": "Addition…",
+          "submittingEdit": "Registration…"
+        },
+        "invite": "Invite",
+        "noResults": "No results.",
+        "searchPlaceholder": "Personal research…"
+      },
+      "roles": {
+        "create": "New role",
+        "createTitle": "Create a role",
+        "delete": "DELETE",
+        "description": "Define what each role can see and modify in the institute space.",
+        "edit": "To modify",
+        "editTitle": "Edit role",
+        "fullAccess": "Full access",
+        "name": "Role name",
+        "permissions": "Permissions",
+        "read": "Reading",
+        "roleDescription": "Description",
+        "sections": {
+          "appointments": "Appointment",
+          "clients": "Customers",
+          "dashboard": "Welcome",
+          "marketing": "Marketing",
+          "pos": "Box",
+          "services": "Services",
+          "team": "Team"
+        },
+        "submitCreate": "Create the role",
+        "submitEdit": "Save",
+        "submitting": "Registration…",
+        "systemBadge": "System",
+        "write": "Writing"
+      },
+      "schedules": {
+        "addBlock": "Beach",
+        "blocksHint": "Add multiple slots per day to manage breaks.",
+        "closed": "Farm",
+        "columns": {
+          "day": "Day",
+          "hours": "Beaches",
+          "open": "Open"
+        },
+        "create": "Create",
+        "createPlaceholder": "Ex. Summer hours",
+        "createTitle": "New grid",
+        "creating": "Creation…",
+        "defaultBadge": "Default Institute Grid",
+        "defaultShort": "default",
+        "delete": "DELETE",
+        "description": "Create reusable timetables with several slots per day (e.g. morning + afternoon with lunch break).",
+        "empty": "No timetable. ",
+        "listTitle": "Grids",
+        "nameLabel": "Grid name",
+        "saved": "Saved grid.",
+        "submit": "Save the grid",
+        "submitting": "Registration…"
+      },
+      "tabs": {
+        "acces": "Access & invitations",
+        "cabines": "Cabins",
+        "horaires": "Schedules",
+        "personnel": "Staff",
+        "roles": "Roles"
+      }
+    },
+    "woo": {
+      "connected": "Connected",
+      "description": "Product catalog and cash register orders.",
+      "disconnect": "Disconnect",
+      "form": {
+        "consumerKey": "Consumer key",
+        "consumerKeyPlaceholder": "ck_…",
+        "consumerSecret": "Consumer secret",
+        "consumerSecretPlaceholder": "cs_…",
+        "shopUrl": "Store URL",
+        "shopUrlPlaceholder": "https://maboutique.com",
+        "submit": "Connect WooCommerce",
+        "submitting": "Testing and recording…"
+      },
+      "notConnected": "Not connected",
+      "shop": "Shop :",
+      "title": "WooCommerce"
+    }
+  },
+  "invite": {
+    "defaultRole": "team member",
+    "fullName": "Full name",
+    "submit": "Create my access",
+    "submitting": "Creation…",
+    "subtitle": "You are invited to join {institute} as {role}.",
+    "title": "Join the team"
+  },
+  "landing": {
+    "brand": "BeautyHub",
+    "cta": {
+      "book": "Make an appointment",
+      "subtitle": "Log in with your team account or reserve a slot online.",
+      "teamLogin": "Team Connection",
+      "title": "Ready to run your institute?"
+    },
+    "footer": "BeautyHub · SaaS platform for beauty salons",
+    "hero": {
+      "badge": "Multi-tenant SaaS · Institutes & academies",
+      "ctaBackOffice": "Access the back office",
+      "ctaClient": "Customer area",
+      "description": "Appointments, WooCommerce checkout, customers, team and training — a single back office. ",
+      "stats": {
+        "ai": {
+          "label": "Built-in actions",
+          "value": "AI"
+        },
+        "isolation": {
+          "label": "Insulation holding",
+          "value": "RLS"
+        },
+        "modules": {
+          "label": "Business modules",
+          "value": "6+"
+        }
+      },
+      "titleLine1": "Manage your institute",
+      "titleLine2": "like a professional platform"
+    },
+    "modules": {
+      "items": {
+        "academie": {
+          "text": "Training, registrations and student monitoring.",
+          "title": "Academy"
+        },
+        "appointments": {
+          "text": "Practitioner/cabin calendar, online reservation, customer portal.",
+          "title": "Appointment"
+        },
+        "assistant": {
+          "text": "Actions declared by module — control without rewiring.",
+          "title": "AI Assistant"
+        },
+        "multitenant": {
+          "text": "Strict isolation by institute, RLS Supabase, team roles.",
+          "title": "Multi-tenant"
+        },
+        "pos": {
+          "text": "Services, WooCommerce products and internal items in a single basket.",
+          "title": "Unified checkout"
+        },
+        "whitelabel": {
+          "text": "Platform → brands → institutes, domains and custom branding.",
+          "title": "White label"
+        }
+      },
+      "subtitle": "Each module is activated according to the institute's formula. ",
+      "title": "Everything you need for your business"
+    },
+    "nav": {
+      "book": "To book",
+      "teamLogin": "Team Connection"
+    },
+    "steps": {
+      "items": {
+        "1": {
+          "text": "WooCommerce, Stripe, team and services.",
+          "title": "Connect your institute"
+        },
+        "2": {
+          "text": "Institute, Academy — according to your formula.",
+          "title": "Activate your modules"
+        },
+        "3": {
+          "text": "Cash register, public appointments and AI assistant.",
+          "title": "Collect and plan"
+        }
+      },
+      "title": "Quick start"
+    }
+  },
+  "nav": {
+    "academieCourses": "Training",
+    "academieOverview": "Academy",
+    "academieStudents": "Students",
+    "adminBrands": "Brands",
+    "adminModules": "Modules",
+    "adminOverview": "Administration",
+    "adminPlans": "Formulas",
+    "adminSettings": "Settings",
+    "adminSubscriptions": "Subscriptions",
+    "adminSupport": "Support",
+    "adminTeam": "Platform team",
+    "adminTenants": "Institutes",
+    "institutAppointments": "Appointment",
+    "institutClients": "Customers",
+    "institutMarketing": "Marketing",
+    "institutMarketingLoyalty": "Loyalty",
+    "institutMarketingPromos": "Promos",
+    "institutMarketingWebsite": "Web page",
+    "institutPos": "Box",
+    "institutPosHistory": "Cash register history",
+    "institutPosProducts": "Internal products",
+    "institutPosSession": "Session",
+    "institutPosVouchers": "Vouchers & credits",
+    "institutServices": "Services",
+    "institutSettings": "Settings",
+    "institutTeam": "Team"
+  },
+  "pos": {
+    "balance": {
+      "back": "Historical",
+      "paid": "Already paid",
+      "pay": "Cash out {amount}",
+      "remaining": "Still to pay",
+      "sale": "Sale",
+      "total": "Total including tax"
+    },
+    "checkout": {
+      "addPayment": "Add a payment method",
+      "amountAria": "Amount",
+      "creditNotePlaceholder": "Asset number (AV-…)",
+      "discount": "Discount",
+      "fillRemaining": "Pay",
+      "giftCodePlaceholder": "Voucher code",
+      "methodAria": "Payment method",
+      "methods": {
+        "card": "TPE card",
+        "cash": "Species",
+        "credit_note": "To have",
+        "gift_card": "Gift voucher",
+        "transfer": "Payment"
+      },
+      "overpaid": "Overpayment: {amount}",
+      "payments": "Payments",
+      "pricesHtHint": "List prices are excluding VAT — VAT is calculated upon receipt.",
+      "pricesTtcHint": "List prices are inclusive of tax.",
+      "remaining": "Remaining to pay: {amount}",
+      "submit": "Cash out {total}",
+      "submitPartial": "Deposit {paid} / {total}",
+      "submitting": "Collection…",
+      "subtotalHt": "Subtotal excluding tax",
+      "totalTtc": "Total including tax",
+      "vat": "VAT",
+      "viewTicket": "View ticket"
+    },
+    "history": {
+      "columns": {
+        "client": "Customer",
+        "date": "Date",
+        "items": "Items",
+        "payment": "Payment",
+        "status": "Status",
+        "ticket": "Ticket",
+        "total": "Total"
+      },
+      "empty": "No sales recorded.",
+      "mixedPayments": "{count} payments",
+      "paidShort": "paid",
+      "payBalance": "Pay",
+      "paymentMethods": {
+        "card": "TPE card",
+        "cash": "Species",
+        "credit_note": "To have",
+        "gift_card": "Gift voucher",
+        "mixed": "Mixed",
+        "other": "Other",
+        "stripe": "stripe",
+        "transfer": "Payment"
+      },
+      "status": {
+        "paid": "Paid",
+        "partial": "Deposit"
+      },
+      "viewTicket": "Ticket"
+    },
+    "products": {
+      "columns": {
+        "actions": "Actions",
+        "name": "Name",
+        "price": "Price",
+        "sku": "SKUs",
+        "stock": "Stock"
+      },
+      "delete": "DELETE",
+      "dialogTitle": "New product",
+      "empty": "No internal products.",
+      "footer": "{count, plural, one {# produit} other {# produits}}",
+      "form": {
+        "namePlaceholder": "Facial oil 30 ml",
+        "priceEur": "Price (EUR)",
+        "skuOptional": "Optional",
+        "stockOptional": "Optional",
+        "submit": "Add product",
+        "submitting": "Addition…"
+      },
+      "new": "New product",
+      "noResults": "No results for this search.",
+      "searchPlaceholder": "Search name, SKU…"
+    },
+    "session": {
+      "backToPos": "Return to checkout",
+      "breakdown": {
+        "cashSales": "Cash sales",
+        "expectedCash": "Expected species",
+        "movementsExpense": "Cash expenses",
+        "movementsIn": "Cash receipts",
+        "movementsOut": "Cash outings",
+        "openingFloat": "Initial cash base"
+      },
+      "byPayment": "By payment method",
+      "closeDescription": "Count the actual cash in the drawer, compare to the expected amount, then close.",
+      "closeForm": {
+        "balancedHint": "The amount counted corresponds to the theoretical balance.",
+        "balancedTitle": "Balanced checkout",
+        "confirmCheckbox": "I physically counted the cash in the cash drawer",
+        "counted": "Cash counted (€)",
+        "countedHelp": "Count coins and notes actually present in the drawer.",
+        "expected": "Expected species",
+        "notesLabel": "Closing notes",
+        "notesPlaceholder": "Observations (optional if balanced fund)",
+        "notesRequiredPlaceholder": "Explain the cash variance (required)",
+        "submit": "Close and edit the Z",
+        "theoreticalTitle": "Theoretical cash balance",
+        "varianceExplain": "Note the cause of the discrepancy in the notes — do not change the recorded sales.",
+        "varianceShortage": "Lacking",
+        "varianceSurplus": "Surplus of",
+        "varianceTitle": "Cash gap",
+        "zWarningBody": "The Z report closes the session and freezes the day's totals. ",
+        "zWarningTitle": "Final closure (Z)"
+      },
+      "closeTitle": "End of day closing",
+      "closedBadge": "Closed checkout",
+      "closedIntro": "Log in to record your sales, track cash on hand, and close out your day neatly.",
+      "generateX": "Generate the",
+      "goToPos": "Cash in on a sale",
+      "goToPosAfterOpen": "Go cash",
+      "journalTitle": "History of movements",
+      "methods": {
+        "card": "Map",
+        "cash": "Species",
+        "credit_note": "To have",
+        "gift_card": "Gift voucher",
+        "stripe": "stripe",
+        "transfer": "Payment"
+      },
+      "movementForm": {
+        "amountLabel": "Amount (€)",
+        "presets": {
+          "bankDeposit": "Bank deposit",
+          "changeFund": "Coin supply",
+          "otherExpense": "Other expense",
+          "ownerDeposit": "Cash contribution",
+          "pettyPurchase": "Small purchase",
+          "safeTransfer": "Safe storage",
+          "supplies": "Supplies/consumables"
+        },
+        "reasonLabel": "Pattern",
+        "reasonPlaceholder": "Describe the movement (required for traceability)",
+        "submit": "Record movement",
+        "typeHints": {
+          "expense": "Purchase paid in cash from the drawer",
+          "in": "Add cash (change, intake)",
+          "out": "Withdraw cash (bank, safe)"
+        },
+        "typeLabel": "Type of movement",
+        "types": {
+          "expense": "Spent",
+          "in": "Entrance",
+          "out": "Exit"
+        }
+      },
+      "movementTypes": {
+        "expense": "Cash expenditure",
+        "in": "Cash entry",
+        "out": "Checkout"
+      },
+      "movements": "Cash movements",
+      "movementsHint": "Excluding sales: currency supply, bank deposit, small expenses paid in cash.",
+      "noMovements": "No movement yet.",
+      "openDescription": "Start a session with the initial cash.",
+      "openForm": {
+        "defaultHint": "Configured default value: {amount}",
+        "float": "Cash (€)",
+        "floatHelp": "Liquid present in the drawer when opened (coins and notes). ",
+        "submit": "Open checkout"
+      },
+      "openTitle": "Start the day",
+      "openingFloat": "Cash bottom",
+      "reports": "Reports generated",
+      "sessionOpen": "Open checkout",
+      "settingsLink": "Cash register settings",
+      "stats": {
+        "expectedCash": "Expected species",
+        "partial": "Installments",
+        "sales": "Sales",
+        "total": "CA incl. VAT"
+      },
+      "steps": {
+        "count": "Count the cash already in the cash drawer",
+        "declare": "Enter this amount as your cash balance",
+        "sell": "Collect your sales from the Cashier tab"
+      },
+      "workflow": {
+        "journal": "Cash log",
+        "xReport": "X report",
+        "zClose": "Z fence"
+      },
+      "workflowAria": "Checkout session steps",
+      "workflowIntro": "Movement log → X control (optional) → Z counting and closing.",
+      "xReportGenerated": "Report {number} saved.",
+      "xReportHint": "Checkpoint without closing the day — useful in the middle of the day or before a cashier change.",
+      "xReportTitle": "Intermediate control (X report)"
+    },
+    "stripe": {
+      "pay": "Pay {total}",
+      "payPending": "Payment…",
+      "paymentFailed": "Payment failed.",
+      "paymentNotConfirmed": "Payment not confirmed.",
+      "paymentRecorded": "Payment recorded.",
+      "prepare": "Preparation…",
+      "startFailed": "Unable to start payment."
+    },
+    "terminal": {
+      "cart": {
+        "addToCheckout": "Adds items to cash out.",
+        "appointmentAria": "Appointment",
+        "clear": "Empty",
+        "clientAria": "Customer",
+        "discount": "Cart discount (€)",
+        "empty": "No articles.",
+        "extraBadge": "extra",
+        "noAppointment": "— Without appointment —",
+        "noClient": "— Without customers —",
+        "noStaff": "— Without practitioner —",
+        "notePlaceholder": "Internal note (optional)",
+        "settingsLink": "Checkout settings →",
+        "staffAria": "Practitioner",
+        "title": "Basket",
+        "total": "Total"
+      },
+      "categories": {
+        "extra": "Extra",
+        "internal": "Internal",
+        "service": "Benefit",
+        "woocommerce": "Woo"
+      },
+      "checkout": {
+        "card": "TPE card · {total}",
+        "cardPending": "Registration…",
+        "cash": "Species · {total}",
+        "cashPending": "Collection…"
+      },
+      "emptyCategory": "No articles in this category. ",
+      "noSessionHint": "Session closed — open for cash tracking",
+      "openSession": "Open checkout →",
+      "searchAria": "To research",
+      "searchArticles": "Search for an article…",
+      "sessionRequired": "Open the register to record this sale.",
+      "tabs": {
+        "all": "All",
+        "internal": "Internal",
+        "services": "Services",
+        "woo": "Shop Woo"
+      }
+    },
+    "ticket": {
+      "discount": "Discount",
+      "item": "Article",
+      "methods": {
+        "card": "Map",
+        "cash": "Species",
+        "credit_note": "To have",
+        "gift_card": "Gift voucher",
+        "other": "Other",
+        "stripe": "stripe",
+        "transfer": "Payment"
+      },
+      "noNumber": "Ticket",
+      "paid": "Cashed",
+      "payments": "Payments",
+      "print": "Print",
+      "qty": "Qty",
+      "subtotalHt": "Subtotal excluding tax",
+      "thanks": "Thank you for your visit!",
+      "total": "Total",
+      "totalTtc": "Total including tax",
+      "vat": "VAT",
+      "vatAmount": "VAT"
+    },
+    "vouchers": {
+      "columns": {
+        "balance": "Pay",
+        "code": "Code",
+        "date": "Date",
+        "number": "No.",
+        "remaining": "Remaining",
+        "status": "Status"
+      },
+      "creditForm": {
+        "amount": "Amount credit (€)",
+        "noSalesHint": "No recent sales with collection.",
+        "reason": "Pattern",
+        "selectSale": "Source sale",
+        "submit": "Create the credit"
+      },
+      "creditNotesTitle": "Assets",
+      "giftCardsTitle": "Gift vouchers",
+      "giftForm": {
+        "amount": "Amount (€)",
+        "recipient": "Recipient (optional)",
+        "submit": "Issue the voucher"
+      },
+      "issueCreditNote": "Create a credit",
+      "issueGiftCard": "Issue a gift voucher",
+      "noCreditNotes": "No assets.",
+      "noGiftCards": "No gift certificate.",
+      "status": {
+        "active": "Active",
+        "cancelled": "Canceled",
+        "depleted": "Exhausted"
+      }
+    }
+  },
+  "public": {
+    "booking": {
+      "availability": {
+        "dayShort": {
+          "0": "sun",
+          "1": "mon",
+          "2": "mar",
+          "3": "sea",
+          "4": "game",
+          "5": "fri",
+          "6": "sat"
+        },
+        "fromDate": "I am available on or after",
+        "hint": "Indicate when you can come: we will display the corresponding slots.",
+        "timeFrom": "From",
+        "timeInvalid": "The end time must be after the start time.",
+        "timeTo": "Until",
+        "title": "When are you available?",
+        "weekdays": "Days of the week",
+        "weekdaysRequired": "Select at least one day."
+      },
+      "confirmed": {
+        "emailHint": "A confirmation email will be sent to you shortly.",
+        "title": "Confirmed appointment",
+        "withExtras": "Your additional options are included."
+      },
+      "extras": {
+        "durationHint": "Total estimated time: {min} min · {price}",
+        "subtitle": "Personalize your session before choosing the time.",
+        "title": "Additional options"
+      },
+      "loadError": "Unable to load data. ",
+      "quoteRequest": {
+        "backToServices": "Choose another service",
+        "eventDate": "Event date (optional)",
+        "fromPrice": "From {price}",
+        "fullName": "Full name",
+        "message": "Your project",
+        "messagePlaceholder": "Location, number of people, desired style…",
+        "submit": "Send my request",
+        "submitting": "Sending…",
+        "successHint": "We will get back to you quickly with a personalized proposal.",
+        "successTitle": "Request sent"
+      },
+      "step1": {
+        "durationMin": "{min} min",
+        "empty": "No services available online.",
+        "manualBadge": "Custom made",
+        "onRequest": "On quote",
+        "quoteBadge": "Estimate",
+        "serviceLabel": "Benefit",
+        "servicePlaceholder": "Choose a service",
+        "staffAny": "No preference",
+        "staffLabel": "Practitioner (optional)",
+        "staffPlaceholder": "Choose a practitioner",
+        "staffRequired": "Please choose a practitioner.",
+        "subtitle": "Please choose a service and indicate your availability.",
+        "title": "Reservation"
+      },
+      "step2": {
+        "title": "Choose a practitioner"
+      },
+      "step3": {
+        "seeSlots": "View slots",
+        "title": "Indicate your availability"
+      },
+      "step4": {
+        "changeAvailability": "Change my availability",
+        "confirm": "Confirm appointment",
+        "confirming": "Confirmation…",
+        "extrasHint": "Additional options can be added in the next step.",
+        "fullName": "Full name",
+        "loading": "Looking for niches…",
+        "noSlots": "No slot matches your availability.",
+        "noSlotsHint": "Expand your days or time slot, or change your options.",
+        "subtitle": "Slots available according to your preferences.",
+        "title": "Choose your time"
+      },
+      "step5": {
+        "confirm": "Confirm appointment",
+        "confirming": "Confirmation…",
+        "fullName": "Full name",
+        "title": "Your contact details"
+      },
+      "steps": {
+        "details": "Contact details",
+        "done": "Finished",
+        "extras": "Supplements",
+        "service": "Benefit",
+        "slots": "Hour"
+      },
+      "subtitle": "{name} — online reservation",
+      "title": "Make an appointment",
+      "wizardTitle": "Your reservation"
+    },
+    "client": {
+      "account": {
+        "cancel": "Cancel",
+        "columns": {
+          "actions": "Actions",
+          "date": "Date",
+          "service": "Benefit",
+          "status": "Status"
+        },
+        "empty": "No upcoming appointments.",
+        "logout": "Disconnect",
+        "status": {
+          "booked": "Reserve",
+          "cancelled": "Canceled",
+          "completed": "Finished",
+          "confirmed": "Confirmed",
+          "no_show": "Absent"
+        }
+      },
+      "login": {
+        "credentialsHint": "Your institute will provide you with your username and your 4-digit PIN code.",
+        "loginId": "Customer ID",
+        "loginIdPlaceholder": "ins-001",
+        "pin": "PIN code",
+        "submit": "Log in",
+        "submitting": "Connection…",
+        "subtitle": "Log in with your customer ID and PIN.",
+        "title": "My account"
+      },
+      "register": {
+        "disabledDescription": "Your account is created by your institute. ",
+        "hasAccount": "Already have your login details? ",
+        "title": "Create an account"
+      }
+    },
+    "quote": {
+      "accept": "Accept quote",
+      "client": "Customer",
+      "decline": "Refuse",
+      "description": "Description",
+      "discount": "Discount",
+      "eventDate": "Event Date",
+      "footer": "{name} — thank you for your trust.",
+      "message": "Your message",
+      "printPdf": "Print / PDF",
+      "quantity": "Qty",
+      "quoteNumber": "No.",
+      "respondError": "Unable to save your response.",
+      "responding": "Sending…",
+      "service": "Benefit",
+      "statusAccepted": "THANKS ! ",
+      "statusDeclined": "Your refusal has been recorded.",
+      "statusExpired": "This quote has expired. ",
+      "subtotal": "Subtotal",
+      "title": "Estimate",
+      "total": "Total including tax",
+      "unitPrice": "COULD.",
+      "validUntil": "Valid until"
+    },
+    "site": {
+      "blocks": {
+        "hoursByAppointment": "Hours by appointment.",
+        "noImages": "No images.",
+        "noServices": "No services found."
+      },
+      "nav": {
+        "account": "My account",
+        "book": "To book",
+        "home": "Welcome"
+      }
+    }
+  },
+  "roles": {
+    "brand_owner": "Owner brand",
+    "coach": "Coach",
+    "platform_admin": "Great admin",
+    "staff": "Staff",
+    "tenant_owner": "Owner"
+  },
+  "shell": {
+    "academie": "Academy",
+    "administration": "Administration",
+    "footerRights": "All rights reserved.",
+    "home": "Welcome",
+    "institut": "Institute",
+    "language": "Language",
+    "myAccount": "My account",
+    "posSession": {
+      "durationHours": "since {hours} h {mins} min",
+      "durationJustOpened": "right now",
+      "durationMins": "since {mins} min",
+      "navIndicator": "Open checkout",
+      "open": "Open checkout"
+    },
+    "sidebar": {
+      "ariaLabel": "Main navigation",
+      "collapse": "Reduce",
+      "expand": "Expand menu"
+    },
+    "signOut": "Disconnect"
+  },
+  "ui": {
+    "dataTable": {
+      "emptyDefault": "No items."
+    },
+    "formDialog": {
+      "close": "Close"
+    },
+    "pageTabs": {
+      "sectionsAriaLabel": "Sections"
+    }
+  },
+  "weekdays": {
+    "fri": "Friday",
+    "mon": "Monday",
+    "sat": "SATURDAY",
+    "sun": "Sunday",
+    "thu": "THURSDAY",
+    "tue": "Tuesday",
+    "wed": "Wednesday"
+  }
+}

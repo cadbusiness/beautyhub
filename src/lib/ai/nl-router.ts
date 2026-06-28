@@ -6,10 +6,13 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchTenantContext } from "@/modules/institut/ai-helpers";
 import { fetchPosContext } from "@/modules/institut/ai-pos-helpers";
 import { fetchPlatformAiConfig } from "@/lib/platform/settings";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   buildKnowledgeCatalog,
   findHelpArticle,
   formatHelpArticle,
+  getArticleById,
+  loadHelpArticles,
   looksLikeHelpQuestion,
   looksLikeSupportIssue,
   type HelpArticle,
@@ -40,6 +43,8 @@ interface ActionCatalogEntry {
   parametersHint: string;
   needsConfirm: boolean;
 }
+
+type RouterT = Awaited<ReturnType<typeof getTranslations<"assistant.router">>>;
 
 function zodFieldHints(schema: AIAction["parameters"]): string {
   const shape = (schema as { shape?: Record<string, { description?: string; _def?: { typeName?: string } }> })
@@ -121,6 +126,10 @@ function parseFrenchDate(token: string, refYear = new Date().getFullYear()): Dat
   return null;
 }
 
+function formatDate(date: Date, locale: string): string {
+  return date.toLocaleDateString(locale);
+}
+
 function helpFromArticle(article: HelpArticle): InterpretResult {
   return {
     type: "help",
@@ -129,27 +138,28 @@ function helpFromArticle(article: HelpArticle): InterpretResult {
   };
 }
 
-function heuristicHelpOrSupport(message: string, pos: Awaited<ReturnType<typeof fetchPosContext>>): InterpretResult | null {
+function heuristicHelpOrSupport(
+  message: string,
+  pos: Awaited<ReturnType<typeof fetchPosContext>>,
+  articles: HelpArticle[],
+  t: RouterT,
+): InterpretResult | null {
   if (looksLikeSupportIssue(message)) {
     const norm = normalizeText(message);
     const category: SupportCategory =
-      norm.includes("bug") || norm.includes("erreur") ? "bug" : "config";
+      norm.includes("bug") || norm.includes("erreur") || norm.includes("error") ? "bug" : "config";
 
     if (norm.includes("caisse") && !pos.openSession && (norm.includes("ouvr") || norm.includes("encaiss"))) {
       return {
         type: "help",
-        message:
-          "La caisse semble fermée — c'est souvent la cause du problème.\n\n1. Allez dans Caisse → Session.\n2. Ouvrez une session avec le fond de caisse initial.\n3. Réessayez votre opération.",
-        links: [{ label: "Ouvrir la session caisse", href: "/institut/caisse/session" }],
+        message: t("posClosedHelp"),
+        links: [{ label: t("openPosSessionLink"), href: "/institut/caisse/session" }],
       };
     }
 
     return {
       type: "support_offer",
-      summary:
-        category === "bug"
-          ? "Ce problème ressemble à un dysfonctionnement. Je peux transmettre votre demande au support BeautyHub."
-          : "Je n'ai pas trouvé la cause exacte. Je peux transmettre votre demande au support pour qu'on vous aide.",
+      summary: category === "bug" ? t("supportBugSummary") : t("supportConfigSummary"),
       category,
       subject: message.slice(0, 120),
       body: message,
@@ -157,7 +167,7 @@ function heuristicHelpOrSupport(message: string, pos: Awaited<ReturnType<typeof 
   }
 
   if (looksLikeHelpQuestion(message)) {
-    const article = findHelpArticle(message);
+    const article = findHelpArticle(message, articles);
     if (article) return helpFromArticle(article);
   }
 
@@ -169,18 +179,21 @@ function heuristicRoute(
   catalog: ActionCatalogEntry[],
   context: Awaited<ReturnType<typeof fetchTenantContext>>,
   pos: Awaited<ReturnType<typeof fetchPosContext>>,
+  articles: HelpArticle[],
+  t: RouterT,
+  locale: string,
 ): InterpretResult | null {
   const norm = normalizeText(message);
   const staffNames = context.staff.map((s) => s.full_name);
 
   const has = (...words: string[]) => words.some((w) => norm.includes(normalizeText(w)));
 
-  const helpOrSupport = heuristicHelpOrSupport(message, pos);
+  const helpOrSupport = heuristicHelpOrSupport(message, pos, articles, t);
   if (helpOrSupport) return helpOrSupport;
 
-  if (has("conge", "vacance", "absence", "fermeture", "indisponible")) {
+  if (has("conge", "vacance", "absence", "fermeture", "indisponible", "leave", "vacation", "time off")) {
     const staffName = findStaffInMessage(message, staffNames);
-    const daysMatch = message.match(/(\d+)\s+jours?/i);
+    const daysMatch = message.match(/(\d+)\s+jours?/i) ?? message.match(/(\d+)\s+days?/i);
     const days = daysMatch ? Number(daysMatch[1]) : null;
 
     let start: Date | null = null;
@@ -210,9 +223,12 @@ function heuristicRoute(
 
       const scope = staffName
         ? "staff"
-        : has("cabine", "ressource")
+        : has("cabine", "ressource", "room")
           ? "resource"
           : "tenant";
+
+      const startLabel = formatDate(start, locale);
+      const endLabel = formatDate(end, locale);
 
       return {
         type: "action",
@@ -226,88 +242,90 @@ function heuristicRoute(
               : undefined,
           starts_at: start.toISOString(),
           ends_at: end.toISOString(),
-          reason: has("vacance", "conge") ? "Vacances" : undefined,
+          reason: has("vacance", "conge", "vacation", "leave") ? t("vacationReason") : undefined,
         },
         summary: staffName
-          ? `Congés pour ${staffName} du ${start.toLocaleDateString("fr")} au ${end.toLocaleDateString("fr")}`
-          : `Absence institut du ${start.toLocaleDateString("fr")} au ${end.toLocaleDateString("fr")}`,
+          ? t("timeOffStaffSummary", { name: staffName, start: startLabel, end: endLabel })
+          : t("timeOffTenantSummary", { start: startLabel, end: endLabel }),
         needsConfirm: true,
       };
     }
   }
 
-  if (has("liste", "lister", "montre", "affiche", "voir", "historique")) {
-    if (has("vente", "ticket", "caisse") && !has("produit")) {
-      return matchList(catalog, "institut.pos_list_sales", { limit: 20 }, "Lister les ventes caisse");
+  if (has("liste", "lister", "montre", "affiche", "voir", "historique", "list", "show")) {
+    if (has("vente", "ticket", "caisse", "sale") && !has("produit", "product")) {
+      return matchList(catalog, "institut.pos_list_sales", { limit: 20 }, t("listSales"));
     }
-    if (has("bon cadeau", "bon-cadeau", "bon cadeaux")) {
-      return matchList(catalog, "institut.pos_list_gift_cards", { limit: 20 }, "Lister les bons cadeaux");
+    if (has("bon cadeau", "bon-cadeau", "bon cadeaux", "gift card")) {
+      return matchList(catalog, "institut.pos_list_gift_cards", { limit: 20 }, t("listGiftCards"));
     }
-    if (has("avoir", "avoirs")) {
-      return matchList(catalog, "institut.pos_list_credit_notes", { limit: 20 }, "Lister les avoirs");
+    if (has("avoir", "avoirs", "credit note")) {
+      return matchList(catalog, "institut.pos_list_credit_notes", { limit: 20 }, t("listCreditNotes"));
     }
-    if (has("produit") && has("caisse", "interne")) {
-      return matchList(catalog, "institut.pos_list_products", { limit: 50 }, "Lister les produits caisse");
+    if (has("produit", "product") && has("caisse", "interne", "pos")) {
+      return matchList(catalog, "institut.pos_list_products", { limit: 50 }, t("listProducts"));
     }
-    if (has("client")) {
-      return matchList(catalog, "institut.list_clients", { limit: 20 }, "Lister les clients");
+    if (has("client", "customer")) {
+      return matchList(catalog, "institut.list_clients", { limit: 20 }, t("listClients"));
     }
-    if (has("rdv", "rendez-vous", "rendez vous")) {
-      return matchList(catalog, "institut.list_appointments", { limit: 20 }, "Lister les rendez-vous");
+    if (has("rdv", "rendez-vous", "rendez vous", "appointment")) {
+      return matchList(catalog, "institut.list_appointments", { limit: 20 }, t("listAppointments"));
     }
-    if (has("personnel", "praticien", "equipe")) {
-      return matchList(catalog, "institut.list_staff", {}, "Lister le personnel");
+    if (has("personnel", "praticien", "equipe", "staff", "team")) {
+      return matchList(catalog, "institut.list_staff", {}, t("listStaff"));
     }
-    if (has("cabine")) {
-      return matchList(catalog, "institut.list_resources", {}, "Lister les cabines");
+    if (has("cabine", "room", "resource")) {
+      return matchList(catalog, "institut.list_resources", {}, t("listResources"));
     }
-    if (has("prestation", "service")) {
-      return matchList(catalog, "institut.list_services", { limit: 50 }, "Lister les prestations");
+    if (has("prestation", "service", "treatment")) {
+      return matchList(catalog, "institut.list_services", { limit: 50 }, t("listServices"));
     }
-    if (has("horaire", "grille", "planning")) {
-      return matchList(catalog, "institut.list_schedules", {}, "Lister les grilles horaires");
+    if (has("horaire", "grille", "planning", "schedule")) {
+      return matchList(catalog, "institut.list_schedules", {}, t("listSchedules"));
     }
-    if (has("absence", "conge", "vacance", "fermeture")) {
-      return matchList(catalog, "institut.list_time_off", { upcoming_only: true }, "Lister les absences");
+    if (has("absence", "conge", "vacance", "fermeture", "leave")) {
+      return matchList(catalog, "institut.list_time_off", { upcoming_only: true }, t("listTimeOff"));
     }
   }
 
-  if (has("caisse", "session") && has("ouvr", "demarr", "start")) {
+  if (has("caisse", "session", "pos") && has("ouvr", "demarr", "start", "open")) {
     const floatMatch = message.match(/(\d+(?:[.,]\d+)?)\s*€/);
     const opening = floatMatch ? Number.parseFloat(floatMatch[1].replace(",", ".")) : 0;
     return {
       type: "action",
       actionName: "institut.pos_open_session",
       params: { opening_float_euros: opening },
-      summary: `Ouvrir la session caisse${opening ? ` avec ${opening} € de fond` : ""}`,
+      summary: opening
+        ? t("openSessionWithFloat", { amount: opening })
+        : t("openSessionSummary"),
       needsConfirm: true,
     };
   }
 
-  if (has("rapport x", "ticket x") || (has("rapport") && has("intermediaire"))) {
-    return matchList(catalog, "institut.pos_generate_x_report", {}, "Générer un rapport X");
+  if (has("rapport x", "ticket x", "x report") || (has("rapport", "report") && has("intermediaire", "intermediate"))) {
+    return matchList(catalog, "institut.pos_generate_x_report", {}, t("generateXReport"));
   }
 
-  if (has("clotur", "ferme") && has("caisse", "session", "rapport z", "z")) {
+  if (has("clotur", "ferme", "close") && has("caisse", "session", "rapport z", "z", "pos")) {
     const cashMatch = message.match(/(\d+(?:[.,]\d+)?)\s*€/);
     if (cashMatch) {
       return {
         type: "action",
         actionName: "institut.pos_close_session",
         params: { counted_cash_euros: Number.parseFloat(cashMatch[1].replace(",", ".")) },
-        summary: `Clôturer la session caisse (${cashMatch[1]} € comptés)`,
+        summary: t("closeSessionSummary", { amount: cashMatch[1] }),
         needsConfirm: true,
       };
     }
     return {
       type: "clarify",
-      message: "Indiquez le montant espèces compté en caisse pour la clôture (ex. « clôture caisse avec 250 € »).",
+      message: t("closeSessionClarify"),
     };
   }
 
   if (
-    has("bon cadeau", "bon-cadeau") &&
-    (has("creer", "créer", "emettre", "émettre", "faire", "ajoute"))
+    has("bon cadeau", "bon-cadeau", "gift card") &&
+    (has("creer", "créer", "emettre", "émettre", "faire", "ajoute", "create", "issue"))
   ) {
     const amountMatch = message.match(/(\d+(?:[.,]\d+)?)\s*€/);
     if (amountMatch) {
@@ -315,41 +333,35 @@ function heuristicRoute(
         type: "action",
         actionName: "institut.pos_issue_gift_card",
         params: { amount_euros: Number.parseFloat(amountMatch[1].replace(",", ".")) },
-        summary: `Émettre un bon cadeau de ${amountMatch[1]} €`,
+        summary: t("giftCardSummary", { amount: amountMatch[1] }),
         needsConfirm: true,
       };
     }
-    return { type: "clarify", message: "Quel montant pour le bon cadeau ? (ex. « bon cadeau 50 € »)" };
+    return { type: "clarify", message: t("giftCardClarify") };
   }
 
-  if (has("caisse", "session") && (has("etat", "état", "status", "ouverte", "resume", "résumé"))) {
+  if (has("caisse", "session", "pos") && (has("etat", "état", "status", "ouverte", "resume", "résumé", "open"))) {
     return matchList(
       catalog,
       "institut.pos_session_status",
       {},
-      pos.openSession ? "Résumé session caisse ouverte" : "État de la caisse",
+      pos.openSession ? t("posSessionOpenSummary") : t("posSessionStatusSummary"),
     );
   }
 
-  if (has("cree", "creer", "ajoute", "ajouter", "nouveau", "nouvelle")) {
-    if (has("client")) {
-      return {
-        type: "help",
-        message: formatHelpArticle(
-          findHelpArticle("ajouter client") ?? {
-            id: "add_client",
-            title: "Ajouter un client",
-            summary: "Créez un client depuis la liste Clients.",
-            steps: ["Ouvrez Clients.", "Cliquez sur « + Nouveau client ».", "Renseignez les informations."],
-            href: "/institut/clients",
-            keywords: [],
-          },
-        ),
-        links: [{ label: "Ajouter un client", href: "/institut/clients" }],
-      };
+  if (has("cree", "creer", "ajoute", "ajouter", "nouveau", "nouvelle", "create", "add", "new")) {
+    if (has("client", "customer")) {
+      const article = getArticleById(articles, "add_client");
+      if (article) {
+        return {
+          type: "help",
+          message: formatHelpArticle(article),
+          links: [{ label: article.title, href: article.href }],
+        };
+      }
     }
-    if (has("prestation", "service")) {
-      const article = findHelpArticle("ajouter prestation");
+    if (has("prestation", "service", "treatment")) {
+      const article = findHelpArticle("ajouter prestation", articles) ?? getArticleById(articles, "add_service");
       if (article) return helpFromArticle(article);
     }
   }
@@ -389,7 +401,11 @@ function matchList(
   };
 }
 
-function parseLlmResult(content: string, catalog: ActionCatalogEntry[]): InterpretResult | null {
+function parseLlmResult(
+  content: string,
+  catalog: ActionCatalogEntry[],
+  t: RouterT,
+): InterpretResult | null {
   try {
     const parsed = JSON.parse(content) as Record<string, unknown>;
 
@@ -426,7 +442,7 @@ function parseLlmResult(content: string, catalog: ActionCatalogEntry[]): Interpr
     }
     if (typeof parsed.action === "string") {
       const entry = catalog.find((a) => a.name === parsed.action);
-      if (!entry) return { type: "unknown", message: "Action non autorisée." };
+      if (!entry) return { type: "unknown", message: t("actionNotAllowed") };
       return {
         type: "action",
         actionName: parsed.action,
@@ -442,14 +458,26 @@ function parseLlmResult(content: string, catalog: ActionCatalogEntry[]): Interpr
   return null;
 }
 
+const LOCALE_LABELS: Record<string, string> = {
+  fr: "français",
+  en: "English",
+  es: "español",
+  nl: "Nederlands",
+};
+
 async function openAiRoute(
   message: string,
   catalog: ActionCatalogEntry[],
   context: Awaited<ReturnType<typeof fetchTenantContext>>,
   pos: Awaited<ReturnType<typeof fetchPosContext>>,
+  articles: HelpArticle[],
+  t: RouterT,
+  locale: string,
 ): Promise<InterpretResult | null> {
   const aiConfig = await fetchPlatformAiConfig();
   if (!aiConfig.enabled || !aiConfig.apiKey) return null;
+
+  const responseLanguage = LOCALE_LABELS[locale] ?? locale;
 
   const system = `Tu es l'assistant IA de BeautyHub, un SaaS pour instituts de beauté.
 Tu aides les utilisateurs à:
@@ -457,11 +485,12 @@ Tu aides les utilisateurs à:
 2) EXÉCUTER des actions métier (mode action)
 3) DIAGNOSTIQUER un problème: erreur de configuration vs bug potentiel (mode support)
 
-Réponds UNIQUEMENT en JSON valide avec l'un de ces formats:
-{"help":"explication pas-à-pas en français","links":[{"label":"...","href":"/chemin"}]}
+Réponds UNIQUEMENT en JSON valide. Tous les textes visibles par l'utilisateur doivent être en ${responseLanguage}.
+Formats:
+{"help":"explication pas-à-pas","links":[{"label":"...","href":"/chemin"}]}
 {"support":"résumé pour l'utilisateur","category":"bug|config|feature_request|help","subject":"...","body":"..."}
-{"action":"nom.action","params":{...},"summary":"phrase courte en français"}
-{"clarify":"question en français si info manquante"}
+{"action":"nom.action","params":{...},"summary":"phrase courte"}
+{"clarify":"question si info manquante"}
 {"unknown":"message si impossible"}
 
 Règles support:
@@ -470,7 +499,7 @@ Règles support:
 - Ne crée jamais un ticket automatiquement: propose seulement l'escalade.
 
 Guides disponibles:
-${buildKnowledgeCatalog()}
+${buildKnowledgeCatalog(articles)}
 
 Contexte tenant:
 - Personnel: ${context.staff.map((s) => s.full_name).join(", ") || "aucun"}
@@ -512,16 +541,20 @@ ${catalog.map((a) => `- ${a.name}: ${a.description}. Paramètres: ${a.parameters
   const content = body.choices?.[0]?.message?.content;
   if (!content) return null;
 
-  return parseLlmResult(content, catalog);
+  return parseLlmResult(content, catalog, t);
 }
 
 export async function interpretUserMessage(
   message: string,
   ctx: ExecuteActionContext,
 ): Promise<InterpretResult> {
+  const t = await getTranslations("assistant.router");
+  const locale = await getLocale();
+  const articles = await loadHelpArticles();
+
   const trimmed = message.trim();
   if (!trimmed) {
-    return { type: "clarify", message: "Que souhaitez-vous faire ?" };
+    return { type: "clarify", message: t("emptyMessage") };
   }
 
   const actions = getAiActionsFor(ctx.enabledModuleIds, ctx.role);
@@ -530,18 +563,16 @@ export async function interpretUserMessage(
   const tenantContext = await fetchTenantContext(supabase, ctx.tenantId);
   const posContext = await fetchPosContext(supabase, ctx.tenantId);
 
-  const llm = await openAiRoute(trimmed, catalog, tenantContext, posContext);
+  const llm = await openAiRoute(trimmed, catalog, tenantContext, posContext, articles, t, locale);
   if (llm) return llm;
 
-  const heuristic = heuristicRoute(trimmed, catalog, tenantContext, posContext);
+  const heuristic = heuristicRoute(trimmed, catalog, tenantContext, posContext, articles, t, locale);
   if (heuristic) return heuristic;
 
   const aiConfig = await fetchPlatformAiConfig();
   return {
     type: "unknown",
-    message: aiConfig.apiKey
-      ? "Je n'ai pas reconnu cette demande. Reformulez, choisissez une action rapide, ou décrivez un problème pour contacter le support."
-      : "Je n'ai pas reconnu cette demande. Configurez la clé OpenAI dans Admin → Réglages, ou choisissez une action rapide.",
+    message: aiConfig.apiKey ? t("unknownWithKey") : t("unknownNoKey"),
   };
 }
 

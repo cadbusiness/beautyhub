@@ -39,18 +39,17 @@ export function extForSiteMedia(mime: string): string {
   }
 }
 
-export function validateSiteMediaFile(file: File): { error?: string; kind?: SiteMediaKind } {
+export type SiteMediaErrorKey = "unsupportedFormat" | "videoTooLarge" | "imageTooLarge";
+
+export function validateSiteMediaFile(file: File): { errorKey?: SiteMediaErrorKey; kind?: SiteMediaKind } {
   const kind = siteMediaKindFromMime(file.type);
   if (!kind) {
-    return { error: "Format non supporté (JPEG, PNG, WebP, GIF, MP4, WebM)." };
+    return { errorKey: "unsupportedFormat" };
   }
   const max = kind === "video" ? SITE_VIDEO_MAX_BYTES : SITE_IMAGE_MAX_BYTES;
   if (file.size > max) {
     return {
-      error:
-        kind === "video"
-          ? "Vidéo trop volumineuse (max 25 Mo)."
-          : "Image trop volumineuse (max 5 Mo).",
+      errorKey: kind === "video" ? "videoTooLarge" : "imageTooLarge",
     };
   }
   return { kind };

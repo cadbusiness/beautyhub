@@ -30,6 +30,11 @@ export function SiteThemeForm({
 }) {
   const t = useTranslations("institut.marketing.website.theme");
   const tCommon = useTranslations("common");
+  const tBlocks = useTranslations("public.site.blocks");
+  const blockLabels = {
+    noImages: tBlocks("noImages"),
+    hoursByAppointment: tBlocks("hoursByAppointment"),
+  };
   const [state, action, pending] = useActionState(saveSiteTheme, initial);
   const [primaryColor, setPrimaryColor] = useState(settings.primary_color);
   const [displayName, setDisplayName] = useState(settings.display_name ?? "");
@@ -151,6 +156,7 @@ export function SiteThemeForm({
             templateId="elegant"
             services={[]}
             accent={primaryColor}
+            blockLabels={blockLabels}
           />
           {footerText ? (
             <p className="border-t border-slate-200 px-4 py-3 text-center text-xs text-slate-500">

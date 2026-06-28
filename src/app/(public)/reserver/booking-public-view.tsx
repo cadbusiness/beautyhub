@@ -29,6 +29,11 @@ export async function BookingPublicView({
 }) {
   const t = await getTranslations("public.booking");
   const tNav = await getTranslations("public.site.nav");
+  const tBlocks = await getTranslations("public.site.blocks");
+  const blockLabels = {
+    noImages: tBlocks("noImages"),
+    hoursByAppointment: tBlocks("hoursByAppointment"),
+  };
   const tenant = await getPublicSiteTenant();
   if (!tenant) return null;
 
@@ -101,6 +106,7 @@ export async function BookingPublicView({
           scheduleDays={scheduleDays}
           accent={shell.primaryColor}
           compactHero
+          blockLabels={blockLabels}
         />
       ) : (
         <div className="mx-auto max-w-3xl px-4 pt-6 lg:px-6">

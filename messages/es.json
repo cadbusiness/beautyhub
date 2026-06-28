@@ -1,0 +1,2701 @@
+{
+  "academie": {
+    "courses": {
+      "columns": {
+        "actions": "Comportamiento",
+        "price": "Precio",
+        "status": "Estado",
+        "title": "Título"
+      },
+      "delete": "BORRAR",
+      "dialogTitle": "Nueva formación",
+      "draft": "Borrador",
+      "empty": "No hay entrenamiento por el momento.",
+      "footer": "{recuento, plural, uno {# formation} otro {# formations}}",
+      "form": {
+        "descriptionPlaceholder": "Opcional",
+        "priceEur": "Precio (EUR)",
+        "publishImmediately": "Publicar inmediatamente",
+        "submit": "Crear la formación",
+        "submitting": "Creación…",
+        "title": "Título",
+        "titlePlaceholder": "mi entrenamiento"
+      },
+      "new": "Nueva formación",
+      "noResults": "No hay resultados para esta búsqueda.",
+      "published": "Publicado",
+      "searchPlaceholder": "Buscar por título…"
+    },
+    "enrollments": {
+      "title": "Inscripciones"
+    },
+    "overview": {
+      "courses": "Capacitación",
+      "enrolledStudents": "Estudiantes matriculados",
+      "published": "Publicado"
+    },
+    "students": {
+      "columns": {
+        "course": "Capacitación",
+        "status": "Estado",
+        "student": "Alumno"
+      },
+      "dialogTitle": "Nuevo registro",
+      "empty": "No hay registro por el momento.",
+      "footer": "{recuento, plural, uno {# inscription} otro {# inscriptions}}",
+      "form": {
+        "chooseCourse": "Elegir…",
+        "course": "Capacitación",
+        "emailPlaceholder": "marie@correo electrónico.com",
+        "linkClient": "Enlace a un cliente (opcional)",
+        "noCourses": "Primero cree un curso antes de inscribir a un estudiante.",
+        "studentName": "Nombre del estudiante",
+        "studentNamePlaceholder": "María Durand",
+        "submit": "Registrar al estudiante",
+        "submitting": "Registro…"
+      },
+      "newEnrollment": "Nuevo registro",
+      "noResults": "No hay resultados para esta búsqueda.",
+      "searchPlaceholder": "Búsqueda de estudiantes, correo electrónico, formación…",
+      "status": {
+        "cancelled": "Cancelado",
+        "completed": "Finalizado",
+        "enrolled": "Registrado"
+      }
+    }
+  },
+  "account": {
+    "actions": {
+      "notAuthenticated": "La sesión expiró. Inicie sesión nuevamente.",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "passwordSaved": "Contraseña actualizada.",
+      "passwordTooShort": "La contraseña debe contener al menos 8 caracteres.",
+      "profileSaved": "Perfil guardado."
+    },
+    "nav": {
+      "ariaLabel": "Secciones de cuenta",
+      "institut": "Instituto",
+      "pos": "Caja",
+      "profile": "Perfil",
+      "security": "Seguridad",
+      "stripe": "RayaConectar",
+      "woocommerce": "WooCommerce"
+    },
+    "password": {
+      "confirmPassword": "Confirmar Contraseña",
+      "newPassword": "Nueva contraseña",
+      "sectionDescription": "Elija una contraseña de al menos 8 caracteres.",
+      "sectionTitle": "Contraseña",
+      "submit": "Actualizar contraseña",
+      "submitting": "Actualizar…"
+    },
+    "profile": {
+      "fullName": "nombre completo",
+      "fullNamePlaceholder": "María Durand",
+      "phonePlaceholder": "06 12 34 56 78",
+      "sectionDescription": "Tu información personal visible en el equipo.",
+      "sectionTitle": "Perfil"
+    },
+    "subtitle": "Perfil del instituto, seguridad y configuración.",
+    "title": "mi cuenta"
+  },
+  "admin": {
+    "brands": {
+      "columns": {
+        "brand": "Marca",
+        "slug": "Identificador",
+        "tenants": "institutos",
+        "type": "Amable"
+      },
+      "created": "Marca creada.",
+      "dialogTitle": "Nueva marca",
+      "edit": "para modificar",
+      "empty": "Sin marcas.",
+      "errors": {
+        "notFound": "Marca no encontrada.",
+        "platformBrand": "La marca de la plataforma no se puede cambiar.",
+        "required": "Se requiere nombre y DNI.",
+        "slugTaken": "El identificador “{slug}” ya está en uso."
+      },
+      "footerCount": "__UCI0__ marca(s)",
+      "form": {
+        "create": "Crear",
+        "name": "Nombre",
+        "slug": "Identificador",
+        "submit": "Ahorrar",
+        "submitting": "Registro…"
+      },
+      "new": "Nueva marca",
+      "platform": "Plataforma",
+      "reseller": "Distribuidor",
+      "searchPlaceholder": "Búsqueda de marca…",
+      "updated": "Marca actualizada."
+    },
+    "dashboard": {
+      "description": "Descripción general de la plataforma.",
+      "managePlans": "Administrar fórmulas",
+      "manageSettings": "Configuración de la plataforma",
+      "manageSubscriptions": "Ver suscripciones",
+      "manageTeam": "equipo de plataforma",
+      "manageTenants": "Gestionar institutos",
+      "stats": {
+        "activeSubscriptions": "Suscripciones activas",
+        "brands": "Marcas",
+        "catalogModules": "Módulos en el catálogo.",
+        "openTickets": "Entradas abiertas",
+        "plans": "Fórmulas",
+        "tenants": "institutos"
+      },
+      "title": "Panel"
+    },
+    "layout": {
+      "backToApp": "Volver a la aplicación",
+      "subtitle": "Administración de plataforma"
+    },
+    "modules": {
+      "active": "Activo",
+      "columns": {
+        "category": "Categoría",
+        "module": "Módulo",
+        "status": "Estado",
+        "tenants": "institutos",
+        "version": "Versión"
+      },
+      "disable": "Desactivar",
+      "empty": "Ningún módulo en el catálogo.",
+      "enable": "Permitir",
+      "errors": {
+        "required": "Identificador y nombre requeridos."
+      },
+      "footerCount": "__UCI0__ módulo(s)",
+      "form": {
+        "category": "Categoría",
+        "description": "Descripción",
+        "isActive": "Módulo activo en el catálogo.",
+        "name": "Nombre",
+        "submit": "Ahorrar",
+        "submitting": "Registro…",
+        "version": "Versión"
+      },
+      "inactive": "Inactivo",
+      "searchPlaceholder": "Módulo de búsqueda…",
+      "updated": "Módulo actualizado."
+    },
+    "plans": {
+      "active": "Activo",
+      "back": "← Fórmulas",
+      "columns": {
+        "modules": "Módulos",
+        "plan": "Fórmula",
+        "price": "Precio",
+        "status": "Estado"
+      },
+      "dialogTitle": "Nueva fórmula",
+      "empty": "Sin fórmula.",
+      "footerCount": "__UCI0__ fórmula(s)",
+      "form": {
+        "createSubmit": "Crea la fórmula",
+        "editSubmit": "Ahorrar",
+        "featureCalendar": "Calendario de citas",
+        "featureClientBooking": "Reserva de clientes en línea",
+        "featureSms": "Notificaciones por SMS",
+        "includedModules": "Módulos incluidos",
+        "interval": "Periodicidad",
+        "isActive": "Fórmula activa (disponible para institutos)",
+        "limitAppointments": "Cita / mes",
+        "limitClients": "Archivos de clientes",
+        "limitStaff": "Miembros del equipo",
+        "limitStudents": "Estudiantes (academia)",
+        "monthly": "Mensual",
+        "namePlaceholder": "Pro",
+        "priceEur": "Precio (EUR)",
+        "pricePlaceholder": "59",
+        "quotas": "Cuotas",
+        "quotasHint": "(vacío = ilimitado)",
+        "rdvFeatures": "Funciones de reunión",
+        "submitting": "Registro…",
+        "unlimitedPlaceholder": "∞",
+        "yearly": "Anual"
+      },
+      "inactive": "Inactivo",
+      "new": "Nueva fórmula",
+      "noResults": "Sin resultados.",
+      "searchPlaceholder": "Fórmula de búsqueda…"
+    },
+    "settings": {
+      "aiDescription": "La clave OpenAI está cifrada de forma básica. Si no está presente, el respaldo utiliza OPENAI_API_KEY de la implementación.",
+      "aiEnabled": "Asistente de IA habilitado",
+      "aiModel": "Modelo abierto de IA",
+      "aiTitle": "Asistente de IA",
+      "clearOpenAiKey": "Eliminar clave guardada",
+      "description": "Configuración de asistente de IA y atención al cliente.",
+      "openAiKey": "Clave API de OpenAI",
+      "openAiKeyConfigured": "Ya hay una clave configurada.",
+      "openAiKeyHint": "Requerido para lenguaje natural avanzado y diagnóstico inteligente.",
+      "openAiKeyPlaceholder": "sk-…",
+      "openAiKeyPlaceholderSet": "Déjelo en blanco para mantener la clave actual.",
+      "save": "Ahorrar",
+      "saved": "Configuraciones guardadas.",
+      "saving": "Registro…",
+      "supportDescription": "Las solicitudes escaladas desde el asistente aparecen en Soporte.",
+      "supportNotifyEmail": "Notificación por correo electrónico (opcional)",
+      "supportNotifyEmailPlaceholder": "soporte@votredomaine.fr",
+      "supportTitle": "Atención al cliente",
+      "title": "Configuración de la plataforma"
+    },
+    "subscriptions": {
+      "applyPlan": "Aplicar",
+      "applyStatus": "Estado",
+      "columns": {
+        "actions": "Comportamiento",
+        "periodEnd": "Fin del periodo",
+        "plan": "Fórmula",
+        "status": "Estado",
+        "tenant": "Instituto"
+      },
+      "empty": "Sin suscripción.",
+      "filterAll": "Todos los estados",
+      "footerCount": "{count} suscripción(es)",
+      "noPlan": "- Ninguno -",
+      "status": {
+        "active": "Activo",
+        "canceled": "Finalizado",
+        "past_due": "No pagado",
+        "trialing": "Ensayo"
+      }
+    },
+    "support": {
+      "actions": {
+        "ticketMissing": "Boleto perdido."
+      },
+      "category": {
+        "bug": "Bicho",
+        "config": "Configuración",
+        "feature_request": "Evolución",
+        "help": "Ayuda"
+      },
+      "columns": {
+        "date": "Fecha",
+        "status": "Estado",
+        "subject": "Sujeto",
+        "tenant": "Instituto"
+      },
+      "description": "Solicitudes enviadas por institutos a través del asistente de IA.",
+      "detail": {
+        "conversation": "Historial del asistente",
+        "message": "Mensaje",
+        "notes": "Notas internas",
+        "page": "Página",
+        "save": "Para actualizar",
+        "saving": "Actualizar…",
+        "status": "Estado"
+      },
+      "empty": "No hay solicitudes por el momento.",
+      "filterAll": "Todo",
+      "footerCount": "__UCI0__ solicitud(es)",
+      "status": {
+        "closed": "Cerrado",
+        "in_progress": "En curso",
+        "open": "Abierto",
+        "resolved": "Resuelto"
+      },
+      "title": "Atención al cliente"
+    },
+    "team": {
+      "columns": {
+        "email": "Correo electrónico",
+        "since": "De"
+      },
+      "dialogTitle": "Invitar a un superadministrador",
+      "empty": "Aún no hay superadministradores.",
+      "errors": {
+        "createUser": "No se puede crear usuario.",
+        "required": "Se requiere correo electrónico y contraseña.",
+        "selfRevoke": "No puede revocar su propio acceso."
+      },
+      "footerCount": "__UCI0__ miembro(s)",
+      "form": {
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "submit": "Invitar",
+        "submitting": "Invitación…"
+      },
+      "invite": "Invitar a un superadministrador",
+      "invited": "Gran administrador invitado.",
+      "revoke": "Revocar",
+      "you": "TÚ"
+    },
+    "tenants": {
+      "brandFilterHint": "Filtro de marca activo.",
+      "clearBrandFilter": "Mostrar todo",
+      "columns": {
+        "activeModules": "Módulos activos",
+        "brand": "Marca",
+        "institut": "Instituto",
+        "plan": "Fórmula",
+        "slug": "Identificador",
+        "subscription": "Suscripción"
+      },
+      "detail": {
+        "accessHint": "Acceso al instituto: {slug}.localhost:3000",
+        "activePlan": "Fórmula activa",
+        "applyPlan": "Aplicar",
+        "applyPlanHint": "Al aplicar un plan se activan automáticamente sus módulos incluidos.",
+        "back": "← Institutos",
+        "brandLabel": "Marca",
+        "disable": "Desactivar",
+        "enable": "Permitir",
+        "featureActive": "activo",
+        "featureInactive": "desactivado",
+        "info": "Información",
+        "modules": "Módulos",
+        "noPlan": "- Ninguno -",
+        "subscription": "Suscripción",
+        "team": "Equipo",
+        "teamCount": "{count} miembro(s): {roles}",
+        "teamNone": "ninguno",
+        "usage": "Uso de cita",
+        "usageLimit": "/ {limit} (fórmula {plan})",
+        "usageThisMonth": "Este mes: __UCI0__",
+        "usageUnlimited": "(ilimitado)"
+      },
+      "dialogTitle": "nuevo instituto",
+      "empty": "Ningún instituto por el momento.",
+      "footerCount": "{count} instituto(s)",
+      "form": {
+        "name": "nombre del instituto",
+        "namePlaceholder": "Instituto de Belleza de Lyon",
+        "noPlan": "— Ninguno por el momento —",
+        "ownerEmailPlaceholder": "proprio@institut.fr",
+        "ownerLegend": "Cuenta de propietario (opcional)",
+        "ownerPasswordPlaceholder": "mín. 6 personajes",
+        "plan": "Fórmula",
+        "slug": "Identificador (subdominio)",
+        "slugPlaceholder": "bella-lyon",
+        "submit": "crear el instituto",
+        "submitting": "Creación…"
+      },
+      "new": "nuevo instituto",
+      "noResults": "Sin resultados.",
+      "searchPlaceholder": "Búsqueda de institutos, identificador…",
+      "subscriptionStatus": {
+        "active": "Activo",
+        "canceled": "Finalizado",
+        "past_due": "No pagado",
+        "trialing": "Ensayo"
+      }
+    }
+  },
+  "appointments": {
+    "bookingPublic": {
+      "backToCalendar": "Volver al calendario",
+      "columns": {
+        "actions": "Comportamiento",
+        "name": "Nombre",
+        "slug": "URL",
+        "status": "Estado"
+      },
+      "copy": "Copiar",
+      "createTitle": "Nueva ruta",
+      "defaultBadge": "Por defecto",
+      "defaultSlug": "/reservar",
+      "draft": "Borrador",
+      "editTitle": "Editar ruta",
+      "embedCode": "código de marco flotante",
+      "embedLink": "Insertar URL",
+      "empty": "No hay ruta configurada.",
+      "footer": "{recuento, plural, uno {# parcours} otro {# parcours}}",
+      "form": {
+        "allowedServices": "Servicios autorizados",
+        "allowedServicesHint": "Deje en blanco para todos los servicios del catálogo público.",
+        "defaultSlugHint": "Se puede acceder a la ruta predeterminada en /reserver",
+        "name": "Nombre del curso",
+        "processTitle": "Viaje del cliente",
+        "published": "Publicado (visible en línea)",
+        "requirePhone": "Teléfono requerido",
+        "requireStaff": "practicante obligatorio",
+        "setDefault": "Establecer como ruta predeterminada",
+        "showExtrasStep": "Etapa de suplementos/extras",
+        "showStaffPicker": "Proponer la elección del practicante.",
+        "slug": "segmento de URL",
+        "slugHint": "Accesible en /reserver/{slug}",
+        "slugPlaceholder": "ex. peinado"
+      },
+      "intro": "Configure uno o más viajes de reserva en línea: reglas de formulario, enlaces directos y código de inserción para su sitio.",
+      "newFlow": "Nueva ruta",
+      "openPreview": "Abrir página",
+      "publicLink": "Enlace público",
+      "published": "Publicado",
+      "setDefault": "Establecer como predeterminado",
+      "share": "Vincular e insertar",
+      "shareTitle": "Compartir — {name}",
+      "title": "Reserva pública"
+    },
+    "calendar": {
+      "allServices": "Todos los servicios",
+      "allStaff": "todo el equipo",
+      "columnMode": {
+        "resource": "Cabañas",
+        "staff": "Practicantes"
+      },
+      "dialogTitle": "Nueva cita",
+      "editTitle": "Editar cita",
+      "emptyResources": "Agrega cabañas en Team para mostrar el calendario.",
+      "emptyStaff": "Agrega personal al equipo para ver el calendario.",
+      "loadError": "No se puede cargar el calendario.",
+      "monthAppointments": "{recuento, plural, uno {# RDV} otro {# RDV}}",
+      "newAppointment": "Nueva cita",
+      "publicPage": "Configuración de reserva",
+      "retry": "Intentar otra vez",
+      "slotClickHint": "Haga clic para crear una cita",
+      "today": "Hoy",
+      "views": {
+        "day": "Día",
+        "month": "Mes",
+        "week": "Semana"
+      },
+      "weekOf": "Semana de __UCI0__",
+      "weekdaysShort": {
+        "fri": "Vie",
+        "mon": "Lun",
+        "sat": "Se sentó",
+        "sun": "Sol",
+        "thu": "Juego",
+        "tue": "Mar",
+        "wed": "Mar"
+      }
+    },
+    "form": {
+      "addService": "Nuevo servicio",
+      "anyStaff": "— Indiferente —",
+      "chooseService": "Elige un servicio",
+      "client": "Cliente",
+      "create": "Crear la cita",
+      "endsAt": "Fecha y hora de finalización",
+      "endsAtExtrasHint": "Déjelo en blanco para recalcular automáticamente en función de los extras.",
+      "extras": "Opciones/extras",
+      "noClient": "— Sin clientes —",
+      "noResource": "- Ninguno -",
+      "noServicesHint": "No hay servicios disponibles: cree uno para programar una cita.",
+      "notes": "Notas",
+      "resource": "Cabina",
+      "scheduleWarningConfirm": "Confirmar a pesar de que el horario está fuera de horario",
+      "service": "Beneficio",
+      "staff": "Empleado)",
+      "startsAt": "Fecha y hora de inicio",
+      "status": "Estado"
+    },
+    "list": {
+      "columns": {
+        "actions": "Comportamiento",
+        "client": "Cliente",
+        "date": "Fecha",
+        "service": "Beneficio",
+        "staff": "Facultativo",
+        "status": "Estado"
+      },
+      "confirmStatus": "Bueno",
+      "dialogTitle": "Nueva cita",
+      "empty": "Sin cita previa.",
+      "new": "Nueva cita",
+      "noResults": "No hay resultados para esta búsqueda.",
+      "searchPlaceholder": "Buscando servicio, cliente, practicante…"
+    },
+    "status": {
+      "booked": "Reservar",
+      "cancelled": "Cancelado",
+      "completed": "Finalizado",
+      "confirmed": "Confirmado",
+      "no_show": "Ausente"
+    },
+    "tabs": {
+      "bookingPublic": "Reserva pública",
+      "calendar": "Calendario",
+      "list": "Lista"
+    }
+  },
+  "assistant": {
+    "knowledge": {
+      "articles": {
+        "add_client": {
+          "step1": "Abra Clientes desde el menú.",
+          "step2": "Haga clic en “+ Nuevo cliente”.",
+          "step3": "Ingrese nombre, correo electrónico y número de teléfono.",
+          "summary": "Registre un cliente de la lista de Clientes.",
+          "title": "Añadir un cliente"
+        },
+        "add_service": {
+          "step1": "Abra Servicios en el menú lateral.",
+          "step2": "Haga clic en “+ Nuevo servicio”.",
+          "step3": "Ingrese el nombre, la duración y el precio, luego guarde.",
+          "summary": "Cree un servicio desde el menú Servicios.",
+          "title": "Agregar un servicio"
+        },
+        "appointments": {
+          "step1": "Abra Citas en el menú.",
+          "step2": "Utilice el calendario para ver los espacios.",
+          "step3": "Haga clic en un espacio libre para crear una cita.",
+          "summary": "Ver el calendario y crear citas.",
+          "title": "Gestionar citas"
+        },
+        "courses": {
+          "step1": "Academia Abierta → Entrenamientos.",
+          "step2": "Haz clic en “+ Nueva formación”.",
+          "step3": "Introduzca título, descripción y precio.",
+          "summary": "Publicar formación del módulo Academy.",
+          "title": "Crear entrenamiento"
+        },
+        "open_pos": {
+          "step1": "Vaya a Pagar → Sesión.",
+          "step2": "Haga clic en \"Iniciar sesión\".",
+          "step3": "Indique el saldo de caja inicial si es necesario.",
+          "summary": "Se debe abrir una sesión de caja registradora antes de retirar el dinero.",
+          "title": "Abrir caja"
+        },
+        "pos_checkout": {
+          "step1": "Verifique que haya una sesión de pago abierta.",
+          "step2": "Vaya a Cajero (terminal).",
+          "step3": "Añade servicios/productos a la cesta y valida el pago.",
+          "summary": "Retiro de efectivo desde la terminal de efectivo.",
+          "title": "Guardar una venta"
+        },
+        "team_time_off": {
+          "step1": "Abra Equipo desde el menú.",
+          "step2": "Apartado de ausencias: añadir un periodo para un practicante o el instituto.",
+          "step3": "También puedes preguntarme en lenguaje natural (por ejemplo, “Léa de baja por 5 días”).",
+          "summary": "Declarar baja o indisponibilidad del Equipo.",
+          "title": "Planificar una ausencia"
+        }
+      }
+    },
+    "page": {
+      "action": "Acción",
+      "availableActions": "Acciones disponibles",
+      "conversation": "Conversación",
+      "createClient": {
+        "emailPlaceholder": "marie@correo electrónico.com",
+        "fullName": "nombre completo",
+        "fullNamePlaceholder": "María Durand",
+        "phonePlaceholder": "06 12 34 56 78",
+        "title": "crear un cliente"
+      },
+      "invalidJson": "JSON no válido.",
+      "listClients": {
+        "limit": "Límite",
+        "title": "Listar clientes"
+      },
+      "noActions": "Sin acción de IA.",
+      "paramsJson": "Parámetros (JSON)",
+      "systemHint": "Describe tu solicitud en lenguaje natural o elige una acción a continuación."
+    },
+    "panel": {
+      "actions": {
+        "assignResourceSchedule": "Asignar horarios a una cabina",
+        "assignStaffSchedule": "Asignar horarios al personal",
+        "cancelAppointment": "Cancelar una cita",
+        "createAppointment": "Crear una cita",
+        "createClient": "crear un cliente",
+        "createCourse": "Nueva formación",
+        "createSchedule": "Crear un horario",
+        "createTimeOff": "Planificar una ausencia",
+        "deleteTimeOff": "Eliminar una ausencia",
+        "listAppointments": "Listar citas",
+        "listClients": "Listar clientes",
+        "listCourses": "Ver la formación",
+        "listResources": "Listar cabañas",
+        "listSchedules": "Listar horarios",
+        "listServices": "Listar los servicios",
+        "listStaff": "Lista de personal",
+        "listTimeOff": "Listar ausencias",
+        "posAddMovement": "Movimiento de efectivo",
+        "posCheckout": "Guardar una venta",
+        "posCloseSession": "Cierra la caja (Z)",
+        "posCreateCreditNote": "crear un credito",
+        "posCreateProduct": "crear un producto",
+        "posGenerateXReport": "informe x",
+        "posGetSettings": "Configuración de caja registradora",
+        "posIssueGiftCard": "Emitir un vale regalo",
+        "posListCreditNotes": "Activos activos",
+        "posListGiftCards": "Vales regalo activos",
+        "posListProducts": "Productos de caja",
+        "posListSales": "Ventas recientes",
+        "posOpenSession": "Abrir caja",
+        "posPayBalance": "cobrar un saldo",
+        "posSessionStatus": "Estado de la sesión de pago",
+        "updateScheduleBlocks": "Editar franjas horarias"
+      },
+      "browseAllActions": "Todas las acciones",
+      "closeChat": "Cerrar chat",
+      "closeOverlay": "Cierra el asistente",
+      "confirmFallback": "Esta acción requiere su confirmación.",
+      "confirmNo": "Cancelar",
+      "confirmPrompt": "¿Confirmar esta acción?",
+      "confirmYes": "Confirmar",
+      "confirming": "Ejecución: {summary}",
+      "fabLabel": "Asistente",
+      "greeting": "Buen día ! Describe lo que quieres hacer en lenguaje natural (por ejemplo, “dar a Léa un permiso de 5 días a partir del 1 de agosto”) o elige una acción rápida.",
+      "messagePlaceholder": "Tu mensaje…",
+      "modules": {
+        "academie": "Academia",
+        "institut": "Instituto"
+      },
+      "noActionResults": "No se encontraron acciones.",
+      "notRecognized": "No reconocí esta solicitud. Reformule o elija una acción rápida.",
+      "open": "Abrir asistente de IA",
+      "quickActions": "Acciones rápidas",
+      "searchActions": "Buscar una acción…",
+      "send": "Enviar",
+      "sendPending": "…",
+      "subtitle": "gestión del instituto",
+      "support": {
+        "cancel": "No, gracias",
+        "confirm": "Enviar a soporte",
+        "prompt": "¿Le gustaría enviar esta solicitud al soporte de BeautyHub?",
+        "submitError": "No se puede enviar la solicitud en este momento.",
+        "submitted": "Su solicitud ha sido enviada a soporte. Nos comunicaremos con usted rápidamente."
+      },
+      "thinking": "Reflexión…",
+      "title": "Asistente de IA"
+    },
+    "router": {
+      "actionNotAllowed": "Acción no autorizada.",
+      "closeSessionClarify": "Indique el importe en efectivo contabilizado en efectivo para el cierre (por ejemplo, “cierre en efectivo con 250 €”).",
+      "closeSessionSummary": "Cerrar la sesión de pago ({amount} € contados)",
+      "emptyMessage": "¿Qué es lo que quieres hacer?",
+      "generateXReport": "Generar informe X",
+      "giftCardClarify": "¿A cuánto asciende el bono regalo? (por ejemplo, “vale regalo de 50€”)",
+      "giftCardSummary": "Emitir un cheque regalo de {amount}€",
+      "listAppointments": "Listar citas",
+      "listClients": "Listar clientes",
+      "listCreditNotes": "Listar activos",
+      "listGiftCards": "Listar vales regalo",
+      "listProducts": "Listar productos de pago",
+      "listResources": "Listar cabañas",
+      "listSales": "Listar ventas en efectivo",
+      "listSchedules": "Listar horarios",
+      "listServices": "Listar los servicios",
+      "listStaff": "Lista de personal",
+      "listTimeOff": "Listar ausencias",
+      "openPosSessionLink": "Abrir sesión de pago",
+      "openSessionSummary": "Abrir sesión de pago",
+      "openSessionWithFloat": "Sesión de pago abierta con antecedentes de €{amount}",
+      "posClosedHelp": "La caja registradora parece cerrada; ésta suele ser la causa del problema.\n\n1. Vaya a Pagar → Sesión.\n2. Inicie sesión en el fondo original.\n3. Vuelva a intentar su operación.",
+      "posSessionOpenSummary": "Abrir resumen de la sesión de pago",
+      "posSessionStatusSummary": "Estado de la caja registradora",
+      "supportBugSummary": "Este problema parece un mal funcionamiento. Puedo reenviar su solicitud al soporte de BeautyHub.",
+      "supportConfigSummary": "No he encontrado la causa exacta. Puedo reenviar tu solicitud al soporte para que podamos ayudarte.",
+      "timeOffStaffSummary": "Salida para {name} de {start} a {end}",
+      "timeOffTenantSummary": "Ausencia del instituto de {start} a {end}",
+      "unknownNoKey": "No reconocí esta solicitud. Configure la clave OpenAI en Administrador → Configuración, o elija una acción rápida.",
+      "unknownWithKey": "No reconocí esta solicitud. Reformule, elija una acción rápida o describa un problema para comunicarse con el soporte.",
+      "vacationReason": "Vacaciones"
+    },
+    "runtime": {
+      "invalidParams": "Parámetros no válidos.",
+      "unknownAction": "Acción desconocida o no autorizada: {action}"
+    }
+  },
+  "auth": {
+    "backToHome": "← Centro de belleza",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "setupRequired": "La base de datos no está conectada en esta implementación. Configure las variables de Supabase en Vercel y luego vuelva a implementarlas.",
+    "submit": "Acceso",
+    "submitting": "Conexión…",
+    "subtitle": "Instituto y plataforma de back office.",
+    "supabaseNotConfigured": "Servicio no disponible: Supabase no está configurada en esta implementación.",
+    "testAccounts": {
+      "roles": {
+        "brandOwner": "Marca propietaria",
+        "demoCoach": "Entrenador de la academia de demostración",
+        "demoOwner": "Instituto de demostración de propietarios",
+        "demoStaff": "Demostración del instituto del personal",
+        "platformAdmin": "Administrador de súper plataforma"
+      },
+      "sharedPassword": "Contraseña común:",
+      "title": "cuentas de prueba"
+    },
+    "title": "Conexión de equipo"
+  },
+  "common": {
+    "actions": "Comportamiento",
+    "active": "Activo",
+    "add": "Agregar",
+    "adding": "Suma…",
+    "all": "Todo",
+    "apply": "Aplicar",
+    "appointment": "Cita",
+    "appointmentShort": "Cita",
+    "back": "Atrás",
+    "cabin": "Cabina",
+    "cancel": "Cancelar",
+    "card": "Mapa",
+    "cash": "Especies",
+    "choose": "Elegir…",
+    "client": "Cliente",
+    "close": "Cerca",
+    "color": "Color",
+    "confirm": "Confirmar",
+    "connect": "Conectar",
+    "connected": "Conectado",
+    "contactAdmin": "Contacta a tu administrador para activar los módulos del instituto o academia.",
+    "continue": "Continuar",
+    "countOfTotal": "__UCI0__ en __UCI1__",
+    "create": "Crear",
+    "creating": "Creación…",
+    "dash": "—",
+    "date": "Fecha",
+    "delete": "BORRAR",
+    "description": "Descripción",
+    "disconnect": "Desconectar",
+    "draft": "Borrador",
+    "duration": "Duración",
+    "edit": "para modificar",
+    "email": "Correo electrónico",
+    "execute": "Ejecutar",
+    "executing": "Ejecución…",
+    "extras": "Extras",
+    "hidden": "Enmascarado",
+    "history": "Histórico",
+    "inactive": "Inactivo",
+    "internal": "Interno",
+    "interval": "Periodicidad",
+    "loading": "Cargando…",
+    "loadingError": "Error de carga",
+    "modules": "Módulos",
+    "monthly": "Mensual",
+    "name": "Nombre",
+    "no": "No",
+    "noClient": "Sin clientes",
+    "none": "Ninguno",
+    "notConnected": "No conectado",
+    "note": "Nota",
+    "notes": "Notas",
+    "ok": "Bueno",
+    "optional": "Opcional",
+    "overview": "Descripción general",
+    "pagination": {
+      "next": "Próximo.",
+      "pageOf": "__UCI0__ / __UCI1__",
+      "prev": "Anterior.",
+      "showing": "{from}–{to} en {total}"
+    },
+    "password": "Contraseña",
+    "pay": "Pagar",
+    "perMonth": "mes",
+    "perYear": "año",
+    "phone": "Teléfono",
+    "plan": "Fórmula",
+    "practitioner": "Facultativo",
+    "prepare": "Preparación…",
+    "price": "Precio",
+    "products": "Productos",
+    "published": "Publicado",
+    "refresh": "Refrescar",
+    "save": "Ahorrar",
+    "saved": "Registrado",
+    "saving": "Registro…",
+    "search": "investigar",
+    "searchArticles": "Buscar un artículo…",
+    "sections": "Secciones",
+    "send": "Enviar",
+    "service": "Beneficio",
+    "settings": "Ajustes",
+    "sku": "SKU",
+    "slug": "Identificador",
+    "staff": "Empleado)",
+    "status": "Estado",
+    "step": "Paso __UCI0__",
+    "stock": "Existencias",
+    "stripe": "raya",
+    "success": "Éxito",
+    "team": "Equipo",
+    "terminal": "Terminal",
+    "testAndSave": "Probando y grabando...",
+    "title": "Título",
+    "total": "Total",
+    "unlimited": "Ilimitado",
+    "visible": "Visible",
+    "woo": "Cortejar",
+    "woocommerce": "WooCommerce",
+    "yearly": "Anual",
+    "yes": "Sí"
+  },
+  "dashboard": {
+    "analytics": {
+      "appointmentMix": "Distribución de citas",
+      "appointments": "Cita",
+      "appointmentsChart": "Equipo",
+      "cancellationRate": "__UCI0__ % de cancelaciones",
+      "description": "Su negocio de un vistazo: cifras y tendencias actuales.",
+      "emptyAppointments": "No hay citas durante este período.",
+      "emptyChart": "Aún no hay datos para este período.",
+      "healthHint": "Las cifras de hoy de su instituto.",
+      "healthScore": "Índice de actividad",
+      "healthTitle": "Hoy",
+      "mood": {
+        "good": "Buena dinámica",
+        "great": "muy buen dia",
+        "low": "dia tranquilo",
+        "noActivity": "Aún no hay actividad",
+        "ok": "Buen día"
+      },
+      "newClients": "Nuevos clientes",
+      "noComparison": "Sin comparación",
+      "noShowCount": "{cuenta, plural, =0 {Aucune absence} uno {# absence} otro {# absences}}",
+      "periodHint": {
+        "month": "Los últimos 30 días.",
+        "today": "Detalle hora a hora de tu día.",
+        "week": "Los últimos 7 días.",
+        "year": "Los últimos 12 meses."
+      },
+      "periodOverview": "Vista del periodo",
+      "periods": {
+        "month": "Mes",
+        "today": "Hoy",
+        "week": "Semana",
+        "year": "Año"
+      },
+      "revenue": "Volumen de negocios",
+      "revenueChart": "CA generada",
+      "sales": "Ventas",
+      "status": {
+        "cancelled": "Cancelado",
+        "completed": "Terminado",
+        "noShow": "Ausente",
+        "scheduled": "Futuro"
+      },
+      "title": "Estadística",
+      "todayAppointments": "reunión del día",
+      "todayCancelled": "Cancelaciones",
+      "todayCompleted": "Terminado",
+      "todayNewClients": "Nuevos clientes",
+      "todayRevenue": "Generado hoy",
+      "todaySales": "{cuenta, plural, =0 {Aucune vente} uno {# vente} otro {# ventes}}"
+    },
+    "assistant": {
+      "description": "Clientes, formación, planificación: realice una solicitud o elija una acción predefinida en el asistente.",
+      "heading": "Pilotaje asistido por IA",
+      "open": "Abre el asistente",
+      "openShort": "Asistente",
+      "title": "Asistente"
+    },
+    "kpis": {
+      "clients": "Clientes",
+      "description": "Cifras clave para su instituto.",
+      "services": "Servicios",
+      "title": "Indicadores",
+      "upcomingAppointments": "Próximas citas"
+    },
+    "modules": {
+      "emptyDescription": "No hay módulos activos en este momento.",
+      "emptyHint": "Contacta a tu administrador para activar los módulos del instituto o academia.",
+      "title": "Módulos"
+    },
+    "posSession": {
+      "closedDescription": "Inicie sesión para cobrar y realizar un seguimiento del efectivo de hoy.",
+      "closedTitle": "Caja cerrada",
+      "expectedCash": "Especies esperadas",
+      "goToPos": "Cobrar una venta",
+      "manageSession": "Administrar sesión",
+      "openSession": "Abrir caja",
+      "openSince": "Abierto",
+      "openTitle": "Abrir caja",
+      "revenue": "CA incluido TINA",
+      "sales": "Ventas"
+    },
+    "quickActions": {
+      "appointments": {
+        "description": "Planificación y reservas",
+        "label": "Cita"
+      },
+      "clients": {
+        "description": "Fichas y datos de contacto",
+        "label": "Clientes"
+      },
+      "courses": {
+        "description": "catálogo de la academia",
+        "label": "Capacitación"
+      },
+      "description": "Las tareas más frecuentes, sin recorrer todo el menú.",
+      "pos": {
+        "description": "Cobrar una venta",
+        "label": "Caja"
+      },
+      "services": {
+        "description": "Servicios y precios",
+        "label": "Servicios"
+      },
+      "students": {
+        "description": "Inscripciones en curso",
+        "label": "Estudiantes"
+      },
+      "title": "Acciones rápidas"
+    },
+    "shortcuts": {
+      "description": "Acceso directo a las páginas que más utilizas.",
+      "title": "Atajos"
+    },
+    "subtitle": "Descripción general: utilice el menú de la izquierda para navegar."
+  },
+  "errors": {
+    "quota": {
+      "exceeded": "Límite alcanzado para \"{key}\" (máx. {limit}). Actualízate al siguiente nivel."
+    }
+  },
+  "institut": {
+    "actions": {
+      "accountAlreadyExists": "Ya existe una cuenta para este correo electrónico.",
+      "accountCreateError": "Error de creación de cuenta.",
+      "accountNotFound": "ID de cliente no encontrado.",
+      "allFieldsRequired": "Todos los campos son obligatorios.",
+      "balancePaid": "Saldo recibido",
+      "cartAmountMismatch": "Importe del carrito incompatible con el pago.",
+      "clientEmailExists": "Ya existe un cliente con este correo electrónico.",
+      "clientPinRegenerateFailed": "No se puede regenerar el código PIN.",
+      "clientSelfRegisterDisabled": "La creación de cuenta se realiza a través de su instituto. Solicite su nombre de usuario y PIN.",
+      "connectionFailed": "Error de conexión: {message}",
+      "courseNotFound": "Entrenamiento no encontrado.",
+      "creditAmountInvalid": "Monto del crédito discapacitado.",
+      "creditNoteCreated": "habiendo creado",
+      "creditNoteExpired": "Han caducado.",
+      "creditNoteInsufficient": "Saldo crediticio insuficiente.",
+      "creditNoteInvalid": "Tener una discapacidad.",
+      "creditNoteRefRequired": "Número de crédito requerido.",
+      "durationInvalid": "Duración no válida.",
+      "emailPasswordRequired": "Se requiere correo electrónico y contraseña.",
+      "emptyCart": "Cesta vacía.",
+      "enrollmentFieldsRequired": "Se requiere formación, nombre y correo electrónico.",
+      "extrasInvalid": "Extras no válidos.",
+      "giftCardCodeRequired": "Se requiere código de vale de regalo.",
+      "giftCardExpired": "El vale regalo caducó.",
+      "giftCardInsufficient": "Saldo insuficiente del vale regalo.",
+      "giftCardInvalid": "Vale regalo no válido.",
+      "giftCardIssued": "Cheque regalo emitido",
+      "invalidAmount": "Cantidad no válida.",
+      "invalidCart": "Cesta no válida.",
+      "invalidCredentials": "Identificadores incorrectos.",
+      "invalidJsonParams": "JSON no válido para parámetros.",
+      "invalidLoginId": "ID de cliente no válido.",
+      "invalidMovementType": "Tipo de movimiento no válido.",
+      "invalidPayments": "Pagos no válidos.",
+      "invalidPin": "El código PIN debe tener 4 dígitos.",
+      "loginIdPinRequired": "Se requiere identificación de cliente y PIN.",
+      "missingFields": "Faltan campos obligatorios.",
+      "missingRequiredFields": "Faltan campos obligatorios.",
+      "movementRecorded": "Movimiento registrado.",
+      "nameRequired": "Nombre requerido.",
+      "nameSlugRequired": "Se requiere nombre e identificación (slug).",
+      "noOpenSession": "No iniciar sesión: primero abra el proceso de pago.",
+      "noPayments": "Agregue al menos un pago.",
+      "overpaid": "Los pagos totales exceden el monto adeudado.",
+      "passwordMinLength": "Contraseña: 8 caracteres mínimo.",
+      "paymentCard": "(tarjeta TPE)",
+      "paymentCash": "(especies)",
+      "paymentCreateFailed": "No se puede crear el pago Stripe.",
+      "paymentMethodDisabled": "Método de pago deshabilitado: {method}",
+      "paymentNotConfirmed": "Pago no confirmado.",
+      "paymentStripe": "(Tarjeta rayada)",
+      "planNameRequired": "Se requiere el nombre de la fórmula.",
+      "platformBrandNotFound": "Plataforma de marca no encontrada.",
+      "posSettingsSaved": "Se guardaron los ajustes de la caja registradora.",
+      "productNotFoundInCart": "Producto no encontrado: {id}",
+      "reasonRequired": "Razón requerida.",
+      "reportFailed": "No se puede generar el informe.",
+      "saleAlreadyRecorded": "Venta ya registrada.",
+      "saleError": "Error de ventas.",
+      "saleNotFound": "Venta no encontrada.",
+      "saleNotPartial": "Esta venta no es un depósito pendiente.",
+      "saleRecorded": "Venta registrada",
+      "scheduleBlocksInvalid": "Formato de franja horaria no válido.",
+      "scheduleNameRequired": "Se requiere el nombre de la cuadrícula.",
+      "scheduleNotFound": "Horario no encontrado.",
+      "serverConfigIncomplete": "Configuración del servidor incompleta (rol de servicio).",
+      "serviceDateRequired": "Servicio y fecha/hora requerida.",
+      "serviceNotFound": "Servicio no encontrado.",
+      "serviceNotFoundInCart": "Servicio no encontrado: {id}",
+      "sessionAlreadyOpen": "Ya hay una sesión abierta.",
+      "sessionClosed": "Valla Z terminada",
+      "sessionOpened": "Abrir sesión de pago.",
+      "slugTaken": "El identificador \"{slug}\" ya está en uso.",
+      "stripeNotConfigured": "Stripe Connect no está configurado para este instituto.",
+      "stripeNotConfiguredShort": "Stripe Connect no configurado.",
+      "teamInviteAlreadyPending": "Ya hay una invitación pendiente para este correo electrónico.",
+      "teamInviteExpired": "Esta invitación ha caducado.",
+      "teamInviteForbidden": "Sólo el propietario puede invitar a miembros.",
+      "teamInviteInvalid": "Invitación no válida o ya utilizada.",
+      "teamRoleForbidden": "Sólo el propietario puede gestionar roles.",
+      "teamRoleNotFound": "Rol no encontrado.",
+      "teamRoleSlugTaken": "Ya existe un rol con este identificador.",
+      "tenantCreateError": "Error de creación del instituto.",
+      "tenantCreatedOwnerFailed": "Instituto creado, pero propietario no creado: {message}.",
+      "tenantNotFound": "Instituto no encontrado.",
+      "tenantUpdated": "Instituto actualizado.",
+      "timeOffDatesRequired": "Se requieren fechas de inicio y finalización.",
+      "timeOffEndBeforeStart": "El final debe ser después del principio.",
+      "timeOffResourceRequired": "Seleccione una cabina.",
+      "timeOffStaffRequired": "Seleccione un miembro del personal.",
+      "titleRequired": "Título requerido.",
+      "urlKeySecretRequired": "Se requiere URL, clave y secreto.",
+      "varianceNotesRequired": "Una discrepancia de efectivo requiere una nota explicativa.",
+      "wooConnected": "Tienda WooCommerce conectada.",
+      "wooOrderFailed": "Error en el pedido de WooCommerce: {message}",
+      "workingHoursEndBeforeStart": "{day}: La hora de finalización debe ser posterior al inicio.",
+      "workingHoursSaved": "Horarios registrados."
+    },
+    "clients": {
+      "badgeAccount": "Cuenta activa",
+      "badgeEcommerce": "Comercio electrónico",
+      "badgeUpcoming": "{recuento, plural, uno {# RDV} otro {# RDV}}",
+      "columns": {
+        "appointments": "Cita",
+        "email": "Correo electrónico",
+        "name": "Nombre",
+        "phone": "Teléfono",
+        "spent": "Gastado"
+      },
+      "detail": {
+        "accessHint": "Comunicar el identificador y el código PIN al cliente para la aplicación móvil o área de clientes online.",
+        "accessTitle": "Acceso de clientes",
+        "activityTitle": "Actividad",
+        "address": "DIRECCIÓN",
+        "backToList": "Volver a los clientes",
+        "badgeAccount": "cuenta en línea",
+        "badgeEcommerce": "Cliente de comercio electrónico",
+        "clientId": "ID de cliente",
+        "columns": {
+          "date": "Fecha",
+          "items": "Elementos",
+          "price": "Precio",
+          "service": "Beneficio",
+          "source": "Fuente",
+          "staff": "Facultativo",
+          "status": "Estado",
+          "ticket": "Boleto",
+          "total": "Total"
+        },
+        "contactTitle": "Datos de contacto",
+        "copy": "Copiar",
+        "dateOfBirth": "Fecha de nacimiento",
+        "edit": "para modificar",
+        "editTitle": "Modificar la ficha del cliente",
+        "emailsComingSoon": "Historial de correo electrónico: próximamente",
+        "emailsHint": "Las campañas y los correos electrónicos transaccionales aparecerán aquí.",
+        "enrollmentsTitle": "Entrenamiento de la academia",
+        "historyTitle": "Histórico",
+        "loginId": "ID de inicio de sesión",
+        "marketingOptIn": "Marketing",
+        "memberSince": "Cliente desde",
+        "noAppointments": "No hay citas registradas.",
+        "noSales": "No se registraron compras.",
+        "noUpcoming": "No hay citas próximas.",
+        "notesTitle": "Notas",
+        "pinCode": "código PIN",
+        "portalAccount": "cuenta del área de clientes",
+        "portalActive": "Activo — conexión por identificador + PIN",
+        "portalInactive": "Inactivo: genera acceso a continuación",
+        "protocolsComingSoon": "Protocolos: próximamente",
+        "protocolsHint": "Podrás asociar protocolos de tratamiento personalizados a cada cliente.",
+        "regeneratePin": "Regenerar PIN",
+        "regeneratePinSubmitting": "Regeneración…",
+        "serviceCount": "{recuento, plural, uno {# fois} otro {# fois}}",
+        "sourceEcommerce": "Comercio electrónico",
+        "sourcePos": "Caja",
+        "stats": {
+          "appointments": "Cita",
+          "bookingRate": "Tasa de asistencia",
+          "cancelled": "Cancelado",
+          "completed": "Terminado",
+          "ecommerceSpent": "Compras de comercio electrónico",
+          "loyaltyPoints": "Puntos de fidelidad",
+          "noShow": "Ausencias",
+          "posSpent": "Compra en instituto",
+          "totalSpent": "Total gastado",
+          "upcoming": "Próximas citas"
+        },
+        "tabs": {
+          "access": "Acceso y correos electrónicos",
+          "appointments": "Cita",
+          "overview": "Descripción general",
+          "quotes": "Estimar",
+          "sales": "Facturas y compras"
+        },
+        "topServices": "Servicios más reservados",
+        "upcomingTitle": "Próximas reuniones"
+      },
+      "dialogEditTitle": "Editar cliente",
+      "dialogTitle": "Nuevo cliente",
+      "editClient": "para modificar",
+      "empty": "No hay clientes por el momento.",
+      "filterAll": "Todo",
+      "filterEcommerce": "Comercio electrónico",
+      "filterUpcoming": "Próximas citas",
+      "filterWithAccount": "cuenta en línea",
+      "filterWithPurchases": "Con compras",
+      "footer": "{recuento, plural, uno {# client} otro {# clients}}",
+      "form": {
+        "addressLine1": "DIRECCIÓN",
+        "addressLine1Placeholder": "12 rue de la Paix",
+        "addressLine2": "dirección adicional",
+        "city": "Ciudad",
+        "dateOfBirth": "Fecha de nacimiento",
+        "emailPlaceholder": "marie@correo electrónico.com",
+        "fullName": "nombre completo",
+        "fullNamePlaceholder": "María Durand",
+        "marketingOptIn": "Acepta comunicaciones de marketing.",
+        "notes": "Notas internas",
+        "notesPlaceholder": "Preferencias, contraindicaciones, comentarios…",
+        "phonePlaceholder": "06 12 34 56 78",
+        "postalCode": "Código postal",
+        "submit": "Agregar cliente",
+        "submitEdit": "Ahorrar",
+        "submitting": "Suma…",
+        "submittingEdit": "Registro…",
+        "tags": "Insignias",
+        "tagsHint": "Separe las insignias con comas (máx. 10).",
+        "tagsPlaceholder": "VIP, Alergia, Nuevo cliente…"
+      },
+      "new": "Nuevo cliente",
+      "noResults": "No hay resultados para esta búsqueda.",
+      "searchPlaceholder": "Busca por nombre, email, teléfono, placa…"
+    },
+    "extras": {
+      "decrease": "Disminuir",
+      "increase": "Aumentar",
+      "lineMeta": "__UCI0__ min · __UCI1__",
+      "noImage": "—",
+      "optionalMax": "Opcional, máx. __UCI0__",
+      "requiredMin": "Obligatorio: {min} a {max}",
+      "total": "Total: __UCI0__ min · __UCI1__"
+    },
+    "marketing": {
+      "loyalty": {
+        "actions": {
+          "invalidAmount": "Cantidad no válida.",
+          "invalidPercent": "Porcentaje no válido.",
+          "invalidReward": "Recompensa no válida.",
+          "invalidRule": "Regla no válida.",
+          "missingFields": "Faltan campos obligatorios.",
+          "serviceRequired": "Servicio requerido.",
+          "shopifyUnavailable": "Shopify aún no está disponible.",
+          "wooRequired": "Conecte WooCommerce para utilizar esta fuente."
+        },
+        "calcModes": {
+          "fixed_per_event": "Puntos fijos por evento",
+          "per_euro_spent": "Puntos por euro gastado"
+        },
+        "clientsLabel": "{recuento, plural, uno {cliente} otro {clientes}}",
+        "description": "Puntos por cada visita o compra, canjeables por beneficios.",
+        "guide": {
+          "liveSummary": "__UCI0__ __UCI1__ · __UCI2__ __UCI3__",
+          "liveTitle": "programa en línea",
+          "phase1Action": "Haga clic en \"Nueva regla\". Ejemplo: 10 puntos por cita completada.",
+          "phase1Title": "Paso 1: Cómo ganan puntos tus clientes",
+          "phase2Action": "Añade una recompensa. Ejemplo: −10% a 100 puntos.",
+          "phase2Title": "Paso 2: Qué pueden conseguir",
+          "phase3Action": "Marque \"Programa activo\" y luego guarde.",
+          "phase3Title": "Paso 3: cargar"
+        },
+        "integrations": {
+          "comingSoon": "Pronto",
+          "connectHint": "Conecta tu tienda para activar esta fuente:",
+          "wooDisconnected": "no conectado"
+        },
+        "program": {
+          "active": "programa activo",
+          "description": "Nombre, redacción de puntos y activación del programa.",
+          "name": "Nombre del programa",
+          "pointsLabel": "Redacción de puntos",
+          "saved": "Programa grabado.",
+          "title": "Ajustes"
+        },
+        "programStatus": {
+          "draft": "Borrador",
+          "live": "En línea",
+          "ready": "Listo para activar"
+        },
+        "rewards": {
+          "add": "Nueva recompensa",
+          "columns": {
+            "cost": "Costo",
+            "name": "Nombre",
+            "status": "Estado",
+            "type": "Amable"
+          },
+          "createTitle": "Nueva recompensa",
+          "deleteConfirm": "¿Eliminar esta recompensa?",
+          "editTitle": "Editar recompensa",
+          "empty": "Aún no hay recompensas.",
+          "footer": "{recuento, plural, uno {# récompense} otro {# récompenses}}",
+          "form": {
+            "active": "recompensa activa",
+            "description": "Descripción",
+            "discountEur": "Importe de la reducción (€)",
+            "discountPercent": "Porcentaje de descuento",
+            "name": "Nombre",
+            "pointsCost": "Costo en __UCI0__",
+            "service": "Servicio ofrecido",
+            "type": "tipo de recompensa"
+          },
+          "redeemHint": "El uso de puntos al finalizar la compra estará disponible próximamente.",
+          "title": "Premios",
+          "types": {
+            "discountFixed": "−__UCI0__",
+            "discountFixedLabel": "Reducción fija",
+            "discountPercent": "−__UCI0__ %",
+            "discountPercentLabel": "Reducción en %",
+            "freeService": "Ofrecido: __UCI0__",
+            "freeServiceLabel": "Servicio ofrecido"
+          }
+        },
+        "rules": {
+          "add": "Nueva regla",
+          "columns": {
+            "earning": "Ganar",
+            "name": "Nombre",
+            "source": "Fuente",
+            "status": "Estado"
+          },
+          "createTitle": "Nueva regla ganadora",
+          "deleteConfirm": "¿Eliminar esta regla ganadora?",
+          "earningFixed": "__UCI0__ ptos/evento",
+          "earningPerEuro": "{points} pt / € (ej. €50 → {example} pts)",
+          "editTitle": "Editar regla",
+          "empty": "Aún no hay reglas.",
+          "footer": "{recuento, plural, uno {# règle} otro {# règles}}",
+          "form": {
+            "active": "regla activa",
+            "calcMode": "Método de cálculo",
+            "minAmount": "Importe mínimo (€)",
+            "name": "Nombre de la regla",
+            "namePlaceholder": "Ex. Puntos por visita",
+            "pointsFixed": "Puntos ({label})",
+            "pointsPerEuro": "Puntos por euro ({label})",
+            "preview": "Ejemplo: Gasto 50€ → __UCI0__ __UCI1__",
+            "source": "Residencia en"
+          },
+          "title": "Gana puntos"
+        },
+        "sources": {
+          "appointment_completed": "Cita completada",
+          "pos_sale": "Compra en instituto (caja)",
+          "shopify_order": "Orden de Shopify",
+          "woocommerce_order": "Orden de WooCommerce"
+        },
+        "stats": {
+          "clientsWithPoints": "Clientes participantes",
+          "pointsOutstanding": "__UCI0__ en circulación"
+        },
+        "status": {
+          "active": "Activo",
+          "inactive": "Inactivo"
+        },
+        "title": "Programa de fidelización"
+      },
+      "overview": {
+        "available": "Disponible",
+        "comingSoon": "Pronto",
+        "description": "Fidelice a sus clientes, promocione su instituto en línea y lance ofertas específicas.",
+        "tools": {
+          "campaigns": {
+            "description": "Emails y SMS para dar seguimiento, informar o llenar tu agenda.",
+            "title": "Campañas"
+          },
+          "loyalty": {
+            "description": "Puntos configurables: citas, pago, WooCommerce y recompensas.",
+            "title": "Lealtad"
+          },
+          "promos": {
+            "description": "Códigos promocionales, ofertas limitadas y descuentos en servicios.",
+            "title": "Promociones"
+          },
+          "referral": {
+            "description": "Recompense a los clientes que atraigan nuevos clientes.",
+            "title": "Patrocinio"
+          },
+          "reviews": {
+            "description": "Recopilación y promoción de Google y reseñas internas.",
+            "title": "Aviso"
+          },
+          "website": {
+            "description": "Tu escaparate online: reserva, presentación y branding.",
+            "title": "Página web"
+          }
+        }
+      },
+      "promos": {
+        "description": "Crea códigos promocionales y ofertas por tiempo limitado.",
+        "hint": "Esta característica estará disponible próximamente. Las promociones se aplicarán a la reserva en línea y al finalizar la compra.",
+        "title": "Promociones"
+      },
+      "website": {
+        "actions": {
+          "brandingSaved": "Identidad visual registrada.",
+          "fileRequired": "Archivo requerido.",
+          "galleryImagesOnly": "Sólo se aceptan imágenes para la galería.",
+          "homeAlreadyExists": "Ya existe una página de inicio.",
+          "homeAlwaysInNav": "La hospitalidad siempre está en el menú.",
+          "homeCannotDelete": "La página de inicio no se puede eliminar.",
+          "invalidContent": "Contenido no válido.",
+          "invalidData": "Datos no válidos.",
+          "layoutInvalid": "Modelo no válido.",
+          "logoImagesOnly": "Sólo se aceptan imágenes para el logo.",
+          "pageNotFound": "Página no encontrada.",
+          "pageSaved": "Página guardada.",
+          "pageTypeInvalid": "Tipo de página no válido."
+        },
+        "addPage": "Nueva pagina",
+        "builder": {
+          "addBlock": "Añade un bloque...",
+          "back": "Sitios web",
+          "backgroundClear": "Ninguno",
+          "backgroundColor": "Color",
+          "blockSubAdd": "Agregar",
+          "blockSubContent": "Contenido",
+          "blockSubEdit": "Ajustes",
+          "blockSubStructure": "Estructura",
+          "blockTypes": {
+            "about": "Texto",
+            "columns": "columnas",
+            "contact": "Contacto",
+            "cta": "Llamado a la acción",
+            "divider": "Separador",
+            "gallery": "Galería",
+            "hero": "Bandera",
+            "hours": "Horarios",
+            "image": "Imagen",
+            "services": "Servicios",
+            "spacer": "Espaciador",
+            "text": "Párrafo"
+          },
+          "blocks": "Bloques de contenido",
+          "borderRadius": "Esquinas redondeadas (px)",
+          "borderRadiusShort": "Redondeado",
+          "editTheme": "Cambiar tema",
+          "emptyCanvas": "Agregue un bloque desde el panel izquierdo para comenzar.",
+          "fields": {
+            "addImage": "Añadir una imagen",
+            "address": "DIRECCIÓN",
+            "align": "Alineación",
+            "alignCenter": "Centro",
+            "alignLeft": "IZQUIERDA",
+            "alt": "Texto alternativo",
+            "background": "Abajo",
+            "backgroundImage": "Imagen",
+            "backgroundNone": "Ninguno",
+            "backgroundVideo": "Video",
+            "body": "Texto",
+            "caption": "Leyenda",
+            "columnN": "Columna __UCI0__",
+            "columns": "columnas",
+            "ctaHref": "Enlace de botón",
+            "ctaLabel": "Etiqueta del botón",
+            "dividerLine": "Línea",
+            "dividerSpace": "Espacio",
+            "email": "Correo electrónico",
+            "galleryCols2": "2 columnas",
+            "galleryCols3": "3 columnas",
+            "galleryCols4": "4 columnas",
+            "heading": "Título",
+            "headline": "Título principal",
+            "height": "Altura",
+            "hoursNote": "Nota adicional",
+            "imageUrl": "Imagen de fondo de la URL",
+            "limit": "Límite",
+            "link": "Enlace",
+            "maxImageSize": "Máximo 5 MB · JPEG, PNG, WebP, GIF",
+            "maxVideoSize": "Máximo 25 MB · MP4, WebM",
+            "note": "Nota",
+            "phone": "Teléfono",
+            "removeImage": "Retirar",
+            "removeMedia": "Retirar",
+            "showImages": "Mostrar fotos",
+            "showPrices": "Mostrar precios",
+            "showSearch": "barra de búsqueda",
+            "style": "Estilo",
+            "subheadline": "Subtitular",
+            "title": "Título",
+            "uploadBackgroundImage": "Sube una imagen",
+            "uploadBackgroundVideo": "Sube un vídeo",
+            "uploadImage": "Sube una imagen",
+            "uploading": "Envío…",
+            "useSchedule": "Horarios del horario.",
+            "width": "Ancho",
+            "widthFull": "Ancho completo",
+            "widthMedium": "Promedio",
+            "widthSmall": "Pequeño"
+          },
+          "globalTemplate": "Plantilla de sitio",
+          "inspectorBlock": "Bloquear",
+          "inspectorPage": "Página",
+          "layoutChangeConfirm": "¿Aplicar este modelo? El contenido será reemplazado por la estructura de la plantilla.",
+          "marginX": "Margen exterior (px)",
+          "marginXShort": "ext. margen",
+          "maxWidth": "Ancho",
+          "maxWidth4xl": "896",
+          "maxWidth5xl": "1024",
+          "maxWidth6xl": "1280",
+          "maxWidthFull": "100%",
+          "modeLabel": "Modo constructor",
+          "paddingX": "Relleno horizontal (px)",
+          "paddingXShort": "Acolchado H",
+          "paddingY": "Relleno vertical (px)",
+          "paddingYShort": "Acolchado V",
+          "pageLayout": "Plantilla de página",
+          "pageLayoutHint": "Elija la estructura de esta página.",
+          "pageStyleHint": "Estas configuraciones se aplican al cuerpo de la página, como en el sitio publicado.",
+          "pageStyleTitle": "Disposición",
+          "pageSubLayout": "Modelo",
+          "pageSubSettings": "Ajustes",
+          "pageSubStyle": "Disposición",
+          "pageTitle": "Título de la página",
+          "previewFull": "Vista previa en pantalla completa",
+          "previewLabel": "Vista previa en vivo",
+          "published": "Publicar la pagina",
+          "saved": "Página guardada.",
+          "selectBlockHint": "Seleccione un bloque de la vista previa o de la lista anterior.",
+          "seoDescription": "Descripción SEO",
+          "seoTitle": "Título SEO",
+          "structure": "Estructura",
+          "structureEmpty": "Sin bloques. Vaya a Agregar para comenzar.",
+          "structureHint": "Orden de las secciones de la página. Haga clic para editar.",
+          "styleSectionBackground": "Abajo",
+          "styleSectionLayout": "Dimensiones",
+          "styleSectionSpacing": "Espaciado",
+          "template": "Plantilla",
+          "templateOverride": "Plantilla específica para esta página",
+          "templates": {
+            "elegant": "Elegante",
+            "elegantDesc": "Clásico y refinado",
+            "modern": "Moderno",
+            "modernDesc": "Contraste e impacto"
+          },
+          "widgetCatContent": "Contenido",
+          "widgetCatInstitut": "Instituto",
+          "widgetCatLayout": "Disposición",
+          "widgetCatMedia": "Medios de comunicación",
+          "widgetHintColumns": "2 o 3 columnas de texto",
+          "widgetHintDivider": "Línea o espacio separador",
+          "widgetHintImage": "Imagen con título y enlace.",
+          "widgetHintSpacer": "Espacio vertical ajustable",
+          "widgetHintText": "Título y párrafo libre.",
+          "widgets": "Bloques",
+          "widgetsHint": "Arrastra o haz clic para agregar"
+        },
+        "changeLayout": "Cambiar modelo",
+        "chooseType": "Tipo de página",
+        "columns": {
+          "status": "Estado",
+          "template": "Plantilla",
+          "title": "Título",
+          "type": "Amable"
+        },
+        "currentLayout": "Modelo",
+        "customDomain": "Dominio personalizado",
+        "deleteConfirm": "¿Eliminar esta página?",
+        "description": "Crea y personaliza las páginas públicas de tu instituto: inicio, catálogo, contacto.",
+        "editBuilder": "Constructor",
+        "footer": "{recuento, plural, uno {# page} otro {# pages}}",
+        "hideLayouts": "Ocultar plantillas",
+        "homeBadge": "Bienvenido",
+        "hub": {
+          "brandingLink": "Identidad visual",
+          "editHome": "Editar Inicio",
+          "sitePreview": "Descripción general del sitio",
+          "themeLink": "Personaliza el tema",
+          "title": "Tu sitio en línea"
+        },
+        "layoutChangeConfirm": "¿Aplicar este modelo? El contenido actual será reemplazado por la estructura de la plantilla.",
+        "layouts": {
+          "bookingDirect": "Directo",
+          "bookingDirectDesc": "Título compacto, asistente inmediato",
+          "bookingGuide": "Con guia",
+          "bookingGuideDesc": "Introducción + pasos antes del asistente",
+          "catalogGrille": "Cuadrícula de fotos",
+          "catalogGrilleDesc": "Catálogo con búsqueda e imágenes.",
+          "catalogListe": "lista sencilla",
+          "catalogListeDesc": "Precios sin fotos, con búsqueda.",
+          "catalogVitrine": "escaparate de cuidados",
+          "catalogVitrineDesc": "Resaltado visual + CTA",
+          "contactComplet": "Completo",
+          "contactCompletDesc": "Horarios automáticos + datos de contacto",
+          "contactSimple": "Simple",
+          "contactSimpleDesc": "Datos de contacto esenciales",
+          "homeImpact": "Impacto visual",
+          "homeImpactDesc": "Héroe oscuro, beneficios y CTA",
+          "homeMinimal": "Mínimo",
+          "homeMinimalDesc": "Botón de héroe y reserva",
+          "homeVitrine": "escaparate clásico",
+          "homeVitrineDesc": "Héroe, presentación, servicios y llamado a la acción."
+        },
+        "media": {
+          "imageTooLarge": "Imagen demasiado grande (máximo 5 MB).",
+          "unsupportedFormat": "Formato no compatible (JPEG, PNG, WebP, GIF, MP4, WebM).",
+          "videoTooLarge": "Vídeo demasiado grande (máximo 25 MB)."
+        },
+        "pagesTitle": "mis paginas",
+        "previewBtn": "Avance",
+        "previewFull": "Vista previa en pantalla completa",
+        "previewPage": "Vista previa de página",
+        "previewPanel": {
+          "backToBuilder": "Volver al constructor",
+          "bannerDraft": "Modo de vista previa: borrador no publicado",
+          "bannerPublished": "Modo de vista previa: página publicada",
+          "desktop": "Escritorio",
+          "mobile": "Móvil",
+          "openFull": "Abierto",
+          "title": "Avance"
+        },
+        "publicBase": "Sitio público",
+        "status": {
+          "draft": "Borrador",
+          "published": "Publicado"
+        },
+        "tabs": {
+          "branding": "Identidad visual",
+          "pages": "paginas",
+          "theme": "Tema"
+        },
+        "templates": {
+          "elegant": "Elegante",
+          "elegantDesc": "Tipografía serif, diseño aireado.",
+          "modern": "Moderno",
+          "modernDesc": "Fuerte contraste, héroe oscuro."
+        },
+        "theme": {
+          "description": "Colores, logotipo y nombre mostrados en todo el sitio. Las plantillas de página se eligen página por página.",
+          "displayName": "Nombre para mostrar",
+          "footerText": "Texto de pie de página",
+          "logo": "Logo",
+          "navSample": {
+            "book": "Para reservar",
+            "home": "Bienvenido"
+          },
+          "previewLabel": "Descripción general del tema",
+          "primaryColor": "color principal",
+          "removeLogo": "Quitar logotipo",
+          "replaceLogo": "Reemplazar logotipo",
+          "saved": "Tema guardado.",
+          "template": "Plantilla de sitio",
+          "templates": {
+            "elegant": "Elegante",
+            "modern": "Moderno"
+          },
+          "uploadLogo": "Subir un logotipo",
+          "uploading": "Envío…"
+        },
+        "title": "Sitios web",
+        "toggles": {
+          "published": "Publicado",
+          "showInNav": "Mostrar en el menú"
+        },
+        "types": {
+          "booking": "Reserva",
+          "bookingDesc": "Proceso de reserva de citas en línea",
+          "catalog": "Catalogar",
+          "catalogDesc": "Lista de servicios",
+          "contact": "Contacto",
+          "contactDesc": "Datos de contacto y horarios",
+          "home": "Bienvenido",
+          "homeDesc": "Página de presentación del instituto"
+        },
+        "viewLive": "Ver en línea"
+      }
+    },
+    "overview": {
+      "clients": "Clientes",
+      "services": "Servicios",
+      "upcomingAppointments": "Próximas citas"
+    },
+    "pos": {
+      "connectShop": "Conecta la tienda",
+      "emptyCatalog": "Comience agregando servicios, productos internos o conectando WooCommerce en la configuración.",
+      "linkProducts": "Productos internos",
+      "linkServices": "Servicios",
+      "linkSettings": "Ajustes",
+      "settingsButton": "Configuración de caja registradora",
+      "syncWoo": "Sincronizar WooCommerce",
+      "wooNotConnected": "WooCommerce no está conectado: solo están disponibles productos y servicios internos."
+    },
+    "posSettings": {
+      "configured": "Configurable",
+      "description": "IVA, medios de pago, avisos legales y modelo de billete.",
+      "form": {
+        "country": "País",
+        "currency": "Divisa",
+        "defaultOpeningFloat": "Base de caja predeterminada (€)",
+        "defaultVat": "Tasa de impago (%)",
+        "fiscalRegime": "Régimen fiscal",
+        "generalTitle": "General",
+        "legalAddress": "DIRECCIÓN",
+        "legalName": "Nombre de empresa",
+        "legalTitle": "Avisos legales",
+        "paymentMethods": {
+          "card": "tarjeta TPE",
+          "cash": "Especies",
+          "gift_card": "Vale regalo",
+          "stripe": "Raya (en línea)",
+          "transfer": "Pago"
+        },
+        "paymentsTitle": "Métodos de pago",
+        "priceDisplay": "Visualización de precios",
+        "priceHt": "Excl. IVA (IVA añadido a la recaudación)",
+        "priceTtc": "Impuestos incluidos (precio de lista con IVA incluido)",
+        "productVat": "Productos (%)",
+        "regimeBeGks": "Bélgica — GKS (horeca)",
+        "regimeBeVat": "Bélgica: IVA",
+        "regimeNf525": "Francia — Preparación NF525",
+        "regimeStandard": "Estándar",
+        "requireOpenSession": "Sesión obligatoria para retirar dinero",
+        "saved": "Configuraciones guardadas.",
+        "serviceVat": "Beneficios (%)",
+        "sessionTitle": "Sesión de pago",
+        "siret": "SIRET / AEC",
+        "ticketFooter": "Pie de billete",
+        "ticketHeader": "Encabezado del ticket",
+        "ticketPrefix": "Prefijo de marcación",
+        "ticketTitle": "recibo de efectivo",
+        "vatNumber": "Número de IVA intracomunitario",
+        "vatTitle": "TINA"
+      },
+      "title": "Configuración de caja registradora"
+    },
+    "quotes": {
+      "actions": {
+        "clientRequired": "Requerido por el cliente.",
+        "createError": "Error al crear la cotización.",
+        "linesRequired": "Añade al menos una línea.",
+        "numberError": "No se puede generar el número de cotización.",
+        "quoteNotFound": "Cita no encontrada."
+      },
+      "columns": {
+        "actions": "Comportamiento",
+        "date": "Fecha",
+        "number": "No.",
+        "status": "Estado",
+        "total": "Total",
+        "type": "Amable"
+      },
+      "copied": "Copiar",
+      "copyLink": "Copiar enlace",
+      "createFromRequest": "Crear una cotización",
+      "empty": "No hay cotizaciones por el momento.",
+      "eventDate": "Fecha deseada:",
+      "form": {
+        "addLine": "Agregar una línea",
+        "clientMessage": "Mensaje del cliente",
+        "internalNotes": "Notas internas",
+        "lineLabel": "Descripción",
+        "lines": "Pauta",
+        "submit": "Crea la cotización",
+        "submitting": "Creación…",
+        "template": "Modelo",
+        "templates": {
+          "artist": "artista profesional",
+          "elegant": "Elegante",
+          "minimal": "Mínimo",
+          "wedding": "Casamiento"
+        },
+        "title": "Nueva cotización",
+        "validUntil": "Válido hasta"
+      },
+      "hint": "Propuestas y cotizaciones de servicios a medida.",
+      "newQuote": "Nueva cotización",
+      "pendingRequests": "Solicitudes pendientes",
+      "send": "Enviar",
+      "status": {
+        "accepted": "Aceptado",
+        "cancelled": "Cancelado",
+        "converted": "Convertido",
+        "declined": "Denegado",
+        "draft": "Borrador",
+        "expired": "Venció",
+        "pending": "En espera",
+        "sent": "Enviado"
+      },
+      "typeQuote": "Estimar",
+      "typeRequest": "Pedido"
+    },
+    "scheduling": {
+      "conflict": {
+        "resourceBusy": "Esta cabina ya está reservada en este espacio.",
+        "staffBusy": "Este practicante ya tiene una cita en este nicho."
+      },
+      "schedule": {
+        "noHoursToday": "No hay horario de apertura hoy para este proveedor de servicios.",
+        "outsideSchedule": "El período seleccionado no se corresponde con el horario del proveedor del servicio."
+      }
+    },
+    "services": {
+      "columns": {
+        "actions": "Comportamiento",
+        "duration": "Duración",
+        "price": "Precio",
+        "status": "Estado",
+        "title": "Título"
+      },
+      "deleteConfirm": "¿Eliminar “{name}”? Esta acción es irreversible.",
+      "deleteShort": "Borrar",
+      "dialog": {
+        "bookingMode": "Método de reserva",
+        "bookingModeHint": "Maquillaje de boda, eventos: elige “Solicitar presupuesto” para sustituir el calendario público.",
+        "bookingModeInstant": "Reserva online (calendario)",
+        "bookingModeManual": "Contacto / personalizado",
+        "bookingModeQuote": "Solicitud de cotización",
+        "bookingWindowHint": "Consulta la ventana de reservas online de este servicio.",
+        "bufferAfter": "Buffer después (min)",
+        "bufferBefore": "Amortiguador frontal (min)",
+        "bufferHint": "Los tampones bloquean el tiempo antes y después de cada cita.",
+        "createSubmit": "Crear el servicio",
+        "createTitle": "Nuevo servicio",
+        "descriptionPlaceholder": "Opcional: visible internamente",
+        "durationMin": "Duración (min)",
+        "editSubmit": "Ahorrar",
+        "editTitle": "Modificar servicio",
+        "extras": {
+          "afterTime": "Después de elegir el nicho",
+          "beforeTime": "Antes de elegir el nicho",
+          "extraOnlyBadge": "Extra",
+          "hint": "Elija otros servicios para ofrecer como venta adicional con este. Cada extra conserva su duración y precio.",
+          "maxQty": "máx.",
+          "minQty": "mín.",
+          "noCandidates": "Crear otros servicios (catálogo o “solo extra”) para ofrecerlos aquí.",
+          "noSearchResults": "No hay coincidencias de servicio.",
+          "saveExtras": "Guardar extras",
+          "searchPlaceholder": "Buscar un servicio…",
+          "selectedCount": "{recuento, plural, uno {# extra sélectionné} otro {# extras sélectionnés}}",
+          "stepPosition": "Paso extras en la reserva"
+        },
+        "image": {
+          "hint": "JPEG, PNG, WebP o GIF: máximo 5 MB. Visible en reserva y checkout.",
+          "noImage": "Sin fotos",
+          "pendingUpload": "Imagen lista: se enviará a la creación.",
+          "remove": "BORRAR",
+          "replace": "Reemplazar",
+          "upload": "Sube una imagen",
+          "uploading": "Envío…"
+        },
+        "imageAfterCreate": "Guarde la interpretación y luego agregue una imagen modificándola.",
+        "imageLabel": "Imagen",
+        "maxAdvanceDays": "Reserva máxima (días)",
+        "minAdvanceHours": "Retraso mínimo (h)",
+        "namePlaceholder": "Facial",
+        "priceEur": "Precio (EUR)",
+        "submitting": "Registro…",
+        "tabs": {
+          "advanced": "Avance",
+          "extras": "Extras",
+          "general": "General",
+          "time": "Horarios"
+        },
+        "visibility": "Visibilidad del catálogo",
+        "visibilityCatalog": "Catálogo de clientes (servicio principal)",
+        "visibilityExtraOnly": "Solo extra (oculto del catálogo)",
+        "visibleHint": "Deshabilitado para ocultarse de los clientes y realizar el pago.",
+        "visibleLabel": "Visible",
+        "wizard": {
+          "durationRequired": "Introduzca una duración válida (mínimo 1 min).",
+          "nameRequired": "Ingrese un nombre para guardar.",
+          "navHint": "Haga clic en un paso para ir directamente a él.",
+          "navLabel": "Pasos de creación",
+          "stepOf": "Paso {current} a {total}"
+        }
+      },
+      "durationMin": "__UCI0__ min",
+      "edit": "para modificar",
+      "empty": "No hay servicios por el momento.",
+      "extraBadge": "Extra",
+      "filterActive": "Visible",
+      "filterAll": "Todo",
+      "filterInactive": "Enmascarado",
+      "footer": "{recuento, plural, uno {# prestation} otro {# prestations}}",
+      "hidden": "Enmascarado",
+      "hiddenBadge": "Enmascarado",
+      "new": "Nuevo servicio",
+      "noResults": "No hay resultados para esta búsqueda.",
+      "quickForm": {
+        "duration": "Duración (min)",
+        "name": "Nombre",
+        "namePlaceholder": "Facial",
+        "price": "Precio (€)",
+        "submit": "Crear el servicio",
+        "title": "Crear un servicio"
+      },
+      "searchPlaceholder": "Buscar por nombre…",
+      "visible": "Visible"
+    },
+    "settings": {
+      "securityNote": "Las claves de la API de WooCommerce se cifran (AES-256-GCM) antes del almacenamiento. Stripe Connect utiliza una cuenta Express por instituto; los pagos se envían a esta cuenta."
+    },
+    "stripe": {
+      "account": "Cuenta :",
+      "active": "Activo",
+      "connect": "Conectar raya",
+      "description": "Recogida de tarjeta al finalizar la compra (cuenta Institute Express).",
+      "disconnect": "Desconectar raya",
+      "missingKeyRedirect": "Falta la llave de la plataforma Stripe.",
+      "missingPlatformKey": "STRIPE_SECRET_KEY no configurado en la plataforma. Agréguelo a .env.local para habilitar Stripe Connect.",
+      "notConnected": "No conectado",
+      "onboardingIncomplete": "· Incorporación incompleta",
+      "paymentsActive": "· Pagos activos",
+      "resumeOnboarding": "Reanudar la incorporación de Stripe",
+      "title": "RayaConectar"
+    },
+    "team": {
+      "absences": {
+        "chooseResource": "Elegir…",
+        "chooseStaff": "Elegir…",
+        "columns": {
+          "actions": "Comportamiento",
+          "period": "Período",
+          "reason": "Patrón",
+          "scope": "¿Quién/qué?"
+        },
+        "delete": "BORRAR",
+        "empty": "No hay ausencias durante este período.",
+        "endsAt": "FIN",
+        "formDescription": "Cierre del instituto, baja de un practicante o indisponibilidad de cabina.",
+        "formTitle": "Planificar una ausencia",
+        "listTitle": "Ausencias planificadas",
+        "reason": "Patrón (opcional)",
+        "reasonPlaceholder": "Vacaciones, formación, trabajo…",
+        "resource": "Cabina",
+        "saved": "Ausencia registrada.",
+        "scope": "Alcance",
+        "scopeInstitute": "Instituto (cierre)",
+        "scopeResource": "Cabina",
+        "scopeStaff": "Personal",
+        "staff": "Miembro",
+        "startsAt": "Comienzo",
+        "submit": "Añadir ausencia",
+        "submitting": "Suma…"
+      },
+      "access": {
+        "columns": {
+          "actions": "Comportamiento",
+          "email": "Correo electrónico",
+          "expires": "Vence",
+          "name": "Nombre",
+          "role": "Role",
+          "status": "Estado"
+        },
+        "copyLink": "Copiar enlace",
+        "email": "Correo electrónico",
+        "emailComingSoon": "El envío automático por correo electrónico estará disponible próximamente.",
+        "emailPlaceholder": "sophie@institut.fr",
+        "invitationsTitle": "Invitaciones pendientes",
+        "inviteDescription": "Envíe una invitación a {name} para acceder al espacio del instituto.",
+        "inviteHint": "Copie el enlace de la invitación o reenvíelo. La entrega de correo electrónico llegará pronto.",
+        "inviteSubmit": "Crea la invitación",
+        "inviteSubmitting": "Creación…",
+        "inviteTitle": "invitar al equipo",
+        "membersTitle": "Cuentas activas",
+        "noInvitations": "No hay invitaciones pendientes.",
+        "noMembers": "No hay cuentas de equipo en este momento.",
+        "resend": "Renovar",
+        "revoke": "Cancelar",
+        "role": "Role",
+        "statusActive": "Aceptado"
+      },
+      "assignments": {
+        "columns": {
+          "name": "Nombre",
+          "schedule": "Calendario"
+        },
+        "defaultShort": "por defecto",
+        "description": "Sin una cuadrícula asignada, el personal y las cabinas utilizan la cuadrícula predeterminada ({defaultName}).",
+        "noResources": "Sin cabañas.",
+        "noStaff": "Ningún miembro del personal.",
+        "noneDefault": "sin cuadrícula predeterminada",
+        "resourcesTitle": "Cabañas",
+        "save": "Aplicar",
+        "saved": "Citación registrada.",
+        "saving": "…",
+        "staffTitle": "Personal",
+        "useDefault": "Cuadrícula predeterminada"
+      },
+      "cabines": {
+        "add": "Añadir una cabina",
+        "columns": {
+          "actions": "Comportamiento",
+          "name": "Nombre"
+        },
+        "delete": "BORRAR",
+        "dialogTitle": "Añadir una cabina",
+        "empty": "No hay cabinas configuradas.",
+        "footer": "{recuento, plural, uno {# cabine} otro {# cabines}}",
+        "form": {
+          "name": "Nombre de la cabina/recurso",
+          "namePlaceholder": "Cabaña 1",
+          "submit": "Agregar",
+          "submitting": "Suma…"
+        },
+        "subtitle": "Cabinas y salas de tratamiento."
+      },
+      "horairesTabs": {
+        "absences": "Ausencias y cierres",
+        "assignations": "Citaciones",
+        "grilles": "Horarios"
+      },
+      "personnel": {
+        "accessActive": "Activo",
+        "accessNone": "No invitado",
+        "accessPending": "Invitación pendiente",
+        "add": "Agregar personal",
+        "columns": {
+          "access": "Acceso a la aplicación",
+          "actions": "Comportamiento",
+          "color": "Color",
+          "email": "Correo electrónico",
+          "name": "Nombre"
+        },
+        "delete": "BORRAR",
+        "dialogEditTitle": "Editar personal",
+        "dialogTitle": "Agregar personal",
+        "edit": "para modificar",
+        "empty": "Ningún miembro del personal.",
+        "footer": "{recuento, plural, uno {# membre} otro {# membres}}",
+        "form": {
+          "colorOptional": "Color (opcional)",
+          "emailOptional": "Correo electrónico (opcional)",
+          "emailPlaceholder": "sophie@institut.fr",
+          "fullName": "nombre completo",
+          "fullNamePlaceholder": "Sofía Martín",
+          "submit": "Agregar",
+          "submitEdit": "Ahorrar",
+          "submitting": "Suma…",
+          "submittingEdit": "Registro…"
+        },
+        "invite": "Invitar",
+        "noResults": "Sin resultados.",
+        "searchPlaceholder": "Investigación personal..."
+      },
+      "roles": {
+        "create": "Nuevo rol",
+        "createTitle": "Crear un rol",
+        "delete": "BORRAR",
+        "description": "Defina lo que cada rol puede ver y modificar en el espacio del instituto.",
+        "edit": "para modificar",
+        "editTitle": "Editar rol",
+        "fullAccess": "Acceso completo",
+        "name": "Nombre del rol",
+        "permissions": "Permisos",
+        "read": "Lectura",
+        "roleDescription": "Descripción",
+        "sections": {
+          "appointments": "Cita",
+          "clients": "Clientes",
+          "dashboard": "Bienvenido",
+          "marketing": "Marketing",
+          "pos": "Caja",
+          "services": "Servicios",
+          "team": "Equipo"
+        },
+        "submitCreate": "Crear el rol",
+        "submitEdit": "Ahorrar",
+        "submitting": "Registro…",
+        "systemBadge": "Sistema",
+        "write": "Escribiendo"
+      },
+      "schedules": {
+        "addBlock": "Playa",
+        "blocksHint": "Agregue varios espacios por día para gestionar los descansos.",
+        "closed": "Granja",
+        "columns": {
+          "day": "Día",
+          "hours": "Playas",
+          "open": "Abierto"
+        },
+        "create": "Crear",
+        "createPlaceholder": "Ex. Horario de verano",
+        "createTitle": "Nueva grilla",
+        "creating": "Creación…",
+        "defaultBadge": "Cuadrícula de instituto predeterminada",
+        "defaultShort": "por defecto",
+        "delete": "BORRAR",
+        "description": "Cree horarios reutilizables con varios espacios por día (por ejemplo, mañana + tarde con pausa para el almuerzo).",
+        "empty": "Sin horario. Crea uno para comenzar.",
+        "listTitle": "Rejillas",
+        "nameLabel": "Nombre de la cuadrícula",
+        "saved": "Cuadrícula guardada.",
+        "submit": "guardar la grilla",
+        "submitting": "Registro…"
+      },
+      "tabs": {
+        "acces": "Acceso e invitaciones",
+        "cabines": "Cabañas",
+        "horaires": "Horarios",
+        "personnel": "Personal",
+        "roles": "Roles"
+      }
+    },
+    "woo": {
+      "connected": "Conectado",
+      "description": "Catálogo de productos y pedidos de caja registradora.",
+      "disconnect": "Desconectar",
+      "form": {
+        "consumerKey": "Clave del consumidor",
+        "consumerKeyPlaceholder": "ck__…",
+        "consumerSecret": "secreto del consumidor",
+        "consumerSecretPlaceholder": "cs__…",
+        "shopUrl": "URL de la tienda",
+        "shopUrlPlaceholder": "https://maboutique.com",
+        "submit": "Conecte WooCommerce",
+        "submitting": "Probando y grabando..."
+      },
+      "notConnected": "No conectado",
+      "shop": "Comercio :",
+      "title": "WooCommerce"
+    }
+  },
+  "invite": {
+    "defaultRole": "miembro del equipo",
+    "fullName": "nombre completo",
+    "submit": "Crear mi acceso",
+    "submitting": "Creación…",
+    "subtitle": "Está invitado a unirse a {institute} como {role}.",
+    "title": "Únete al equipo"
+  },
+  "landing": {
+    "brand": "BellezaHub",
+    "cta": {
+      "book": "Pedir hora",
+      "subtitle": "Inicie sesión con la cuenta de su equipo o reserve un espacio en línea.",
+      "teamLogin": "Conexión de equipo",
+      "title": "¿Listo para administrar su instituto?"
+    },
+    "footer": "BeautyHub · Plataforma SaaS para salones de belleza",
+    "hero": {
+      "badge": "SaaS multiinquilino · Institutos y academias",
+      "ctaBackOffice": "Accede al back office",
+      "ctaClient": "Área de clientes",
+      "description": "Citas, pago de WooCommerce, clientes, equipo y capacitación: un único back office. Resellable como marca blanca o autohospedado.",
+      "stats": {
+        "ai": {
+          "label": "Acciones integradas",
+          "value": "AI"
+        },
+        "isolation": {
+          "label": "Mantenimiento del aislamiento",
+          "value": "SPI"
+        },
+        "modules": {
+          "label": "Módulos empresariales",
+          "value": "6+"
+        }
+      },
+      "titleLine1": "Gestiona tu instituto",
+      "titleLine2": "como una plataforma profesional"
+    },
+    "modules": {
+      "items": {
+        "academie": {
+          "text": "Formación, inscripciones y seguimiento de alumnos.",
+          "title": "Academia"
+        },
+        "appointments": {
+          "text": "Calendario profesional/cabina, reserva online, portal de clientes.",
+          "title": "Cita"
+        },
+        "assistant": {
+          "text": "Acciones declaradas por módulo: control sin recableado.",
+          "title": "Asistente de IA"
+        },
+        "multitenant": {
+          "text": "Aislamiento estricto por instituto, RLS Supabase, roles de equipo.",
+          "title": "Multiinquilino"
+        },
+        "pos": {
+          "text": "Servicios, productos WooCommerce y artículos internos en una sola cesta.",
+          "title": "Pago unificado"
+        },
+        "whitelabel": {
+          "text": "Plataforma → marcas → institutos, dominios y branding personalizado.",
+          "title": "etiqueta blanca"
+        }
+      },
+      "subtitle": "Cada módulo se activa según la fórmula del instituto. Sin fábricas de gas.",
+      "title": "Todo lo que necesitas para tu negocio"
+    },
+    "nav": {
+      "book": "Para reservar",
+      "teamLogin": "Conexión de equipo"
+    },
+    "steps": {
+      "items": {
+        "1": {
+          "text": "WooCommerce, Stripe, equipo y servicios.",
+          "title": "Conecta tu instituto"
+        },
+        "2": {
+          "text": "Instituto, Academia, según tu fórmula.",
+          "title": "Activa tus módulos"
+        },
+        "3": {
+          "text": "Caja registradora, citas públicas y asistente de IA.",
+          "title": "Recopilar y planificar"
+        }
+      },
+      "title": "Inicio rápido"
+    }
+  },
+  "nav": {
+    "academieCourses": "Capacitación",
+    "academieOverview": "Academia",
+    "academieStudents": "Estudiantes",
+    "adminBrands": "Marcas",
+    "adminModules": "Módulos",
+    "adminOverview": "Administración",
+    "adminPlans": "Fórmulas",
+    "adminSettings": "Ajustes",
+    "adminSubscriptions": "Suscripciones",
+    "adminSupport": "Apoyo",
+    "adminTeam": "equipo de plataforma",
+    "adminTenants": "institutos",
+    "institutAppointments": "Cita",
+    "institutClients": "Clientes",
+    "institutMarketing": "Marketing",
+    "institutMarketingLoyalty": "Lealtad",
+    "institutMarketingPromos": "Promociones",
+    "institutMarketingWebsite": "Página web",
+    "institutPos": "Caja",
+    "institutPosHistory": "Historial de caja registradora",
+    "institutPosProducts": "Productos internos",
+    "institutPosSession": "Sesión",
+    "institutPosVouchers": "Vales y créditos",
+    "institutServices": "Servicios",
+    "institutSettings": "Ajustes",
+    "institutTeam": "Equipo"
+  },
+  "pos": {
+    "balance": {
+      "back": "Histórico",
+      "paid": "ya pagado",
+      "pay": "Retirar dinero {amount}",
+      "remaining": "aun por pagar",
+      "sale": "Venta",
+      "total": "Total incluyendo impuestos"
+    },
+    "checkout": {
+      "addPayment": "Agregar un método de pago",
+      "amountAria": "Cantidad",
+      "creditNotePlaceholder": "Número de activo (AV-…)",
+      "discount": "Descuento",
+      "fillRemaining": "Pagar",
+      "giftCodePlaceholder": "código de cupón",
+      "methodAria": "Método de pago",
+      "methods": {
+        "card": "tarjeta TPE",
+        "cash": "Especies",
+        "credit_note": "Tener",
+        "gift_card": "Vale regalo",
+        "transfer": "Pago"
+      },
+      "overpaid": "Sobrepago: {amount}",
+      "payments": "Pagos",
+      "pricesHtHint": "Los precios de lista no incluyen el IVA: el IVA se calcula al recibirlo.",
+      "pricesTtcHint": "Los precios de lista incluyen impuestos.",
+      "remaining": "Queda por pagar: {amount}",
+      "submit": "Retirar dinero {total}",
+      "submitPartial": "Depósito __UCI0__ / __UCI1__",
+      "submitting": "Recopilación…",
+      "subtotalHt": "Subtotal sin impuestos",
+      "totalTtc": "Total incluyendo impuestos",
+      "vat": "TINA",
+      "viewTicket": "Ver billete"
+    },
+    "history": {
+      "columns": {
+        "client": "Cliente",
+        "date": "Fecha",
+        "items": "Elementos",
+        "payment": "Pago",
+        "status": "Estado",
+        "ticket": "Boleto",
+        "total": "Total"
+      },
+      "empty": "No se registraron ventas.",
+      "mixedPayments": "Pagos __UCI0__",
+      "paidShort": "pagado",
+      "payBalance": "Pagar",
+      "paymentMethods": {
+        "card": "tarjeta TPE",
+        "cash": "Especies",
+        "credit_note": "Tener",
+        "gift_card": "Vale regalo",
+        "mixed": "Mezclado",
+        "other": "Otro",
+        "stripe": "raya",
+        "transfer": "Pago"
+      },
+      "status": {
+        "paid": "Pagado",
+        "partial": "Depósito"
+      },
+      "viewTicket": "Boleto"
+    },
+    "products": {
+      "columns": {
+        "actions": "Comportamiento",
+        "name": "Nombre",
+        "price": "Precio",
+        "sku": "SKU",
+        "stock": "Existencias"
+      },
+      "delete": "BORRAR",
+      "dialogTitle": "Nuevo producto",
+      "empty": "Sin productos internos.",
+      "footer": "{recuento, plural, uno {# produit} otro {# produits}}",
+      "form": {
+        "namePlaceholder": "Aceite facial 30ml",
+        "priceEur": "Precio (EUR)",
+        "skuOptional": "Opcional",
+        "stockOptional": "Opcional",
+        "submit": "Añadir producto",
+        "submitting": "Suma…"
+      },
+      "new": "Nuevo producto",
+      "noResults": "No hay resultados para esta búsqueda.",
+      "searchPlaceholder": "Buscar nombre, SKU…"
+    },
+    "session": {
+      "backToPos": "Volver a pagar",
+      "breakdown": {
+        "cashSales": "Ventas en efectivo",
+        "expectedCash": "Especies esperadas",
+        "movementsExpense": "Gastos en efectivo",
+        "movementsIn": "Recibos de efectivo",
+        "movementsOut": "Salidas en efectivo",
+        "openingFloat": "Base de efectivo inicial"
+      },
+      "byPayment": "Por método de pago",
+      "closeDescription": "Cuente el efectivo real en el cajón, compárelo con la cantidad esperada y luego cierre.",
+      "closeForm": {
+        "balancedHint": "El importe contado corresponde al saldo teórico.",
+        "balancedTitle": "Pago equilibrado",
+        "confirmCheckbox": "Conté físicamente el efectivo en el cajón de efectivo.",
+        "counted": "Efectivo contado (€)",
+        "countedHelp": "Cuente las monedas y billetes realmente presentes en el cajón.",
+        "expected": "Especies esperadas",
+        "notesLabel": "Notas finales",
+        "notesPlaceholder": "Observaciones (opcional si el fondo está equilibrado)",
+        "notesRequiredPlaceholder": "Explique la variación de efectivo (obligatorio)",
+        "submit": "Cerrar y editar la Z",
+        "theoreticalTitle": "Saldo de caja teórico",
+        "varianceExplain": "Tenga en cuenta la causa de la discrepancia en las notas: no cambie las ventas registradas.",
+        "varianceShortage": "Carente",
+        "varianceSurplus": "excedente de",
+        "varianceTitle": "Brecha de efectivo",
+        "zWarningBody": "El informe Z cierra la sesión y congela los totales del día. Si hay un error en una venta, corríjalo antes de cerrarla.",
+        "zWarningTitle": "Cierre definitivo (Z)"
+      },
+      "closeTitle": "Cierre al final del día",
+      "closedBadge": "Caja cerrada",
+      "closedIntro": "Inicie sesión para registrar sus ventas, realizar un seguimiento del efectivo disponible y cerrar el día de forma ordenada.",
+      "generateX": "Generar el",
+      "goToPos": "Cobrar una venta",
+      "goToPosAfterOpen": "Ir en efectivo",
+      "journalTitle": "Historia de los movimientos",
+      "methods": {
+        "card": "Mapa",
+        "cash": "Especies",
+        "credit_note": "Tener",
+        "gift_card": "Vale regalo",
+        "stripe": "raya",
+        "transfer": "Pago"
+      },
+      "movementForm": {
+        "amountLabel": "Importe (€)",
+        "presets": {
+          "bankDeposit": "depósito bancario",
+          "changeFund": "Suministro de monedas",
+          "otherExpense": "Otros gastos",
+          "ownerDeposit": "Contribución en efectivo",
+          "pettyPurchase": "Pequeña compra",
+          "safeTransfer": "Almacenamiento seguro",
+          "supplies": "Suministros/consumibles"
+        },
+        "reasonLabel": "Patrón",
+        "reasonPlaceholder": "Describir el movimiento (requerido para la trazabilidad)",
+        "submit": "Registro de movimiento",
+        "typeHints": {
+          "expense": "Compra pagada en efectivo desde cajón",
+          "in": "Agregar efectivo (cambio, ingreso)",
+          "out": "Retirar efectivo (banco, caja fuerte)"
+        },
+        "typeLabel": "tipo de movimiento",
+        "types": {
+          "expense": "Gastado",
+          "in": "Entrada",
+          "out": "Salida"
+        }
+      },
+      "movementTypes": {
+        "expense": "Gasto en efectivo",
+        "in": "entrada de efectivo",
+        "out": "Verificar"
+      },
+      "movements": "Movimientos de efectivo",
+      "movementsHint": "Excluyendo ventas: suministro de divisas, depósito bancario, pequeños gastos pagados en efectivo.",
+      "noMovements": "Aún no hay movimiento.",
+      "openDescription": "Inicie una sesión con el efectivo inicial.",
+      "openForm": {
+        "defaultHint": "Valor predeterminado configurado: {amount}",
+        "float": "Efectivo (€)",
+        "floatHelp": "Líquido presente en el cajón al abrirlo (monedas y billetes). Pon 0 si el cajón está vacío.",
+        "submit": "Abrir caja"
+      },
+      "openTitle": "empezar el dia",
+      "openingFloat": "fondo de efectivo",
+      "reports": "Informes generados",
+      "sessionOpen": "Abrir caja",
+      "settingsLink": "Configuración de caja registradora",
+      "stats": {
+        "expectedCash": "Especies esperadas",
+        "partial": "Cuotas",
+        "sales": "Ventas",
+        "total": "CA incluido TINA"
+      },
+      "steps": {
+        "count": "Cuente el efectivo que ya está en el cajón de efectivo.",
+        "declare": "Ingrese este monto como su saldo de efectivo",
+        "sell": "Recoge tus ventas desde la pestaña Cajero"
+      },
+      "workflow": {
+        "journal": "Registro de caja",
+        "xReport": "informe x",
+        "zClose": "Valla Z"
+      },
+      "workflowAria": "Pasos de la sesión de pago",
+      "workflowIntro": "Registro de movimientos → Control X (opcional) → Conteo y cierre Z.",
+      "xReportGenerated": "Informe {number} guardado.",
+      "xReportHint": "Punto de control sin cerrar el día: útil a mitad del día o antes de un cambio de caja.",
+      "xReportTitle": "Control intermedio (informe X)"
+    },
+    "stripe": {
+      "pay": "Pagar __UCI0__",
+      "payPending": "Pago…",
+      "paymentFailed": "El pago falló.",
+      "paymentNotConfirmed": "Pago no confirmado.",
+      "paymentRecorded": "Pago registrado.",
+      "prepare": "Preparación…",
+      "startFailed": "No se puede iniciar el pago."
+    },
+    "terminal": {
+      "cart": {
+        "addToCheckout": "Agrega artículos para retirar dinero.",
+        "appointmentAria": "Cita",
+        "clear": "Vacío",
+        "clientAria": "Cliente",
+        "discount": "Descuento carrito (€)",
+        "empty": "Sin artículos.",
+        "extraBadge": "extra",
+        "noAppointment": "— Sin cita previa —",
+        "noClient": "— Sin clientes —",
+        "noStaff": "— Sin practicante —",
+        "notePlaceholder": "Nota interna (opcional)",
+        "settingsLink": "Configuración de pago →",
+        "staffAria": "Facultativo",
+        "title": "Cesta",
+        "total": "Total"
+      },
+      "categories": {
+        "extra": "Extra",
+        "internal": "Interno",
+        "service": "Beneficio",
+        "woocommerce": "Cortejar"
+      },
+      "checkout": {
+        "card": "Tarjeta TPE · __UCI0__",
+        "cardPending": "Registro…",
+        "cash": "Especies · __UCI0__",
+        "cashPending": "Recopilación…"
+      },
+      "emptyCategory": "No hay artículos en esta categoría. Añade servicios, sincroniza WooCommerce o crea productos internos.",
+      "noSessionHint": "Sesión cerrada: abierta para seguimiento de efectivo",
+      "openSession": "Abrir caja →",
+      "searchAria": "investigar",
+      "searchArticles": "Buscar un artículo…",
+      "sessionRequired": "Abra el registro para registrar esta venta.",
+      "tabs": {
+        "all": "Todo",
+        "internal": "Interno",
+        "services": "Servicios",
+        "woo": "Tienda Woo"
+      }
+    },
+    "ticket": {
+      "discount": "Descuento",
+      "item": "Artículo",
+      "methods": {
+        "card": "Mapa",
+        "cash": "Especies",
+        "credit_note": "Tener",
+        "gift_card": "Vale regalo",
+        "other": "Otro",
+        "stripe": "raya",
+        "transfer": "Pago"
+      },
+      "noNumber": "Boleto",
+      "paid": "cobrado",
+      "payments": "Pagos",
+      "print": "Imprimir",
+      "qty": "Cantidad",
+      "subtotalHt": "Subtotal sin impuestos",
+      "thanks": "¡Gracias por tu visita!",
+      "total": "Total",
+      "totalTtc": "Total incluyendo impuestos",
+      "vat": "TINA",
+      "vatAmount": "TINA"
+    },
+    "vouchers": {
+      "columns": {
+        "balance": "Pagar",
+        "code": "Código",
+        "date": "Fecha",
+        "number": "No.",
+        "remaining": "Restante",
+        "status": "Estado"
+      },
+      "creditForm": {
+        "amount": "Importe crédito (€)",
+        "noSalesHint": "No hay ventas recientes con colección.",
+        "reason": "Patrón",
+        "selectSale": "Venta de fuente",
+        "submit": "crear el credito"
+      },
+      "creditNotesTitle": "Activos",
+      "giftCardsTitle": "Vales regalo",
+      "giftForm": {
+        "amount": "Importe (€)",
+        "recipient": "Destinatario (opcional)",
+        "submit": "Emitir el bono"
+      },
+      "issueCreditNote": "crear un credito",
+      "issueGiftCard": "Emitir un vale regalo",
+      "noCreditNotes": "Sin activos.",
+      "noGiftCards": "Sin certificado de regalo.",
+      "status": {
+        "active": "Activo",
+        "cancelled": "Cancelado",
+        "depleted": "Exhausto"
+      }
+    }
+  },
+  "public": {
+    "booking": {
+      "availability": {
+        "dayShort": {
+          "0": "sol",
+          "1": "lun",
+          "2": "mar",
+          "3": "mar",
+          "4": "juego",
+          "5": "vie",
+          "6": "se sentó"
+        },
+        "fromDate": "Estoy disponible a partir de",
+        "hint": "Indica cuándo puedes venir: te mostraremos las franjas horarias correspondientes.",
+        "timeFrom": "De",
+        "timeInvalid": "La hora de finalización debe ser posterior a la hora de inicio.",
+        "timeTo": "Hasta",
+        "title": "¿Cuándo estás disponible?",
+        "weekdays": "Días de la semana",
+        "weekdaysRequired": "Seleccione al menos un día."
+      },
+      "confirmed": {
+        "emailHint": "Se le enviará un correo electrónico de confirmación en breve.",
+        "title": "Cita confirmada",
+        "withExtras": "Sus opciones adicionales están incluidas."
+      },
+      "extras": {
+        "durationHint": "Tiempo total estimado: {min} min · {price}",
+        "subtitle": "Personaliza tu sesión antes de elegir el horario.",
+        "title": "Opciones adicionales"
+      },
+      "loadError": "No se pueden cargar datos. Intentar otra vez.",
+      "quoteRequest": {
+        "backToServices": "Elige otro servicio",
+        "eventDate": "Fecha del evento (opcional)",
+        "fromPrice": "Desde __UCI0__",
+        "fullName": "nombre completo",
+        "message": "Tu proyecto",
+        "messagePlaceholder": "Ubicación, número de personas, estilo deseado…",
+        "submit": "enviar mi solicitud",
+        "submitting": "Envío…",
+        "successHint": "Nos comunicaremos contigo rápidamente con una propuesta personalizada.",
+        "successTitle": "Solicitud enviada"
+      },
+      "step1": {
+        "durationMin": "__UCI0__ min",
+        "empty": "No hay servicios disponibles en línea.",
+        "manualBadge": "Por encargo",
+        "onRequest": "En cotización",
+        "quoteBadge": "Estimar",
+        "serviceLabel": "Beneficio",
+        "servicePlaceholder": "Elige un servicio",
+        "staffAny": "Sin preferencia",
+        "staffLabel": "Practicante (opcional)",
+        "staffPlaceholder": "Elige un practicante",
+        "staffRequired": "Por favor elija un practicante.",
+        "subtitle": "Por favor elija un servicio e indique su disponibilidad.",
+        "title": "Reserva"
+      },
+      "step2": {
+        "title": "Elige un practicante"
+      },
+      "step3": {
+        "seeSlots": "Ver espacios",
+        "title": "Indica tu disponibilidad"
+      },
+      "step4": {
+        "changeAvailability": "Cambiar mi disponibilidad",
+        "confirm": "Confirmar cita",
+        "confirming": "Confirmación…",
+        "extrasHint": "Se pueden agregar opciones adicionales en el siguiente paso.",
+        "fullName": "nombre completo",
+        "loading": "Buscando nichos…",
+        "noSlots": "Ningún cupo coincide con tu disponibilidad.",
+        "noSlotsHint": "Amplíe sus días o franja horaria, o cambie sus opciones.",
+        "subtitle": "Slots disponibles según tus preferencias.",
+        "title": "Elige tu tiempo"
+      },
+      "step5": {
+        "confirm": "Confirmar cita",
+        "confirming": "Confirmación…",
+        "fullName": "nombre completo",
+        "title": "Tus datos de contacto"
+      },
+      "steps": {
+        "details": "Datos de contacto",
+        "done": "Finalizado",
+        "extras": "Suplementos",
+        "service": "Beneficio",
+        "slots": "Hora"
+      },
+      "subtitle": "{name} — reserva en línea",
+      "title": "Pedir hora",
+      "wizardTitle": "Tu reserva"
+    },
+    "client": {
+      "account": {
+        "cancel": "Cancelar",
+        "columns": {
+          "actions": "Comportamiento",
+          "date": "Fecha",
+          "service": "Beneficio",
+          "status": "Estado"
+        },
+        "empty": "No hay citas próximas.",
+        "logout": "Desconectar",
+        "status": {
+          "booked": "Reservar",
+          "cancelled": "Cancelado",
+          "completed": "Finalizado",
+          "confirmed": "Confirmado",
+          "no_show": "Ausente"
+        }
+      },
+      "login": {
+        "credentialsHint": "Su instituto le proporcionará su nombre de usuario y su código PIN de 4 dígitos.",
+        "loginId": "ID de cliente",
+        "loginIdPlaceholder": "ins-001",
+        "pin": "código PIN",
+        "submit": "Acceso",
+        "submitting": "Conexión…",
+        "subtitle": "Inicie sesión con su ID de cliente y PIN.",
+        "title": "mi cuenta"
+      },
+      "register": {
+        "disabledDescription": "Su cuenta es creada por su instituto. Comuníquese con ellos para obtener su ID de cliente y PIN.",
+        "hasAccount": "¿Ya tienes tus datos de acceso? Acceso",
+        "title": "Crear una cuenta"
+      }
+    },
+    "quote": {
+      "accept": "Aceptar cotización",
+      "client": "Cliente",
+      "decline": "Rechazar",
+      "description": "Descripción",
+      "discount": "Descuento",
+      "eventDate": "Fecha del evento",
+      "footer": "{name} — gracias por su confianza.",
+      "message": "tu mensaje",
+      "printPdf": "Imprimir / PDF",
+      "quantity": "Cantidad",
+      "quoteNumber": "No.",
+      "respondError": "No se puede guardar tu respuesta.",
+      "responding": "Envío…",
+      "service": "Beneficio",
+      "statusAccepted": "GRACIAS ! Su aceptación ha quedado registrada. Nos pondremos en contacto contigo nuevamente para fijar la fecha.",
+      "statusDeclined": "Su negativa ha quedado registrada.",
+      "statusExpired": "Esta cotización ha caducado. Contáctenos para una nueva propuesta.",
+      "subtotal": "Total parcial",
+      "title": "Estimar",
+      "total": "Total incluyendo impuestos",
+      "unitPrice": "PODRÍA.",
+      "validUntil": "Válido hasta"
+    },
+    "site": {
+      "blocks": {
+        "hoursByAppointment": "Horario con cita previa.",
+        "noImages": "Sin imágenes.",
+        "noServices": "No se encontraron servicios."
+      },
+      "nav": {
+        "account": "mi cuenta",
+        "book": "Para reservar",
+        "home": "Bienvenido"
+      }
+    }
+  },
+  "roles": {
+    "brand_owner": "Marca propietaria",
+    "coach": "Entrenador",
+    "platform_admin": "Gran administrador",
+    "staff": "Personal",
+    "tenant_owner": "Dueño"
+  },
+  "shell": {
+    "academie": "Academia",
+    "administration": "Administración",
+    "footerRights": "Reservados todos los derechos.",
+    "home": "Bienvenido",
+    "institut": "Instituto",
+    "language": "Idioma",
+    "myAccount": "mi cuenta",
+    "posSession": {
+      "durationHours": "desde __UCI0__ h __UCI1__ min",
+      "durationJustOpened": "ahora mismo",
+      "durationMins": "desde __UCI0__ min",
+      "navIndicator": "Abrir caja",
+      "open": "Abrir caja"
+    },
+    "sidebar": {
+      "ariaLabel": "Navegación principal",
+      "collapse": "Reducir",
+      "expand": "Expandir menú"
+    },
+    "signOut": "Desconectar"
+  },
+  "ui": {
+    "dataTable": {
+      "emptyDefault": "Sin artículos."
+    },
+    "formDialog": {
+      "close": "Cerca"
+    },
+    "pageTabs": {
+      "sectionsAriaLabel": "Secciones"
+    }
+  },
+  "weekdays": {
+    "fri": "Viernes",
+    "mon": "Lunes",
+    "sat": "SÁBADO",
+    "sun": "Domingo",
+    "thu": "JUEVES",
+    "tue": "Martes",
+    "wed": "Miércoles"
+  }
+}

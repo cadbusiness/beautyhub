@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { requirePlatformAdmin } from "@/lib/auth/guards";
 import { updateSupportTicket, type SupportStatus } from "@/lib/platform/support";
 
@@ -19,7 +20,8 @@ export async function updateTicketStatus(
   const status = String(formData.get("status") ?? "") as SupportStatus;
   const adminNotes = String(formData.get("admin_notes") ?? "").trim() || null;
 
-  if (!id) return { error: "Ticket manquant." };
+  const t = await getTranslations("admin.support.actions");
+  if (!id) return { error: t("ticketMissing") };
 
   const result = await updateSupportTicket({ id, status, adminNotes });
   if (result.error) return { error: result.error };

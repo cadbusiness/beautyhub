@@ -20,6 +20,7 @@ import { useTranslations } from "next-intl";
 import {
   SitePageRenderer,
   type FormattedOpeningDay,
+  type SiteBlockLabels,
 } from "@/components/site/site-page-renderer";
 import { PublicSiteShell } from "@/components/site/public-site-shell";
 import { SitePageStyleWrapper } from "@/components/site/site-page-style-wrapper";
@@ -41,6 +42,7 @@ function SortableBlock({
   services,
   scheduleDays,
   accent,
+  blockLabels,
   onSelect,
 }: {
   block: SiteBlock;
@@ -50,6 +52,7 @@ function SortableBlock({
   services: PublicService[];
   scheduleDays: FormattedOpeningDay[];
   accent: string;
+  blockLabels: SiteBlockLabels;
   onSelect: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -120,6 +123,7 @@ function SortableBlock({
           services={services}
           scheduleDays={scheduleDays}
           accent={accent}
+          blockLabels={blockLabels}
         />
       </div>
     </div>
@@ -152,6 +156,11 @@ export function SiteBuilderCanvas({
   onReorder: (blocks: SiteBlock[]) => void;
 }) {
   const t = useTranslations("institut.marketing.website.builder");
+  const tBlocks = useTranslations("public.site.blocks");
+  const blockLabels: SiteBlockLabels = {
+    noImages: tBlocks("noImages"),
+    hoursByAppointment: tBlocks("hoursByAppointment"),
+  };
   const normalizedStyle = normalizeSitePageStyle(pageStyle);
 
   const sensors = useSensors(
@@ -204,6 +213,7 @@ export function SiteBuilderCanvas({
                       services={services}
                       scheduleDays={scheduleDays}
                       accent={accent}
+                      blockLabels={blockLabels}
                       onSelect={onSelect}
                     />
                   ))}

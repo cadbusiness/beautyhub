@@ -1,0 +1,131 @@
+{
+  "common": {
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "edit": "Modifier",
+    "cancel": "Annuler",
+    "all": "Tout",
+    "optional": "Optionnel",
+    "noClient": "Sans client",
+    "appointmentShort": "RDV",
+    "appointment": "Rendez-vous",
+    "loadingError": "Erreur de chargement",
+    "dash": "—",
+    "practitioner": "Praticien",
+    "cabin": "Cabine",
+    "client": "Client",
+    "status": "Statut",
+    "notes": "Notes",
+    "refresh": "Rafraîchir"
+  },
+  "shell": {
+    "home": "Accueil",
+    "administration": "Administration",
+    "signOut": "Déconnexion",
+    "footerRights": "Tous droits réservés.",
+    "language": "Langue"
+  },
+  "roles": {
+    "platform_admin": "Super admin",
+    "brand_owner": "Propriétaire marque",
+    "tenant_owner": "Propriétaire",
+    "staff": "Staff",
+    "coach": "Coach"
+  },
+  "appointments": {
+    "tabs": {
+      "calendar": "Calendrier",
+      "list": "Liste"
+    },
+    "status": {
+      "booked": "Réservé",
+      "confirmed": "Confirmé",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "no_show": "Absent"
+    },
+    "form": {
+      "client": "Client",
+      "noClient": "— Sans client —",
+      "service": "Prestation",
+      "chooseService": "Choisir une prestation",
+      "staff": "Employé(e)",
+      "anyStaff": "— Indifférent —",
+      "resource": "Cabine",
+      "noResource": "— Aucune —",
+      "startsAt": "Date et heure de début",
+      "endsAt": "Date et heure de fin",
+      "status": "Statut",
+      "notes": "Notes",
+      "create": "Créer le rendez-vous",
+      "scheduleWarningConfirm": "Confirmer malgré l'horaire hors planning"
+    },
+    "list": {
+      "new": "Nouveau rendez-vous",
+      "searchPlaceholder": "Recherche prestation, client, praticien…",
+      "empty": "Aucun rendez-vous.",
+      "noResults": "Aucun résultat pour cette recherche.",
+      "dialogTitle": "Nouveau rendez-vous",
+      "columns": {
+        "date": "Date",
+        "service": "Prestation",
+        "client": "Client",
+        "staff": "Praticien",
+        "status": "Statut",
+        "actions": "Actions"
+      },
+      "confirmStatus": "OK"
+    },
+    "calendar": {
+      "editTitle": "Modifier le rendez-vous",
+      "allServices": "Toutes les prestations",
+      "allStaff": "Toute l'équipe",
+      "publicPage": "Page publique ↗",
+      "views": {
+        "month": "Mois",
+        "week": "Semaine",
+        "day": "Jour"
+      },
+      "columnMode": {
+        "staff": "Praticiens",
+        "resource": "Cabines"
+      },
+      "today": "Aujourd'hui",
+      "weekOf": "Semaine du {date}",
+      "emptyStaff": "Ajoute du personnel dans Équipe pour afficher le calendrier.",
+      "emptyResources": "Ajoute des cabines dans Équipe pour afficher le calendrier.",
+      "monthAppointments": "{count, plural, one {# RDV} other {# RDV}}",
+      "weekdaysShort": {
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mer",
+        "thu": "Jeu",
+        "fri": "Ven",
+        "sat": "Sam",
+        "sun": "Dim"
+      }
+    }
+  },
+  "institut": {
+    "actions": {
+      "nameRequired": "Nom requis.",
+      "durationInvalid": "Durée invalide.",
+      "serviceNotFound": "Prestation introuvable.",
+      "serviceDateRequired": "Prestation et date/heure requises.",
+      "missingFields": "Champs requis manquants.",
+      "clientEmailExists": "Un client avec cet e-mail existe déjà.",
+      "workingHoursEndBeforeStart": "{day} : l'heure de fin doit être après le début."
+    },
+    "scheduling": {
+      "conflict": {
+        "staffBusy": "Ce praticien a déjà un rendez-vous sur ce créneau.",
+        "resourceBusy": "Cette cabine est déjà réservée sur ce créneau."
+      },
+      "schedule": {
+        "noHoursToday": "Aucun horaire d'ouverture ce jour pour ce prestataire.",
+        "outsideSchedule": "La période sélectionnée ne correspond pas au planning du prestataire."
+      }
+    }
+  }
+}

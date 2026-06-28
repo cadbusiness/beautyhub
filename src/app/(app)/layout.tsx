@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAppShellData } from "@/lib/auth/team-session";
 import { ensureDefaultTenant } from "@/lib/tenant/ensure";
@@ -23,6 +24,7 @@ export default async function AppLayout({
 
   const { session, accessibleTenants } = shell;
   const nav = getNavFor(session.enabledModuleIds, session.role);
+  const t = await getTranslations("shell");
   const platformAdmin = session.role === "platform_admin";
   const aiActions = getAiActionsFor(session.enabledModuleIds, session.role).map(
     (a) => ({ name: a.name, description: a.description }),
@@ -47,7 +49,7 @@ export default async function AppLayout({
       <div className="flex min-h-0 flex-1">
         <aside className="flex w-52 shrink-0 flex-col border-r border-slate-200 bg-white py-4 lg:w-56">
           <nav className="flex-1 space-y-0.5 px-3">
-            <NavLink href="/dashboard" label="Accueil" exact />
+            <NavLink href="/dashboard" label={t("home")} exact />
             {nav.map((item) => (
               <NavLink
                 key={`${item.moduleId}-${item.href}`}

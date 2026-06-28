@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { CalendarColumn } from "./types";
 
@@ -12,6 +13,8 @@ export function StaffFilterRow({
   selectedStaffId: string | null;
   onSelect: (staffId: string | null) => void;
 }) {
+  const t = useTranslations("common");
+
   if (staff.length === 0) return null;
 
   return (
@@ -29,7 +32,7 @@ export function StaffFilterRow({
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-sm font-semibold">
           *
         </span>
-        Tout
+        {t("all")}
       </button>
       {staff.map((s) => (
         <button

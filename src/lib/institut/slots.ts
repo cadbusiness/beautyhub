@@ -25,6 +25,9 @@ export interface AppointmentBlock {
   status: string;
 }
 
+export type ConflictKey = "staffBusy" | "resourceBusy";
+export type ScheduleWarningKey = "noHoursToday" | "outsideSchedule";
+
 /** Verifie chevauchement staff et/ou cabine (buffers inclus). */
 export async function checkAppointmentConflict(
   supabase: Db,
@@ -38,7 +41,7 @@ export async function checkAppointmentConflict(
     bufferAfterMin?: number;
     excludeId?: string;
   },
-): Promise<string | null> {
+): Promise<ConflictKey | null> {
   const padStart = new Date(
     params.startsAt.getTime() - (params.bufferBeforeMin ?? 0) * 60_000,
   );
@@ -61,10 +64,10 @@ export async function checkAppointmentConflict(
 
   for (const a of data) {
     if (params.staffId && a.staff_id === params.staffId) {
-      return "Ce praticien a deja un rendez-vous sur ce creneau.";
+      return "staffBusy";
     }
     if (params.resourceId && a.resource_id === params.resourceId) {
-      return "Cette cabine est deja reservee sur ce creneau.";
+      return "resourceBusy";
     }
   }
   return null;
@@ -109,7 +112,7 @@ export function validateStaffWorkingHours(
   staffId: string | null,
   startsAt: Date,
   endsAt: Date,
-): string | null {
+): ScheduleWarningKey | null {
   if (!hours.length) return null;
 
   const weekday = startsAt.getDay();
@@ -119,7 +122,7 @@ export function validateStaffWorkingHours(
   const dayWindows = applicable.filter((h) => h.weekday === weekday);
 
   if (dayWindows.length === 0) {
-    return "Aucun horaire d'ouverture ce jour pour ce prestataire.";
+    return "noHoursToday";
   }
 
   const startMin = startsAt.getHours() * 60 + startsAt.getMinutes();
@@ -132,7 +135,7 @@ export function validateStaffWorkingHours(
   });
 
   if (!fits) {
-    return "La période sélectionnée ne correspond pas au planning du prestataire.";
+    return "outsideSchedule";
   }
   return null;
 }

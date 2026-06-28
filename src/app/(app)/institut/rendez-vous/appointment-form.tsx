@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   createAppointment,
   updateAppointment,
@@ -9,9 +10,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import type { CalendarAppointment } from "./calendar/types";
-import { STATUS_LABELS } from "./calendar/types";
 
 const initial: ActionResult = {};
+
+const STATUS_KEYS = [
+  "booked",
+  "confirmed",
+  "completed",
+  "cancelled",
+  "no_show",
+] as const;
 
 interface Option {
   id: string;
@@ -41,6 +49,9 @@ export function AppointmentForm({
   resources?: Option[];
   onSuccess?: () => void;
 }) {
+  const t = useTranslations("appointments.form");
+  const tStatus = useTranslations("appointments.status");
+  const tCommon = useTranslations("common");
   const actionFn = mode === "edit" ? updateAppointment : createAppointment;
   const [state, action, pending] = useActionState(actionFn, initial);
   const [ignoreSchedule, setIgnoreSchedule] = useState(false);
@@ -69,13 +80,13 @@ export function AppointmentForm({
       ) : null}
       <input type="hidden" name="ignore_schedule" value={ignoreSchedule ? "1" : "0"} />
 
-      <Field label="Client" htmlFor="client_id">
+      <Field label={t("client")} htmlFor="client_id">
         <Select
           id="client_id"
           name="client_id"
           defaultValue={appointment?.client_id ?? ""}
         >
-          <option value="">— Sans client —</option>
+          <option value="">{t("noClient")}</option>
           {clients.map((c) => (
             <option key={c.id} value={c.id}>
               {c.label}
@@ -83,7 +94,7 @@ export function AppointmentForm({
           ))}
         </Select>
       </Field>
-      <Field label="Prestation" htmlFor="service_id">
+      <Field label={t("service")} htmlFor="service_id">
         <Select
           id="service_id"
           name="service_id"
@@ -91,7 +102,7 @@ export function AppointmentForm({
           defaultValue={appointment?.service_id ?? ""}
         >
           <option value="" disabled>
-            Choisir une prestation
+            {t("chooseService")}
           </option>
           {services.map((s) => (
             <option key={s.id} value={s.id}>
@@ -100,13 +111,13 @@ export function AppointmentForm({
           ))}
         </Select>
       </Field>
-      <Field label="Employé(e)" htmlFor="staff_id">
+      <Field label={t("staff")} htmlFor="staff_id">
         <Select
           id="staff_id"
           name="staff_id"
           defaultValue={appointment?.staff_id ?? ""}
         >
-          <option value="">— Indifférent —</option>
+          <option value="">{t("anyStaff")}</option>
           {staff.map((s) => (
             <option key={s.id} value={s.id}>
               {s.label}
@@ -115,13 +126,13 @@ export function AppointmentForm({
         </Select>
       </Field>
       {resources.length > 0 ? (
-        <Field label="Cabine" htmlFor="resource_id">
+        <Field label={t("resource")} htmlFor="resource_id">
           <Select
             id="resource_id"
             name="resource_id"
             defaultValue={appointment?.resource_id ?? ""}
           >
-            <option value="">— Aucune —</option>
+            <option value="">{t("noResource")}</option>
             {resources.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.label}
@@ -130,7 +141,7 @@ export function AppointmentForm({
           </Select>
         </Field>
       ) : null}
-      <Field label="Date et heure de début" htmlFor="starts_at">
+      <Field label={t("startsAt")} htmlFor="starts_at">
         <Input
           id="starts_at"
           name="starts_at"
@@ -142,7 +153,7 @@ export function AppointmentForm({
         />
       </Field>
       {mode === "edit" ? (
-        <Field label="Date et heure de fin" htmlFor="ends_at">
+        <Field label={t("endsAt")} htmlFor="ends_at">
           <Input
             id="ends_at"
             name="ends_at"
@@ -154,21 +165,21 @@ export function AppointmentForm({
         </Field>
       ) : null}
       {mode === "edit" && appointment ? (
-        <Field label="Statut" htmlFor="status">
+        <Field label={t("status")} htmlFor="status">
           <Select id="status" name="status" defaultValue={appointment.status}>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => (
+            {STATUS_KEYS.map((value) => (
               <option key={value} value={value}>
-                {label}
+                {tStatus(value)}
               </option>
             ))}
           </Select>
         </Field>
       ) : null}
-      <Field label="Notes" htmlFor="notes">
+      <Field label={t("notes")} htmlFor="notes">
         <Textarea
           id="notes"
           name="notes"
-          placeholder="Optionnel"
+          placeholder={tCommon("optional")}
           defaultValue={appointment?.notes ?? ""}
         />
       </Field>
@@ -183,7 +194,7 @@ export function AppointmentForm({
               checked={ignoreSchedule}
               onChange={(e) => setIgnoreSchedule(e.target.checked)}
             />
-            <span>Confirmer malgré l&apos;horaire hors planning</span>
+            <span>{t("scheduleWarningConfirm")}</span>
           </label>
         </div>
       ) : null}
@@ -194,10 +205,10 @@ export function AppointmentForm({
 
       <Button type="submit" disabled={pending}>
         {pending
-          ? "Enregistrement…"
+          ? tCommon("saving")
           : mode === "edit"
-            ? "Enregistrer"
-            : "Créer le rendez-vous"}
+            ? tCommon("save")
+            : t("create")}
       </Button>
     </form>
   );

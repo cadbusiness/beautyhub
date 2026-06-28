@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { setAppointmentStatus } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,16 +9,15 @@ import { Select } from "@/components/ui/input";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { ListToolbar } from "@/components/ui/list-toolbar";
-import { formatDateTime, formatPrice } from "@/lib/utils";
 import { AppointmentForm } from "./appointment-form";
 
-const STATUS: Record<string, string> = {
-  booked: "Reserve",
-  confirmed: "Confirme",
-  completed: "Termine",
-  cancelled: "Annule",
-  no_show: "Absent",
-};
+const STATUS_KEYS = [
+  "booked",
+  "confirmed",
+  "completed",
+  "cancelled",
+  "no_show",
+] as const;
 
 type Option = { id: string; label: string };
 
@@ -44,6 +44,9 @@ export function AppointmentsList({
   staff: Option[];
   resources: Option[];
 }) {
+  const t = useTranslations("appointments.list");
+  const tStatus = useTranslations("appointments.status");
+  const format = useFormatter();
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -59,86 +62,94 @@ export function AppointmentsList({
   }, [appointments, query]);
 
   const emptyMessage =
-    appointments.length === 0
-      ? "Aucun rendez-vous."
-      : "Aucun resultat pour cette recherche.";
+    appointments.length === 0 ? t("empty") : t("noResults");
 
   return (
     <>
       <ListToolbar
-          action={
-            <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
-              + Nouveau rendez-vous
-            </Button>
-          }
-        >
-          <Input
-            type="search"
-            placeholder="Recherche prestation, client, praticien..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="h-9 sm:max-w-sm"
-          />
-        </ListToolbar>
+        action={
+          <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
+            + {t("new")}
+          </Button>
+        }
+      >
+        <Input
+          type="search"
+          placeholder={t("searchPlaceholder")}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="h-9 sm:max-w-sm"
+        />
+      </ListToolbar>
 
-        <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
-          <table className="w-full text-sm">
-            <thead className="border-b border-slate-200">
-              <tr>
-                <th className={dataTableHead}>Date</th>
-                <th className={dataTableHead}>Prestation</th>
-                <th className={`hidden md:table-cell ${dataTableHead}`}>Client</th>
-                <th className={`hidden lg:table-cell ${dataTableHead}`}>Praticien</th>
-                <th className={`w-28 ${dataTableHead}`}>Statut</th>
-                <th className={`w-36 text-right ${dataTableHead}`}>Actions</th>
+      <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
+        <table className="w-full text-sm">
+          <thead className="border-b border-slate-200">
+            <tr>
+              <th className={dataTableHead}>{t("columns.date")}</th>
+              <th className={dataTableHead}>{t("columns.service")}</th>
+              <th className={`hidden md:table-cell ${dataTableHead}`}>{t("columns.client")}</th>
+              <th className={`hidden lg:table-cell ${dataTableHead}`}>{t("columns.staff")}</th>
+              <th className={`w-28 ${dataTableHead}`}>{t("columns.status")}</th>
+              <th className={`w-36 text-right ${dataTableHead}`}>{t("columns.actions")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((a) => (
+              <tr key={a.id} className={dataTableRow}>
+                <td className={`whitespace-nowrap text-slate-900 ${dataTableCell}`}>
+                  {format.dateTime(new Date(a.starts_at), {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </td>
+                <td className={dataTableCell}>
+                  <p className="font-medium text-slate-900">{a.serviceName}</p>
+                  <p className="text-xs text-slate-500">
+                    {format.number(a.price_cents / 100, {
+                      style: "currency",
+                      currency: "EUR",
+                    })}
+                  </p>
+                </td>
+                <td className={`hidden text-slate-600 md:table-cell ${dataTableCell}`}>
+                  {a.clientName}
+                </td>
+                <td className={`hidden text-slate-600 lg:table-cell ${dataTableCell}`}>
+                  {a.staffName}
+                </td>
+                <td className={dataTableCell}>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+                    {STATUS_KEYS.includes(a.status as (typeof STATUS_KEYS)[number])
+                      ? tStatus(a.status as (typeof STATUS_KEYS)[number])
+                      : a.status}
+                  </span>
+                </td>
+                <td className={`text-right ${dataTableCell}`}>
+                  <form action={setAppointmentStatus} className="inline-flex items-center gap-1">
+                    <input type="hidden" name="id" value={a.id} />
+                    <Select name="status" defaultValue={a.status} className="h-8 max-w-32 text-xs">
+                      {STATUS_KEYS.map((value) => (
+                        <option key={value} value={value}>
+                          {tStatus(value)}
+                        </option>
+                      ))}
+                    </Select>
+                    <Button variant="outline" type="submit" className="h-8 px-2 text-xs">
+                      {t("confirmStatus")}
+                    </Button>
+                  </form>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filtered.map((a) => (
-                <tr key={a.id} className={dataTableRow}>
-                  <td className={`whitespace-nowrap text-slate-900 ${dataTableCell}`}>
-                    {formatDateTime(a.starts_at)}
-                  </td>
-                  <td className={dataTableCell}>
-                    <p className="font-medium text-slate-900">{a.serviceName}</p>
-                    <p className="text-xs text-slate-500">{formatPrice(a.price_cents)}</p>
-                  </td>
-                  <td className={`hidden text-slate-600 md:table-cell ${dataTableCell}`}>
-                    {a.clientName}
-                  </td>
-                  <td className={`hidden text-slate-600 lg:table-cell ${dataTableCell}`}>
-                    {a.staffName}
-                  </td>
-                  <td className={dataTableCell}>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
-                      {STATUS[a.status] ?? a.status}
-                    </span>
-                  </td>
-                  <td className={`text-right ${dataTableCell}`}>
-                    <form action={setAppointmentStatus} className="inline-flex items-center gap-1">
-                      <input type="hidden" name="id" value={a.id} />
-                      <Select name="status" defaultValue={a.status} className="h-8 max-w-32 text-xs">
-                        {Object.entries(STATUS).map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ))}
-                      </Select>
-                      <Button variant="outline" type="submit" className="h-8 px-2 text-xs">
-                        OK
-                      </Button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </DataTable>
+            ))}
+          </tbody>
+        </table>
+      </DataTable>
 
       <FormDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        title="Nouveau rendez-vous"
+        title={t("dialogTitle")}
         size="lg"
       >
         <AppointmentForm

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAppointmentsInRange } from "@/lib/institut/slots";
@@ -8,17 +9,10 @@ import { formatPrice } from "@/lib/utils";
 import { CalendarView, type CalendarAppointment } from "./calendar-view";
 import { AppointmentsList } from "./appointments-list";
 
-const RDV_TABS = [
-  { label: "Calendrier", href: "/institut/rendez-vous", exact: true },
-  { label: "Liste", href: "/institut/rendez-vous?view=liste" },
+const RDV_TAB_HREFS = [
+  { href: "/institut/rendez-vous", exact: true as const },
+  { href: "/institut/rendez-vous?view=liste" },
 ];
-
-type Joined = { name?: string; full_name?: string | null; color?: string | null } | null;
-
-function pick(value: Joined | Joined[]): string {
-  const v = Array.isArray(value) ? value[0] : value;
-  return v?.name ?? v?.full_name ?? "-";
-}
 
 function TabLinksFallback() {
   return <div className="h-[45px] border-b border-slate-200" aria-hidden />;
@@ -29,6 +23,11 @@ export default async function RendezVousPage({
 }: {
   searchParams: Promise<{ view?: string }>;
 }) {
+  const t = await getTranslations("appointments.tabs");
+  const RDV_TABS = [
+    { label: t("calendar"), ...RDV_TAB_HREFS[0] },
+    { label: t("list"), ...RDV_TAB_HREFS[1] },
+  ];
   const session = await requireModule("institut");
   const params = await searchParams;
   const view = params.view === "liste" ? "liste" : "calendrier";
@@ -108,6 +107,13 @@ export default async function RendezVousPage({
     label: r.name,
     color: null,
   }));
+
+  type Joined = { name?: string; full_name?: string | null; color?: string | null } | null;
+
+  function pick(value: Joined | Joined[]): string {
+    const v = Array.isArray(value) ? value[0] : value;
+    return v?.name ?? v?.full_name ?? "-";
+  }
 
   return (
     <ListPanel>

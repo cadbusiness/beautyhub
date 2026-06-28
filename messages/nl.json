@@ -1,0 +1,131 @@
+{
+  "common": {
+    "close": "Sluiten",
+    "save": "Opslaan",
+    "saving": "Opslaan…",
+    "edit": "Bewerken",
+    "cancel": "Annuleren",
+    "all": "Alles",
+    "optional": "Optioneel",
+    "noClient": "Geen klant",
+    "appointmentShort": "Afspr.",
+    "appointment": "Afspraak",
+    "loadingError": "Laadfout",
+    "dash": "—",
+    "practitioner": "Behandelaar",
+    "cabin": "Cabine",
+    "client": "Klant",
+    "status": "Status",
+    "notes": "Notities",
+    "refresh": "Vernieuwen"
+  },
+  "shell": {
+    "home": "Home",
+    "administration": "Administratie",
+    "signOut": "Afmelden",
+    "footerRights": "Alle rechten voorbehouden.",
+    "language": "Taal"
+  },
+  "roles": {
+    "platform_admin": "Super admin",
+    "brand_owner": "Merkeigenaar",
+    "tenant_owner": "Eigenaar",
+    "staff": "Medewerker",
+    "coach": "Coach"
+  },
+  "appointments": {
+    "tabs": {
+      "calendar": "Kalender",
+      "list": "Lijst"
+    },
+    "status": {
+      "booked": "Geboekt",
+      "confirmed": "Bevestigd",
+      "completed": "Afgerond",
+      "cancelled": "Geannuleerd",
+      "no_show": "Niet verschenen"
+    },
+    "form": {
+      "client": "Klant",
+      "noClient": "— Geen klant —",
+      "service": "Behandeling",
+      "chooseService": "Kies een behandeling",
+      "staff": "Medewerker",
+      "anyStaff": "— Geen voorkeur —",
+      "resource": "Cabine",
+      "noResource": "— Geen —",
+      "startsAt": "Startdatum en -tijd",
+      "endsAt": "Einddatum en -tijd",
+      "status": "Status",
+      "notes": "Notities",
+      "create": "Afspraak aanmaken",
+      "scheduleWarningConfirm": "Bevestigen ondanks planning buiten openingstijden"
+    },
+    "list": {
+      "new": "Nieuwe afspraak",
+      "searchPlaceholder": "Zoek behandeling, klant, behandelaar…",
+      "empty": "Geen afspraken.",
+      "noResults": "Geen resultaten voor deze zoekopdracht.",
+      "dialogTitle": "Nieuwe afspraak",
+      "columns": {
+        "date": "Datum",
+        "service": "Behandeling",
+        "client": "Klant",
+        "staff": "Behandelaar",
+        "status": "Status",
+        "actions": "Acties"
+      },
+      "confirmStatus": "OK"
+    },
+    "calendar": {
+      "editTitle": "Afspraak bewerken",
+      "allServices": "Alle behandelingen",
+      "allStaff": "Hele team",
+      "publicPage": "Publieke pagina ↗",
+      "views": {
+        "month": "Maand",
+        "week": "Week",
+        "day": "Dag"
+      },
+      "columnMode": {
+        "staff": "Behandelaars",
+        "resource": "Cabines"
+      },
+      "today": "Vandaag",
+      "weekOf": "Week van {date}",
+      "emptyStaff": "Voeg personeel toe in Team om de kalender te tonen.",
+      "emptyResources": "Voeg cabines toe in Team om de kalender te tonen.",
+      "monthAppointments": "{count, plural, one {# afspr.} other {# afspr.}}",
+      "weekdaysShort": {
+        "mon": "Ma",
+        "tue": "Di",
+        "wed": "Wo",
+        "thu": "Do",
+        "fri": "Vr",
+        "sat": "Za",
+        "sun": "Zo"
+      }
+    }
+  },
+  "institut": {
+    "actions": {
+      "nameRequired": "Naam verplicht.",
+      "durationInvalid": "Ongeldige duur.",
+      "serviceNotFound": "Behandeling niet gevonden.",
+      "serviceDateRequired": "Behandeling en datum/tijd verplicht.",
+      "missingFields": "Verplichte velden ontbreken.",
+      "clientEmailExists": "Er bestaat al een klant met dit e-mailadres.",
+      "workingHoursEndBeforeStart": "{day}: eindtijd moet na starttijd liggen."
+    },
+    "scheduling": {
+      "conflict": {
+        "staffBusy": "Deze behandelaar heeft al een afspraak op dit tijdstip.",
+        "resourceBusy": "Deze cabine is al gereserveerd op dit tijdstip."
+      },
+      "schedule": {
+        "noHoursToday": "Geen openingstijden op deze dag voor deze behandelaar.",
+        "outsideSchedule": "De geselecteerde periode komt niet overeen met de planning."
+      }
+    }
+  }
+}

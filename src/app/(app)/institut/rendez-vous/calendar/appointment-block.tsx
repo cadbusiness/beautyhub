@@ -1,18 +1,26 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { STATUS_LABELS, type CalendarAppointment } from "./types";
+import type { CalendarAppointment } from "./types";
 import type { ColumnKind } from "./time-grid";
 import {
   accentColor,
   apptBlockStyle,
-  formatTimeRange,
   minutesFromMidnight,
   snapMinutes,
   startOfDay,
 } from "./utils";
 import { HOUR_START, SLOT_MINUTES, SLOT_PX } from "./types";
+
+const VALID_STATUSES = [
+  "booked",
+  "confirmed",
+  "completed",
+  "cancelled",
+  "no_show",
+] as const;
 
 type MovePayload = {
   id: string;
@@ -37,6 +45,9 @@ export function AppointmentBlock({
   onMoveEnd?: (payload: MovePayload) => void;
   disabled?: boolean;
 }) {
+  const t = useTranslations("common");
+  const tStatus = useTranslations("appointments.status");
+  const format = useFormatter();
   const { top, height } = apptBlockStyle(appt.starts_at, appt.ends_at);
   const color = accentColor(appt);
   const cancelled = appt.status === "cancelled";
@@ -51,6 +62,16 @@ export function AppointmentBlock({
 
   const displayTop = dragTop ?? top;
   const showDetails = height >= SLOT_PX * 3;
+  const timeRange = `${format.dateTime(new Date(appt.starts_at), {
+    hour: "2-digit",
+    minute: "2-digit",
+  })} – ${format.dateTime(new Date(appt.ends_at), {
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
+  const statusLabel = VALID_STATUSES.includes(appt.status as (typeof VALID_STATUSES)[number])
+    ? tStatus(appt.status as (typeof VALID_STATUSES)[number])
+    : appt.status;
 
   function resolveTargetColumn(clientX: number, clientY: number): string {
     const hit = document
@@ -153,18 +174,14 @@ export function AppointmentBlock({
         borderLeftColor: color,
       }}
     >
-      <p className="truncate font-medium text-slate-900">
-        {formatTimeRange(appt.starts_at, appt.ends_at)}
-      </p>
-      <p className="truncate text-slate-800">{appt.service?.name ?? "RDV"}</p>
+      <p className="truncate font-medium text-slate-900">{timeRange}</p>
+      <p className="truncate text-slate-800">{appt.service?.name ?? t("appointmentShort")}</p>
       {showDetails ? (
         <>
           <p className="truncate text-slate-600">
-            {appt.client?.full_name ?? appt.client?.email ?? "Sans client"}
+            {appt.client?.full_name ?? appt.client?.email ?? t("noClient")}
           </p>
-          <p className="truncate text-[10px] text-slate-500">
-            {STATUS_LABELS[appt.status] ?? appt.status}
-          </p>
+          <p className="truncate text-[10px] text-slate-500">{statusLabel}</p>
         </>
       ) : null}
     </button>

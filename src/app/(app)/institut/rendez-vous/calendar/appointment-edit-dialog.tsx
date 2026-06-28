@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { AppointmentForm } from "../appointment-form";
 import type { CalendarAppointment, CalendarOption } from "./types";
@@ -23,11 +24,13 @@ export function AppointmentEditDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("appointments.calendar");
+
   return (
     <FormDialog
       open={open && Boolean(appointment)}
       onClose={onClose}
-      title="Modifier le rendez-vous"
+      title={t("editTitle")}
       size="lg"
     >
       {appointment ? (

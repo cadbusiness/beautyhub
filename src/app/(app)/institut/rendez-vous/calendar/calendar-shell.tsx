@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   cancelAppointment,
   getCalendarAppointments,
@@ -50,6 +51,7 @@ export function CalendarShell({
   initialDate: string;
 }) {
   const router = useRouter();
+  const t = useTranslations("common");
   const [viewMode, setViewMode] = useState<CalendarViewMode>("day");
   const [columnMode, setColumnMode] = useState<ColumnMode>("staff");
   const [anchor, setAnchor] = useState(() => startOfDay(new Date(initialDate)));
@@ -78,7 +80,7 @@ export function CalendarShell({
         setAppointments(data as CalendarAppointment[]);
         setError(null);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Erreur de chargement");
+        setError(e instanceof Error ? e.message : t("loadingError"));
       }
     });
   }, [range.end, range.start]);

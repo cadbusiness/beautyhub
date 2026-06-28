@@ -1,10 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { CalendarAppointment } from "./types";
 import { addDays, isSameDay, startOfMonth, startOfWeek } from "./utils";
 
-const WEEKDAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
 export function MonthView({
   anchor,
@@ -15,6 +16,7 @@ export function MonthView({
   appointments: CalendarAppointment[];
   onSelectDay: (day: Date) => void;
 }) {
+  const t = useTranslations("appointments.calendar");
   const monthStart = startOfMonth(anchor);
   const gridStart = startOfWeek(monthStart);
   const cells: Date[] = [];
@@ -29,12 +31,12 @@ export function MonthView({
   return (
     <div className="border-t border-slate-200 p-4 lg:p-6">
       <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-slate-200 bg-slate-200">
-        {WEEKDAY_LABELS.map((label) => (
+        {WEEKDAY_KEYS.map((key) => (
           <div
-            key={label}
+            key={key}
             className="bg-slate-50 px-2 py-2 text-center text-xs font-medium uppercase text-slate-500"
           >
-            {label}
+            {t(`weekdaysShort.${key}`)}
           </div>
         ))}
         {cells.map((day) => {
@@ -60,7 +62,9 @@ export function MonthView({
                 {day.getDate()}
               </span>
               {count > 0 ? (
-                <p className="mt-2 text-xs text-slate-600">{count} RDV</p>
+                <p className="mt-2 text-xs text-slate-600">
+                  {t("monthAppointments", { count })}
+                </p>
               ) : null}
             </button>
           );

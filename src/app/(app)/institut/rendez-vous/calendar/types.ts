@@ -45,10 +45,9 @@ export const SLOT_PX = 18;
 export const HOUR_START = 8;
 export const HOUR_END = 20;
 
-export const STATUS_LABELS: Record<string, string> = {
-  booked: "Réservé",
-  confirmed: "Confirmé",
-  completed: "Terminé",
-  cancelled: "Annulé",
-  no_show: "Absent",
-};
+export type AppointmentStatus =
+  | "booked"
+  | "confirmed"
+  | "completed"
+  | "cancelled"
+  | "no_show";

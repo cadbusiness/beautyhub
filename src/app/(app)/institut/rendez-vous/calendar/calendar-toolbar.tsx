@@ -1,16 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useFormatter, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { CalendarOption, CalendarViewMode, ColumnMode } from "./types";
 
-const VIEW_TABS: { id: CalendarViewMode; label: string }[] = [
-  { id: "month", label: "Mois" },
-  { id: "week", label: "Semaine" },
-  { id: "day", label: "Jour" },
-];
+const VIEW_TABS: CalendarViewMode[] = ["month", "week", "day"];
 
 export function CalendarToolbar({
   viewMode,
@@ -45,12 +42,22 @@ export function CalendarToolbar({
   staff: CalendarOption[];
   refreshing?: boolean;
 }) {
+  const t = useTranslations("appointments.calendar");
+  const tCommon = useTranslations("common");
+  const format = useFormatter();
+
   const dateLabel =
     viewMode === "month"
-      ? anchor.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })
+      ? format.dateTime(anchor, { month: "long", year: "numeric" })
       : viewMode === "week"
-        ? `Semaine du ${anchor.toLocaleDateString("fr-FR")}`
-        : anchor.toLocaleDateString("fr-FR", {
+        ? t("weekOf", {
+            date: format.dateTime(anchor, {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            }),
+          })
+        : format.dateTime(anchor, {
             weekday: "long",
             day: "numeric",
             month: "long",
@@ -67,7 +74,7 @@ export function CalendarToolbar({
           onChange={(e) => onServiceFilterChange(e.target.value)}
           className="h-9 w-full max-w-[200px]"
         >
-          <option value="">Toutes les prestations</option>
+          <option value="">{t("allServices")}</option>
           {services.map((s) => (
             <option key={s.id} value={s.id}>
               {s.label}
@@ -79,7 +86,7 @@ export function CalendarToolbar({
           onChange={(e) => onStaffFilterChange(e.target.value)}
           className="h-9 w-full max-w-[200px]"
         >
-          <option value="">Toute l&apos;équipe</option>
+          <option value="">{t("allStaff")}</option>
           {staff.map((s) => (
             <option key={s.id} value={s.id}>
               {s.label}
@@ -87,12 +94,19 @@ export function CalendarToolbar({
           ))}
         </Select>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" className="h-9 px-3" onClick={onRefresh} disabled={refreshing}>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 px-3"
+            onClick={onRefresh}
+            disabled={refreshing}
+            aria-label={tCommon("refresh")}
+          >
             ↻
           </Button>
           <Link href="/reserver" target="_blank">
             <Button variant="outline" className="h-9">
-              Page publique ↗
+              {t("publicPage")}
             </Button>
           </Link>
         </div>
@@ -102,17 +116,17 @@ export function CalendarToolbar({
         <nav className="flex gap-1">
           {VIEW_TABS.map((tab) => (
             <button
-              key={tab.id}
+              key={tab}
               type="button"
-              onClick={() => onViewModeChange(tab.id)}
+              onClick={() => onViewModeChange(tab)}
               className={cn(
                 "-mb-px border-b-2 px-3 py-2 text-sm transition-colors",
-                viewMode === tab.id
+                viewMode === tab
                   ? "border-slate-900 font-medium text-slate-900"
                   : "border-transparent text-slate-500 hover:text-slate-800",
               )}
             >
-              {tab.label}
+              {t(`views.${tab}`)}
             </button>
           ))}
         </nav>
@@ -128,7 +142,7 @@ export function CalendarToolbar({
                   columnMode === "staff" ? "bg-slate-900 text-white" : "text-slate-600",
                 )}
               >
-                Praticiens
+                {t("columnMode.staff")}
               </button>
               <button
                 type="button"
@@ -138,7 +152,7 @@ export function CalendarToolbar({
                   columnMode === "resource" ? "bg-slate-900 text-white" : "text-slate-600",
                 )}
               >
-                Cabines
+                {t("columnMode.resource")}
               </button>
             </div>
           ) : null}
@@ -146,7 +160,7 @@ export function CalendarToolbar({
             ←
           </Button>
           <Button type="button" variant="outline" className="h-8" onClick={onToday}>
-            Aujourd&apos;hui
+            {t("today")}
           </Button>
           <span className="min-w-48 text-center text-sm text-slate-600">{dateLabel}</span>
           <Button type="button" variant="outline" className="h-8 px-2" onClick={() => onAnchorChange(navStep)}>

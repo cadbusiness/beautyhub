@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import type { CalendarAppointment, CalendarColumn, ColumnMode } from "./types";
 import { addDays, isSameDay, startOfDay, startOfWeek } from "./utils";
 import { TimeGrid } from "./time-grid";
@@ -30,6 +31,7 @@ export function DayView({
   onMove: (payload: MovePayload) => void;
   movePending?: boolean;
 }) {
+  const t = useTranslations("appointments.calendar");
   const baseDay = startOfDay(anchor);
   const dayAppts = useMemo(
     () => appointments.filter((a) => isSameDay(new Date(a.starts_at), baseDay)),
@@ -40,8 +42,8 @@ export function DayView({
     return (
       <p className="px-4 py-8 text-sm text-slate-500 lg:px-6">
         {columnMode === "staff"
-          ? "Ajoute du personnel dans Équipe pour afficher le calendrier."
-          : "Ajoute des cabines dans Équipe pour afficher le calendrier."}
+          ? t("emptyStaff")
+          : t("emptyResources")}
       </p>
     );
   }

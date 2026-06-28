@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/auth/guards";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
@@ -132,10 +133,17 @@ export async function createClientRecord(
 
 // --- Rendez-vous ------------------------------------------------------------
 
+async function appointmentMessages() {
+  const actions = await getTranslations("institut.actions");
+  const scheduling = await getTranslations("institut.scheduling");
+  return { actions, scheduling };
+}
+
 export async function createAppointment(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const { actions, scheduling } = await appointmentMessages();
   const session = await requireModule("institut");
   try {
     await assertQuota(session.tenant.id, "appointments_per_month");
@@ -148,7 +156,7 @@ export async function createAppointment(
   const serviceId = String(formData.get("service_id") ?? "");
   const startsAtRaw = String(formData.get("starts_at") ?? "");
   if (!serviceId || !startsAtRaw) {
-    return { error: "Prestation et date/heure requises." };
+    return { error: actions("serviceDateRequired") };
   }
 
   const { data: service } = await supabase
@@ -156,7 +164,7 @@ export async function createAppointment(
     .select("duration_min, price_cents, buffer_before_min, buffer_after_min")
     .eq("id", serviceId)
     .maybeSingle();
-  if (!service) return { error: "Prestation introuvable." };
+  if (!service) return { error: actions("serviceNotFound") };
 
   const startsAt = new Date(startsAtRaw);
   const endsAt = new Date(startsAt.getTime() + service.duration_min * 60_000);
@@ -171,7 +179,7 @@ export async function createAppointment(
     bufferBeforeMin: service.buffer_before_min ?? 0,
     bufferAfterMin: service.buffer_after_min ?? 0,
   });
-  if (conflict) return { error: conflict };
+  if (conflict) return { error: scheduling(`conflict.${conflict}`) };
 
   const { error } = await supabase.from("inst_appointments").insert({
     tenant_id: session.tenant.id,
@@ -193,6 +201,7 @@ export async function updateAppointment(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const { actions, scheduling } = await appointmentMessages();
   const session = await requireModule("institut");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
@@ -201,7 +210,7 @@ export async function updateAppointment(
   const endsAtRaw = String(formData.get("ends_at") ?? "");
 
   if (!id || !serviceId || !startsAtRaw) {
-    return { error: "Champs requis manquants." };
+    return { error: actions("missingFields") };
   }
 
   const { data: service } = await supabase
@@ -209,7 +218,7 @@ export async function updateAppointment(
     .select("duration_min, price_cents, buffer_before_min, buffer_after_min")
     .eq("id", serviceId)
     .maybeSingle();
-  if (!service) return { error: "Prestation introuvable." };
+  if (!service) return { error: actions("serviceNotFound") };
 
   const startsAt = new Date(startsAtRaw);
   const endsAt = endsAtRaw
@@ -227,7 +236,7 @@ export async function updateAppointment(
     bufferAfterMin: service.buffer_after_min ?? 0,
     excludeId: id,
   });
-  if (conflict) return { error: conflict };
+  if (conflict) return { error: scheduling(`conflict.${conflict}`) };
 
   const { data: hours } = await supabase
     .from("inst_working_hours")
@@ -237,7 +246,8 @@ export async function updateAppointment(
   const scheduleWarning = validateStaffWorkingHours(hours ?? [], staffId, startsAt, endsAt);
   const ignoreSchedule = formData.get("ignore_schedule") === "1";
   if (scheduleWarning && !ignoreSchedule) {
-    return { error: scheduleWarning, warning: scheduleWarning };
+    const warning = scheduling(`schedule.${scheduleWarning}`);
+    return { error: warning, warning };
   }
 
   const { error } = await supabase
@@ -290,6 +300,7 @@ export async function updateAppointmentDetails(formData: FormData): Promise<Acti
 }
 
 export async function moveAppointment(formData: FormData): Promise<ActionResult> {
+  const { scheduling } = await appointmentMessages();
   const session = await requireModule("institut");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
@@ -325,7 +336,7 @@ export async function moveAppointment(formData: FormData): Promise<ActionResult>
     bufferAfterMin: bufferAfter,
     excludeId: id,
   });
-  if (conflict) return { error: conflict };
+  if (conflict) return { error: scheduling(`conflict.${conflict}`) };
 
   const { error } = await supabase
     .from("inst_appointments")

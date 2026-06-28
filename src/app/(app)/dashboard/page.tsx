@@ -7,42 +7,68 @@ import {
 import { getEnabledModuleIds, getTenantContext } from "@/lib/tenant/context";
 import { getAiActionsFor, getNavFor } from "@/modules";
 import { Button } from "@/components/ui/button";
-import {
-  DataTable,
-  dataTableCell,
-  dataTableHead,
-  dataTableRow,
-} from "@/components/ui/data-table";
 import { ListPanel } from "@/components/ui/list-panel";
 
-const MODULE_LABELS: Record<string, string> = {
-  institut: "Institut",
-  academie: "Académie",
-};
+const QUICK_ACTIONS = [
+  {
+    href: "/institut/rendez-vous",
+    label: "Rendez-vous",
+    description: "Planning et réservations",
+  },
+  {
+    href: "/institut/caisse",
+    label: "Caisse",
+    description: "Encaisser une vente",
+  },
+  {
+    href: "/institut/clients",
+    label: "Clients",
+    description: "Fiches et coordonnees",
+  },
+  {
+    href: "/institut/prestations",
+    label: "Prestations",
+    description: "Services et tarifs",
+  },
+  {
+    href: "/academie/formations",
+    label: "Formations",
+    description: "Catalogue académie",
+  },
+  {
+    href: "/academie/eleves",
+    label: "Élèves",
+    description: "Inscriptions en cours",
+  },
+] as const;
 
-const ROLE_LABELS: Record<string, string> = {
-  tenant_owner: "Propriétaire",
-  staff: "Équipe",
-  coach: "Coach",
-  brand_owner: "Marque",
-  platform_admin: "Admin plateforme",
-};
-
-function actionLabel(action: { name: string; description: string }) {
-  const labels: Record<string, string> = {
-    "institut.create_client": "Créer un client",
-    "institut.list_clients": "Lister les clients",
-    "academie.list_courses": "Voir les formations",
-    "academie.create_course": "Nouvelle formation",
-  };
-  return labels[action.name] ?? action.description.replace(/\.$/, "");
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function DashboardSection({
+  title,
+  description,
+  children,
+  muted = false,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  muted?: boolean;
+}) {
   return (
-    <div className="border-b border-slate-200 px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-slate-500 lg:px-6">
+    <section
+      className={
+        muted
+          ? "border-t border-slate-200 bg-slate-50/60 px-4 py-6 lg:px-6"
+          : "border-t border-slate-200 px-4 py-6 lg:px-6"
+      }
+    >
+      <div className="mb-4">
+        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+        {description ? (
+          <p className="mt-1 text-sm text-slate-500">{description}</p>
+        ) : null}
+      </div>
       {children}
-    </div>
+    </section>
   );
 }
 
@@ -59,6 +85,11 @@ export default async function DashboardPage() {
   const enabledModuleIds = tenant ? await getEnabledModuleIds(tenant.id) : [];
   const nav = role ? getNavFor(enabledModuleIds, role) : [];
   const aiActions = role ? getAiActionsFor(enabledModuleIds, role) : [];
+  const navHrefs = new Set(nav.map((item) => item.href));
+
+  const quickActions = QUICK_ACTIONS.filter((action) =>
+    nav.some((item) => item.href === action.href || item.href.startsWith(`${action.href}/`)),
+  ).slice(0, 4);
 
   const hasInstitut = enabledModuleIds.includes("institut");
   let kpis: { label: string; value: number; href: string }[] = [];
@@ -95,7 +126,7 @@ export default async function DashboardPage() {
         href: "/institut/clients",
       },
       {
-        label: "Prestations actives",
+        label: "Prestations",
         value: services.count ?? 0,
         href: "/institut/prestations",
       },
@@ -104,94 +135,88 @@ export default async function DashboardPage() {
 
   return (
     <ListPanel>
+      <div className="border-b border-slate-200 px-4 py-5 lg:px-6">
+        <p className="text-base font-semibold text-slate-900">
+          {tenant?.name ?? "BeautyHub"}
+        </p>
+        <p className="mt-1 text-sm text-slate-500">
+          Vue d&apos;ensemble — utilisez le menu à gauche pour naviguer.
+        </p>
+      </div>
+
       {kpis.length > 0 ? (
-        <div className="grid divide-y divide-slate-200 border-b border-slate-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          {kpis.map((kpi) => (
-            <Link
-              key={kpi.label}
-              href={kpi.href}
-              className="px-4 py-5 transition-colors hover:bg-slate-50 lg:px-6"
-            >
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                {kpi.label}
-              </p>
-              <p className="mt-1 text-3xl font-semibold tabular-nums text-slate-900">
-                {kpi.value}
-              </p>
-            </Link>
-          ))}
-        </div>
+        <DashboardSection
+          title="Indicateurs"
+          description="Chiffres clés de votre institut."
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            {kpis.map((kpi) => (
+              <Link
+                key={kpi.label}
+                href={kpi.href}
+                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-slate-300"
+              >
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  {kpi.label}
+                </p>
+                <p className="mt-2 text-3xl font-semibold tabular-nums text-slate-900">
+                  {kpi.value}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </DashboardSection>
       ) : null}
 
-      <SectionTitle>Raccourcis</SectionTitle>
-      <DataTable empty={nav.length === 0 ? "Aucun module actif." : undefined}>
-        {nav.length > 0 ? (
-          <table className="w-full text-sm">
-            <thead className="border-b border-slate-200">
-              <tr>
-                <th className={dataTableHead}>Page</th>
-                <th className={`hidden w-32 sm:table-cell ${dataTableHead}`}>Module</th>
-                <th className={`w-12 ${dataTableHead}`} aria-hidden />
-              </tr>
-            </thead>
-            <tbody>
-              {nav.map((item) => (
-                <tr key={`${item.moduleId}-${item.href}`} className={dataTableRow}>
-                  <td className={dataTableCell}>
-                    <Link
-                      href={item.href}
-                      className="font-medium text-slate-900 hover:text-slate-600"
-                    >
-                      {item.label}
-                    </Link>
-                  </td>
-                  <td className={`hidden text-slate-500 sm:table-cell ${dataTableCell}`}>
-                    {MODULE_LABELS[item.moduleId] ?? item.moduleId}
-                  </td>
-                  <td className={`text-right text-slate-400 ${dataTableCell}`}>
-                    <Link href={item.href} className="hover:text-slate-700" aria-label={item.label}>
-                      →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : null}
-      </DataTable>
+      {quickActions.length > 0 ? (
+        <DashboardSection
+          title="Actions rapides"
+          description="Les tâches les plus fréquentes, sans repasser par tout le menu."
+          muted
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            {quickActions.map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="group flex items-start justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-slate-300"
+              >
+                <div>
+                  <p className="font-medium text-slate-900 group-hover:text-slate-700">
+                    {action.label}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">{action.description}</p>
+                </div>
+                <span className="mt-0.5 text-slate-300 transition-colors group-hover:text-slate-500">
+                  →
+                </span>
+              </Link>
+            ))}
+          </div>
+        </DashboardSection>
+      ) : navHrefs.size === 0 ? (
+        <DashboardSection title="Modules" description="Aucun module actif pour le moment.">
+          <p className="text-sm text-slate-500">
+            Contactez votre administrateur pour activer les modules institut ou académie.
+          </p>
+        </DashboardSection>
+      ) : null}
 
       {aiActions.length > 0 ? (
-        <>
-          <SectionTitle>Assistant</SectionTitle>
-          <DataTable>
-            <table className="w-full text-sm">
-              <tbody>
-                {aiActions.slice(0, 6).map((action) => (
-                  <tr key={action.name} className={dataTableRow}>
-                    <td className={dataTableCell}>
-                      <p className="text-slate-900">{actionLabel(action)}</p>
-                      <p className="text-xs text-slate-400">{action.description}</p>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </DataTable>
-          <div className="border-t border-slate-100 px-4 py-4 lg:px-6">
-            <Link href="/assistant">
-              <Button variant="outline" className="h-9">
-                Ouvrir l&apos;assistant
-              </Button>
+        <DashboardSection title="Assistant">
+          <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-medium text-slate-900">Pilotage assisté par IA</p>
+              <p className="mt-1 max-w-md text-sm text-slate-500">
+                Clients, formations, planning — posez une demande ou choisissez une action
+                prédéfinie dans l&apos;assistant.
+              </p>
+            </div>
+            <Link href="/assistant" className="shrink-0">
+              <Button className="h-9 w-full sm:w-auto">Ouvrir l&apos;assistant</Button>
             </Link>
           </div>
-        </>
-      ) : null}
-
-      {tenant && role ? (
-        <div className="mt-auto border-t border-slate-100 px-4 py-2.5 text-xs text-slate-400 lg:px-6">
-          {tenant.name}
-          {ROLE_LABELS[role] ? ` · ${ROLE_LABELS[role]}` : null}
-        </div>
+        </DashboardSection>
       ) : null}
     </ListPanel>
   );

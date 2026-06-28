@@ -17,3 +17,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## Toujours pousser le code
 
 Après **toute** livraison (feature, fix, refactor, migration), committer et `git push` **sans attendre** que l'utilisateur le demande. Si migration Supabase → `supabase db push --yes`. Ne jamais terminer une tâche avec du code local non poussé. Exception : l'utilisateur demande explicitement de ne pas committer/pousser.
+
+## Shell UI — design system BeautyHub
+
+Pages dans `src/app/(app)/` : **jamais** `max-w-*`, héros gradient, ou cartes SaaS génériques.
+
+- Réutiliser `ListPanel`, `ListToolbar`, `DataTable`, `FormDialog` (voir clients, équipe, prestations).
+- Stats compactes (label xs + chiffre), pas de grosses tuiles KPI.
+- Guide setup : une ligne `→`, pas 3 cartes.
+- Référence détaillée : `.cursor/rules/ui-list-pages.mdc` et `.cursor/rules/ui-shell-design.mdc`.

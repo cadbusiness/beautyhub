@@ -4,18 +4,43 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { runAiAction, type RunAiActionResult } from "@/app/(app)/assistant/actions";
+import {
+  interpretMessage,
+  runAiAction,
+  type InterpretMessageResult,
+  type RunAiActionResult,
+} from "@/app/(app)/assistant/actions";
 
 type Action = { name: string; description: string };
 
 type Message =
   | { role: "assistant"; text: string }
   | { role: "user"; text: string }
-  | { role: "result"; result: RunAiActionResult };
+  | { role: "result"; result: RunAiActionResult }
+  | {
+      role: "confirm";
+      actionName: string;
+      params: Record<string, unknown>;
+      summary: string;
+    };
 
-const ACTION_KEYS: Record<string, "createClient" | "listClients" | "listCourses" | "createCourse"> = {
+const ACTION_KEYS: Record<string, string> = {
   "institut.create_client": "createClient",
   "institut.list_clients": "listClients",
+  "institut.list_services": "listServices",
+  "institut.list_staff": "listStaff",
+  "institut.list_resources": "listResources",
+  "institut.list_appointments": "listAppointments",
+  "institut.create_appointment": "createAppointment",
+  "institut.cancel_appointment": "cancelAppointment",
+  "institut.list_schedules": "listSchedules",
+  "institut.create_schedule": "createSchedule",
+  "institut.update_schedule_blocks": "updateScheduleBlocks",
+  "institut.assign_staff_schedule": "assignStaffSchedule",
+  "institut.assign_resource_schedule": "assignResourceSchedule",
+  "institut.create_time_off": "createTimeOff",
+  "institut.list_time_off": "listTimeOff",
+  "institut.delete_time_off": "deleteTimeOff",
   "academie.list_courses": "listCourses",
   "academie.create_course": "createCourse",
 };
@@ -38,8 +63,8 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
 
   function actionLabel(action: Action) {
     const key = ACTION_KEYS[action.name];
-    if (key) return tActions(key);
-    return action.description.replace(/\.$/, "").slice(0, 48);
+    if (key) return (tActions as (k: string) => string)(key);
+    return action.description.replace(/\.$/, "").slice(0, 56);
   }
 
   const grouped = useMemo(() => {
@@ -64,15 +89,56 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  function runAction(actionName: string, params: unknown = {}) {
+  function appendResult(result: RunAiActionResult) {
+    setMessages((prev) => [...prev, { role: "result", result }]);
+  }
+
+  function executeAction(actionName: string, params: Record<string, unknown>, confirmed = false) {
+    startTransition(async () => {
+      const result = await runAiAction(actionName, JSON.stringify(params), { confirmed });
+      if (!result.ok && result.needsConfirm) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "confirm",
+            actionName,
+            params,
+            summary: t("confirmFallback"),
+          },
+        ]);
+        return;
+      }
+      appendResult(result);
+    });
+  }
+
+  function runQuickAction(actionName: string, params: Record<string, unknown> = {}) {
     const action = actions.find((a) => a.name === actionName);
     const label = action ? actionLabel(action) : actionName;
     setMessages((prev) => [...prev, { role: "user", text: label }]);
+    executeAction(actionName, params, false);
+  }
 
-    startTransition(async () => {
-      const result = await runAiAction(actionName, JSON.stringify(params));
-      setMessages((prev) => [...prev, { role: "result", result }]);
-    });
+  function handleInterpretResult(result: InterpretMessageResult) {
+    if (result.type === "clarify" || result.type === "unknown") {
+      setMessages((prev) => [...prev, { role: "assistant", text: result.message }]);
+      return;
+    }
+
+    if (result.needsConfirm) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "confirm",
+          actionName: result.actionName,
+          params: result.params,
+          summary: result.summary,
+        },
+      ]);
+      return;
+    }
+
+    executeAction(result.actionName, result.params, true);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -82,19 +148,18 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text }]);
 
-    const match = actions.find(
-      (a) =>
-        actionLabel(a).toLowerCase().includes(text.toLowerCase()) ||
-        a.description.toLowerCase().includes(text.toLowerCase()),
-    );
-    if (match) {
-      runAction(match.name);
-    } else {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: t("notRecognized") },
-      ]);
-    }
+    startTransition(async () => {
+      const result = await interpretMessage(text);
+      handleInterpretResult(result);
+    });
+  }
+
+  function confirmPending(msg: Extract<Message, { role: "confirm" }>) {
+    setMessages((prev) => [
+      ...prev.filter((m) => m !== msg),
+      { role: "assistant", text: t("confirming", { summary: msg.summary }) },
+    ]);
+    executeAction(msg.actionName, msg.params, true);
   }
 
   if (actions.length === 0) return null;
@@ -153,7 +218,9 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
                   ? "ml-auto bg-primary text-primary-foreground"
                   : msg.role === "result"
                     ? "border border-slate-200 bg-slate-50 text-slate-700"
-                    : "bg-slate-100 text-slate-700",
+                    : msg.role === "confirm"
+                      ? "border border-amber-200 bg-amber-50 text-slate-800"
+                      : "bg-slate-100 text-slate-700",
               )}
             >
               {msg.role === "result" ? (
@@ -164,11 +231,40 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
                 ) : (
                   <p className="text-red-600">{msg.result.error}</p>
                 )
+              ) : msg.role === "confirm" ? (
+                <div className="space-y-2">
+                  <p>{msg.summary}</p>
+                  <p className="text-xs text-slate-600">{t("confirmPrompt")}</p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      className="h-8"
+                      disabled={pending}
+                      onClick={() => confirmPending(msg)}
+                    >
+                      {t("confirmYes")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-8"
+                      disabled={pending}
+                      onClick={() =>
+                        setMessages((prev) => prev.filter((_, idx) => idx !== i))
+                      }
+                    >
+                      {t("confirmNo")}
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 msg.text
               )}
             </div>
           ))}
+          {pending ? (
+            <p className="text-xs text-slate-400">{t("thinking")}</p>
+          ) : null}
         </div>
 
         <div className="space-y-3 border-t border-slate-100 p-4">
@@ -179,13 +275,13 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
             {[...grouped.entries()].map(([module, moduleActions]) => (
               <div key={module} className="space-y-1.5">
                 <p className="text-xs font-medium text-slate-500">{module}</p>
-                <div className="space-y-1">
+                <div className="max-h-40 space-y-1 overflow-y-auto">
                   {moduleActions.map((action) => (
                     <button
                       key={action.name}
                       type="button"
                       disabled={pending}
-                      onClick={() => runAction(action.name)}
+                      onClick={() => runQuickAction(action.name)}
                       className="flex w-full flex-col rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
                     >
                       <span className="text-sm font-medium text-slate-900">

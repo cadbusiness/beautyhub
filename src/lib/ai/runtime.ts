@@ -12,6 +12,7 @@ export async function executeAction(
   actionName: string,
   params: unknown,
   ctx: ExecuteActionContext,
+  options?: { confirmed?: boolean },
 ): Promise<ExecuteActionResult> {
   const actions = getAiActionsFor(ctx.enabledModuleIds, ctx.role);
   const action = actions.find((a) => a.name === actionName);
@@ -19,6 +20,14 @@ export async function executeAction(
     return {
       ok: false,
       error: `Action inconnue ou non autorisee : ${actionName}`,
+    };
+  }
+
+  if (action.confirm && !options?.confirmed) {
+    return {
+      ok: false,
+      error: "CONFIRMATION_REQUIRED",
+      needsConfirm: true,
     };
   }
 

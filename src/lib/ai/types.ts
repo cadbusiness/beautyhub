@@ -10,4 +10,4 @@ export interface ExecuteActionContext {
 
 export type ExecuteActionResult =
   | { ok: true; data: unknown }
-  | { ok: false; error: string };
+  | { ok: false; error: string; needsConfirm?: boolean };

@@ -1,23 +1,99 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { deleteService } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
+import {
+  DataTable,
+  dataTableCellCompact,
+  dataTableHeadCompact,
+  dataTableRow,
+} from "@/components/ui/data-table";
 import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { PaginationBar } from "@/components/ui/pagination";
+import { ServiceThumbnail } from "@/components/institut/service-thumbnail";
+import { paginateItems } from "@/lib/ui/pagination";
 import { formatPrice } from "@/lib/utils";
 import { ServiceDialog, type ServiceRow } from "./service-dialog";
 
+const LIST_PAGE_SIZE = 10;
+
 type Filter = "all" | "active" | "inactive";
+
+function IconButton({
+  label,
+  onClick,
+  children,
+  className,
+}: {
+  label: string;
+  onClick?: () => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={`inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors ${className ?? "text-slate-500 hover:bg-slate-100 hover:text-slate-800"}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
+      <path d="m2.695 14.763-1.262 3.154a.5.5 0 0 0 .65.65l3.155-1.262a4 4 0 0 0 1.343-.885L17.5 5.5a2.121 2.121 0 0 0-3-3L3.58 13.42a4 4 0 0 0-.885 1.343Z" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
+      <path
+        fillRule="evenodd"
+        d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 9.24A2.75 2.75 0 0 0 7.596 17h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-9.24.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+function ServiceBadge({
+  children,
+  tone = "neutral",
+}: {
+  children: React.ReactNode;
+  tone?: "neutral" | "violet" | "slate";
+}) {
+  const tones = {
+    neutral: "bg-slate-100 text-slate-600",
+    violet: "bg-violet-50 text-violet-700",
+    slate: "bg-slate-200/70 text-slate-600",
+  };
+  return (
+    <span
+      className={`max-w-[9rem] shrink-0 truncate rounded px-1.5 py-0.5 text-[10px] font-medium ${tones[tone]}`}
+    >
+      {children}
+    </span>
+  );
+}
 
 export function ServicesManager({ services }: { services: ServiceRow[] }) {
   const t = useTranslations("institut.services");
   const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceRow | null>(null);
 
@@ -34,6 +110,19 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
     });
   }, [services, query, filter]);
 
+  const slice = useMemo(
+    () => paginateItems(filtered, page, LIST_PAGE_SIZE),
+    [filtered, page],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, filter]);
+
+  useEffect(() => {
+    if (page > slice.totalPages) setPage(slice.totalPages);
+  }, [page, slice.totalPages]);
+
   function openCreate() {
     setEditing(null);
     setDialogOpen(true);
@@ -47,6 +136,12 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
   function closeDialog() {
     setDialogOpen(false);
     setEditing(null);
+  }
+
+  function confirmDelete(service: ServiceRow) {
+    if (!window.confirm(t("deleteConfirm", { name: service.name }))) return;
+    const form = document.getElementById(`delete-service-${service.id}`) as HTMLFormElement | null;
+    form?.requestSubmit();
   }
 
   const emptyMessage = services.length === 0 ? t("empty") : t("noResults");
@@ -83,75 +178,63 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200">
               <tr>
-                <th className={`w-10 ${dataTableHead}`} aria-label={t("columns.status")} />
-                <th className={dataTableHead}>{t("columns.title")}</th>
-                <th className={`hidden w-28 sm:table-cell ${dataTableHead}`}>
+                <th className={`w-12 ${dataTableHeadCompact}`} aria-hidden />
+                <th className={dataTableHeadCompact}>{t("columns.title")}</th>
+                <th className={`hidden w-24 sm:table-cell ${dataTableHeadCompact}`}>
                   {t("columns.duration")}
                 </th>
-                <th className={`w-28 text-right ${dataTableHead}`}>{t("columns.price")}</th>
-                <th className={`w-32 text-right ${dataTableHead}`}>{t("columns.actions")}</th>
+                <th className={`w-24 text-right ${dataTableHeadCompact}`}>{t("columns.price")}</th>
+                <th className={`w-20 text-right ${dataTableHeadCompact}`}>{t("columns.actions")}</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((s) => (
+              {slice.items.map((s) => (
                 <tr key={s.id} className={dataTableRow}>
-                  <td className={dataTableCell}>
-                    <span
-                      className="inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: s.color ?? "#64748b" }}
-                      title={s.is_active ? t("visible") : t("hidden")}
-                    />
+                  <td className={dataTableCellCompact}>
+                    <ServiceThumbnail name={s.name} imageUrl={s.image_url} color={s.color} />
                   </td>
-                  <td className={`max-w-0 ${dataTableCell}`}>
-                    <button
-                      type="button"
-                      onClick={() => openEdit(s)}
-                      className="group w-full text-left"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="truncate font-medium text-slate-900 group-hover:text-slate-600">
-                          {s.name}
-                        </span>
-                        {!s.is_active ? (
-                          <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                            {t("hiddenBadge")}
-                          </span>
-                        ) : null}
-                      </span>
+                  <td className={`max-w-0 ${dataTableCellCompact}`}>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(s)}
+                        className="min-w-0 truncate font-medium text-slate-900 hover:text-slate-600"
+                      >
+                        {s.name}
+                      </button>
                       {s.description ? (
-                        <span className="mt-0.5 block truncate text-xs text-slate-400">
-                          {s.description}
-                        </span>
+                        <ServiceBadge tone="neutral">{s.description}</ServiceBadge>
                       ) : null}
-                    </button>
+                      {s.visibility === "extra_only" ? (
+                        <ServiceBadge tone="violet">{t("extraBadge")}</ServiceBadge>
+                      ) : null}
+                      {!s.is_active ? (
+                        <ServiceBadge tone="slate">{t("hiddenBadge")}</ServiceBadge>
+                      ) : null}
+                    </div>
                   </td>
-                  <td className={`hidden text-slate-600 sm:table-cell ${dataTableCell}`}>
+                  <td className={`hidden text-slate-600 sm:table-cell ${dataTableCellCompact}`}>
                     {t("durationMin", { min: s.duration_min })}
                   </td>
                   <td
-                    className={`whitespace-nowrap text-right tabular-nums text-slate-900 ${dataTableCell}`}
+                    className={`whitespace-nowrap text-right tabular-nums text-slate-900 ${dataTableCellCompact}`}
                   >
                     {formatPrice(s.price_cents, s.currency)}
                   </td>
-                  <td className={`text-right ${dataTableCell}`}>
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="h-8 px-2 text-xs"
-                        onClick={() => openEdit(s)}
-                      >
-                        {t("edit")}
-                      </Button>
-                      <form action={deleteService}>
+                  <td className={`text-right ${dataTableCellCompact}`}>
+                    <div className="flex items-center justify-end gap-0.5">
+                      <IconButton label={t("edit")} onClick={() => openEdit(s)}>
+                        <EditIcon />
+                      </IconButton>
+                      <form id={`delete-service-${s.id}`} action={deleteService}>
                         <input type="hidden" name="id" value={s.id} />
-                        <Button
-                          variant="ghost"
-                          type="submit"
-                          className="h-8 px-2 text-xs text-red-600"
+                        <IconButton
+                          label={tCommon("delete")}
+                          onClick={() => confirmDelete(s)}
+                          className="text-slate-400 hover:bg-red-50 hover:text-red-600"
                         >
-                          {t("deleteShort")}
-                        </Button>
+                          <TrashIcon />
+                        </IconButton>
                       </form>
                     </div>
                   </td>
@@ -162,12 +245,23 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
         </DataTable>
 
         {filtered.length > 0 ? (
-          <ListPanelFooter>
-            {t("footer", { count: filtered.length })}
-            {filter !== "all" || query
-              ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: services.length })}`
-              : ""}
-          </ListPanelFooter>
+          <>
+            <PaginationBar
+              page={slice.page}
+              totalPages={slice.totalPages}
+              from={slice.from}
+              to={slice.to}
+              total={slice.total}
+              onPageChange={setPage}
+              className="border-t border-slate-200 px-4 lg:px-6"
+            />
+            <ListPanelFooter>
+              {t("footer", { count: filtered.length })}
+              {filter !== "all" || query
+                ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: services.length })}`
+                : ""}
+            </ListPanelFooter>
+          </>
         ) : null}
       </ListPanel>
 

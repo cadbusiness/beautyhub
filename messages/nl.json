@@ -748,6 +748,8 @@
       "visible": "Zichtbaar",
       "hidden": "Verborgen",
       "hiddenBadge": "Verborgen",
+      "extraBadge": "Extra",
+      "deleteConfirm": "« {name} » verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
       "edit": "Bewerken",
       "deleteShort": "Verw.",
       "footer": "{count, plural, one {# behandeling} other {# behandelingen}}",

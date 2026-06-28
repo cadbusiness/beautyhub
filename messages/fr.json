@@ -770,6 +770,8 @@
       "visible": "Visible",
       "hidden": "Masquée",
       "hiddenBadge": "Masquée",
+      "extraBadge": "Extra",
+      "deleteConfirm": "Supprimer « {name} » ? Cette action est irréversible.",
       "edit": "Modifier",
       "deleteShort": "Suppr.",
       "footer": "{count, plural, one {# prestation} other {# prestations}}",

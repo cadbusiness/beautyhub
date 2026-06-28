@@ -17,8 +17,11 @@ export function DataTable({
 }
 
 export const dataTableCell = "px-4 py-3 lg:px-6";
+export const dataTableCellCompact = "px-4 py-2 lg:px-6";
 export const dataTableHead =
   "px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-slate-500 lg:px-6";
+export const dataTableHeadCompact =
+  "px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500 lg:px-6";
 
 export const dataTableRow =
   "border-b border-slate-100 transition-colors last:border-b-0 hover:bg-slate-50/70";

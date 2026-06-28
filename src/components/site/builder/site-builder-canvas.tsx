@@ -70,18 +70,26 @@ function SortableBlock({
           }
         }}
         className={cn(
-          "relative cursor-pointer outline-none [&_a]:pointer-events-none",
+          "group relative cursor-pointer outline-none [&_a]:pointer-events-none",
           selected && "ring-2 ring-blue-500 ring-offset-2",
-          !selected && "hover:ring-2 hover:ring-blue-300 hover:ring-offset-1",
+          !selected && "hover:ring-2 hover:ring-blue-300/80 hover:ring-offset-1",
         )}
       >
-        <div className="pointer-events-none absolute left-3 top-3 z-10 rounded bg-slate-900/75 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
+        <div
+          className={cn(
+            "pointer-events-none absolute left-3 top-3 z-10 rounded bg-slate-900/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white transition-opacity",
+            selected ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+          )}
+        >
           {label}
         </div>
         <button
           type="button"
           aria-label="Déplacer"
-          className="absolute right-3 top-3 z-20 flex h-8 w-8 cursor-grab items-center justify-center rounded-md border border-slate-200 bg-white/95 text-slate-600 shadow-sm active:cursor-grabbing"
+          className={cn(
+            "absolute right-3 top-3 z-20 flex h-8 w-8 cursor-grab items-center justify-center rounded-md border border-slate-200 bg-white/95 text-slate-600 shadow-sm active:cursor-grabbing",
+            selected ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+          )}
           {...attributes}
           {...listeners}
           onClick={(e) => e.stopPropagation()}
@@ -149,19 +157,21 @@ export function SiteBuilderCanvas({
 
   return (
     <div
-      className="min-h-0 flex-1 overflow-y-auto bg-slate-200"
+      className="min-h-0 flex-1 overflow-y-auto bg-slate-200/80 p-4 lg:p-8"
       onClick={() => onSelect(null)}
       onKeyDown={() => {}}
       role="presentation"
     >
       {blocks.length === 0 ? (
-        <div className="flex min-h-[60vh] items-center justify-center p-8">
-          <p className="max-w-sm text-center text-sm text-slate-500">{t("emptyCanvas")}</p>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <p className="max-w-sm rounded-lg border border-dashed border-slate-300 bg-white px-6 py-8 text-center text-sm text-slate-500">
+            {t("emptyCanvas")}
+          </p>
         </div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-            <div className="mx-auto max-w-5xl bg-white shadow-sm">
+            <div className="mx-auto max-w-5xl overflow-hidden rounded-lg bg-white shadow-md ring-1 ring-slate-200/80">
               {blocks.map((block) => (
                 <SortableBlock
                   key={block.id}

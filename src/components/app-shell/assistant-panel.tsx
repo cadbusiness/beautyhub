@@ -65,12 +65,58 @@ const MODULE_KEYS: Record<string, "institut" | "academie"> = {
   academie: "academie",
 };
 
+const FEATURED_ACTION_NAMES = [
+  "institut.create_client",
+  "institut.list_clients",
+  "institut.list_appointments",
+  "institut.create_time_off",
+  "academie.list_courses",
+  "institut.pos_open_session",
+] as const;
+
+function SendIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M12 19V5" />
+      <path d="m5 12 7-7 7 7" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")}
+      aria-hidden
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 export function AssistantPanel({ actions }: { actions: Action[] }) {
   const t = useTranslations("assistant.panel");
   const tActions = useTranslations("assistant.panel.actions");
   const tModules = useTranslations("assistant.panel.modules");
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [actionSearch, setActionSearch] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", text: t("greeting") },
   ]);
@@ -94,6 +140,33 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
     }
     return groups;
   }, [actions, tModules]);
+
+  const featuredActions = useMemo(
+    () =>
+      FEATURED_ACTION_NAMES.map((name) => actions.find((a) => a.name === name)).filter(
+        (action): action is Action => action != null,
+      ),
+    [actions],
+  );
+
+  const filteredGroups = useMemo(() => {
+    const q = actionSearch.trim().toLowerCase();
+    if (!q) return grouped;
+
+    const filtered = new Map<string, Action[]>();
+    for (const [module, moduleActions] of grouped) {
+      const matches = moduleActions.filter((action) => {
+        const label = actionLabel(action).toLowerCase();
+        return (
+          label.includes(q) ||
+          action.description.toLowerCase().includes(q) ||
+          action.name.toLowerCase().includes(q)
+        );
+      });
+      if (matches.length > 0) filtered.set(module, matches);
+    }
+    return filtered;
+  }, [grouped, actionSearch, tActions]);
 
   useEffect(() => {
     if (!open) return;
@@ -131,6 +204,8 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
     const action = actions.find((a) => a.name === actionName);
     const label = action ? actionLabel(action) : actionName;
     setMessages((prev) => [...prev, { role: "user", text: label }]);
+    setActionsOpen(false);
+    setActionSearch("");
     executeAction(actionName, params, false);
   }
 
@@ -156,10 +231,9 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
     executeAction(result.actionName, result.params, true);
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function submitMessage() {
     const text = input.trim();
-    if (!text) return;
+    if (!text || pending) return;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text }]);
 
@@ -167,6 +241,11 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
       const result = await interpretMessage(text);
       handleInterpretResult(result);
     });
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    submitMessage();
   }
 
   function confirmPending(msg: Extract<Message, { role: "confirm" }>) {
@@ -204,7 +283,7 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 z-50 flex w-full max-w-[380px] flex-col border-l border-slate-200 bg-white shadow-xl transition-transform duration-200",
+          "fixed inset-y-0 right-0 z-50 flex w-full max-w-[420px] flex-col border-l border-slate-200 bg-white shadow-xl transition-transform duration-200",
           open ? "translate-x-0" : "pointer-events-none translate-x-full",
         )}
       >
@@ -283,45 +362,112 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
         </div>
 
         <div className="space-y-3 border-t border-slate-100 p-4">
-          <div className="space-y-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+          <div className="space-y-2">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
               {t("quickActions")}
             </p>
-            {[...grouped.entries()].map(([module, moduleActions]) => (
-              <div key={module} className="space-y-1.5">
-                <p className="text-xs font-medium text-slate-500">{module}</p>
-                <div className="max-h-40 space-y-1 overflow-y-auto">
-                  {moduleActions.map((action) => (
-                    <button
-                      key={action.name}
-                      type="button"
-                      disabled={pending}
-                      onClick={() => runQuickAction(action.name)}
-                      className="flex w-full flex-col rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-                    >
-                      <span className="text-sm font-medium text-slate-900">
-                        {actionLabel(action)}
-                      </span>
-                      <span className="text-xs text-slate-500 line-clamp-1">
-                        {action.description}
-                      </span>
-                    </button>
-                  ))}
+
+            {featuredActions.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {featuredActions.map((action) => (
+                  <button
+                    key={action.name}
+                    type="button"
+                    disabled={pending}
+                    onClick={() => runQuickAction(action.name)}
+                    title={action.description}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white disabled:opacity-50"
+                  >
+                    {actionLabel(action)}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => setActionsOpen((value) => !value)}
+              className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <span className="font-medium text-slate-700">{t("browseAllActions")}</span>
+              <span className="flex items-center gap-1.5 text-slate-400">
+                <span>{actions.length}</span>
+                <ChevronIcon open={actionsOpen} />
+              </span>
+            </button>
+
+            {actionsOpen ? (
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                <div className="border-b border-slate-200 p-2">
+                  <input
+                    type="search"
+                    value={actionSearch}
+                    onChange={(e) => setActionSearch(e.target.value)}
+                    placeholder={t("searchActions")}
+                    className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                  />
+                </div>
+                <div className="max-h-52 space-y-3 overflow-y-auto p-2">
+                  {[...filteredGroups.entries()].length === 0 ? (
+                    <p className="px-2 py-3 text-center text-xs text-slate-500">
+                      {t("noActionResults")}
+                    </p>
+                  ) : (
+                    [...filteredGroups.entries()].map(([module, moduleActions]) => (
+                      <div key={module} className="space-y-1">
+                        <p className="px-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                          {module}
+                        </p>
+                        <div className="space-y-0.5">
+                          {moduleActions.map((action) => (
+                            <button
+                              key={action.name}
+                              type="button"
+                              disabled={pending}
+                              onClick={() => runQuickAction(action.name)}
+                              title={action.description}
+                              className="flex w-full items-center rounded-lg px-2 py-1.5 text-left text-sm text-slate-800 transition hover:bg-white disabled:opacity-50"
+                            >
+                              <span className="truncate font-medium">{actionLabel(action)}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
-            ))}
+            ) : null}
           </div>
 
-          <form onSubmit={handleSubmit} className="flex gap-2 pt-1">
-            <input
+          <form onSubmit={handleSubmit} className="relative">
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  submitMessage();
+                }
+              }}
               placeholder={t("messagePlaceholder")}
-              className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+              rows={3}
+              disabled={pending}
+              className="min-h-[96px] w-full resize-none rounded-xl border border-slate-300 bg-white py-3 pl-4 pr-12 text-base text-slate-900 outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:opacity-60"
             />
-            <Button type="submit" disabled={pending} className="shrink-0">
-              {pending ? t("sendPending") : t("send")}
-            </Button>
+            <button
+              type="submit"
+              disabled={pending || !input.trim()}
+              aria-label={pending ? t("sendPending") : t("send")}
+              className="absolute bottom-2.5 right-2.5 flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {pending ? (
+                <span className="text-sm">{t("sendPending")}</span>
+              ) : (
+                <SendIcon className="h-4 w-4" />
+              )}
+            </button>
           </form>
         </div>
       </aside>

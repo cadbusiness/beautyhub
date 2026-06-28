@@ -7,6 +7,8 @@ import {
 } from "@/lib/auth/session";
 import { getEnabledModuleIds, getTenantContext } from "@/lib/tenant/context";
 import { getAiActionsFor, getNavFor } from "@/modules";
+import { getAppShellData } from "@/lib/auth/team-session";
+import { PosSessionBanner } from "@/components/app-shell/pos-session-status";
 import { Button } from "@/components/ui/button";
 import { ListPanel } from "@/components/ui/list-panel";
 
@@ -99,6 +101,9 @@ export default async function DashboardPage() {
       description: t(`quickActions.${action.descriptionKey}.description`),
     }));
 
+  const shell = await getAppShellData();
+  const posSession = shell?.posSession ?? null;
+
   const hasInstitut = enabledModuleIds.includes("institut");
   let kpis: { label: string; value: number; href: string }[] = [];
 
@@ -143,6 +148,14 @@ export default async function DashboardPage() {
 
   return (
     <ListPanel>
+      {hasInstitut ? (
+        posSession ? (
+          <PosSessionBanner session={posSession} variant="open" />
+        ) : (
+          <PosSessionBanner variant="closed" />
+        )
+      ) : null}
+
       <div className="border-b border-slate-200 px-4 py-5 lg:px-6">
         <p className="text-base font-semibold text-slate-900">
           {tenant?.name ?? "BeautyHub"}

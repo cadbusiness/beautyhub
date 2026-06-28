@@ -110,7 +110,14 @@
     "footerRights": "Alle rechten voorbehouden.",
     "language": "Taal",
     "institut": "Instituut",
-    "myAccount": "Mijn account"
+    "myAccount": "Mijn account",
+    "posSession": {
+      "open": "Kassa open",
+      "durationJustOpened": "zojuist",
+      "durationMins": "sinds {mins} min",
+      "durationHours": "sinds {hours} u {mins} min",
+      "navIndicator": "Kassa open"
+    }
   },
   "roles": {
     "platform_admin": "Super admin",
@@ -237,6 +244,18 @@
       "heading": "AI-ondersteund beheer",
       "description": "Klanten, opleidingen, planning — stel een vraag of kies een vooraf ingestelde actie in de assistent.",
       "open": "Assistent openen"
+    },
+    "posSession": {
+      "openTitle": "Kassa open",
+      "openSince": "Open",
+      "closedTitle": "Kassa gesloten",
+      "closedDescription": "Open een sessie om verkopen te registreren en contant geld te volgen.",
+      "openSession": "Kassa openen",
+      "goToPos": "Verkoop registreren",
+      "manageSession": "Sessie beheren",
+      "sales": "Verkopen",
+      "revenue": "Omzet incl. btw",
+      "expectedCash": "Verwacht contant"
     }
   },
   "appointments": {
@@ -1333,6 +1352,9 @@
       "confirming": "Uitvoeren: {summary}",
       "confirmFallback": "Deze actie vereist uw bevestiging.",
       "quickActions": "Snelle acties",
+      "browseAllActions": "Alle acties",
+      "searchActions": "Actie zoeken…",
+      "noActionResults": "Geen actie gevonden.",
       "messagePlaceholder": "Uw bericht…",
       "send": "Verzenden",
       "sendPending": "…",

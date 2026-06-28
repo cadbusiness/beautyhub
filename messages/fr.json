@@ -110,7 +110,14 @@
     "footerRights": "Tous droits réservés.",
     "language": "Langue",
     "institut": "Institut",
-    "myAccount": "Mon compte"
+    "myAccount": "Mon compte",
+    "posSession": {
+      "open": "Caisse ouverte",
+      "durationJustOpened": "à l'instant",
+      "durationMins": "depuis {mins} min",
+      "durationHours": "depuis {hours} h {mins} min",
+      "navIndicator": "Caisse ouverte"
+    }
   },
   "roles": {
     "platform_admin": "Super admin",
@@ -237,6 +244,18 @@
       "heading": "Pilotage assisté par IA",
       "description": "Clients, formations, planning — posez une demande ou choisissez une action prédéfinie dans l'assistant.",
       "open": "Ouvrir l'assistant"
+    },
+    "posSession": {
+      "openTitle": "Caisse ouverte",
+      "openSince": "Ouverte",
+      "closedTitle": "Caisse fermée",
+      "closedDescription": "Ouvrez une session pour encaisser et suivre les espèces du jour.",
+      "openSession": "Ouvrir la caisse",
+      "goToPos": "Encaisser une vente",
+      "manageSession": "Gérer la session",
+      "sales": "Ventes",
+      "revenue": "CA TTC",
+      "expectedCash": "Espèces attendues"
     }
   },
   "appointments": {
@@ -1358,6 +1377,9 @@
       "confirming": "Exécution : {summary}",
       "confirmFallback": "Cette action nécessite votre confirmation.",
       "quickActions": "Actions rapides",
+      "browseAllActions": "Toutes les actions",
+      "searchActions": "Rechercher une action…",
+      "noActionResults": "Aucune action trouvée.",
       "messagePlaceholder": "Votre message…",
       "send": "Envoyer",
       "sendPending": "…",

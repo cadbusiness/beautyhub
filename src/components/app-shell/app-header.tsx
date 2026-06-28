@@ -2,6 +2,10 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { AppLogo } from "@/components/app-shell/app-logo";
 import { LocaleSwitcher } from "@/components/app-shell/locale-switcher";
+import {
+  PosSessionHeaderBadge,
+  type PosSessionStatusData,
+} from "@/components/app-shell/pos-session-status";
 import { TenantSwitcher } from "@/components/app-shell/tenant-switcher";
 import { UserMenu } from "@/components/app-shell/user-menu";
 import type { TenantOption } from "@/lib/tenant/defaults";
@@ -14,6 +18,7 @@ export async function AppHeader({
   currentSlug,
   displayName,
   profileInitial,
+  posSession = null,
 }: {
   email: string | null;
   role: string;
@@ -22,6 +27,7 @@ export async function AppHeader({
   currentSlug: string;
   displayName: string;
   profileInitial: string;
+  posSession?: PosSessionStatusData | null;
 }) {
   const t = await getTranslations("shell");
   const tRoles = await getTranslations("roles");
@@ -51,6 +57,8 @@ export async function AppHeader({
       <div className="flex-1" />
 
       <div className="flex items-center gap-2">
+        {posSession ? <PosSessionHeaderBadge session={posSession} /> : null}
+
         {platformAdmin ? (
           <Link
             href="/admin"

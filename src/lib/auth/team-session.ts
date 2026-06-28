@@ -7,6 +7,9 @@ import {
   isPlatformAdmin,
 } from "@/lib/auth/session";
 import { getEnabledModuleIds, getTenantContext } from "@/lib/tenant/context";
+import type { PosSessionSummary } from "@/lib/institut/pos-session";
+import { getPosSessionSummary } from "@/lib/institut/pos-session";
+import { createClient } from "@/lib/supabase/server";
 import type { TeamRole } from "@/modules/types";
 import type { TenantContext } from "@/lib/tenant/context";
 
@@ -48,14 +51,21 @@ export const getTeamSession = cache(async (): Promise<TeamSession | null> => {
 export interface AppShellData {
   session: TeamSession;
   accessibleTenants: Awaited<ReturnType<typeof getAccessibleTenants>>;
+  posSession: PosSessionSummary | null;
 }
 
 export const getAppShellData = cache(async (): Promise<AppShellData | null> => {
   const session = await getTeamSession();
   if (!session) return null;
 
-  const accessibleTenants = await getAccessibleTenants();
-  return { session, accessibleTenants };
+  const [accessibleTenants, posSession] = await Promise.all([
+    getAccessibleTenants(),
+    session.enabledModuleIds.includes("institut")
+      ? getPosSessionSummary(await createClient(), session.tenant.id)
+      : Promise.resolve(null),
+  ]);
+
+  return { session, accessibleTenants, posSession };
 });
 
 export async function requireTeamSession(): Promise<TeamSession> {

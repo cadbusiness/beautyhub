@@ -31,6 +31,40 @@ export async function getOpenCashSession(supabase: Db, tenantId: string) {
   return data;
 }
 
+export interface PosSessionSummary {
+  id: string;
+  opened_at: string;
+  opening_float_cents: number;
+  sales_count: number;
+  total_cents: number;
+  expected_cash_cents: number;
+}
+
+/** Résumé session ouverte pour header / accueil (null si fermée). */
+export async function getPosSessionSummary(
+  supabase: Db,
+  tenantId: string,
+): Promise<PosSessionSummary | null> {
+  const cashSession = await getOpenCashSession(supabase, tenantId);
+  if (!cashSession) return null;
+
+  const snapshot = await computeSessionSnapshot(
+    supabase,
+    tenantId,
+    cashSession.id,
+    "x",
+  );
+
+  return {
+    id: cashSession.id,
+    opened_at: cashSession.opened_at,
+    opening_float_cents: cashSession.opening_float_cents,
+    sales_count: snapshot.sales_count,
+    total_cents: snapshot.total_cents,
+    expected_cash_cents: snapshot.expected_cash_cents,
+  };
+}
+
 export async function requireOpenSessionIfNeeded(
   supabase: Db,
   tenantId: string,

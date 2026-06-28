@@ -28,7 +28,7 @@ export default async function AppLayout({
   const shell = await getAppShellData();
   if (!shell) redirect("/login");
 
-  const { session, accessibleTenants } = shell;
+  const { session, accessibleTenants, posSession } = shell;
   const nav = getNavFor(session.enabledModuleIds, session.role);
   const t = await getTranslations("shell");
   const tNav = await getTranslations("nav");
@@ -56,6 +56,7 @@ export default async function AppLayout({
         currentSlug={session.tenant.slug}
         displayName={displayName}
         profileInitial={initial}
+        posSession={posSession}
       />
 
       <div className="flex min-h-0 flex-1">
@@ -65,12 +66,15 @@ export default async function AppLayout({
             {nav.map((item) => {
               const labelKey = navMessageKey(item.href);
               const label = labelKey ? tNav(labelKey) : item.label;
+              const posOpen =
+                posSession && item.href === "/institut/caisse";
               return (
                 <NavLink
                   key={`${item.moduleId}-${item.href}`}
                   href={item.href}
                   label={label}
                   exact={item.exact}
+                  indicator={posOpen ? "dot-green" : undefined}
                 />
               );
             })}

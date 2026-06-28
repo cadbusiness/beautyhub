@@ -8,11 +8,9 @@ export default async function SiteThemePage() {
   const settings = await loadSiteSettingsAdmin();
 
   return (
-    <div className="px-4 py-4 lg:px-6">
-      <div className="mx-auto max-w-3xl space-y-5">
-        <SiteWebSubNav />
-        <SiteThemeForm settings={settings} instituteName={session.tenant.name} />
-      </div>
+    <div className="space-y-5 px-4 py-4 lg:px-6">
+      <SiteWebSubNav />
+      <SiteThemeForm settings={settings} instituteName={session.tenant.name} />
     </div>
   );
 }

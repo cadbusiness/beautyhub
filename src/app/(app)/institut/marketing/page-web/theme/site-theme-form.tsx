@@ -54,7 +54,7 @@ export function SiteThemeForm({
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-      <form action={action} className="w-full space-y-5 lg:max-w-sm lg:shrink-0">
+      <form action={action} className="w-full shrink-0 space-y-5 lg:w-80 xl:w-96">
         <input type="hidden" name="primary_color" value={primaryColor} />
         <input type="hidden" name="display_name" value={displayName} />
         <input type="hidden" name="logo_url" value={logoUrl} />

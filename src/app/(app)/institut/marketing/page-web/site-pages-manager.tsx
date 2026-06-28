@@ -97,9 +97,8 @@ export function SitePagesManager({
   }
 
   return (
-    <div className="px-4 py-4 lg:px-6">
-      <div className="mx-auto max-w-3xl space-y-5">
-        <SiteWebSubNav />
+    <div className="space-y-5 px-4 py-4 lg:px-6">
+      <SiteWebSubNav />
 
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 space-y-0.5">
@@ -142,13 +141,16 @@ export function SitePagesManager({
           </div>
         ) : null}
 
-        <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <ul className="grid gap-4 lg:grid-cols-2">
           {pages.map((page) => {
             const layout = getLayoutDef(page.page_type, page.layout_id);
             const layoutOpen = layoutPickerPageId === page.id;
 
             return (
-              <li key={page.id}>
+              <li
+                key={page.id}
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white"
+              >
                 <div className="flex gap-3 p-3">
                   <Link
                     href={`/institut/marketing/page-web/${page.id}/builder`}
@@ -294,8 +296,7 @@ export function SitePagesManager({
           })}
         </ul>
 
-        <p className="text-center text-xs text-slate-400">{t("footer", { count: pages.length })}</p>
-      </div>
+        <p className="text-xs text-slate-400">{t("footer", { count: pages.length })}</p>
     </div>
   );
 }

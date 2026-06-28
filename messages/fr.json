@@ -1654,11 +1654,11 @@
       "subtitle": "{name} — réservation en ligne",
       "wizardTitle": "Votre réservation",
       "steps": {
-        "service": "1. Prestation",
-        "staff": "2. Praticien",
-        "extras": "3. Extras",
-        "availability": "4. Disponibilités",
-        "slots": "5. Créneau"
+        "service": "Prestation",
+        "extras": "Suppléments",
+        "slots": "Heure",
+        "details": "Coordonnées",
+        "done": "Terminé"
       },
       "confirmed": {
         "title": "Rendez-vous confirmé",
@@ -1666,8 +1666,13 @@
         "emailHint": "Un email de confirmation vous sera envoyé prochainement."
       },
       "step1": {
-        "title": "Choisir une prestation",
-        "empty": "Aucune prestation disponible.",
+        "title": "Réservation",
+        "subtitle": "Veuillez choisir une prestation et indiquer vos disponibilités.",
+        "empty": "Aucune prestation disponible en ligne.",
+        "serviceLabel": "Prestation",
+        "servicePlaceholder": "Choisir une prestation",
+        "staffLabel": "Praticien (facultatif)",
+        "staffAny": "Sans préférence",
         "durationMin": "{min} min",
         "quoteBadge": "Devis",
         "manualBadge": "Sur mesure",
@@ -1679,21 +1684,30 @@
       },
       "step3": {
         "title": "Indiquez vos disponibilités",
-        "seeSlots": "Voir les créneaux possibles"
+        "seeSlots": "Voir les créneaux"
       },
       "step4": {
-        "title": "Choisissez un créneau",
+        "title": "Choisissez votre heure",
+        "subtitle": "Créneaux disponibles selon vos préférences.",
+        "loading": "Recherche des créneaux…",
         "noSlots": "Aucun créneau ne correspond à vos disponibilités.",
-        "noSlotsHint": "Élargissez vos jours ou votre plage horaire, ou choisissez une autre prestation.",
+        "noSlotsHint": "Élargissez vos jours ou votre plage horaire, ou modifiez vos options.",
+        "changeAvailability": "Modifier mes disponibilités",
         "extrasHint": "Des options complémentaires pourront être ajoutées à l'étape suivante.",
+        "fullName": "Nom complet",
+        "confirm": "Confirmer le rendez-vous",
+        "confirming": "Confirmation…"
+      },
+      "step5": {
+        "title": "Vos coordonnées",
         "fullName": "Nom complet",
         "confirm": "Confirmer le rendez-vous",
         "confirming": "Confirmation…"
       },
       "availability": {
         "title": "Quand êtes-vous disponible ?",
-        "hint": "Nous chercherons les créneaux qui correspondent à vos préférences.",
-        "fromDate": "À partir du",
+        "hint": "Indiquez quand vous pouvez venir : nous afficherons les créneaux correspondants.",
+        "fromDate": "Je suis disponible le ou après",
         "weekdays": "Jours de la semaine",
         "timeFrom": "À partir de",
         "timeTo": "Jusqu'à",
@@ -1711,6 +1725,7 @@
       },
       "extras": {
         "title": "Options complémentaires",
+        "subtitle": "Personnalisez votre séance avant de choisir l'heure.",
         "durationHint": "Durée totale estimée : {min} min · {price}"
       },
       "quoteRequest": {

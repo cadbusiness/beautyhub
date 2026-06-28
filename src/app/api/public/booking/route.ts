@@ -70,9 +70,6 @@ export async function GET(request: Request) {
     const availability = parseAvailabilityParams(url);
 
     if (availability) {
-      if (!staffId) {
-        return NextResponse.json({ error: "staffId required" }, { status: 400 });
-      }
       const slots = await fetchPublicSlotsMatchingAvailability(
         supabase,
         tenant.id,

@@ -82,7 +82,7 @@ export async function fetchPublicSlotsMatchingAvailability(
   supabase: Db,
   tenantId: string,
   serviceId: string,
-  staffId: string,
+  staffId: string | undefined,
   extras: BookingExtraLine[],
   prefs: AvailabilityPreferences,
 ): Promise<PublicSlot[]> {

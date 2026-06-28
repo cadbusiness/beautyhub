@@ -18,9 +18,11 @@ export function defaultAvailability(): AvailabilityPreferences {
 export function AvailabilityPreferencesForm({
   value,
   onChange,
+  variant = "inline",
 }: {
   value: AvailabilityPreferences;
   onChange: (next: AvailabilityPreferences) => void;
+  variant?: "inline" | "card";
 }) {
   const t = useTranslations("public.booking.availability");
 
@@ -37,10 +39,21 @@ export function AvailabilityPreferencesForm({
     value.timeTo &&
     value.timeFrom >= value.timeTo;
 
+  const wrapperClass =
+    variant === "card"
+      ? "space-y-4 rounded-lg border border-slate-200 bg-slate-50/60 p-4"
+      : "space-y-4 border-t border-slate-200 pt-4";
+
   return (
-    <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
-      <p className="text-sm font-medium text-slate-900">{t("title")}</p>
-      <p className="text-xs text-slate-500">{t("hint")}</p>
+    <div className={wrapperClass}>
+      {variant === "card" ? (
+        <>
+          <p className="text-sm font-medium text-slate-900">{t("title")}</p>
+          <p className="text-xs text-slate-500">{t("hint")}</p>
+        </>
+      ) : (
+        <p className="text-sm text-slate-600">{t("hint")}</p>
+      )}
 
       <Field label={t("fromDate")} htmlFor="avail_from">
         <Input

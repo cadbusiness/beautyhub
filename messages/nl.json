@@ -1637,11 +1637,11 @@
       "subtitle": "{name} — online reservering",
       "wizardTitle": "Uw reservering",
       "steps": {
-        "service": "1. Behandeling",
-        "staff": "2. Behandelaar",
-        "extras": "3. Extras",
-        "availability": "4. Beschikbaarheid",
-        "slots": "5. Tijdslot"
+        "service": "Behandeling",
+        "extras": "Extra's",
+        "slots": "Tijd",
+        "details": "Gegevens",
+        "done": "Klaar"
       },
       "confirmed": {
         "title": "Afspraak bevestigd",
@@ -1649,8 +1649,13 @@
         "emailHint": "U ontvangt binnenkort een bevestigingsmail."
       },
       "step1": {
-        "title": "Kies een behandeling",
-        "empty": "Geen behandelingen beschikbaar.",
+        "title": "Reserveren",
+        "subtitle": "Kies een behandeling en geef uw beschikbaarheid door.",
+        "empty": "Geen behandelingen online beschikbaar.",
+        "serviceLabel": "Behandeling",
+        "servicePlaceholder": "Kies een behandeling",
+        "staffLabel": "Behandelaar (optioneel)",
+        "staffAny": "Geen voorkeur",
         "durationMin": "{min} min",
         "quoteBadge": "Offerte",
         "manualBadge": "Maatwerk",
@@ -1662,21 +1667,30 @@
       },
       "step3": {
         "title": "Geef uw beschikbaarheid door",
-        "seeSlots": "Mogelijke tijdslots bekijken"
+        "seeSlots": "Tijdslots bekijken"
       },
       "step4": {
-        "title": "Kies een tijdslot",
+        "title": "Kies uw tijd",
+        "subtitle": "Beschikbare tijdslots volgens uw voorkeuren.",
+        "loading": "Tijdslots zoeken…",
         "noSlots": "Geen tijdslot komt overeen met uw beschikbaarheid.",
-        "noSlotsHint": "Breid uw dagen of tijdsvenster uit, of kies een andere behandeling.",
+        "noSlotsHint": "Breid uw dagen of tijdsvenster uit, of pas uw opties aan.",
+        "changeAvailability": "Beschikbaarheid wijzigen",
         "extrasHint": "Extra opties kunnen in de volgende stap worden toegevoegd.",
+        "fullName": "Volledige naam",
+        "confirm": "Afspraak bevestigen",
+        "confirming": "Bevestigen…"
+      },
+      "step5": {
+        "title": "Uw gegevens",
         "fullName": "Volledige naam",
         "confirm": "Afspraak bevestigen",
         "confirming": "Bevestigen…"
       },
       "availability": {
         "title": "Wanneer bent u beschikbaar?",
-        "hint": "We zoeken tijdslots die bij uw voorkeuren passen.",
-        "fromDate": "Vanaf",
+        "hint": "Geef aan wanneer u kunt komen: we tonen de passende tijdslots.",
+        "fromDate": "Ik ben beschikbaar vanaf",
         "weekdays": "Dagen van de week",
         "timeFrom": "Vanaf",
         "timeTo": "Tot",
@@ -1694,6 +1708,7 @@
       },
       "extras": {
         "title": "Extra opties",
+        "subtitle": "Personaliseer uw behandeling voordat u een tijd kiest.",
         "durationHint": "Geschatte totale duur: {min} min · {price}"
       },
       "quoteRequest": {

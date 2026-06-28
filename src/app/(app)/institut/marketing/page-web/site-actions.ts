@@ -28,6 +28,12 @@ import {
   ensureSiteSettings,
   type SiteSettingsRow,
 } from "@/lib/institut/site-settings";
+import {
+  SITE_MEDIA_BUCKET,
+  extForSiteMedia,
+  validateSiteMediaFile,
+  type SiteMediaKind,
+} from "@/lib/institut/site-media-upload";
 
 const ADMIN_PATH = "/institut/marketing/page-web";
 
@@ -98,38 +104,17 @@ export async function ensureDefaultSitePages(tenantId: string, instituteName: st
   await supabase.from("inst_site_pages").insert(inserts);
 }
 
-const BUCKET = "site-images";
-const MAX_BYTES = 5 * 1024 * 1024;
-const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
-
-function extForMime(mime: string): string {
-  switch (mime) {
-    case "image/jpeg":
-      return "jpg";
-    case "image/png":
-      return "png";
-    case "image/webp":
-      return "webp";
-    case "image/gif":
-      return "gif";
-    default:
-      return "bin";
-  }
-}
-
-async function uploadSiteImage(
+async function uploadSiteMediaFile(
   tenantId: string,
   folder: string,
   file: File,
-): Promise<{ error?: string; url?: string }> {
-  if (file.size > MAX_BYTES) return { error: "Image trop volumineuse (max 5 Mo)." };
-  if (!ALLOWED.has(file.type)) {
-    return { error: "Format non supporté (JPEG, PNG, WebP, GIF)." };
-  }
+): Promise<{ error?: string; url?: string; kind?: SiteMediaKind }> {
+  const validation = validateSiteMediaFile(file);
+  if (validation.error || !validation.kind) return { error: validation.error };
 
   const supabase = await createClient();
-  const path = `${tenantId}/${folder}/${crypto.randomUUID()}.${extForMime(file.type)}`;
-  const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
+  const path = `${tenantId}/${folder}/${crypto.randomUUID()}.${extForSiteMedia(file.type)}`;
+  const { error: upErr } = await supabase.storage.from(SITE_MEDIA_BUCKET).upload(path, file, {
     contentType: file.type,
     upsert: false,
   });
@@ -137,8 +122,19 @@ async function uploadSiteImage(
 
   const {
     data: { publicUrl },
-  } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return { url: publicUrl };
+  } = supabase.storage.from(SITE_MEDIA_BUCKET).getPublicUrl(path);
+  return { url: publicUrl, kind: validation.kind };
+}
+
+export async function uploadSiteBlockMedia(
+  formData: FormData,
+): Promise<{ error?: string; url?: string; kind?: SiteMediaKind }> {
+  const session = await requireModule("institut");
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Fichier requis." };
+  }
+  return uploadSiteMediaFile(session.tenant.id, "media", file);
 }
 
 export async function uploadSiteGalleryImage(
@@ -149,7 +145,11 @@ export async function uploadSiteGalleryImage(
   if (!(file instanceof File) || file.size === 0) {
     return { error: "Fichier requis." };
   }
-  return uploadSiteImage(session.tenant.id, "gallery", file);
+  const res = await uploadSiteMediaFile(session.tenant.id, "gallery", file);
+  if (res.kind && res.kind !== "image") {
+    return { error: "Seules les images sont acceptées pour la galerie." };
+  }
+  return { error: res.error, url: res.url };
 }
 
 export async function uploadSiteLogo(
@@ -160,7 +160,11 @@ export async function uploadSiteLogo(
   if (!(file instanceof File) || file.size === 0) {
     return { error: "Fichier requis." };
   }
-  return uploadSiteImage(session.tenant.id, "logo", file);
+  const res = await uploadSiteMediaFile(session.tenant.id, "logo", file);
+  if (res.kind && res.kind !== "image") {
+    return { error: "Seules les images sont acceptées pour le logo." };
+  }
+  return { error: res.error, url: res.url };
 }
 
 export async function loadSitePagesAdmin(): Promise<{

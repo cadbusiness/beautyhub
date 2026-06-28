@@ -49,6 +49,7 @@ export interface SiteHeroBlock extends SiteBlockBase {
   ctaLabel: string;
   ctaHref: string;
   imageUrl?: string;
+  videoUrl?: string;
 }
 
 export interface SiteAboutBlock extends SiteBlockBase {

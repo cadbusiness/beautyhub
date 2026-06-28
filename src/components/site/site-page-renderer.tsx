@@ -37,13 +37,15 @@ function HeroBlock({
 }) {
   const py = compact ? "py-10 lg:py-12" : "py-16 lg:py-24";
   const ctaHref = block.ctaHref;
+  const hasVideo = Boolean(block.videoUrl);
+  const hasImage = Boolean(block.imageUrl);
 
   if (template === "modern") {
     return (
       <section
-        className={`relative bg-slate-900 px-4 text-white lg:px-6 ${py}`}
+        className={`relative overflow-hidden px-4 text-white lg:px-6 ${py} ${!hasVideo && !hasImage ? "bg-slate-900" : ""}`}
         style={
-          block.imageUrl
+          hasImage && !hasVideo
             ? {
                 backgroundImage: `linear-gradient(rgba(15,23,42,0.75), rgba(15,23,42,0.75)), url(${block.imageUrl})`,
                 backgroundSize: "cover",
@@ -52,7 +54,20 @@ function HeroBlock({
             : undefined
         }
       >
-        <div className="mx-auto max-w-5xl">
+        {hasVideo ? (
+          <>
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 h-full w-full object-cover"
+              src={block.videoUrl}
+            />
+            <div className="absolute inset-0 bg-slate-900/75" aria-hidden />
+          </>
+        ) : null}
+        <div className="relative mx-auto max-w-5xl">
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{block.headline}</h1>
           <p className="mt-3 max-w-2xl text-lg text-slate-300">{block.subheadline}</p>
           {!compact && ctaHref !== "#booking" ? (
@@ -69,11 +84,15 @@ function HeroBlock({
     );
   }
 
+  const elegantOnMedia = hasVideo || hasImage;
+
   return (
     <section
-      className={`border-b border-slate-200 bg-slate-50 px-4 lg:px-6 ${py}`}
+      className={`relative overflow-hidden px-4 lg:px-6 ${py} ${
+        elegantOnMedia ? "text-white" : "border-b border-slate-200 bg-slate-50"
+      }`}
       style={
-        block.imageUrl
+        hasImage && !hasVideo
           ? {
               backgroundImage: `linear-gradient(rgba(248,250,252,0.92), rgba(248,250,252,0.92)), url(${block.imageUrl})`,
               backgroundSize: "cover",
@@ -82,19 +101,52 @@ function HeroBlock({
           : undefined
       }
     >
-      <div className={`mx-auto max-w-5xl ${compact ? "text-left" : "text-center"}`}>
+      {hasVideo ? (
+        <>
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+            src={block.videoUrl}
+          />
+          <div className="absolute inset-0 bg-slate-900/55" aria-hidden />
+        </>
+      ) : hasImage ? (
+        <div className="absolute inset-0 bg-slate-50/10" aria-hidden />
+      ) : null}
+      <div className={`relative mx-auto max-w-5xl ${compact ? "text-left" : "text-center"}`}>
         {!compact ? (
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">Institut</p>
+          <p
+            className={`text-xs font-medium uppercase tracking-[0.2em] ${
+              elegantOnMedia ? "text-white/80" : "text-slate-500"
+            }`}
+          >
+            Institut
+          </p>
         ) : null}
-        <h1 className={`${compact ? "text-3xl" : "mt-3 text-4xl font-serif sm:text-5xl"} font-semibold text-slate-900`}>
+        <h1
+          className={`${compact ? "text-3xl" : "mt-3 text-4xl font-serif sm:text-5xl"} font-semibold ${
+            elegantOnMedia ? "text-white" : "text-slate-900"
+          }`}
+        >
           {block.headline}
         </h1>
-        <p className="mx-auto mt-3 max-w-2xl text-lg text-slate-600">{block.subheadline}</p>
+        <p
+          className={`mx-auto mt-3 max-w-2xl text-lg ${
+            elegantOnMedia ? "text-white/90" : "text-slate-600"
+          }`}
+        >
+          {block.subheadline}
+        </p>
         {!compact && ctaHref !== "#booking" ? (
           <Link
             href={ctaHref}
-            className="mt-6 inline-flex h-11 items-center rounded-full border px-6 text-sm font-medium"
-            style={{ borderColor: accent, color: accent }}
+            className={`mt-6 inline-flex h-11 items-center rounded-full border px-6 text-sm font-medium ${
+              elegantOnMedia ? "border-white text-white" : ""
+            }`}
+            style={elegantOnMedia ? undefined : { borderColor: accent, color: accent }}
           >
             {block.ctaLabel}
           </Link>

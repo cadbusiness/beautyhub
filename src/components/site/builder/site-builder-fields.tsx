@@ -2,10 +2,12 @@
 
 import { useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { uploadSiteGalleryImage } from "@/app/(app)/institut/marketing/page-web/site-actions";
+import { uploadSiteBlockMedia, uploadSiteGalleryImage } from "@/app/(app)/institut/marketing/page-web/site-actions";
+import { BuilderMediaUpload } from "@/components/site/builder/builder-media-upload";
 import {
   InspectorCheckbox,
   InspectorRow,
+  InspectorSegments,
   InspectorSelect,
   InspectorSlider,
   InspectorTextInput,
@@ -16,6 +18,7 @@ import type {
   SiteColumnsBlock,
   SiteGalleryBlock,
   SiteGalleryImage,
+  SiteHeroBlock,
   SiteImageBlock,
 } from "@/lib/institut/site-pages";
 
@@ -32,28 +35,7 @@ export function SiteBuilderBlockFields({
 }) {
   switch (block.type) {
     case "hero":
-      return (
-        <div className="space-y-2">
-          <InspectorRow label={t("fields.headline")}>
-            <InspectorTextInput value={block.headline} onChange={(v) => onChange({ headline: v })} />
-          </InspectorRow>
-          <InspectorRow label={t("fields.subheadline")}>
-            <InspectorTextInput value={block.subheadline} onChange={(v) => onChange({ subheadline: v })} />
-          </InspectorRow>
-          <InspectorRow label={t("fields.ctaLabel")}>
-            <InspectorTextInput value={block.ctaLabel} onChange={(v) => onChange({ ctaLabel: v })} />
-          </InspectorRow>
-          <InspectorRow label={t("fields.ctaHref")}>
-            <InspectorTextInput value={block.ctaHref} onChange={(v) => onChange({ ctaHref: v })} />
-          </InspectorRow>
-          <InspectorRow label={t("fields.imageUrl")}>
-            <InspectorTextInput
-              value={block.imageUrl ?? ""}
-              onChange={(v) => onChange({ imageUrl: v || undefined })}
-            />
-          </InspectorRow>
-        </div>
-      );
+      return <HeroBlockFields block={block} onChange={onChange} t={t} />;
     case "about":
       return (
         <div className="space-y-2">
@@ -211,6 +193,87 @@ export function SiteBuilderBlockFields({
   }
 }
 
+function HeroBlockFields({
+  block,
+  onChange,
+  t,
+}: {
+  block: SiteHeroBlock;
+  onChange: (patch: Partial<SiteHeroBlock>) => void;
+  t: BuilderT;
+}) {
+  const [uploading, startUpload] = useTransition();
+  type BgMode = "none" | "image" | "video";
+  const bgMode: BgMode = block.videoUrl ? "video" : block.imageUrl ? "image" : "none";
+
+  function setBgMode(mode: BgMode) {
+    if (mode === "none") onChange({ imageUrl: undefined, videoUrl: undefined });
+    else if (mode === "image") onChange({ videoUrl: undefined });
+    else onChange({ imageUrl: undefined });
+  }
+
+  function handleUpload(file: File) {
+    const fd = new FormData();
+    fd.set("file", file);
+    startUpload(async () => {
+      const res = await uploadSiteBlockMedia(fd);
+      if (res.error) alert(res.error);
+      else if (res.url) {
+        if (res.kind === "video") onChange({ videoUrl: res.url, imageUrl: undefined });
+        else onChange({ imageUrl: res.url, videoUrl: undefined });
+      }
+    });
+  }
+
+  const accept =
+    bgMode === "video" ? "video/mp4,video/webm" : bgMode === "image" ? "image/*" : "image/*,video/mp4,video/webm";
+
+  return (
+    <div className="space-y-2">
+      <InspectorRow label={t("fields.headline")}>
+        <InspectorTextInput value={block.headline} onChange={(v) => onChange({ headline: v })} />
+      </InspectorRow>
+      <InspectorRow label={t("fields.subheadline")}>
+        <InspectorTextInput value={block.subheadline} onChange={(v) => onChange({ subheadline: v })} />
+      </InspectorRow>
+      <InspectorRow label={t("fields.ctaLabel")}>
+        <InspectorTextInput value={block.ctaLabel} onChange={(v) => onChange({ ctaLabel: v })} />
+      </InspectorRow>
+      <InspectorRow label={t("fields.ctaHref")}>
+        <InspectorTextInput value={block.ctaHref} onChange={(v) => onChange({ ctaHref: v })} />
+      </InspectorRow>
+
+      <div className="space-y-1.5 pt-1">
+        <p className="text-[11px] text-slate-600">{t("fields.background")}</p>
+        <InspectorSegments
+          value={bgMode}
+          options={[
+            { value: "none", label: t("fields.backgroundNone") },
+            { value: "image", label: t("fields.backgroundImage") },
+            { value: "video", label: t("fields.backgroundVideo") },
+          ]}
+          onChange={setBgMode}
+        />
+        {bgMode !== "none" ? (
+          <BuilderMediaUpload
+            accept={accept}
+            previewUrl={bgMode === "video" ? block.videoUrl : block.imageUrl}
+            previewKind={bgMode === "video" ? "video" : "image"}
+            uploading={uploading}
+            uploadLabel={
+              bgMode === "video" ? t("fields.uploadBackgroundVideo") : t("fields.uploadBackgroundImage")
+            }
+            removeLabel={t("fields.removeMedia")}
+            hint={bgMode === "video" ? t("fields.maxVideoSize") : t("fields.maxImageSize")}
+            onUpload={handleUpload}
+            onRemove={() => onChange({ imageUrl: undefined, videoUrl: undefined })}
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function ImageBlockFields({
   block,
   onChange,
@@ -222,28 +285,27 @@ function ImageBlockFields({
 }) {
   const [uploading, startUpload] = useTransition();
 
-  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const fd = new FormData();
-    fd.set("file", file);
-    startUpload(async () => {
-      const res = await uploadSiteGalleryImage(fd);
-      if (res.error) alert(res.error);
-      else if (res.url) onChange({ imageUrl: res.url });
-    });
-    e.target.value = "";
-  }
-
   return (
     <div className="space-y-2">
-      <label className="flex cursor-pointer items-center gap-2 text-[10px] text-slate-600">
-        <input type="file" accept="image/*" className="text-[10px]" onChange={handleUpload} disabled={uploading} />
-        {uploading ? t("fields.uploading") : t("fields.uploadImage")}
-      </label>
-      <InspectorRow label={t("fields.imageUrl")}>
-        <InspectorTextInput value={block.imageUrl} onChange={(v) => onChange({ imageUrl: v })} />
-      </InspectorRow>
+      <BuilderMediaUpload
+        accept="image/*"
+        previewUrl={block.imageUrl || undefined}
+        previewKind="image"
+        uploading={uploading}
+        uploadLabel={t("fields.uploadImage")}
+        removeLabel={t("fields.removeMedia")}
+        hint={t("fields.maxImageSize")}
+        onUpload={(file) => {
+          const fd = new FormData();
+          fd.set("file", file);
+          startUpload(async () => {
+            const res = await uploadSiteGalleryImage(fd);
+            if (res.error) alert(res.error);
+            else if (res.url) onChange({ imageUrl: res.url });
+          });
+        }}
+        onRemove={() => onChange({ imageUrl: "" })}
+      />
       <InspectorRow label={t("fields.caption")}>
         <InspectorTextInput value={block.caption} onChange={(v) => onChange({ caption: v })} />
       </InspectorRow>

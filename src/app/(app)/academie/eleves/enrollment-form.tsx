@@ -23,13 +23,20 @@ interface EnrollmentFormProps {
  clients: ClientOption[];
 }
 
-export function EnrollmentForm({ courses, clients }: EnrollmentFormProps) {
+export function EnrollmentForm({
+ courses,
+ clients,
+ onSuccess,
+}: EnrollmentFormProps & { onSuccess?: () => void }) {
  const [state, action, pending] = useActionState(createEnrollment, initial);
  const formRef = useRef<HTMLFormElement>(null);
 
  useEffect(() => {
- if (state.ok) formRef.current?.reset();
- }, [state.ok]);
+ if (state.ok) {
+ formRef.current?.reset();
+ onSuccess?.();
+ }
+ }, [state.ok, onSuccess]);
 
  if (courses.length === 0) {
  return (

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default async function InstitutHome() {
  const session = await requireModule("institut");
@@ -32,10 +33,8 @@ export default async function InstitutHome() {
  ];
 
  return (
- <div className="space-y-6">
- <h1 className="text-2xl font-semibold text-slate-900">
- Institut
- </h1>
+    <div className="space-y-6">
+      <PageHeader title="Institut" />
  <div className="grid gap-4 sm:grid-cols-3">
  {stats.map((s) => (
  <Link key={s.label} href={s.href}>

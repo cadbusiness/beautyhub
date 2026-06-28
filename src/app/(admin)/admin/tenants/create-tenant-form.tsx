@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { createTenant, type ActionResult } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/input";
@@ -9,13 +9,23 @@ const initial: ActionResult = {};
 
 export function CreateTenantForm({
  plans,
+ onSuccess,
 }: {
  plans: { id: string; name: string }[];
+ onSuccess?: () => void;
 }) {
  const [state, action, pending] = useActionState(createTenant, initial);
+ const formRef = useRef<HTMLFormElement>(null);
+
+ useEffect(() => {
+ if (state.ok) {
+ formRef.current?.reset();
+ onSuccess?.();
+ }
+ }, [state.ok, onSuccess]);
 
  return (
- <form action={action} className="space-y-4">
+ <form ref={formRef} action={action} className="space-y-4">
  <div className="grid gap-4 sm:grid-cols-2">
  <Field label="Nom de l'institut" htmlFor="name">
  <Input id="name" name="name" required placeholder="Institut Beaute Lyon" />

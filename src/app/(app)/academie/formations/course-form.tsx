@@ -7,13 +7,16 @@ import { Field, Input, Textarea } from "@/components/ui/input";
 
 const initial: ActionResult = {};
 
-export function CourseForm() {
+export function CourseForm({ onSuccess }: { onSuccess?: () => void }) {
  const [state, action, pending] = useActionState(createCourse, initial);
  const formRef = useRef<HTMLFormElement>(null);
 
  useEffect(() => {
- if (state.ok) formRef.current?.reset();
- }, [state.ok]);
+ if (state.ok) {
+ formRef.current?.reset();
+ onSuccess?.();
+ }
+ }, [state.ok, onSuccess]);
 
  return (
  <form ref={formRef} action={action} className="space-y-4">

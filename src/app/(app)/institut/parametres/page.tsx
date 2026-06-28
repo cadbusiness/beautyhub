@@ -4,6 +4,7 @@ import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { isStripeConfigured } from "@/lib/stripe/client";
 import { STRIPE_CONNECT_PROVIDER } from "@/lib/stripe/index";
 import { syncStripeConnectStatus } from "../stripe-actions";
+import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WooConnectionForm } from "./woo-connection-form";
@@ -40,9 +41,7 @@ export default async function ParametresPage({
 
  return (
  <div className="space-y-6">
- <h1 className="text-2xl font-semibold text-slate-900">
- Parametres
- </h1>
+ <PageHeader title="Parametres" />
 
  <Card className="max-w-xl space-y-4">
  <div className="flex items-center justify-between">

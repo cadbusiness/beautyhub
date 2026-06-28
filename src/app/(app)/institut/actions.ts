@@ -19,21 +19,68 @@ function eurosToCents(value: FormDataEntryValue | null): number {
 
 // --- Prestations -----------------------------------------------------------
 
+function parseServiceForm(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: "Nom requis." as const };
+
+  const durationMin = Number.parseInt(String(formData.get("duration_min") ?? "30"), 10);
+  if (!Number.isFinite(durationMin) || durationMin < 1) {
+    return { error: "Duree invalide." as const };
+  }
+
+  return {
+    data: {
+      name,
+      description: String(formData.get("description") ?? "").trim() || null,
+      duration_min: durationMin,
+      price_cents: eurosToCents(formData.get("price")),
+      color: String(formData.get("color") ?? "").trim() || null,
+      is_active: formData.get("is_active") === "on",
+      buffer_before_min: Number.parseInt(String(formData.get("buffer_before_min") ?? "0"), 10) || 0,
+      buffer_after_min: Number.parseInt(String(formData.get("buffer_after_min") ?? "0"), 10) || 0,
+      min_advance_hours:
+        Number.parseInt(String(formData.get("min_advance_hours") ?? "0"), 10) || 0,
+      max_advance_days:
+        Number.parseInt(String(formData.get("max_advance_days") ?? "60"), 10) || 60,
+    },
+  };
+}
+
 export async function createService(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
   const session = await requireModule("institut");
+  const parsed = parseServiceForm(formData);
+  if ("error" in parsed) return { error: parsed.error };
+
   const supabase = await createClient();
   const { error } = await supabase.from("inst_services").insert({
     tenant_id: session.tenant.id,
-    name: String(formData.get("name") ?? "").trim(),
-    description: String(formData.get("description") ?? "").trim() || null,
-    duration_min: Number.parseInt(String(formData.get("duration_min") ?? "30"), 10),
-    price_cents: eurosToCents(formData.get("price")),
+    ...parsed.data,
   });
   if (error) return { error: error.message };
   revalidatePath("/institut/prestations");
+  revalidatePath("/institut/caisse");
+  return { ok: true };
+}
+
+export async function updateService(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireModule("institut");
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "Prestation introuvable." };
+
+  const parsed = parseServiceForm(formData);
+  if ("error" in parsed) return { error: parsed.error };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("inst_services").update(parsed.data).eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/institut/prestations");
+  revalidatePath("/institut/caisse");
   return { ok: true };
 }
 
@@ -45,6 +92,7 @@ export async function deleteService(formData: FormData): Promise<void> {
     .delete()
     .eq("id", String(formData.get("id")));
   revalidatePath("/institut/prestations");
+  revalidatePath("/institut/caisse");
 }
 
 // --- Clients ----------------------------------------------------------------

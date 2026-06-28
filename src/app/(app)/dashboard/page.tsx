@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   getRoleForTenant,
   isPlatformAdmin,
@@ -22,10 +23,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Accueil</h1>
-        <p className="text-sm text-slate-500">{tenant?.name}</p>
-      </header>
+      <PageHeader title="Accueil" description={tenant?.name} />
 
       <section className="grid gap-4 md:grid-cols-2">
         <Card>

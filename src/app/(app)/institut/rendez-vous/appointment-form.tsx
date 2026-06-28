@@ -17,18 +17,23 @@ export function AppointmentForm({
   services,
   staff,
   resources = [],
+  onSuccess,
 }: {
   clients: Option[];
   services: Option[];
   staff: Option[];
   resources?: Option[];
+  onSuccess?: () => void;
 }) {
   const [state, action, pending] = useActionState(createAppointment, initial);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state.ok) formRef.current?.reset();
-  }, [state.ok]);
+    if (state.ok) {
+      formRef.current?.reset();
+      onSuccess?.();
+    }
+  }, [state.ok, onSuccess]);
 
   return (
     <form ref={formRef} action={action} className="space-y-4">

@@ -7,13 +7,16 @@ import { Field, Input } from "@/components/ui/input";
 
 const initial: ActionResult = {};
 
-export function ClientForm() {
+export function ClientForm({ onSuccess }: { onSuccess?: () => void }) {
   const [state, action, pending] = useActionState(createClientRecord, initial);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state.ok) formRef.current?.reset();
-  }, [state.ok]);
+    if (state.ok) {
+      formRef.current?.reset();
+      onSuccess?.();
+    }
+  }, [state.ok, onSuccess]);
 
   return (
     <form ref={formRef} action={action} className="space-y-4">

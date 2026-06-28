@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requirePlatformAdmin } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 
 async function count(
  supabase: Awaited<ReturnType<typeof createClient>>,
@@ -33,13 +34,11 @@ export default async function AdminDashboardPage() {
  ];
 
  return (
- <div className="space-y-6">
- <div>
- <h1 className="text-2xl font-semibold text-slate-900">
- Tableau de bord
- </h1>
- <p className="text-sm text-slate-500">Vue d&apos;ensemble de la plateforme.</p>
- </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Tableau de bord"
+        description="Vue d'ensemble de la plateforme."
+      />
 
  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
  {stats.map((s) => (

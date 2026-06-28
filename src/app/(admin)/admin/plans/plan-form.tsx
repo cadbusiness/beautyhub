@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { savePlan, type ActionResult } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/input";
@@ -34,16 +34,26 @@ const FEATURE_FIELDS = [
 export function PlanForm({
  plan,
  modules,
+ onSuccess,
 }: {
  plan?: PlanDefaults;
  modules: { id: string; name: string }[];
+ onSuccess?: () => void;
 }) {
  const [state, action, pending] = useActionState(savePlan, initial);
+ const formRef = useRef<HTMLFormElement>(null);
  const selected = new Set(plan?.modules ?? []);
  const features = plan?.features ?? {};
 
+ useEffect(() => {
+ if (state.ok) {
+ formRef.current?.reset();
+ onSuccess?.();
+ }
+ }, [state.ok, onSuccess]);
+
  return (
- <form action={action} className="space-y-5">
+ <form ref={formRef} action={action} className="space-y-5">
  {plan?.id ? <input type="hidden" name="plan_id" value={plan.id} /> : null}
 
  <div className="grid gap-4 sm:grid-cols-3">

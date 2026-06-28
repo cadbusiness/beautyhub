@@ -146,38 +146,62 @@ export type Database = {
       }
       clients: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          country: string | null
           created_at: string
+          date_of_birth: string | null
           email: string
           full_name: string | null
           id: string
           marketing_opt_in: boolean
           metadata: Json
+          notes: string | null
           password_hash: string | null
           phone: string | null
+          postal_code: string | null
+          tags: string[]
           tenant_id: string
           updated_at: string
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email: string
           full_name?: string | null
           id?: string
           marketing_opt_in?: boolean
           metadata?: Json
+          notes?: string | null
           password_hash?: string | null
           phone?: string | null
+          postal_code?: string | null
+          tags?: string[]
           tenant_id: string
           updated_at?: string
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string
           full_name?: string | null
           id?: string
           marketing_opt_in?: boolean
           metadata?: Json
+          notes?: string | null
           password_hash?: string | null
           phone?: string | null
+          postal_code?: string | null
+          tags?: string[]
           tenant_id?: string
           updated_at?: string
         }

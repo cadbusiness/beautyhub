@@ -173,12 +173,14 @@ export async function createClientRecord(
     throw e;
   }
 
+  const { clientFormFields } = await import("@/lib/institut/clients");
+  const fields = clientFormFields(formData);
+  if (!fields.email) return { error: t("missingFields") };
+
   const supabase = await createClient();
   const { error } = await supabase.from("clients").insert({
     tenant_id: session.tenant.id,
-    email: String(formData.get("email") ?? "").trim().toLowerCase(),
-    full_name: String(formData.get("full_name") ?? "").trim() || null,
-    phone: String(formData.get("phone") ?? "").trim() || null,
+    ...fields,
   });
   if (error) {
     return {
@@ -186,6 +188,35 @@ export async function createClientRecord(
     };
   }
   revalidatePath("/institut/clients");
+  return { ok: true };
+}
+
+export async function updateClientRecord(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const clientId = String(formData.get("client_id") ?? "").trim();
+  if (!clientId) return { error: t("missingFields") };
+
+  const { clientFormFields } = await import("@/lib/institut/clients");
+  const fields = clientFormFields(formData);
+  if (!fields.email) return { error: t("missingFields") };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("clients")
+    .update(fields)
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", clientId);
+  if (error) {
+    return {
+      error: error.code === "23505" ? t("clientEmailExists") : error.message,
+    };
+  }
+  revalidatePath("/institut/clients");
+  revalidatePath(`/institut/clients/${clientId}`);
   return { ok: true };
 }
 

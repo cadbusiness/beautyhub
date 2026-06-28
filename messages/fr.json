@@ -249,7 +249,8 @@
         "great": "Très bonne journée",
         "good": "Bonne dynamique",
         "ok": "Journée correcte",
-        "low": "Journée calme"
+        "low": "Journée calme",
+        "noActivity": "Pas encore d'activité"
       },
       "status": {
         "completed": "Terminés",

@@ -213,9 +213,13 @@ export function DashboardAnalytics({
           />
           <StatCell
             label={t("healthScore")}
-            value={today.healthScore}
+            value={today.healthScore ?? "—"}
             hint={
-              <p className="text-xs text-slate-500">{t(`mood.${today.mood}`)}</p>
+              <p className="text-xs text-slate-500">
+                {today.healthScore === null
+                  ? t("mood.noActivity")
+                  : t(`mood.${today.mood}`)}
+              </p>
             }
           />
           <StatCell label={t("todayAppointments")} value={today.appointmentsScheduled} />

@@ -249,7 +249,8 @@
         "great": "Zeer goede dag",
         "good": "Goede dynamiek",
         "ok": "Correcte dag",
-        "low": "Rustige dag"
+        "low": "Rustige dag",
+        "noActivity": "Nog geen activiteit"
       },
       "status": {
         "completed": "Afgerond",

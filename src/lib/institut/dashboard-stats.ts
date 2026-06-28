@@ -16,7 +16,7 @@ export type DashboardTodaySummary = {
   appointmentsNoShow: number;
   newClients: number;
   cancellationRate: number;
-  healthScore: number;
+  healthScore: number | null;
   mood: HealthMood;
 };
 
@@ -135,20 +135,36 @@ function computeHealthScore(input: {
   cancellationRate: number;
   completed: number;
   cancelled: number;
-}): { score: number; mood: HealthMood } {
-  let score = 65;
+  appointmentsTotal: number;
+  salesCount: number;
+}): { score: number | null; mood: HealthMood } {
+  const hasActivity =
+    input.salesCount > 0 || input.appointmentsTotal > 0 || input.completed > 0;
 
+  if (!hasActivity) {
+    return { score: null, mood: "low" };
+  }
+
+  let score = 50;
+
+  if (input.revenueCents > 0) score += 10;
   if (input.revenueCents > input.previousRevenueCents) score += 15;
-  else if (input.revenueCents > 0 && input.previousRevenueCents === 0) score += 10;
-  else if (input.revenueCents < input.previousRevenueCents) score -= 8;
+  else if (
+    input.revenueCents < input.previousRevenueCents &&
+    input.previousRevenueCents > 0
+  ) {
+    score -= 10;
+  }
 
-  if (input.cancellationRate <= 5) score += 12;
-  else if (input.cancellationRate <= 15) score += 5;
-  else if (input.cancellationRate >= 30) score -= 18;
-  else if (input.cancellationRate >= 20) score -= 10;
+  if (input.completed > 0) score += 10;
+  if (input.completed > input.cancelled) score += 5;
 
-  if (input.completed > input.cancelled) score += 8;
-  if (input.revenueCents > 0) score += 5;
+  if (input.appointmentsTotal > 0) {
+    if (input.cancellationRate <= 5) score += 10;
+    else if (input.cancellationRate <= 15) score += 3;
+    else if (input.cancellationRate >= 30) score -= 15;
+    else if (input.cancellationRate >= 20) score -= 8;
+  }
 
   score = Math.max(0, Math.min(100, score));
 
@@ -410,6 +426,8 @@ function buildTodaySummary(
     cancellationRate: rate,
     completed: appointmentsCompleted,
     cancelled: appointmentsCancelled,
+    appointmentsTotal: appointments.length,
+    salesCount,
   });
 
   return {

@@ -6,7 +6,9 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requirePlatformAdmin } from "@/lib/auth/guards";
-import type { Json } from "@/lib/db/database.types";
+import type { Database, Json } from "@/lib/db/database.types";
+
+type TenantModuleInsert = Database["public"]["Tables"]["tenant_modules"]["Insert"];
 
 export interface ActionResult {
   error?: string;
@@ -60,11 +62,13 @@ async function enablePlanModules(
 ) {
   if (moduleIds.length === 0) return;
   await supabase.from("tenant_modules").upsert(
-    moduleIds.map((module_id) => ({
-      tenant_id: tenantId,
-      module_id,
-      enabled: true,
-    })),
+    moduleIds.map(
+      (module_id): TenantModuleInsert => ({
+        tenant_id: tenantId,
+        module_id,
+        enabled: true,
+      }),
+    ),
     { onConflict: "tenant_id,module_id" },
   );
 }

@@ -1696,7 +1696,6 @@ export type Database = {
           },
         ]
       }
-      }
       inst_booking_flows: {
         Row: {
           config: Json

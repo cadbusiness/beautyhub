@@ -42,15 +42,17 @@ export function NavLink({
       )}
     >
       {icon ? (
-        <NavItemIcon
-          name={icon}
-          className={cn(
-            "transition-colors",
-            active
-              ? "text-slate-900"
-              : "text-slate-400 group-hover:text-slate-600",
-          )}
-        />
+        <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
+          <NavItemIcon
+            name={icon}
+            className={cn(
+              "transition-colors",
+              active
+                ? "text-slate-700"
+                : "text-slate-400 group-hover:text-slate-600",
+            )}
+          />
+        </span>
       ) : null}
       {!collapsed ? (
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">

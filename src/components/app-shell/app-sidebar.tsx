@@ -4,36 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/app-shell/nav-link";
-import { NavIconPanelLeft, NavItemIcon } from "@/components/app-shell/nav-icons";
+import { NavIconPanelLeft } from "@/components/app-shell/nav-icons";
 import type { NavGroup } from "@/modules/registry";
 
 const SIDEBAR_COLLAPSED_KEY = "beautyhub-sidebar-collapsed";
-const SECTION_COLLAPSED_PREFIX = "beautyhub-nav-section-";
 
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn("h-3.5 w-3.5 shrink-0 transition-transform", open && "rotate-180")}
-      aria-hidden
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-}
-
-function sectionMeta(moduleId: string): {
-  titleKey: "institut" | "academie" | null;
-  icon?: string;
-} {
-  if (moduleId === "institut") return { titleKey: "institut", icon: "sparkles" };
-  if (moduleId === "academie") return { titleKey: "academie", icon: "graduation-cap" };
-  return { titleKey: null };
+function sectionTitleKey(moduleId: string): "institut" | "academie" | null {
+  if (moduleId === "institut") return "institut";
+  if (moduleId === "academie") return "academie";
+  return null;
 }
 
 export function AppSidebar({
@@ -47,21 +26,12 @@ export function AppSidebar({
 }) {
   const t = useTranslations("shell");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [sectionCollapsed, setSectionCollapsed] = useState<Record<string, boolean>>(
-    {},
-  );
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1");
-    const sections: Record<string, boolean> = {};
-    for (const group of navGroups) {
-      sections[group.moduleId] =
-        localStorage.getItem(`${SECTION_COLLAPSED_PREFIX}${group.moduleId}`) === "1";
-    }
-    setSectionCollapsed(sections);
     setHydrated(true);
-  }, [navGroups]);
+  }, []);
 
   const flatItems = useMemo(
     () => navGroups.flatMap((group) => group.items),
@@ -76,18 +46,8 @@ export function AppSidebar({
     });
   }
 
-  function toggleSection(moduleId: string) {
-    setSectionCollapsed((prev) => {
-      const next = !prev[moduleId];
-      localStorage.setItem(
-        `${SECTION_COLLAPSED_PREFIX}${moduleId}`,
-        next ? "1" : "0",
-      );
-      return { ...prev, [moduleId]: next };
-    });
-  }
-
   const collapsed = hydrated && sidebarCollapsed;
+  const showSectionTitles = navGroups.length > 1;
 
   return (
     <aside
@@ -97,7 +57,7 @@ export function AppSidebar({
       )}
     >
       <nav
-        className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2 py-3"
+        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-3"
         aria-label={t("sidebar.ariaLabel")}
       >
         <NavLink
@@ -110,7 +70,7 @@ export function AppSidebar({
 
         {collapsed ? (
           <>
-            <div className="my-1 border-t border-slate-100" aria-hidden />
+            <div className="my-1.5 border-t border-slate-100" aria-hidden />
             {flatItems.map((item) => (
               <NavLink
                 key={`${item.moduleId}-${item.href}`}
@@ -129,50 +89,35 @@ export function AppSidebar({
           <>
             <div className="my-2 border-t border-slate-100" aria-hidden />
             {navGroups.map((group, groupIndex) => {
-              const { titleKey, icon } = sectionMeta(group.moduleId);
+              const titleKey = sectionTitleKey(group.moduleId);
               const sectionTitle = titleKey
                 ? t(titleKey)
                 : group.moduleName;
-              const isSectionCollapsed = sectionCollapsed[group.moduleId] ?? false;
 
               return (
                 <div
                   key={group.moduleId}
-                  className={cn(groupIndex > 0 && "mt-3 border-t border-slate-100 pt-3")}
+                  className={cn(groupIndex > 0 && "mt-3")}
                 >
-                  <button
-                    type="button"
-                    onClick={() => toggleSection(group.moduleId)}
-                    className="mb-1 flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-colors hover:bg-slate-50"
-                    aria-expanded={!isSectionCollapsed}
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      {icon ? (
-                        <NavItemIcon name={icon} className="text-slate-400" />
-                      ) : null}
-                      <span className="truncate text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                        {sectionTitle}
-                      </span>
-                    </span>
-                    <ChevronIcon open={!isSectionCollapsed} />
-                  </button>
-
-                  {!isSectionCollapsed ? (
-                    <div className="space-y-0.5">
-                      {group.items.map((item) => (
-                        <NavLink
-                          key={`${item.moduleId}-${item.href}`}
-                          href={item.href}
-                          label={item.label}
-                          exact={item.exact}
-                          icon={item.icon}
-                          indicator={
-                            posOpenHref === item.href ? "dot-green" : undefined
-                          }
-                        />
-                      ))}
-                    </div>
+                  {showSectionTitles ? (
+                    <p className="mb-1 px-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      {sectionTitle}
+                    </p>
                   ) : null}
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => (
+                      <NavLink
+                        key={`${item.moduleId}-${item.href}`}
+                        href={item.href}
+                        label={item.label}
+                        exact={item.exact}
+                        icon={item.icon}
+                        indicator={
+                          posOpenHref === item.href ? "dot-green" : undefined
+                        }
+                      />
+                    ))}
+                  </div>
                 </div>
               );
             })}

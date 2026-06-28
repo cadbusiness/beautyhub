@@ -1,13 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-  cancelAppointment,
-  getCalendarAppointments,
-  moveAppointment,
-} from "../../actions";
+import { cancelAppointment, moveAppointment } from "../../actions";
 import { CalendarToolbar } from "./calendar-toolbar";
 import { StaffFilterRow } from "./staff-filter-row";
 import { DayView, WeekView } from "./week-view";
@@ -23,7 +19,7 @@ import type {
   CalendarViewMode,
   ColumnMode,
 } from "./types";
-import { getRangeForView, parseDateOnly, startOfDay, todayDateString } from "./utils";
+import { parseDateOnly, startOfDay, todayDateString } from "./utils";
 
 type MovePayload = {
   id: string;
@@ -68,38 +64,13 @@ export function CalendarShell({
   const [editAppt, setEditAppt] = useState<CalendarAppointment | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fetchPending, startFetch] = useTransition();
+  const [refreshPending, startRefresh] = useTransition();
   const [actionPending, startAction] = useTransition();
-  const skipInitialFetch = useRef(true);
-
-  const range = useMemo(() => getRangeForView(anchor, viewMode), [anchor, viewMode]);
-
-  const loadAppointments = useCallback(() => {
-    startFetch(async () => {
-      const result = await getCalendarAppointments(
-        range.start.toISOString(),
-        range.end.toISOString(),
-      );
-      if (!result.ok) {
-        setError(result.error || tCal("loadError"));
-        return;
-      }
-      setAppointments(result.appointments as CalendarAppointment[]);
-      setError(null);
-    });
-  }, [range.end, range.start, tCal]);
 
   useEffect(() => {
     setAppointments(initialAppointments);
+    setError(null);
   }, [initialAppointments]);
-
-  useEffect(() => {
-    if (skipInitialFetch.current) {
-      skipInitialFetch.current = false;
-      return;
-    }
-    loadAppointments();
-  }, [loadAppointments]);
 
   const filtered = useMemo(
     () =>
@@ -119,6 +90,12 @@ export function CalendarShell({
     }
     return base;
   }, [columnMode, staffChipFilter, staffColumns, resourceColumns]);
+
+  function refreshCalendar() {
+    startRefresh(() => {
+      router.refresh();
+    });
+  }
 
   function handleAnchorChange(delta: number) {
     setAnchor((prev) => {
@@ -160,8 +137,7 @@ export function CalendarShell({
       }
       setError(null);
       setPopover(null);
-      loadAppointments();
-      router.refresh();
+      refreshCalendar();
     });
   }
 
@@ -178,16 +154,14 @@ export function CalendarShell({
       }
       setError(null);
       setPopover(null);
-      loadAppointments();
-      router.refresh();
+      refreshCalendar();
     });
   }
 
   function handleSaved() {
     setEditAppt(null);
     setPopover(null);
-    loadAppointments();
-    router.refresh();
+    refreshCalendar();
   }
 
   const showStaffChips = viewMode === "day" && columnMode === "staff";
@@ -202,14 +176,14 @@ export function CalendarShell({
         anchor={anchor}
         onAnchorChange={handleAnchorChange}
         onToday={handleToday}
-        onRefresh={loadAppointments}
+        onRefresh={refreshCalendar}
         serviceFilter={serviceFilter}
         onServiceFilterChange={setServiceFilter}
         staffFilter={staffDropdownFilter}
         onStaffFilterChange={setStaffDropdownFilter}
         services={services}
         staff={staff}
-        refreshing={fetchPending}
+        refreshing={refreshPending}
         onNewAppointment={() => setCreateOpen(true)}
       />
 
@@ -291,8 +265,7 @@ export function CalendarShell({
           resources={resources}
           onSuccess={() => {
             setCreateOpen(false);
-            loadAppointments();
-            router.refresh();
+            refreshCalendar();
           }}
         />
       </FormDialog>

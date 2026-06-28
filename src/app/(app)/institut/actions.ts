@@ -10,6 +10,7 @@ import { weekdayMessageKey } from "@/lib/i18n/nav";
 import {
   checkAppointmentConflict,
   fetchAppointmentsInRange,
+  type CalendarAppointmentRow,
   validateStaffSchedule,
 } from "@/lib/institut/slots";
 import {
@@ -485,8 +486,48 @@ export async function moveAppointment(formData: FormData): Promise<ActionResult>
 }
 
 export type CalendarAppointmentsResult =
-  | { ok: true; appointments: Awaited<ReturnType<typeof fetchAppointmentsInRange>> }
+  | { ok: true; appointments: CalendarAppointmentRow[] }
   | { ok: false; error: string };
+
+function serializeCalendarAppointments(rows: CalendarAppointmentRow[]): CalendarAppointmentRow[] {
+  return rows.map((row) => ({
+    id: row.id,
+    starts_at: row.starts_at,
+    ends_at: row.ends_at,
+    status: row.status,
+    notes: row.notes ?? null,
+    price_cents: row.price_cents ?? null,
+    staff_id: row.staff_id ?? null,
+    resource_id: row.resource_id ?? null,
+    service_id: row.service_id ?? null,
+    client_id: row.client_id ?? null,
+    service: row.service
+      ? {
+          name: row.service.name,
+          color: row.service.color ?? null,
+          duration_min: row.service.duration_min,
+        }
+      : null,
+    staff: row.staff
+      ? { full_name: row.staff.full_name, color: row.staff.color ?? null }
+      : null,
+    client: row.client
+      ? {
+          full_name: row.client.full_name ?? null,
+          email: row.client.email,
+          phone: row.client.phone ?? null,
+        }
+      : null,
+    resource: row.resource ? { name: row.resource.name } : null,
+    extras: (row.extras ?? []).map((e) => ({
+      service_id: e.service_id,
+      quantity: e.quantity,
+      name: e.name,
+      price_cents: e.price_cents,
+      duration_min: e.duration_min,
+    })),
+  }));
+}
 
 export async function getCalendarAppointments(
   rangeStart: string,
@@ -501,11 +542,18 @@ export async function getCalendarAppointments(
       new Date(rangeStart),
       new Date(rangeEnd),
     );
-    return { ok: true, appointments };
+    return { ok: true, appointments: serializeCalendarAppointments(appointments) };
   } catch (e) {
+    if (isNextNavigationError(e)) throw e;
     const message = e instanceof Error ? e.message : "calendar_load_failed";
     return { ok: false, error: message };
   }
+}
+
+function isNextNavigationError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null || !("digest" in error)) return false;
+  const digest = String((error as { digest?: string }).digest ?? "");
+  return digest.startsWith("NEXT_REDIRECT") || digest.startsWith("NEXT_NOT_FOUND");
 }
 
 export async function setAppointmentStatus(formData: FormData): Promise<void> {

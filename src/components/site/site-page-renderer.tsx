@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { PublicService } from "@/app/(public)/reserver/actions";
+import type { PublicService } from "@/lib/public/booking-load";
 import type {
   SiteAboutBlock,
   SiteBlock,

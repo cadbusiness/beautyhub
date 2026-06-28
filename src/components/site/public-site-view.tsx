@@ -6,7 +6,7 @@ import {
   type FormattedOpeningDay,
 } from "@/components/site/site-page-renderer";
 import { PublicSiteShell } from "@/components/site/public-site-shell";
-import type { PublicService } from "@/app/(public)/reserver/actions";
+import type { PublicService } from "@/lib/public/booking-load";
 import {
   fetchPublicOpeningHours,
   formatTimeLabel,

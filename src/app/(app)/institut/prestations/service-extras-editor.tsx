@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
-import { loadServiceExtraLinks, saveServiceExtras } from "./extras-actions";
+import { saveServiceExtras } from "./extras-actions";
 import type { ServiceExtraLinkInput } from "@/lib/institut/service-extras-persist";
 import type { ServiceRow } from "./service-dialog";
 
@@ -34,7 +34,18 @@ export function ServiceExtrasEditor({
 
   useEffect(() => {
     if (!serviceId) return;
-    loadServiceExtraLinks(serviceId).then(onLinksChange);
+    let cancelled = false;
+    fetch(`/api/institut/service-extra-links?serviceId=${encodeURIComponent(serviceId)}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("load_failed"))))
+      .then((data: ServiceExtraLinkInput[]) => {
+        if (!cancelled) onLinksChange(data);
+      })
+      .catch(() => {
+        if (!cancelled) onLinksChange([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [serviceId, onLinksChange]);
 
   const available = candidateServices.filter(

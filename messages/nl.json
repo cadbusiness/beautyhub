@@ -1250,6 +1250,7 @@
         "empty": "Geen behandelingen beschikbaar.",
         "durationMin": "{min} min"
       },
+      "loadError": "Gegevens konden niet worden geladen. Probeer opnieuw.",
       "step2": {
         "title": "Kies een behandelaar"
       },

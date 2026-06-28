@@ -46,3 +46,25 @@ export async function loadServiceExtrasCatalog(
     })
     .filter((row): row is ServiceExtraConfig => row !== null);
 }
+
+/** Liens extra ↔ prestation pour l'édition admin. */
+export async function loadServiceExtraLinks(
+  supabase: Db,
+  tenantId: string,
+  serviceId: string,
+): Promise<
+  {
+    extra_service_id: string;
+    min_qty: number;
+    max_qty: number;
+    sort_order: number;
+  }[]
+> {
+  const { data } = await supabase
+    .from("inst_service_extras")
+    .select("extra_service_id, min_qty, max_qty, sort_order")
+    .eq("tenant_id", tenantId)
+    .eq("service_id", serviceId)
+    .order("sort_order");
+  return data ?? [];
+}

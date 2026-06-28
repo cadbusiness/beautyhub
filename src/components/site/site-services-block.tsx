@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils";
-import type { PublicService } from "@/app/(public)/reserver/actions";
+import type { PublicService } from "@/lib/public/booking-load";
 import type { SiteServicesBlock, SiteTemplateId } from "@/lib/institut/site-pages";
 import { Input } from "@/components/ui/input";
 

@@ -1275,6 +1275,7 @@
         "empty": "Aucune prestation disponible.",
         "durationMin": "{min} min"
       },
+      "loadError": "Impossible de charger les données. Réessayez.",
       "step2": {
         "title": "Choisir un praticien"
       },

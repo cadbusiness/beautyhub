@@ -1,17 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import {
-  bookPublicAppointment,
-  loadPublicServices,
-  loadPublicServiceExtras,
-  loadPublicSlots,
-  loadPublicStaff,
-  type PublicService,
-  type PublicSlot,
-  type PublicStaff,
-} from "./actions";
+import { bookPublicAppointment } from "./actions";
+import type { PublicService, PublicSlot, PublicStaff } from "@/lib/public/booking-load";
 import { ExtrasPicker } from "@/components/institut/extras-picker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,12 +14,44 @@ import { totalDurationMin, totalPriceCents } from "@/lib/institut/service-extras
 
 type WizardStep = "service" | "staff" | "extras" | "date" | "slots" | "done";
 
-export function BookingWizard({ initialServiceId = "" }: { initialServiceId?: string }) {
+async function fetchBookingStaff(serviceId: string): Promise<PublicStaff[]> {
+  const res = await fetch(`/api/public/booking?serviceId=${encodeURIComponent(serviceId)}`);
+  if (!res.ok) throw new Error("load_failed");
+  return res.json();
+}
+
+async function fetchBookingExtras(serviceId: string): Promise<ServiceExtraConfig[]> {
+  const res = await fetch(
+    `/api/public/booking?serviceId=${encodeURIComponent(serviceId)}&kind=extras`,
+  );
+  if (!res.ok) throw new Error("load_failed");
+  return res.json();
+}
+
+async function fetchBookingSlots(
+  serviceId: string,
+  date: string,
+  staffId: string,
+  extras: BookingExtraLine[],
+): Promise<PublicSlot[]> {
+  const params = new URLSearchParams({ serviceId, date, staffId });
+  if (extras.length > 0) params.set("extras", JSON.stringify(extras));
+  const res = await fetch(`/api/public/booking?${params}`);
+  if (!res.ok) throw new Error("load_failed");
+  return res.json();
+}
+
+export function BookingWizard({
+  initialServiceId = "",
+  services,
+}: {
+  initialServiceId?: string;
+  services: PublicService[];
+}) {
   const t = useTranslations("public.booking");
   const tCommon = useTranslations("common");
   const format = useFormatter();
   const [step, setStep] = useState<WizardStep>("service");
-  const [services, setServices] = useState<PublicService[]>([]);
   const [staff, setStaff] = useState<PublicStaff[]>([]);
   const [extraCatalog, setExtraCatalog] = useState<ServiceExtraConfig[]>([]);
   const [slots, setSlots] = useState<PublicSlot[]>([]);
@@ -41,16 +65,15 @@ export function BookingWizard({ initialServiceId = "" }: { initialServiceId?: st
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const deepLinked = useRef(false);
 
   useEffect(() => {
-    loadPublicServices().then((list) => {
-      setServices(list);
-      if (initialServiceId && list.some((s) => s.id === initialServiceId)) {
-        pickService(initialServiceId);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on mount with deep link
-  }, []);
+    if (!initialServiceId || deepLinked.current) return;
+    if (!services.some((s) => s.id === initialServiceId)) return;
+    deepLinked.current = true;
+    pickService(initialServiceId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deep link once on mount
+  }, [initialServiceId, services]);
 
   const selectedService = services.find((s) => s.id === serviceId);
   const extrasBeforeTime = selectedService?.extras_step_position === "before_time";
@@ -77,13 +100,17 @@ export function BookingWizard({ initialServiceId = "" }: { initialServiceId?: st
     setSlot(null);
     setExtras([]);
     startTransition(async () => {
-      const [staffList, catalog] = await Promise.all([
-        loadPublicStaff(id),
-        loadPublicServiceExtras(id),
-      ]);
-      setStaff(staffList);
-      setExtraCatalog(catalog);
-      setStep("staff");
+      try {
+        const [staffList, catalog] = await Promise.all([
+          fetchBookingStaff(id),
+          fetchBookingExtras(id),
+        ]);
+        setStaff(staffList);
+        setExtraCatalog(catalog);
+        setStep("staff");
+      } catch {
+        setError(t("loadError"));
+      }
     });
   }
 
@@ -97,9 +124,13 @@ export function BookingWizard({ initialServiceId = "" }: { initialServiceId?: st
     if (!serviceId || !date || !staffId) return;
     const slotExtras = extrasBeforeTime ? extras : [];
     startTransition(async () => {
-      const list = await loadPublicSlots(serviceId, date, staffId, slotExtras);
-      setSlots(list);
-      setStep("slots");
+      try {
+        const list = await fetchBookingSlots(serviceId, date, staffId, slotExtras);
+        setSlots(list);
+        setStep("slots");
+      } catch {
+        setError(t("loadError"));
+      }
     });
   }
 

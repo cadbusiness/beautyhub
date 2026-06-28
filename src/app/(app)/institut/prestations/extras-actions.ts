@@ -8,7 +8,7 @@ import {
   persistServiceExtras,
   type ServiceExtraLinkInput,
 } from "@/lib/institut/service-extras-persist";
-import { loadServiceExtrasCatalog } from "@/lib/institut/service-extras-load";
+import { loadServiceExtrasCatalog, loadServiceExtraLinks as loadServiceExtraLinksQuery } from "@/lib/institut/service-extras-load";
 
 export type { ServiceExtraLinkInput };
 
@@ -23,13 +23,7 @@ export async function loadServiceExtraLinks(
 ): Promise<ServiceExtraLinkInput[]> {
   const session = await requireModule("institut");
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("inst_service_extras")
-    .select("extra_service_id, min_qty, max_qty, sort_order")
-    .eq("tenant_id", session.tenant.id)
-    .eq("service_id", serviceId)
-    .order("sort_order");
-  return data ?? [];
+  return loadServiceExtraLinksQuery(supabase, session.tenant.id, serviceId);
 }
 
 export async function saveServiceExtras(

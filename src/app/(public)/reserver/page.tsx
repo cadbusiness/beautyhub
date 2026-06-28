@@ -92,7 +92,7 @@ export default async function ReserverPage({
         {introBlocks.length > 0 ? (
           <h2 className="mb-4 text-lg font-semibold text-slate-900">{t("wizardTitle")}</h2>
         ) : null}
-        <BookingWizard initialServiceId={initialServiceId ?? ""} />
+        <BookingWizard initialServiceId={initialServiceId ?? ""} services={services} />
       </div>
       {!shell.footerText ? <AppFooter /> : null}
     </PublicSiteShell>

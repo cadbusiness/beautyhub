@@ -4,7 +4,7 @@ import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { loadSitePageForBuilder } from "../../site-actions";
 import { SitePageBuilder } from "../../site-page-builder";
-import type { PublicService } from "@/app/(public)/reserver/actions";
+import type { PublicService } from "@/lib/public/booking-load";
 import type { FormattedOpeningDay } from "@/components/site/site-page-renderer";
 import {
   fetchPublicOpeningHours,

@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { useActionState, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { saveSitePageBuilder, applyPageLayout, uploadSiteGalleryImage, type ActionResult } from "./site-actions";
-import { loadPublicServices, type PublicService } from "@/app/(public)/reserver/actions";
+import type { PublicService } from "@/lib/public/booking-load";
 import {
   layoutVisualStyle,
   layoutsForPageType,
@@ -95,13 +95,6 @@ export function SitePageBuilder({
   const [seoTitle, setSeoTitle] = useState(page.seo_title ?? "");
   const [seoDescription, setSeoDescription] = useState(page.seo_description ?? "");
   const [published, setPublished] = useState(page.is_published);
-  const [services, setServices] = useState<PublicService[]>(previewServices);
-
-  useEffect(() => {
-    if (previewServices.length === 0) {
-      loadPublicServices().then(setServices);
-    }
-  }, [previewServices.length]);
 
   const blocksJson = useMemo(() => JSON.stringify(blocks), [blocks]);
 
@@ -307,7 +300,7 @@ export function SitePageBuilder({
         <SitePageRenderer
           blocks={blocks}
           templateId={previewTemplateId}
-          services={services}
+          services={previewServices}
           scheduleDays={scheduleDays}
           accent="#0f172a"
         />

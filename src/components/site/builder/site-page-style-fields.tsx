@@ -1,10 +1,23 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Field, Input, Select } from "@/components/ui/input";
+import {
+  InspectorColor,
+  InspectorRow,
+  InspectorSection,
+  InspectorSegments,
+  InspectorSlider,
+} from "@/components/site/builder/builder-inspector-primitives";
 import type { SitePageMaxWidth, SitePageStyle } from "@/lib/institut/site-page-style";
 
 type BuilderT = ReturnType<typeof useTranslations<"institut.marketing.website.builder">>;
+
+const MAX_WIDTH_OPTIONS: { value: SitePageMaxWidth; labelKey: string }[] = [
+  { value: "full", labelKey: "maxWidthFull" },
+  { value: "6xl", labelKey: "maxWidth6xl" },
+  { value: "5xl", labelKey: "maxWidth5xl" },
+  { value: "4xl", labelKey: "maxWidth4xl" },
+];
 
 export function SitePageStyleFields({
   style,
@@ -15,97 +28,71 @@ export function SitePageStyleFields({
   onChange: (patch: Partial<SitePageStyle>) => void;
   t: BuilderT;
 }) {
-  const bg = style.backgroundColor ?? "#ffffff";
-
   return (
-    <section className="space-y-3">
-      <div>
-        <h3 className="text-sm font-semibold text-slate-900">{t("pageStyleTitle")}</h3>
-        <p className="mt-0.5 text-xs text-slate-500">{t("pageStyleHint")}</p>
-      </div>
-
-      <Field label={t("backgroundColor")} htmlFor="page_bg">
-        <div className="flex items-center gap-2">
-          <input
+    <div className="-mx-0">
+      <InspectorSection title={t("styleSectionBackground")}>
+        <InspectorRow label={t("backgroundColor")} htmlFor="page_bg">
+          <InspectorColor
             id="page_bg"
-            type="color"
-            value={bg}
-            onChange={(e) => onChange({ backgroundColor: e.target.value })}
-            className="h-9 w-12 cursor-pointer rounded border border-slate-200 bg-white p-0.5"
+            value={style.backgroundColor}
+            clearLabel={t("backgroundClear")}
+            onChange={(value) => onChange({ backgroundColor: value })}
+            onClear={() => onChange({ backgroundColor: null })}
           />
-          <Input
-            value={style.backgroundColor ?? ""}
-            onChange={(e) => onChange({ backgroundColor: e.target.value.trim() || null })}
-            placeholder="#ffffff"
-            className="flex-1"
+        </InspectorRow>
+      </InspectorSection>
+
+      <InspectorSection title={t("styleSectionSpacing")}>
+        <InspectorRow label={t("marginXShort")} htmlFor="page_margin_x">
+          <InspectorSlider
+            id="page_margin_x"
+            value={style.marginX}
+            min={0}
+            max={120}
+            onChange={(marginX) => onChange({ marginX })}
           />
-          <button
-            type="button"
-            onClick={() => onChange({ backgroundColor: null })}
-            className="shrink-0 text-xs text-slate-500 hover:text-slate-800"
-          >
-            {t("backgroundClear")}
-          </button>
-        </div>
-      </Field>
-
-      <Field label={t("marginX")} htmlFor="page_margin_x">
-        <Input
-          id="page_margin_x"
-          type="number"
-          min={0}
-          max={120}
-          value={style.marginX}
-          onChange={(e) => onChange({ marginX: Number(e.target.value) })}
-        />
-      </Field>
-
-      <div className="grid grid-cols-2 gap-2">
-        <Field label={t("paddingX")} htmlFor="page_padding_x">
-          <Input
+        </InspectorRow>
+        <InspectorRow label={t("paddingXShort")} htmlFor="page_padding_x">
+          <InspectorSlider
             id="page_padding_x"
-            type="number"
-            min={0}
-            max={120}
             value={style.paddingX}
-            onChange={(e) => onChange({ paddingX: Number(e.target.value) })}
-          />
-        </Field>
-        <Field label={t("paddingY")} htmlFor="page_padding_y">
-          <Input
-            id="page_padding_y"
-            type="number"
             min={0}
             max={120}
-            value={style.paddingY}
-            onChange={(e) => onChange({ paddingY: Number(e.target.value) })}
+            onChange={(paddingX) => onChange({ paddingX })}
           />
-        </Field>
-      </div>
+        </InspectorRow>
+        <InspectorRow label={t("paddingYShort")} htmlFor="page_padding_y">
+          <InspectorSlider
+            id="page_padding_y"
+            value={style.paddingY}
+            min={0}
+            max={120}
+            onChange={(paddingY) => onChange({ paddingY })}
+          />
+        </InspectorRow>
+      </InspectorSection>
 
-      <Field label={t("maxWidth")} htmlFor="page_max_width">
-        <Select
-          id="page_max_width"
-          value={style.maxWidth}
-          onChange={(e) => onChange({ maxWidth: e.target.value as SitePageMaxWidth })}
-        >
-          <option value="full">{t("maxWidthFull")}</option>
-          <option value="6xl">{t("maxWidth6xl")}</option>
-          <option value="5xl">{t("maxWidth5xl")}</option>
-          <option value="4xl">{t("maxWidth4xl")}</option>
-        </Select>
-      </Field>
-
-      <Field label={t("borderRadius")} htmlFor="page_radius">
-        <Input
-          id="page_radius"
-          type="number"
-          min={0}
-          max={64}
-          value={style.borderRadius}
-          onChange={(e) => onChange({ borderRadius: Number(e.target.value) })}
-        />
-      </Field>
-    </section>
+      <InspectorSection title={t("styleSectionLayout")}>
+        <InspectorRow label={t("maxWidth")}>
+          <InspectorSegments
+            value={style.maxWidth}
+            options={MAX_WIDTH_OPTIONS.map((opt) => ({
+              value: opt.value,
+              label: t(opt.labelKey as "maxWidthFull"),
+            }))}
+            onChange={(maxWidth) => onChange({ maxWidth })}
+          />
+        </InspectorRow>
+        <InspectorRow label={t("borderRadiusShort")} htmlFor="page_radius">
+          <InspectorSlider
+            id="page_radius"
+            value={style.borderRadius}
+            min={0}
+            max={64}
+            onChange={(borderRadius) => onChange({ borderRadius })}
+          />
+        </InspectorRow>
+      </InspectorSection>
+    </div>
   );
 }

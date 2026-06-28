@@ -20,7 +20,7 @@ export function PublicSiteHeader({
 }) {
   return (
     <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 lg:px-6">
+      <div className="flex w-full items-center justify-between gap-4 px-4 py-4 lg:px-6">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -68,7 +68,7 @@ export function PublicSiteShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-full flex-col bg-white">
+    <div className="flex min-h-full w-full flex-col bg-white">
       <PublicSiteHeader
         displayName={shell.displayName}
         logoUrl={shell.logoUrl}
@@ -76,7 +76,7 @@ export function PublicSiteShell({
         navLinks={shell.navLinks}
         activePath={activePath}
       />
-      <main className="flex-1" style={mainStyle}>
+      <main className="w-full flex-1" style={mainStyle}>
         {children}
       </main>
       {shell.footerText ? (

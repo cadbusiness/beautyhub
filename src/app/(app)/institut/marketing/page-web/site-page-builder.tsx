@@ -100,7 +100,7 @@ export function SitePageBuilder({
   }
 
   return (
-    <div className="flex h-dvh flex-col bg-slate-100">
+    <div className="flex h-dvh flex-col bg-white">
       <header className="flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 py-2.5">
         <Link
           href="/institut/marketing/page-web"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { SiteLayoutPickerCard } from "@/components/site/site-page-thumbnail";
 import { SiteBuilderBlockFields } from "@/components/site/builder/site-builder-fields";
@@ -18,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export type BuilderSidebarTab = "block" | "page";
+export type PageSidebarTab = "style" | "layout" | "settings";
 
 const BLOCK_ICONS: Record<SiteBlockType, string> = {
   hero: "▣",
@@ -82,13 +84,26 @@ export function SiteBuilderSidebar({
 }) {
   const t = useTranslations("institut.marketing.website.builder");
   const tCommon = useTranslations("common");
+  const [pageSubTab, setPageSubTab] = useState<PageSidebarTab>("style");
+
+  function handlePageTabClick() {
+    onTabChange("page");
+  }
 
   return (
     <aside className="flex w-80 shrink-0 flex-col border-r border-slate-200 bg-white">
       <div className="flex shrink-0 border-b border-slate-200">
         <SidebarTab active={tab === "block"} onClick={() => onTabChange("block")} label={t("inspectorBlock")} />
-        <SidebarTab active={tab === "page"} onClick={() => onTabChange("page")} label={t("inspectorPage")} />
+        <SidebarTab active={tab === "page"} onClick={handlePageTabClick} label={t("inspectorPage")} />
       </div>
+
+      {tab === "page" ? (
+        <div className="flex shrink-0 border-b border-slate-100 bg-slate-50 px-2 py-1.5">
+          <PageSubTab active={pageSubTab === "style"} onClick={() => setPageSubTab("style")} label={t("pageSubStyle")} />
+          <PageSubTab active={pageSubTab === "layout"} onClick={() => setPageSubTab("layout")} label={t("pageSubLayout")} />
+          <PageSubTab active={pageSubTab === "settings"} onClick={() => setPageSubTab("settings")} label={t("pageSubSettings")} />
+        </div>
+      ) : null}
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {tab === "block" ? (
@@ -168,14 +183,12 @@ export function SiteBuilderSidebar({
               </div>
             </section>
           </div>
-        ) : (
-          <div className="space-y-6 p-4">
-            <SitePageStyleFields
-              style={pageStyle}
-              onChange={onPageStyleChange}
-              t={t}
-            />
-
+        ) : pageSubTab === "style" ? (
+          <div className="p-4">
+            <SitePageStyleFields style={pageStyle} onChange={onPageStyleChange} t={t} />
+          </div>
+        ) : pageSubTab === "layout" ? (
+          <div className="space-y-4 p-4">
             <section className="space-y-2">
               <h3 className="text-sm font-semibold text-slate-900">{t("pageLayout")}</h3>
               <p className="text-xs text-slate-500">{t("pageLayoutHint")}</p>
@@ -192,7 +205,9 @@ export function SiteBuilderSidebar({
                 ))}
               </div>
             </section>
-
+          </div>
+        ) : (
+          <div className="space-y-4 p-4">
             <section className="space-y-3">
               <Field label={t("pageTitle")} htmlFor="builder_title">
                 <Input
@@ -251,6 +266,29 @@ function SidebarTab({
         active
           ? "border-b-2 border-slate-900 text-slate-900"
           : "text-slate-500 hover:text-slate-700",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+function PageSubTab({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition",
+        active ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900",
       )}
     >
       {label}

@@ -28,31 +28,33 @@ export function AccountProfileForm({
   }, [state.ok]);
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="space-y-5">
       <Field label={tCommon("email")} htmlFor="email">
         <Input id="email" name="email" value={email} disabled className="bg-slate-50" />
       </Field>
 
-      <Field label={t("fullName")} htmlFor="full_name">
-        <Input
-          id="full_name"
-          name="full_name"
-          defaultValue={fullName}
-          placeholder={t("fullNamePlaceholder")}
-          autoComplete="name"
-        />
-      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={t("fullName")} htmlFor="full_name">
+          <Input
+            id="full_name"
+            name="full_name"
+            defaultValue={fullName}
+            placeholder={t("fullNamePlaceholder")}
+            autoComplete="name"
+          />
+        </Field>
 
-      <Field label={tCommon("phone")} htmlFor="phone">
-        <Input
-          id="phone"
-          name="phone"
-          type="tel"
-          defaultValue={phone}
-          placeholder={t("phonePlaceholder")}
-          autoComplete="tel"
-        />
-      </Field>
+        <Field label={tCommon("phone")} htmlFor="phone">
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            defaultValue={phone}
+            placeholder={t("phonePlaceholder")}
+            autoComplete="tel"
+          />
+        </Field>
+      </div>
 
       {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
       {state.ok && state.message ? (

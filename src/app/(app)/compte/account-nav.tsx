@@ -17,7 +17,7 @@ export function AccountNav({ items }: { items: AccountNavItem[] }) {
 
   return (
     <nav
-      className="flex shrink-0 gap-1 overflow-x-auto lg:w-44 lg:flex-col lg:overflow-visible"
+      className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-0.5 lg:overflow-visible"
       aria-label={t("ariaLabel")}
     >
       {items.map((item) => {
@@ -32,7 +32,7 @@ export function AccountNav({ items }: { items: AccountNavItem[] }) {
             prefetch
             aria-current={active ? "page" : undefined}
             className={cn(
-              "shrink-0 rounded-lg px-3 py-2 text-sm transition-colors",
+              "shrink-0 rounded-lg px-3 py-2 text-sm transition-colors lg:w-full",
               active
                 ? "bg-slate-100 font-medium text-slate-900"
                 : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",

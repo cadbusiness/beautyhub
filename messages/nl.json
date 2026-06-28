@@ -211,8 +211,9 @@
     "analytics": {
       "title": "Statistieken",
       "description": "Uw activiteit in één oogopslag — cijfers van vandaag en trends.",
-      "healthTitle": "Businessgezondheid vandaag",
-      "healthHint": "Gebaseerd op omzet, afspraken en annuleringspercentage.",
+      "healthTitle": "Vandaag",
+      "healthHint": "Cijfers van vandaag voor uw instituut.",
+      "healthScore": "Activiteitsindex",
       "todayRevenue": "Vandaag gegenereerd",
       "todaySales": "{count, plural, =0 {Geen verkopen} one {# verkoop} other {# verkopen}}",
       "todayAppointments": "Afspraken vandaag",
@@ -245,10 +246,10 @@
       "emptyChart": "Nog geen gegevens voor deze periode.",
       "emptyAppointments": "Geen afspraken in deze periode.",
       "mood": {
-        "great": "Topdag!",
-        "good": "Mooie dynamiek",
-        "ok": "We houden koers",
-        "low": "Rustige dag — morgen is een nieuwe kans"
+        "great": "Zeer goede dag",
+        "good": "Goede dynamiek",
+        "ok": "Correcte dag",
+        "low": "Rustige dag"
       },
       "status": {
         "completed": "Afgerond",

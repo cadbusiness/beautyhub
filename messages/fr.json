@@ -211,8 +211,9 @@
     "analytics": {
       "title": "Statistiques",
       "description": "Votre activité en un coup d'œil — chiffres du jour et tendances.",
-      "healthTitle": "Santé du business aujourd'hui",
-      "healthHint": "Basé sur votre CA, vos RDV et le taux d'annulation.",
+      "healthTitle": "Aujourd'hui",
+      "healthHint": "Chiffres du jour pour votre institut.",
+      "healthScore": "Indice activité",
       "todayRevenue": "Généré aujourd'hui",
       "todaySales": "{count, plural, =0 {Aucune vente} one {# vente} other {# ventes}}",
       "todayAppointments": "RDV du jour",
@@ -245,10 +246,10 @@
       "emptyChart": "Pas encore de données sur cette période.",
       "emptyAppointments": "Aucun rendez-vous sur cette période.",
       "mood": {
-        "great": "Super journée !",
-        "good": "Belle dynamique",
-        "ok": "On garde le cap",
-        "low": "Journée calme — place à demain"
+        "great": "Très bonne journée",
+        "good": "Bonne dynamique",
+        "ok": "Journée correcte",
+        "low": "Journée calme"
       },
       "status": {
         "completed": "Terminés",

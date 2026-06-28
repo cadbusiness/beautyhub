@@ -491,6 +491,12 @@
       },
       "horaires": {
         "description": "Standaard openingstijden van het instituut (gebruikt voor online beschikbaarheid).",
+        "columns": {
+          "day": "Dag",
+          "open": "Open",
+          "hours": "Uren"
+        },
+        "closed": "Gesloten",
         "saved": "Openingstijden opgeslagen.",
         "submit": "Openingstijden opslaan",
         "submitting": "Opslaan…"

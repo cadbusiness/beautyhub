@@ -513,6 +513,12 @@
       },
       "horaires": {
         "description": "Horaires d'ouverture par défaut de l'institut (utilisés pour les disponibilités en ligne).",
+        "columns": {
+          "day": "Jour",
+          "open": "Ouvert",
+          "hours": "Horaires"
+        },
+        "closed": "Fermé",
         "saved": "Horaires enregistrés.",
         "submit": "Enregistrer les horaires",
         "submitting": "Enregistrement…"

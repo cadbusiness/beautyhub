@@ -48,17 +48,16 @@ export default async function CaissePage() {
  const stripeEnabled = Boolean(stripeAccount && stripePublishableKey);
 
  return (
- <div className="space-y-6">
- <div className="flex flex-wrap items-center justify-between gap-3">
- <h1 className="text-2xl font-semibold text-slate-900">Caisse</h1>
+ <div className="space-y-4 px-4 py-4 lg:px-6">
  {connected ? (
+ <div className="flex justify-end">
  <form action={syncWooProducts}>
- <Button variant="outline" type="submit">
+ <Button variant="outline" type="submit" className="h-9">
  Sync WooCommerce
  </Button>
  </form>
- ) : null}
  </div>
+ ) : null}
 
  {!connected && catalog.length === 0 ? (
  <Card className="space-y-3">

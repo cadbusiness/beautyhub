@@ -1,13 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { deleteInternalProduct } from "../../caisse-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
-import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
+import { ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatPrice } from "@/lib/utils";
 import { InternalProductForm } from "./internal-product-form";
@@ -40,21 +39,13 @@ export function ProductsManager({ products }: { products: ProductRow[] }) {
 
   return (
     <>
-      <ListPanel>
-        <ListToolbar
-          action={
-            <div className="flex flex-wrap gap-2">
-              <Link href="/institut/caisse">
-                <Button variant="outline" type="button" className="h-9">
-                  Retour caisse
-                </Button>
-              </Link>
-              <Button onClick={() => setDialogOpen(true)} className="h-9">
-                + Nouveau produit
-              </Button>
-            </div>
-          }
-        >
+      <ListToolbar
+        action={
+          <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
+            + Nouveau produit
+          </Button>
+        }
+      >
           <Input
             type="search"
             placeholder="Recherche nom, SKU..."
@@ -108,7 +99,6 @@ export function ProductsManager({ products }: { products: ProductRow[] }) {
             {query ? ` sur ${products.length}` : ""}
           </ListPanelFooter>
         ) : null}
-      </ListPanel>
 
       <FormDialog
         open={dialogOpen}

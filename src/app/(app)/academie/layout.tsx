@@ -1,4 +1,4 @@
-import { SectionNav } from "@/components/app-shell/section-nav";
+import { SectionPanel } from "@/components/ui/section-panel";
 
 const TABS = [
   { label: "Vue d'ensemble", href: "/academie", exact: true },
@@ -11,10 +11,5 @@ export default function AcademieLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div>
-      <SectionNav items={TABS} />
-      {children}
-    </div>
-  );
+  return <SectionPanel tabs={TABS}>{children}</SectionPanel>;
 }

@@ -1,4 +1,4 @@
-import { SectionNav } from "@/components/app-shell/section-nav";
+import { SectionPanel } from "@/components/ui/section-panel";
 
 const TABS = [
   { label: "Terminal", href: "/institut/caisse", exact: true },
@@ -11,10 +11,5 @@ export default function CaisseLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div>
-      <SectionNav items={TABS} />
-      {children}
-    </div>
-  );
+  return <SectionPanel tabs={TABS}>{children}</SectionPanel>;
 }

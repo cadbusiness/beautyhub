@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
-import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
+import { ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatPrice } from "@/lib/utils";
 import { CourseForm } from "./course-form";
@@ -41,8 +41,7 @@ export function CoursesManager({ courses }: { courses: CourseRow[] }) {
 
   return (
     <>
-      <ListPanel>
-        <ListToolbar
+      <ListToolbar
           action={
             <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
               + Nouvelle formation
@@ -111,7 +110,6 @@ export function CoursesManager({ courses }: { courses: CourseRow[] }) {
             {query ? ` sur ${courses.length}` : ""}
           </ListPanelFooter>
         ) : null}
-      </ListPanel>
 
       <FormDialog
         open={dialogOpen}

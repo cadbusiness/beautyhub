@@ -1,18 +1,30 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAppointmentsInRange } from "@/lib/institut/slots";
 import { Button } from "@/components/ui/button";
+import { ListPanel } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { PageTabLinks } from "@/components/ui/page-tabs";
 import { formatPrice } from "@/lib/utils";
 import { CalendarView, type CalendarAppointment } from "./calendar-view";
 import { AppointmentsList } from "./appointments-list";
+
+const RDV_TABS = [
+  { label: "Calendrier", href: "/institut/rendez-vous", exact: true },
+  { label: "Liste", href: "/institut/rendez-vous?view=liste" },
+];
 
 type Joined = { name?: string; full_name?: string | null; color?: string | null } | null;
 
 function pick(value: Joined | Joined[]): string {
   const v = Array.isArray(value) ? value[0] : value;
   return v?.name ?? v?.full_name ?? "-";
+}
+
+function TabLinksFallback() {
+  return <div className="h-[45px] border-b border-slate-200" aria-hidden />;
 }
 
 export default async function RendezVousPage({
@@ -101,45 +113,35 @@ export default async function RendezVousPage({
   }));
 
   return (
-    <>
-      <div className="-mx-4 border-b border-slate-200 bg-white lg:-mx-6">
-        <ListToolbar
-          action={
-            <div className="flex flex-wrap gap-2">
-              <Link href="/institut/rendez-vous?view=calendrier">
-                <Button variant={view === "calendrier" ? "primary" : "outline"} className="h-9">
-                  Calendrier
-                </Button>
-              </Link>
-              <Link href="/institut/rendez-vous?view=liste">
-                <Button variant={view === "liste" ? "primary" : "outline"} className="h-9">
-                  Liste
-                </Button>
-              </Link>
+    <ListPanel>
+      <Suspense fallback={<TabLinksFallback />}>
+        <PageTabLinks items={RDV_TABS} />
+      </Suspense>
+
+      {view === "calendrier" ? (
+        <>
+          <ListToolbar
+            action={
               <Link href="/reserver" target="_blank">
                 <Button variant="outline" className="h-9">
                   Page publique ↗
                 </Button>
               </Link>
-            </div>
-          }
-        >
-          <span className="text-sm text-slate-500">Rendez-vous</span>
-        </ListToolbar>
-      </div>
-
-      {view === "calendrier" ? (
-        <div className="pt-4">
-          <CalendarView
-          appointments={calendarAppts as CalendarAppointment[]}
-          staffColumns={staffColumns}
-          resourceColumns={resourceColumns}
-          initialDate={now.toISOString().slice(0, 10)}
-          />
-        </div>
+            }
+          >
+            <span className="text-sm text-slate-500">Planning par praticien et cabine</span>
+          </ListToolbar>
+          <div className="px-4 py-4 lg:px-6">
+            <CalendarView
+              appointments={calendarAppts as CalendarAppointment[]}
+              staffColumns={staffColumns}
+              resourceColumns={resourceColumns}
+              initialDate={now.toISOString().slice(0, 10)}
+            />
+          </div>
+        </>
       ) : (
         <AppointmentsList
-          panelClassName="flex-1"
           appointments={appointments}
           clients={clients}
           services={services}
@@ -147,6 +149,6 @@ export default async function RendezVousPage({
           resources={resources}
         />
       )}
-    </>
+    </ListPanel>
   );
 }

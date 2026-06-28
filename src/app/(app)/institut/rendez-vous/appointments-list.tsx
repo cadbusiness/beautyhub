@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/input";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
-import { ListPanel } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { AppointmentForm } from "./appointment-form";
@@ -38,14 +37,12 @@ export function AppointmentsList({
   services,
   staff,
   resources,
-  panelClassName,
 }: {
   appointments: AppointmentRow[];
   clients: Option[];
   services: Option[];
   staff: Option[];
   resources: Option[];
-  panelClassName?: string;
 }) {
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -68,8 +65,7 @@ export function AppointmentsList({
 
   return (
     <>
-      <ListPanel className={panelClassName}>
-        <ListToolbar
+      <ListToolbar
           action={
             <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
               + Nouveau rendez-vous
@@ -138,7 +134,6 @@ export function AppointmentsList({
             </tbody>
           </table>
         </DataTable>
-      </ListPanel>
 
       <FormDialog
         open={dialogOpen}

@@ -32,7 +32,7 @@ export default async function AcademieHome() {
  ];
 
  return (
- <div className="space-y-6">
+ <div className="px-4 py-4 lg:px-6">
  <div className="grid gap-4 sm:grid-cols-3">
  {stats.map((s) => (
  <Link key={s.label} href={s.href}>

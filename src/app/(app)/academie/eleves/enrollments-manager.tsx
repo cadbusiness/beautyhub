@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
-import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
+import { ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { EnrollmentForm } from "./enrollment-form";
 
@@ -56,8 +56,7 @@ export function EnrollmentsManager({
 
   return (
     <>
-      <ListPanel>
-        <ListToolbar
+      <ListToolbar
           action={
             <Button
               onClick={() => setDialogOpen(true)}
@@ -111,7 +110,6 @@ export function EnrollmentsManager({
             {query ? ` sur ${enrollments.length}` : ""}
           </ListPanelFooter>
         ) : null}
-      </ListPanel>
 
       <FormDialog
         open={dialogOpen}

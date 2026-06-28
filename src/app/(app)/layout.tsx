@@ -9,10 +9,10 @@ import {
 import { getAppShellData } from "@/lib/auth/team-session";
 import { ensureDefaultTenant } from "@/lib/tenant/ensure";
 import { navMessageKey } from "@/lib/i18n/nav";
-import { getAiActionsFor, getNavFor } from "@/modules";
+import { getAiActionsFor, getNavGroupsFor } from "@/modules";
 import { AppHeader } from "@/components/app-shell/app-header";
 import { AppFooter } from "@/components/app-shell/app-footer";
-import { NavLink } from "@/components/app-shell/nav-link";
+import { AppSidebar } from "@/components/app-shell/app-sidebar";
 import { AssistantPanel } from "@/components/app-shell/assistant-panel";
 
 export default async function AppLayout({
@@ -29,9 +29,20 @@ export default async function AppLayout({
   if (!shell) redirect("/login");
 
   const { session, accessibleTenants, posSession } = shell;
-  const nav = getNavFor(session.enabledModuleIds, session.role);
   const t = await getTranslations("shell");
   const tNav = await getTranslations("nav");
+  const navGroups = getNavGroupsFor(session.enabledModuleIds, session.role).map(
+    (group) => ({
+      ...group,
+      items: group.items.map((item) => {
+        const labelKey = navMessageKey(item.href);
+        const label = labelKey ? tNav(labelKey) : item.label;
+        return { ...item, label };
+      }),
+    }),
+  );
+  const posOpenHref =
+    posSession ? "/institut/caisse" : undefined;
   const profile = await getTeamProfile();
   const displayName = profileDisplayName(profile, user.email ?? null);
   const initial = profileInitial(displayName);
@@ -60,26 +71,11 @@ export default async function AppLayout({
       />
 
       <div className="flex min-h-0 flex-1">
-        <aside className="flex w-52 shrink-0 flex-col border-r border-slate-200 bg-white py-4 lg:w-56">
-          <nav className="flex-1 space-y-0.5 px-3">
-            <NavLink href="/dashboard" label={t("home")} exact />
-            {nav.map((item) => {
-              const labelKey = navMessageKey(item.href);
-              const label = labelKey ? tNav(labelKey) : item.label;
-              const posOpen =
-                posSession && item.href === "/institut/caisse";
-              return (
-                <NavLink
-                  key={`${item.moduleId}-${item.href}`}
-                  href={item.href}
-                  label={label}
-                  exact={item.exact}
-                  indicator={posOpen ? "dot-green" : undefined}
-                />
-              );
-            })}
-          </nav>
-        </aside>
+        <AppSidebar
+          homeLabel={t("home")}
+          navGroups={navGroups}
+          posOpenHref={posOpenHref}
+        />
 
         <div className="flex min-w-0 flex-1">
           <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">

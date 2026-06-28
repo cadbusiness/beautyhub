@@ -110,7 +110,13 @@
     "footerRights": "Tous droits réservés.",
     "language": "Langue",
     "institut": "Institut",
+    "academie": "Académie",
     "myAccount": "Mon compte",
+    "sidebar": {
+      "ariaLabel": "Navigation principale",
+      "collapse": "Réduire",
+      "expand": "Agrandir le menu"
+    },
     "posSession": {
       "open": "Caisse ouverte",
       "durationJustOpened": "à l'instant",

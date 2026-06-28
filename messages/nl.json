@@ -110,7 +110,13 @@
     "footerRights": "Alle rechten voorbehouden.",
     "language": "Taal",
     "institut": "Instituut",
+    "academie": "Academie",
     "myAccount": "Mijn account",
+    "sidebar": {
+      "ariaLabel": "Hoofdnavigatie",
+      "collapse": "Inklappen",
+      "expand": "Menu uitklappen"
+    },
     "posSession": {
       "open": "Kassa open",
       "durationJustOpened": "zojuist",

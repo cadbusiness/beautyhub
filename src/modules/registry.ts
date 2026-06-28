@@ -1,4 +1,4 @@
-import type { AIAction, ModuleId, ModuleManifest, TeamRole } from "./types";
+import type { AIAction, ModuleId, ModuleManifest, ModuleNavItem, TeamRole } from "./types";
 
 const ROLE_RANK: Record<TeamRole, number> = {
   staff: 1,
@@ -52,14 +52,33 @@ export function getAiActionsFor(
   return actions;
 }
 
+export type NavItemWithModule = ModuleNavItem & { moduleId: ModuleId };
+
+export type NavGroup = {
+  moduleId: ModuleId;
+  moduleName: string;
+  items: NavItemWithModule[];
+};
+
 /** Entrees de navigation pour les modules actives, filtrees par role. */
 export function getNavFor(enabledModuleIds: ModuleId[], role: TeamRole) {
+  return getNavGroupsFor(enabledModuleIds, role).flatMap((g) => g.items);
+}
+
+/** Navigation groupee par module (sidebar). */
+export function getNavGroupsFor(
+  enabledModuleIds: ModuleId[],
+  role: TeamRole,
+): NavGroup[] {
   const enabled = new Set(enabledModuleIds);
   return getAllModules()
     .filter((m) => enabled.has(m.id))
-    .flatMap((m) =>
-      (m.nav ?? [])
+    .map((m) => ({
+      moduleId: m.id,
+      moduleName: m.name,
+      items: (m.nav ?? [])
         .filter((item) => !item.roles || item.roles.includes(role))
         .map((item) => ({ ...item, moduleId: m.id })),
-    );
+    }))
+    .filter((g) => g.items.length > 0);
 }

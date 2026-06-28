@@ -688,6 +688,11 @@
         "createSubmit": "Créer la prestation",
         "editSubmit": "Enregistrer",
         "submitting": "Enregistrement…",
+        "wizard": {
+          "stepOf": "Étape {current} sur {total}",
+          "nameRequired": "Indiquez un nom pour continuer.",
+          "durationRequired": "Indiquez une durée valide (onglet Horaires)."
+        },
         "extras": {
           "hint": "Choisissez d'autres prestations à proposer en upsell avec celle-ci. Chaque extra conserve sa durée et son prix.",
           "stepPosition": "Étape extras dans la réservation",
@@ -705,7 +710,8 @@
           "replace": "Remplacer",
           "remove": "Supprimer",
           "uploading": "Envoi…",
-          "hint": "JPEG, PNG, WebP ou GIF — max 5 Mo. Visible en réservation et caisse."
+          "hint": "JPEG, PNG, WebP ou GIF — max 5 Mo. Visible en réservation et caisse.",
+          "pendingUpload": "Image prête — sera envoyée à la création."
         }
       }
     },

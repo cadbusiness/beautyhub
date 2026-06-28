@@ -27,6 +27,7 @@ export interface ActionResult {
   error?: string;
   warning?: string;
   ok?: boolean;
+  serviceId?: string;
 }
 
 function eurosToCents(value: FormDataEntryValue | null): number {
@@ -80,14 +81,47 @@ export async function createService(
   if ("error" in parsed) return { error: parsed.error };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("inst_services").insert({
-    tenant_id: session.tenant.id,
-    ...parsed.data,
-  });
+  const { data: created, error } = await supabase
+    .from("inst_services")
+    .insert({
+      tenant_id: session.tenant.id,
+      ...parsed.data,
+    })
+    .select("id")
+    .single();
   if (error) return { error: error.message };
+
+  const extrasRaw = String(formData.get("extras_links_json") ?? "").trim();
+  if (extrasRaw && extrasRaw !== "[]") {
+    try {
+      const links = JSON.parse(extrasRaw) as Array<{
+        extra_service_id: string;
+        min_qty: number;
+        max_qty: number;
+        sort_order: number;
+      }>;
+      if (links.length > 0) {
+        const { persistServiceExtras } = await import("@/lib/institut/service-extras-persist");
+        const stepPos =
+          parsed.data.extras_step_position === "before_time" ? "before_time" : "after_time";
+        const extraErr = await persistServiceExtras(
+          supabase,
+          session.tenant.id,
+          created.id,
+          links,
+          stepPos,
+        );
+        if (extraErr) return { error: extraErr };
+      }
+    } catch {
+      return { error: "Extras invalides." };
+    }
+  }
+
   revalidatePath("/institut/prestations");
   revalidatePath("/institut/caisse");
-  return { ok: true };
+  revalidatePath("/reserver");
+  return { ok: true, serviceId: created.id };
 }
 
 export async function updateService(

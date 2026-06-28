@@ -4,66 +4,71 @@ import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
-import {
-  loadServiceExtraLinks,
-  saveServiceExtras,
-  type ServiceExtraLinkInput,
-} from "./extras-actions";
+import { loadServiceExtraLinks, saveServiceExtras } from "./extras-actions";
+import type { ServiceExtraLinkInput } from "@/lib/institut/service-extras-persist";
 import type { ServiceRow } from "./service-dialog";
 
-export function ServiceExtrasTab({
-  service,
+export type ExtrasStepPosition = "before_time" | "after_time";
+
+export function ServiceExtrasEditor({
+  serviceId,
   candidateServices,
+  links,
+  onLinksChange,
+  stepPosition,
+  onStepPositionChange,
+  showSaveButton = false,
 }: {
-  service: ServiceRow;
+  serviceId?: string;
   candidateServices: ServiceRow[];
+  links: ServiceExtraLinkInput[];
+  onLinksChange: (links: ServiceExtraLinkInput[]) => void;
+  stepPosition: ExtrasStepPosition;
+  onStepPositionChange: (pos: ExtrasStepPosition) => void;
+  showSaveButton?: boolean;
 }) {
   const t = useTranslations("institut.services.dialog.extras");
   const tCommon = useTranslations("common");
-  const [links, setLinks] = useState<ServiceExtraLinkInput[]>([]);
-  const [stepPosition, setStepPosition] = useState<"before_time" | "after_time">(
-    (service.extras_step_position === "before_time" ? "before_time" : "after_time"),
-  );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    loadServiceExtraLinks(service.id).then((rows) => {
-      setLinks(rows);
-      setStepPosition(
-        service.extras_step_position === "before_time" ? "before_time" : "after_time",
-      );
-    });
-  }, [service.id, service.extras_step_position]);
+    if (!serviceId) return;
+    loadServiceExtraLinks(serviceId).then(onLinksChange);
+  }, [serviceId, onLinksChange]);
 
-  const available = candidateServices.filter((s) => s.id !== service.id && s.is_active);
+  const available = candidateServices.filter(
+    (s) => s.is_active && (!serviceId || s.id !== serviceId),
+  );
 
   function toggleExtra(extraId: string) {
-    setLinks((prev) => {
-      const exists = prev.find((l) => l.extra_service_id === extraId);
-      if (exists) return prev.filter((l) => l.extra_service_id !== extraId);
-      return [
-        ...prev,
+    const exists = links.find((l) => l.extra_service_id === extraId);
+    if (exists) {
+      onLinksChange(links.filter((l) => l.extra_service_id !== extraId));
+    } else {
+      onLinksChange([
+        ...links,
         {
           extra_service_id: extraId,
           min_qty: 0,
           max_qty: 1,
-          sort_order: prev.length,
+          sort_order: links.length,
         },
-      ];
-    });
+      ]);
+    }
   }
 
   function updateLink(extraId: string, patch: Partial<ServiceExtraLinkInput>) {
-    setLinks((prev) =>
-      prev.map((l) => (l.extra_service_id === extraId ? { ...l, ...patch } : l)),
+    onLinksChange(
+      links.map((l) => (l.extra_service_id === extraId ? { ...l, ...patch } : l)),
     );
   }
 
   function handleSave() {
+    if (!serviceId) return;
     startTransition(async () => {
       setError(null);
-      const res = await saveServiceExtras(service.id, links, stepPosition);
+      const res = await saveServiceExtras(serviceId, links, stepPosition);
       if (res.error) setError(res.error);
     });
   }
@@ -77,7 +82,7 @@ export function ServiceExtrasTab({
           id="extras_step_position"
           value={stepPosition}
           onChange={(e) =>
-            setStepPosition(e.target.value as "before_time" | "after_time")
+            onStepPositionChange(e.target.value as ExtrasStepPosition)
           }
           className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
         >
@@ -155,9 +160,11 @@ export function ServiceExtrasTab({
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-      <Button type="button" disabled={pending} onClick={handleSave}>
-        {pending ? tCommon("saving") : t("saveExtras")}
-      </Button>
+      {showSaveButton && serviceId ? (
+        <Button type="button" disabled={pending} onClick={handleSave}>
+          {pending ? tCommon("saving") : t("saveExtras")}
+        </Button>
+      ) : null}
     </div>
   );
 }

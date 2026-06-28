@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import type { ServiceExtraConfig } from "@/lib/institut/service-extras";
+import {
+  persistServiceExtras,
+  type ServiceExtraLinkInput,
+} from "@/lib/institut/service-extras-persist";
+
+export type { ServiceExtraLinkInput };
 
 export async function loadInstServiceExtras(serviceId: string): Promise<ServiceExtraConfig[]> {
   const session = await requireModule("institut");
@@ -38,13 +44,6 @@ export async function loadInstServiceExtras(serviceId: string): Promise<ServiceE
     });
 }
 
-export interface ServiceExtraLinkInput {
-  extra_service_id: string;
-  min_qty: number;
-  max_qty: number;
-  sort_order: number;
-}
-
 export async function loadServiceExtraLinks(
   serviceId: string,
 ): Promise<ServiceExtraLinkInput[]> {
@@ -67,32 +66,14 @@ export async function saveServiceExtras(
   const session = await requireModule("institut");
   const supabase = await createClient();
 
-  const { error: posError } = await supabase
-    .from("inst_services")
-    .update({ extras_step_position: extrasStepPosition })
-    .eq("id", serviceId)
-    .eq("tenant_id", session.tenant.id);
-  if (posError) return { error: posError.message };
-
-  await supabase
-    .from("inst_service_extras")
-    .delete()
-    .eq("service_id", serviceId)
-    .eq("tenant_id", session.tenant.id);
-
-  if (links.length > 0) {
-    const { error } = await supabase.from("inst_service_extras").insert(
-      links.map((l) => ({
-        tenant_id: session.tenant.id,
-        service_id: serviceId,
-        extra_service_id: l.extra_service_id,
-        min_qty: l.min_qty,
-        max_qty: l.max_qty,
-        sort_order: l.sort_order,
-      })),
-    );
-    if (error) return { error: error.message };
-  }
+  const err = await persistServiceExtras(
+    supabase,
+    session.tenant.id,
+    serviceId,
+    links,
+    extrasStepPosition,
+  );
+  if (err) return { error: err };
 
   revalidatePath("/institut/prestations");
   revalidatePath("/reserver");

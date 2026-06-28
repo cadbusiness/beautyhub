@@ -5,23 +5,37 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { removeServiceImage, uploadServiceImage } from "@/app/(app)/institut/prestations/image-actions";
 
-export function ServiceImageUpload({
+export function ServiceImageField({
   serviceId,
   initialUrl,
-  onUrlChange,
+  onPendingFile,
 }: {
-  serviceId: string;
-  initialUrl: string | null;
-  onUrlChange: (url: string | null) => void;
+  serviceId?: string;
+  initialUrl?: string | null;
+  onPendingFile?: (file: File | null) => void;
 }) {
   const t = useTranslations("institut.services.dialog.image");
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(initialUrl);
+  const [preview, setPreview] = useState<string | null>(initialUrl ?? null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function handleFile(file: File | null) {
-    if (!file) return;
+  function setFile(file: File | null) {
+    setPendingFile(file);
+    onPendingFile?.(file);
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+    } else {
+      setPreview(initialUrl ?? null);
+    }
+  }
+
+  function handleUpload(file: File) {
+    if (!serviceId) {
+      setFile(file);
+      return;
+    }
     setError(null);
     startTransition(async () => {
       const fd = new FormData();
@@ -32,11 +46,17 @@ export function ServiceImageUpload({
         return;
       }
       setPreview(res.url ?? null);
-      onUrlChange(res.url ?? null);
+      setPendingFile(null);
+      onPendingFile?.(null);
     });
   }
 
   function handleRemove() {
+    if (!serviceId) {
+      setFile(null);
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
     setError(null);
     startTransition(async () => {
       const res = await removeServiceImage(serviceId);
@@ -45,10 +65,13 @@ export function ServiceImageUpload({
         return;
       }
       setPreview(null);
-      onUrlChange(null);
+      setPendingFile(null);
+      onPendingFile?.(null);
       if (inputRef.current) inputRef.current.value = "";
     });
   }
+
+  const hasImage = Boolean(preview);
 
   return (
     <div className="space-y-3">
@@ -65,7 +88,7 @@ export function ServiceImageUpload({
         </div>
       )}
 
-      <input type="hidden" name="image_url" value={preview ?? ""} />
+      <input type="hidden" name="image_url" value={serviceId ? (preview ?? "") : ""} />
 
       <div className="flex flex-wrap gap-2">
         <Button
@@ -74,9 +97,9 @@ export function ServiceImageUpload({
           disabled={pending}
           onClick={() => inputRef.current?.click()}
         >
-          {pending ? t("uploading") : preview ? t("replace") : t("upload")}
+          {pending ? t("uploading") : hasImage ? t("replace") : t("upload")}
         </Button>
-        {preview ? (
+        {hasImage ? (
           <Button type="button" variant="ghost" disabled={pending} onClick={handleRemove}>
             {t("remove")}
           </Button>
@@ -88,9 +111,15 @@ export function ServiceImageUpload({
         type="file"
         accept="image/jpeg,image/png,image/webp,image/gif"
         className="hidden"
-        onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+        onChange={(e) => {
+          const file = e.target.files?.[0] ?? null;
+          if (file) handleUpload(file);
+        }}
       />
 
+      {!serviceId && pendingFile ? (
+        <p className="text-xs text-emerald-700">{t("pendingUpload")}</p>
+      ) : null}
       <p className="text-xs text-slate-500">{t("hint")}</p>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>

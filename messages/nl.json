@@ -666,6 +666,11 @@
         "createSubmit": "Behandeling aanmaken",
         "editSubmit": "Opslaan",
         "submitting": "Opslaan…",
+        "wizard": {
+          "stepOf": "Stap {current} van {total}",
+          "nameRequired": "Vul een naam in om verder te gaan.",
+          "durationRequired": "Vul een geldige duur in (tabblad Tijden)."
+        },
         "extras": {
           "hint": "Kies andere behandelingen als upsell bij deze behandeling. Elke extra behoudt duur en prijs.",
           "stepPosition": "Extras-stap in reservering",
@@ -683,7 +688,8 @@
           "replace": "Vervangen",
           "remove": "Verwijderen",
           "uploading": "Uploaden…",
-          "hint": "JPEG, PNG, WebP of GIF — max 5 MB. Zichtbaar bij reservering en kassa."
+          "hint": "JPEG, PNG, WebP of GIF — max 5 MB. Zichtbaar bij reservering en kassa.",
+          "pendingUpload": "Afbeelding klaar — wordt geüpload bij aanmaken."
         }
       }
     },

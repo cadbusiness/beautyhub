@@ -2174,6 +2174,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_active: boolean
           name: string
           version: string
         }
@@ -2182,6 +2183,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id: string
+          is_active?: boolean
           name: string
           version?: string
         }
@@ -2190,6 +2192,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_active?: boolean
           name?: string
           version?: string
         }

@@ -13,6 +13,7 @@ export function NavLink({
   indicator,
   icon,
   collapsed = false,
+  badge,
 }: {
   href: string;
   label: string;
@@ -20,6 +21,7 @@ export function NavLink({
   indicator?: "dot-green";
   icon?: string;
   collapsed?: boolean;
+  badge?: number;
 }) {
   const pathname = usePathname();
   const tPos = useTranslations("shell.posSession");
@@ -57,13 +59,21 @@ export function NavLink({
       {!collapsed ? (
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
           <span className="truncate">{label}</span>
-          {indicator === "dot-green" ? (
+          {badge != null && badge > 0 ? (
+            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-sky-100 px-1.5 text-[10px] font-semibold text-sky-800">
+              {badge > 99 ? "99+" : badge}
+            </span>
+          ) : indicator === "dot-green" ? (
             <span
               className="h-2 w-2 shrink-0 rounded-full bg-green-500 ring-2 ring-green-100"
               title={tPos("navIndicator")}
               aria-hidden
             />
           ) : null}
+        </span>
+      ) : badge != null && badge > 0 ? (
+        <span className="absolute right-1.5 top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sky-100 px-1 text-[9px] font-semibold text-sky-800">
+          {badge > 9 ? "9+" : badge}
         </span>
       ) : indicator === "dot-green" ? (
         <span

@@ -115,6 +115,42 @@ export function NavIconPanelLeft({ className }: IconProps) {
   );
 }
 
+export function NavIconBuilding({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+      <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+      <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+      <path d="M10 6h4" />
+      <path d="M10 10h4" />
+      <path d="M10 14h4" />
+      <path d="M10 18h4" />
+    </Svg>
+  );
+}
+
+export function NavIconLifeBuoy({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="m4.93 4.93 4.24 4.24" />
+      <path d="m14.83 14.83 4.24 4.24" />
+      <path d="m14.83 9.17 4.24-4.24" />
+      <path d="m4.93 19.07 4.24-4.24" />
+    </Svg>
+  );
+}
+
+export function NavIconSettings({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </Svg>
+  );
+}
+
 const NAV_ICON_MAP: Record<string, ComponentType<IconProps>> = {
   home: NavIconHome,
   calendar: NavIconCalendar,
@@ -124,6 +160,9 @@ const NAV_ICON_MAP: Record<string, ComponentType<IconProps>> = {
   cash: NavIconCash,
   chart: NavIconChart,
   "book-open": NavIconBookOpen,
+  building: NavIconBuilding,
+  "life-buoy": NavIconLifeBuoy,
+  settings: NavIconSettings,
 };
 
 export function NavItemIcon({

@@ -152,7 +152,11 @@
     "academieStudents": "Élèves",
     "adminOverview": "Administration",
     "adminTenants": "Instituts",
+    "adminBrands": "Marques",
     "adminPlans": "Formules",
+    "adminSubscriptions": "Abonnements",
+    "adminModules": "Modules",
+    "adminTeam": "Équipe plateforme",
     "adminSupport": "Support",
     "adminSettings": "Réglages"
   },
@@ -1591,7 +1595,8 @@
   },
   "admin": {
     "layout": {
-      "subtitle": "Administration plateforme"
+      "subtitle": "Administration plateforme",
+      "backToApp": "Retour à l'app"
     },
     "dashboard": {
       "title": "Tableau de bord",
@@ -1600,10 +1605,15 @@
         "tenants": "Instituts",
         "activeSubscriptions": "Abonnements actifs",
         "plans": "Formules",
-        "catalogModules": "Modules au catalogue"
+        "catalogModules": "Modules au catalogue",
+        "brands": "Marques",
+        "openTickets": "Tickets ouverts"
       },
       "manageTenants": "Gérer les instituts",
-      "managePlans": "Gérer les formules"
+      "managePlans": "Gérer les formules",
+      "manageSubscriptions": "Voir les abonnements",
+      "manageTeam": "Équipe plateforme",
+      "manageSettings": "Réglages plateforme"
     },
     "tenants": {
       "new": "Nouvel institut",
@@ -1614,8 +1624,19 @@
       "columns": {
         "institut": "Institut",
         "slug": "Identifiant",
+        "brand": "Marque",
         "plan": "Formule",
+        "subscription": "Abonnement",
         "activeModules": "Modules actifs"
+      },
+      "brandFilterHint": "Filtre marque actif.",
+      "clearBrandFilter": "Tout afficher",
+      "footerCount": "{count} institut(s)",
+      "subscriptionStatus": {
+        "trialing": "Essai",
+        "active": "Actif",
+        "past_due": "Impayé",
+        "canceled": "Résilié"
       },
       "form": {
         "name": "Nom de l'institut",
@@ -1632,6 +1653,7 @@
       },
       "detail": {
         "back": "← Instituts",
+        "brandLabel": "Marque",
         "info": "Informations",
         "accessHint": "Accès institut : {slug}.localhost:3000",
         "usage": "Usage rendez-vous",
@@ -1668,6 +1690,7 @@
       },
       "active": "Active",
       "inactive": "Inactive",
+      "footerCount": "{count} formule(s)",
       "form": {
         "namePlaceholder": "Pro",
         "priceEur": "Prix (EUR)",
@@ -1719,10 +1742,12 @@
       "description": "Demandes transmises par les instituts via l'assistant IA.",
       "filterAll": "Toutes",
       "empty": "Aucune demande pour le moment.",
+      "footerCount": "{count} demande(s)",
       "columns": {
         "subject": "Sujet",
         "tenant": "Institut",
-        "status": "Statut"
+        "status": "Statut",
+        "date": "Date"
       },
       "category": {
         "help": "Aide",
@@ -1744,6 +1769,111 @@
         "notes": "Notes internes",
         "save": "Mettre à jour",
         "saving": "Mise à jour…"
+      }
+    },
+    "team": {
+      "invite": "Inviter un super admin",
+      "dialogTitle": "Inviter un super admin",
+      "empty": "Aucun super admin pour le moment.",
+      "revoke": "Révoquer",
+      "you": "Vous",
+      "footerCount": "{count} membre(s)",
+      "invited": "Super admin invité.",
+      "columns": {
+        "email": "Email",
+        "since": "Depuis"
+      },
+      "form": {
+        "email": "Email",
+        "password": "Mot de passe",
+        "submit": "Inviter",
+        "submitting": "Invitation…"
+      },
+      "errors": {
+        "required": "Email et mot de passe requis.",
+        "createUser": "Impossible de créer l'utilisateur.",
+        "selfRevoke": "Vous ne pouvez pas révoquer votre propre accès."
+      }
+    },
+    "subscriptions": {
+      "filterAll": "Tous les statuts",
+      "empty": "Aucun abonnement.",
+      "noPlan": "— Aucune —",
+      "applyPlan": "Appliquer",
+      "applyStatus": "Statut",
+      "footerCount": "{count} abonnement(s)",
+      "columns": {
+        "tenant": "Institut",
+        "plan": "Formule",
+        "status": "Statut",
+        "periodEnd": "Fin période",
+        "actions": "Actions"
+      },
+      "status": {
+        "trialing": "Essai",
+        "active": "Actif",
+        "past_due": "Impayé",
+        "canceled": "Résilié"
+      }
+    },
+    "modules": {
+      "searchPlaceholder": "Recherche module…",
+      "empty": "Aucun module au catalogue.",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "enable": "Activer",
+      "disable": "Désactiver",
+      "updated": "Module mis à jour.",
+      "footerCount": "{count} module(s)",
+      "columns": {
+        "module": "Module",
+        "category": "Catégorie",
+        "version": "Version",
+        "tenants": "Instituts",
+        "status": "Statut"
+      },
+      "form": {
+        "name": "Nom",
+        "description": "Description",
+        "category": "Catégorie",
+        "version": "Version",
+        "isActive": "Module actif dans le catalogue",
+        "submit": "Enregistrer",
+        "submitting": "Enregistrement…"
+      },
+      "errors": {
+        "required": "Identifiant et nom requis."
+      }
+    },
+    "brands": {
+      "new": "Nouvelle marque",
+      "searchPlaceholder": "Recherche marque…",
+      "empty": "Aucune marque.",
+      "dialogTitle": "Nouvelle marque",
+      "platform": "Plateforme",
+      "reseller": "Revendeur",
+      "edit": "Modifier",
+      "created": "Marque créée.",
+      "updated": "Marque mise à jour.",
+      "footerCount": "{count} marque(s)",
+      "columns": {
+        "brand": "Marque",
+        "slug": "Identifiant",
+        "tenants": "Instituts",
+        "type": "Type"
+      },
+      "form": {
+        "name": "Nom",
+        "slug": "Identifiant",
+        "create": "Créer",
+        "submit": "Enregistrer",
+        "submitting": "Enregistrement…"
+      },
+      "errors": {
+        "required": "Nom et identifiant requis.",
+        "slugTaken": "Identifiant « {slug} » déjà pris.",
+        "notFound": "Marque introuvable.",
+        "platformBrand": "La marque plateforme ne peut pas être modifiée."
       }
     }
   },

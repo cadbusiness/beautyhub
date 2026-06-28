@@ -1,9 +1,9 @@
-import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { requirePlatformAdmin } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { Card } from "@/components/ui/card";
+import { ListPanel } from "@/components/ui/list-panel";
 import { PlanForm } from "../plan-form";
 
 export default async function PlanEditPage({
@@ -22,20 +22,22 @@ export default async function PlanEditPage({
       .select("id, name, price_cents, interval, is_active, modules, limits, features")
       .eq("id", id)
       .maybeSingle(),
-    supabase.from("modules").select("id, name").order("name"),
+    supabase.from("modules").select("id, name").eq("is_active", true).order("name"),
   ]);
   if (!plan) notFound();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/admin/plans" className="text-sm text-slate-500 hover:underline">
-          {t("back")}
-        </Link>
-        <h1 className="text-2xl font-semibold text-slate-900">{plan.name}</h1>
+    <ListPanel className="min-h-0 flex-1">
+      <div className="border-b border-slate-200 px-4 py-4 lg:px-6">
+        <div className="flex items-center gap-3">
+          <Link href="/admin/plans" className="text-sm text-slate-500 hover:underline">
+            {t("back")}
+          </Link>
+          <h1 className="text-lg font-semibold text-slate-900">{plan.name}</h1>
+        </div>
       </div>
 
-      <Card>
+      <div className="px-4 py-4 lg:px-6">
         <PlanForm
           modules={modules ?? []}
           plan={{
@@ -49,7 +51,7 @@ export default async function PlanEditPage({
             features: (plan.features as Record<string, boolean>) ?? {},
           }}
         />
-      </Card>
-    </div>
+      </div>
+    </ListPanel>
   );
 }

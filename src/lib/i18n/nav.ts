@@ -19,7 +19,13 @@ const NAV_MESSAGE_KEYS = {
   "/academie/eleves": "academieStudents",
   "/admin": "adminOverview",
   "/admin/tenants": "adminTenants",
+  "/admin/brands": "adminBrands",
   "/admin/plans": "adminPlans",
+  "/admin/subscriptions": "adminSubscriptions",
+  "/admin/modules": "adminModules",
+  "/admin/team": "adminTeam",
+  "/admin/support": "adminSupport",
+  "/admin/settings": "adminSettings",
 } as const;
 
 export type NavMessageKey = (typeof NAV_MESSAGE_KEYS)[keyof typeof NAV_MESSAGE_KEYS];

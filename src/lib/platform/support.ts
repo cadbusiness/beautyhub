@@ -60,10 +60,11 @@ export async function fetchSupportTickets(options?: {
   status?: SupportStatus | "all";
 }): Promise<SupportTicketRow[]> {
   const supabase = await createClient();
+
   let q = supabase
     .from("support_tickets")
     .select(
-      "id, tenant_id, user_id, subject, body, category, status, ai_summary, conversation_excerpt, page_url, admin_notes, created_at, updated_at, tenant:tenants(name, slug)",
+      "id, tenant_id, user_id, subject, body, category, status, ai_summary, conversation_excerpt, page_url, admin_notes, created_at, updated_at",
     )
     .order("created_at", { ascending: false });
 
@@ -71,9 +72,23 @@ export async function fetchSupportTickets(options?: {
     q = q.eq("status", options.status);
   }
 
-  const { data, error } = await q;
-  if (error || !data) return [];
-  return data as SupportTicketRow[];
+  const { data: tickets, error } = await q;
+  if (error || !tickets?.length) return [];
+
+  const tenantIds = [...new Set(tickets.map((t) => t.tenant_id))];
+  const { data: tenants } = await supabase
+    .from("tenants")
+    .select("id, name, slug")
+    .in("id", tenantIds);
+
+  const tenantById = new Map((tenants ?? []).map((t) => [t.id, t]));
+
+  return tickets.map((ticket) => ({
+    ...ticket,
+    category: ticket.category as SupportCategory,
+    status: ticket.status as SupportStatus,
+    tenant: tenantById.get(ticket.tenant_id) ?? null,
+  }));
 }
 
 export async function updateSupportTicket(input: {

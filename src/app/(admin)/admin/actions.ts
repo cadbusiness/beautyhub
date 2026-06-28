@@ -204,6 +204,7 @@ export async function setTenantPlan(formData: FormData): Promise<void> {
     if (plan?.modules) await enablePlanModules(supabase, tenantId, plan.modules);
   }
   revalidatePath(`/admin/tenants/${tenantId}`);
+  revalidatePath("/admin/subscriptions");
 }
 
 export async function toggleTenantModule(formData: FormData): Promise<void> {
@@ -221,6 +222,7 @@ export async function toggleTenantModule(formData: FormData): Promise<void> {
       { onConflict: "tenant_id,module_id" },
     );
   revalidatePath(`/admin/tenants/${tenantId}`);
+  revalidatePath("/admin/subscriptions");
 }
 
 export async function savePlan(
@@ -257,4 +259,166 @@ export async function savePlan(
 
   revalidatePath("/admin/plans");
   redirect("/admin/plans");
+}
+
+export async function setSubscriptionStatus(formData: FormData): Promise<void> {
+  await requirePlatformAdmin();
+  const supabase = await createClient();
+  const tenantId = String(formData.get("tenant_id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!tenantId || !status) return;
+
+  await supabase.from("subscriptions").update({ status }).eq("tenant_id", tenantId);
+  revalidatePath("/admin/subscriptions");
+  revalidatePath(`/admin/tenants/${tenantId}`);
+  revalidatePath("/admin/subscriptions");
+}
+
+export async function createBrand(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requirePlatformAdmin();
+  const t = await getTranslations("admin.brands");
+  const supabase = await createClient();
+
+  const name = String(formData.get("name") ?? "").trim();
+  const slug = slugify(String(formData.get("slug") ?? "") || name);
+  if (!name || !slug) return { error: t("errors.required") };
+
+  const { error } = await supabase.from("brands").insert({ name, slug });
+  if (error) {
+    return {
+      error: error.message.includes("duplicate")
+        ? t("errors.slugTaken", { slug })
+        : error.message,
+    };
+  }
+
+  revalidatePath("/admin/brands");
+  return { ok: true, message: t("created") };
+}
+
+export async function updateBrand(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requirePlatformAdmin();
+  const t = await getTranslations("admin.brands");
+  const supabase = await createClient();
+
+  const id = String(formData.get("brand_id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const slug = slugify(String(formData.get("slug") ?? ""));
+  if (!id || !name || !slug) return { error: t("errors.required") };
+
+  const { data: brand } = await supabase
+    .from("brands")
+    .select("is_platform")
+    .eq("id", id)
+    .maybeSingle();
+  if (!brand) return { error: t("errors.notFound") };
+  if (brand.is_platform) return { error: t("errors.platformBrand") };
+
+  const { error } = await supabase.from("brands").update({ name, slug }).eq("id", id);
+  if (error) {
+    return {
+      error: error.message.includes("duplicate")
+        ? t("errors.slugTaken", { slug })
+        : error.message,
+    };
+  }
+
+  revalidatePath("/admin/brands");
+  return { ok: true, message: t("updated") };
+}
+
+export async function updateModuleCatalog(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requirePlatformAdmin();
+  const t = await getTranslations("admin.modules");
+  const supabase = await createClient();
+
+  const id = String(formData.get("module_id") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim() || null;
+  const category = String(formData.get("category") ?? "").trim() || null;
+  const version = String(formData.get("version") ?? "").trim() || "1.0.0";
+  const isActive = String(formData.get("is_active") ?? "") === "on";
+
+  if (!id || !name) return { error: t("errors.required") };
+
+  const { error } = await supabase
+    .from("modules")
+    .update({ name, description, category, version, is_active: isActive })
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/modules");
+  return { ok: true, message: t("updated") };
+}
+
+export async function toggleModuleActive(formData: FormData): Promise<void> {
+  await requirePlatformAdmin();
+  const supabase = await createClient();
+  const moduleId = String(formData.get("module_id") ?? "");
+  const isActive = String(formData.get("is_active") ?? "") === "true";
+  if (!moduleId) return;
+
+  await supabase.from("modules").update({ is_active: isActive }).eq("id", moduleId);
+  revalidatePath("/admin/modules");
+}
+
+export async function invitePlatformAdmin(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requirePlatformAdmin();
+  const t = await getTranslations("admin.team");
+  const supabase = await createClient();
+
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  if (!email || !password) return { error: t("errors.required") };
+
+  try {
+    const service = createServiceClient();
+    const { data: created, error: uErr } = await service.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+    if (uErr || !created.user) {
+      return { error: uErr?.message ?? t("errors.createUser") };
+    }
+
+    const { error: mErr } = await supabase.from("memberships").insert({
+      user_id: created.user.id,
+      role: "platform_admin",
+    });
+    if (mErr) return { error: mErr.message };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+
+  revalidatePath("/admin/team");
+  return { ok: true, message: t("invited") };
+}
+
+export async function revokePlatformAdmin(formData: FormData): Promise<void> {
+  const session = await requirePlatformAdmin();
+  const t = await getTranslations("admin.team");
+  const membershipId = String(formData.get("membership_id") ?? "");
+  const userId = String(formData.get("user_id") ?? "");
+  if (!membershipId || !userId) return;
+
+  if (userId === session.userId) {
+    throw new Error(t("errors.selfRevoke"));
+  }
+
+  const supabase = await createClient();
+  await supabase.from("memberships").delete().eq("id", membershipId);
+  revalidatePath("/admin/team");
 }

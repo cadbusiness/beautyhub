@@ -6,6 +6,23 @@ import { useTranslations } from "next-intl";
 import { signOut } from "@/app/login/actions";
 import { cn } from "@/lib/utils";
 
+function ChevronIcon({ open, className }: { open: boolean; className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className={cn("h-4 w-4 shrink-0 text-slate-400 transition-transform", open && "rotate-180", className)}
+      aria-hidden
+    >
+      <path
+        fillRule="evenodd"
+        d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.25a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 export function UserMenu({
   email,
   roleText,
@@ -13,6 +30,7 @@ export function UserMenu({
   initial,
   align = "right",
   variant = "header",
+  hideAccountLink = false,
 }: {
   email: string | null;
   roleText: string;
@@ -20,6 +38,7 @@ export function UserMenu({
   initial: string;
   align?: "left" | "right";
   variant?: "header" | "sidebar";
+  hideAccountLink?: boolean;
 }) {
   const t = useTranslations("shell");
   const [open, setOpen] = useState(false);
@@ -40,6 +59,8 @@ export function UserMenu({
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  const dropdownUp = variant === "sidebar";
 
   return (
     <div ref={rootRef} className="relative">
@@ -85,13 +106,18 @@ export function UserMenu({
             {roleText}
           </span>
         </span>
+        <ChevronIcon
+          open={open}
+          className={cn(variant === "header" && "hidden sm:block")}
+        />
       </button>
 
       {open ? (
         <div
           role="menu"
           className={cn(
-            "absolute z-50 mt-2 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg",
+            "absolute z-50 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg",
+            dropdownUp ? "bottom-full mb-2" : "mt-2",
             align === "right" ? "right-0" : "left-0",
           )}
         >
@@ -101,14 +127,16 @@ export function UserMenu({
           </div>
 
           <div className="py-1">
-            <Link
-              href="/compte"
-              onClick={() => setOpen(false)}
-              className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-              role="menuitem"
-            >
-              {t("myAccount")}
-            </Link>
+            {!hideAccountLink ? (
+              <Link
+                href="/compte"
+                onClick={() => setOpen(false)}
+                className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                role="menuitem"
+              >
+                {t("myAccount")}
+              </Link>
+            ) : null}
             <button
               type="button"
               className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"

@@ -152,7 +152,11 @@
     "academieStudents": "Cursisten",
     "adminOverview": "Administratie",
     "adminTenants": "Instituten",
+    "adminBrands": "Merken",
     "adminPlans": "Formules",
+    "adminSubscriptions": "Abonnementen",
+    "adminModules": "Modules",
+    "adminTeam": "Platformteam",
     "adminSupport": "Support",
     "adminSettings": "Instellingen"
   },
@@ -1574,7 +1578,8 @@
   },
   "admin": {
     "layout": {
-      "subtitle": "Platformadministratie"
+      "subtitle": "Platformadministratie",
+      "backToApp": "Terug naar app"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -1583,10 +1588,15 @@
         "tenants": "Instituten",
         "activeSubscriptions": "Actieve abonnementen",
         "plans": "Formules",
-        "catalogModules": "Modules in catalogus"
+        "catalogModules": "Modules in catalogus",
+        "brands": "Merken",
+        "openTickets": "Open tickets"
       },
       "manageTenants": "Instituten beheren",
-      "managePlans": "Formules beheren"
+      "managePlans": "Formules beheren",
+      "manageSubscriptions": "Abonnementen bekijken",
+      "manageTeam": "Platformteam",
+      "manageSettings": "Platforminstellingen"
     },
     "tenants": {
       "new": "Nieuw instituut",
@@ -1597,8 +1607,19 @@
       "columns": {
         "institut": "Instituut",
         "slug": "Identificatie",
+        "brand": "Merk",
         "plan": "Formule",
+        "subscription": "Abonnement",
         "activeModules": "Actieve modules"
+      },
+      "brandFilterHint": "Merkfilter actief.",
+      "clearBrandFilter": "Alles tonen",
+      "footerCount": "{count} institu(u)t(en)",
+      "subscriptionStatus": {
+        "trialing": "Proef",
+        "active": "Actief",
+        "past_due": "Achterstallig",
+        "canceled": "Opgezegd"
       },
       "form": {
         "name": "Naam instituut",
@@ -1615,6 +1636,7 @@
       },
       "detail": {
         "back": "← Instituten",
+        "brandLabel": "Merk",
         "info": "Informatie",
         "accessHint": "Toegang instituut: {slug}.localhost:3000",
         "usage": "Afsprakenverbruik",
@@ -1651,6 +1673,7 @@
       },
       "active": "Actief",
       "inactive": "Inactief",
+      "footerCount": "{count} formule(s)",
       "form": {
         "namePlaceholder": "Pro",
         "priceEur": "Prijs (EUR)",
@@ -1702,10 +1725,12 @@
       "description": "Verzoeken doorgestuurd door instituten via de AI-assistent.",
       "filterAll": "Alle",
       "empty": "Nog geen verzoeken.",
+      "footerCount": "{count} verzoek(en)",
       "columns": {
         "subject": "Onderwerp",
         "tenant": "Instituut",
-        "status": "Status"
+        "status": "Status",
+        "date": "Datum"
       },
       "category": {
         "help": "Hulp",
@@ -1727,6 +1752,111 @@
         "notes": "Interne notities",
         "save": "Bijwerken",
         "saving": "Bijwerken…"
+      }
+    },
+    "team": {
+      "invite": "Super admin uitnodigen",
+      "dialogTitle": "Super admin uitnodigen",
+      "empty": "Nog geen super admins.",
+      "revoke": "Intrekken",
+      "you": "U",
+      "footerCount": "{count} lid/leden",
+      "invited": "Super admin uitgenodigd.",
+      "columns": {
+        "email": "E-mail",
+        "since": "Sinds"
+      },
+      "form": {
+        "email": "E-mail",
+        "password": "Wachtwoord",
+        "submit": "Uitnodigen",
+        "submitting": "Uitnodigen…"
+      },
+      "errors": {
+        "required": "E-mail en wachtwoord verplicht.",
+        "createUser": "Gebruiker aanmaken mislukt.",
+        "selfRevoke": "U kunt uw eigen toegang niet intrekken."
+      }
+    },
+    "subscriptions": {
+      "filterAll": "Alle statussen",
+      "empty": "Geen abonnementen.",
+      "noPlan": "— Geen —",
+      "applyPlan": "Toepassen",
+      "applyStatus": "Status",
+      "footerCount": "{count} abonnement(en)",
+      "columns": {
+        "tenant": "Instituut",
+        "plan": "Formule",
+        "status": "Status",
+        "periodEnd": "Einde periode",
+        "actions": "Acties"
+      },
+      "status": {
+        "trialing": "Proef",
+        "active": "Actief",
+        "past_due": "Achterstallig",
+        "canceled": "Opgezegd"
+      }
+    },
+    "modules": {
+      "searchPlaceholder": "Zoek module…",
+      "empty": "Geen modules in catalogus.",
+      "active": "Actief",
+      "inactive": "Inactief",
+      "enable": "Activeren",
+      "disable": "Deactiveren",
+      "updated": "Module bijgewerkt.",
+      "footerCount": "{count} module(s)",
+      "columns": {
+        "module": "Module",
+        "category": "Categorie",
+        "version": "Versie",
+        "tenants": "Instituten",
+        "status": "Status"
+      },
+      "form": {
+        "name": "Naam",
+        "description": "Beschrijving",
+        "category": "Categorie",
+        "version": "Versie",
+        "isActive": "Module actief in catalogus",
+        "submit": "Opslaan",
+        "submitting": "Opslaan…"
+      },
+      "errors": {
+        "required": "Identificatie en naam verplicht."
+      }
+    },
+    "brands": {
+      "new": "Nieuw merk",
+      "searchPlaceholder": "Zoek merk…",
+      "empty": "Geen merken.",
+      "dialogTitle": "Nieuw merk",
+      "platform": "Platform",
+      "reseller": "Wederverkoper",
+      "edit": "Bewerken",
+      "created": "Merk aangemaakt.",
+      "updated": "Merk bijgewerkt.",
+      "footerCount": "{count} merk(en)",
+      "columns": {
+        "brand": "Merk",
+        "slug": "Identificatie",
+        "tenants": "Instituten",
+        "type": "Type"
+      },
+      "form": {
+        "name": "Naam",
+        "slug": "Identificatie",
+        "create": "Aanmaken",
+        "submit": "Opslaan",
+        "submitting": "Opslaan…"
+      },
+      "errors": {
+        "required": "Naam en identificatie verplicht.",
+        "slugTaken": "Identificatie « {slug} » is al in gebruik.",
+        "notFound": "Merk niet gevonden.",
+        "platformBrand": "Het platformmerk kan niet worden gewijzigd."
       }
     }
   },

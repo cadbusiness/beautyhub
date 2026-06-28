@@ -1,21 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
-import { ListPanel } from "@/components/ui/list-panel";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { paginateItems } from "@/lib/ui/pagination";
 import type { SupportTicketRow, SupportStatus } from "@/lib/platform/support";
 import { updateTicketStatus, type SupportActionResult } from "./actions";
 
 const STATUSES: SupportStatus[] = ["open", "in_progress", "resolved", "closed"];
+const PAGE_SIZE = 12;
 
 export function SupportManager({ tickets }: { tickets: SupportTicketRow[] }) {
   const t = useTranslations("admin.support");
   const [filter, setFilter] = useState<SupportStatus | "all">("open");
-  const [selectedId, setSelectedId] = useState<string | null>(tickets[0]?.id ?? null);
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<SupportTicketRow | null>(null);
   const [, formAction, pending] = useActionState(updateTicketStatus, {} as SupportActionResult);
 
   const filtered = useMemo(() => {
@@ -23,11 +27,15 @@ export function SupportManager({ tickets }: { tickets: SupportTicketRow[] }) {
     return tickets.filter((ticket) => ticket.status === filter);
   }, [tickets, filter]);
 
-  const selected = filtered.find((t) => t.id === selectedId) ?? filtered[0] ?? null;
+  const slice = useMemo(() => paginateItems(filtered, page, PAGE_SIZE), [filtered, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      <ListPanel className="flex-none">
+    <>
+      <ListPanel>
         <ListToolbar>
           <select
             value={filter}
@@ -44,53 +52,73 @@ export function SupportManager({ tickets }: { tickets: SupportTicketRow[] }) {
         </ListToolbar>
 
         <DataTable empty={filtered.length === 0 ? t("empty") : undefined}>
-          <thead>
-            <tr className={dataTableRow}>
-              <th className={dataTableHead}>{t("columns.subject")}</th>
-              <th className={dataTableHead}>{t("columns.tenant")}</th>
-              <th className={dataTableHead}>{t("columns.status")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((ticket) => (
-              <tr
-                key={ticket.id}
-                className={`${dataTableRow} cursor-pointer ${selected?.id === ticket.id ? "bg-slate-50" : ""}`}
-                onClick={() => setSelectedId(ticket.id)}
-              >
-                <td className={dataTableCell}>
-                  <p className="font-medium text-slate-900">{ticket.subject}</p>
-                  <p className="text-xs text-slate-500">{t(`category.${ticket.category}`)}</p>
-                </td>
-                <td className={dataTableCell}>{ticket.tenant?.name ?? "—"}</td>
-                <td className={dataTableCell}>{t(`status.${ticket.status}`)}</td>
+          <table className="w-full text-sm">
+            <thead className="border-b border-slate-200">
+              <tr>
+                <th className={dataTableHead}>{t("columns.subject")}</th>
+                <th className={dataTableHead}>{t("columns.tenant")}</th>
+                <th className={dataTableHead}>{t("columns.status")}</th>
+                <th className={`w-36 ${dataTableHead}`}>{t("columns.date")}</th>
               </tr>
-            ))}
-          </tbody>
+            </thead>
+            <tbody>
+              {slice.items.map((ticket) => (
+                <tr
+                  key={ticket.id}
+                  className={`${dataTableRow} cursor-pointer hover:bg-slate-50`}
+                  onClick={() => setSelected(ticket)}
+                >
+                  <td className={dataTableCell}>
+                    <p className="font-medium text-slate-900">{ticket.subject}</p>
+                    <p className="text-xs text-slate-500">{t(`category.${ticket.category}`)}</p>
+                  </td>
+                  <td className={dataTableCell}>{ticket.tenant?.name ?? "—"}</td>
+                  <td className={dataTableCell}>{t(`status.${ticket.status}`)}</td>
+                  <td className={`text-slate-500 ${dataTableCell}`}>
+                    {new Date(ticket.created_at).toLocaleDateString("fr-FR")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </DataTable>
+
+        {filtered.length > 0 ? (
+          <ListPanelFooter
+            pagination={{
+              page: slice.page,
+              totalPages: slice.totalPages,
+              onPageChange: setPage,
+            }}
+          >
+            {t("footerCount", { count: slice.total })}
+          </ListPanelFooter>
+        ) : null}
       </ListPanel>
 
       {selected ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <div className="space-y-1">
-            <h2 className="text-base font-semibold text-slate-900">{selected.subject}</h2>
+        <FormDialog
+          open
+          onClose={() => setSelected(null)}
+          title={selected.subject}
+          size="lg"
+        >
+          <div className="space-y-4">
             <p className="text-xs text-slate-500">
               {selected.tenant?.name} · {new Date(selected.created_at).toLocaleString("fr-FR")}
             </p>
-          </div>
 
-          {selected.ai_summary ? (
-            <p className="mt-4 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-900">
-              {selected.ai_summary}
-            </p>
-          ) : null}
+            {selected.ai_summary ? (
+              <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-900">
+                {selected.ai_summary}
+              </p>
+            ) : null}
 
-          <div className="mt-4 space-y-3 text-sm text-slate-700">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 {t("detail.message")}
               </p>
-              <p className="mt-1 whitespace-pre-wrap">{selected.body}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{selected.body}</p>
             </div>
 
             {selected.conversation_excerpt ? (
@@ -109,43 +137,43 @@ export function SupportManager({ tickets }: { tickets: SupportTicketRow[] }) {
                 {t("detail.page")}: {selected.page_url}
               </p>
             ) : null}
+
+            <form action={formAction} className="space-y-3 border-t border-slate-100 pt-4">
+              <input type="hidden" name="ticket_id" value={selected.id} />
+              <label className="block text-sm font-medium text-slate-700" htmlFor="status">
+                {t("detail.status")}
+              </label>
+              <select
+                id="status"
+                name="status"
+                defaultValue={selected.status}
+                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
+              >
+                {STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {t(`status.${status}`)}
+                  </option>
+                ))}
+              </select>
+
+              <label className="block text-sm font-medium text-slate-700" htmlFor="admin_notes">
+                {t("detail.notes")}
+              </label>
+              <textarea
+                id="admin_notes"
+                name="admin_notes"
+                defaultValue={selected.admin_notes ?? ""}
+                rows={4}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+              />
+
+              <Button type="submit" disabled={pending}>
+                {pending ? t("detail.saving") : t("detail.save")}
+              </Button>
+            </form>
           </div>
-
-          <form action={formAction} className="mt-5 space-y-3 border-t border-slate-100 pt-5">
-            <input type="hidden" name="ticket_id" value={selected.id} />
-            <label className="block text-sm font-medium text-slate-700" htmlFor="status">
-              {t("detail.status")}
-            </label>
-            <select
-              id="status"
-              name="status"
-              defaultValue={selected.status}
-              className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
-            >
-              {STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {t(`status.${status}`)}
-                </option>
-              ))}
-            </select>
-
-            <label className="block text-sm font-medium text-slate-700" htmlFor="admin_notes">
-              {t("detail.notes")}
-            </label>
-            <textarea
-              id="admin_notes"
-              name="admin_notes"
-              defaultValue={selected.admin_notes ?? ""}
-              rows={4}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-            />
-
-            <Button type="submit" disabled={pending}>
-              {pending ? t("detail.saving") : t("detail.save")}
-            </Button>
-          </form>
-        </div>
+        </FormDialog>
       ) : null}
-    </div>
+    </>
   );
 }

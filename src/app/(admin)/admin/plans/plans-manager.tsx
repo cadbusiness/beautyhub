@@ -1,16 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
-import { ListPanel } from "@/components/ui/list-panel";
+import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatPrice } from "@/lib/utils";
+import { paginateItems } from "@/lib/ui/pagination";
 import { PlanForm } from "./plan-form";
+
+const PAGE_SIZE = 12;
 
 type PlanRow = {
   id: string;
@@ -31,6 +34,7 @@ export function PlansManager({
   const t = useTranslations("admin.plans");
   const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const filtered = useMemo(() => {
@@ -38,6 +42,12 @@ export function PlansManager({
     if (!q) return plans;
     return plans.filter((p) => p.name.toLowerCase().includes(q));
   }, [plans, query]);
+
+  const slice = useMemo(() => paginateItems(filtered, page, PAGE_SIZE), [filtered, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
 
   const emptyMessage = plans.length === 0 ? t("empty") : t("noResults");
 
@@ -71,7 +81,7 @@ export function PlansManager({
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
+              {slice.items.map((p) => (
                 <tr key={p.id} className={dataTableRow}>
                   <td className={dataTableCell}>
                     <Link
@@ -104,16 +114,30 @@ export function PlansManager({
             </tbody>
           </table>
         </DataTable>
+
+        {filtered.length > 0 ? (
+          <ListPanelFooter
+            pagination={{
+              page: slice.page,
+              totalPages: slice.totalPages,
+              onPageChange: setPage,
+            }}
+          >
+            {t("footerCount", { count: slice.total })}
+          </ListPanelFooter>
+        ) : null}
       </ListPanel>
 
-      <FormDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        title={t("dialogTitle")}
-        size="lg"
-      >
-        <PlanForm modules={modules} onSuccess={() => setDialogOpen(false)} />
-      </FormDialog>
+      {dialogOpen ? (
+        <FormDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title={t("dialogTitle")}
+          size="lg"
+        >
+          <PlanForm modules={modules} onSuccess={() => setDialogOpen(false)} />
+        </FormDialog>
+      ) : null}
     </>
   );
 }

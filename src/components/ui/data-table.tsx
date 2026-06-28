@@ -24,7 +24,4 @@ export const dataTableHeadCompact =
   "px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500 lg:px-6";
 
 export const dataTableRow =
-  "transition-colors hover:bg-slate-50/80 odd:bg-white even:bg-slate-50/30";
-
-export const dataTableRowBordered =
   "border-b border-slate-100 transition-colors last:border-b-0 hover:bg-slate-50/70";

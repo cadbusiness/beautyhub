@@ -11,8 +11,9 @@ import {
   dataTableHeadCompact,
   dataTableRow,
 } from "@/components/ui/data-table";
-import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
+import { ListPanel } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { PaginationControls } from "@/components/ui/pagination";
 import { ServiceThumbnail } from "@/components/institut/service-thumbnail";
 import { paginateItems } from "@/lib/ui/pagination";
 import { formatPrice } from "@/lib/utils";
@@ -145,10 +146,29 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
 
   const emptyMessage = services.length === 0 ? t("empty") : t("noResults");
 
+  const countLabel =
+    filtered.length > 0
+      ? `${t("footer", { count: filtered.length })}${
+          filter !== "all" || query
+            ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: services.length })}`
+            : ""
+        }`
+      : undefined;
+
   return (
     <>
       <ListPanel>
         <ListToolbar
+          meta={countLabel}
+          trailing={
+            slice.totalPages > 1 ? (
+              <PaginationControls
+                page={slice.page}
+                totalPages={slice.totalPages}
+                onPageChange={setPage}
+              />
+            ) : undefined
+          }
           action={
             <Button onClick={openCreate} className="h-9 w-full sm:w-auto">
               + {t("new")}
@@ -175,8 +195,8 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
 
         <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
           <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100">
+            <thead className="border-b border-slate-200">
+              <tr>
                 <th className={`w-12 ${dataTableHeadCompact}`} aria-hidden />
                 <th className={dataTableHeadCompact}>{t("columns.title")}</th>
                 <th className={`hidden w-24 sm:table-cell ${dataTableHeadCompact}`}>
@@ -242,21 +262,6 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
             </tbody>
           </table>
         </DataTable>
-
-        {filtered.length > 0 ? (
-          <ListPanelFooter
-            pagination={{
-              page: slice.page,
-              totalPages: slice.totalPages,
-              onPageChange: setPage,
-            }}
-          >
-            {t("footer", { count: filtered.length })}
-            {filter !== "all" || query
-              ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: services.length })}`
-              : ""}
-          </ListPanelFooter>
-        ) : null}
       </ListPanel>
 
       <ServiceDialog

@@ -146,20 +146,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
 
   const emptyMessage = services.length === 0 ? t("empty") : t("noResults");
 
-  const countLabel =
-    filtered.length > 0
-      ? `${t("footer", { count: filtered.length })}${
-          filter !== "all" || query
-            ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: services.length })}`
-            : ""
-        }`
-      : undefined;
-
-  return (
-    <>
-      <ListPanel>
         <ListToolbar
-          meta={countLabel}
           trailing={
             slice.totalPages > 1 ? (
               <PaginationControls

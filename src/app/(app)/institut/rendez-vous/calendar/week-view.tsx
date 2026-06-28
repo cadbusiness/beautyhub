@@ -2,9 +2,16 @@
 
 import { useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import type { CalendarAppointment, CalendarColumn, ColumnMode } from "./types";
+import type {
+  AppointmentCreateDraft,
+  CalendarAppointment,
+  CalendarColumn,
+  ColumnMode,
+} from "./types";
 import { addDays, isSameDay, startOfDay, startOfWeek } from "./utils";
-import { TimeGrid } from "./time-grid";
+import { TimeGrid, type SlotClickPayload } from "./time-grid";
+import { HOUR_START, SLOT_MINUTES } from "./types";
+import { minutesToIso } from "./utils";
 
 type MovePayload = {
   id: string;
@@ -21,6 +28,7 @@ export function DayView({
   appointments,
   onSelect,
   onMove,
+  onSlotClick,
   movePending,
 }: {
   anchor: Date;
@@ -29,6 +37,7 @@ export function DayView({
   appointments: CalendarAppointment[];
   onSelect: (appt: CalendarAppointment, el: HTMLElement) => void;
   onMove: (payload: MovePayload) => void;
+  onSlotClick?: (draft: AppointmentCreateDraft) => void;
   movePending?: boolean;
 }) {
   const t = useTranslations("appointments.calendar");
@@ -48,6 +57,16 @@ export function DayView({
     );
   }
 
+  function handleSlotClick({ columnId, slotIndex }: SlotClickPayload) {
+    if (!onSlotClick) return;
+    const minutes = HOUR_START * 60 + slotIndex * SLOT_MINUTES;
+    onSlotClick({
+      startsAt: minutesToIso(baseDay, minutes),
+      staffId: columnMode === "staff" ? columnId : null,
+      resourceId: columnMode === "resource" ? columnId : null,
+    });
+  }
+
   return (
     <TimeGrid
       columns={columns}
@@ -58,6 +77,7 @@ export function DayView({
       }
       onSelect={onSelect}
       onMove={onMove}
+      onSlotClick={onSlotClick ? handleSlotClick : undefined}
       movePending={movePending}
     />
   );
@@ -68,12 +88,14 @@ export function WeekView({
   appointments,
   onSelect,
   onMove,
+  onSlotClick,
   movePending,
 }: {
   anchor: Date;
   appointments: CalendarAppointment[];
   onSelect: (appt: CalendarAppointment, el: HTMLElement) => void;
   onMove: (payload: MovePayload) => void;
+  onSlotClick?: (draft: AppointmentCreateDraft) => void;
   movePending?: boolean;
 }) {
   const format = useFormatter();
@@ -97,6 +119,13 @@ export function WeekView({
     [appointments, weekStart],
   );
 
+  function handleSlotClick({ columnId, slotIndex }: SlotClickPayload) {
+    if (!onSlotClick) return;
+    const minutes = HOUR_START * 60 + slotIndex * SLOT_MINUTES;
+    const day = startOfDay(new Date(columnId));
+    onSlotClick({ startsAt: minutesToIso(day, minutes) });
+  }
+
   return (
     <TimeGrid
       columns={columns}
@@ -105,6 +134,7 @@ export function WeekView({
       matchColumn={(a, colId) => isSameDay(new Date(a.starts_at), new Date(colId))}
       onSelect={onSelect}
       onMove={onMove}
+      onSlotClick={onSlotClick ? handleSlotClick : undefined}
       movePending={movePending}
     />
   );

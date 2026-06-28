@@ -1,16 +1,22 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { CalendarAppointment } from "./types";
-
-export type ColumnKind = "staff" | "resource" | "day";
 import { HOUR_END, HOUR_START, SLOT_MINUTES, SLOT_PX } from "./types";
 import { gridHeightPx, slotCount } from "./utils";
 import { AppointmentBlock } from "./appointment-block";
+
+export type ColumnKind = "staff" | "resource" | "day";
 
 export interface TimeGridColumn {
   id: string;
   label: string;
   color?: string | null;
+}
+
+export interface SlotClickPayload {
+  columnId: string;
+  slotIndex: number;
 }
 
 type MovePayload = {
@@ -28,6 +34,7 @@ export function TimeGrid({
   matchColumn,
   onSelect,
   onMove,
+  onSlotClick,
   movePending,
 }: {
   columns: TimeGridColumn[];
@@ -36,8 +43,10 @@ export function TimeGrid({
   matchColumn: (appt: CalendarAppointment, columnId: string) => boolean;
   onSelect: (appt: CalendarAppointment, el: HTMLElement) => void;
   onMove: (payload: MovePayload) => void;
+  onSlotClick?: (payload: SlotClickPayload) => void;
   movePending?: boolean;
 }) {
+  const t = useTranslations("appointments.calendar");
   const slots = slotCount();
   const height = gridHeightPx();
 
@@ -85,9 +94,13 @@ export function TimeGrid({
             style={{ height }}
           >
             {Array.from({ length: slots }, (_, i) => (
-              <div
+              <button
                 key={i}
-                className={cnSlotBorder(i)}
+                type="button"
+                title={onSlotClick ? t("slotClickHint") : undefined}
+                disabled={!onSlotClick || movePending}
+                onClick={() => onSlotClick?.({ columnId: col.id, slotIndex: i })}
+                className={cnSlotBorder(i, Boolean(onSlotClick))}
                 style={{ height: SLOT_PX }}
               />
             ))}
@@ -111,9 +124,14 @@ export function TimeGrid({
   );
 }
 
-function cnSlotBorder(index: number): string {
+function cnSlotBorder(index: number, clickable: boolean): string {
   const minuteSlot = index % (60 / SLOT_MINUTES);
-  return minuteSlot === 0
-    ? "border-b border-slate-200"
-    : "border-b border-slate-100/80";
+  const border =
+    minuteSlot === 0 ? "border-b border-slate-200" : "border-b border-slate-100/80";
+  if (!clickable) return `block w-full ${border}`;
+  return [
+    "block w-full",
+    border,
+    "cursor-pointer transition-colors hover:bg-slate-100/90 focus-visible:bg-slate-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-slate-300",
+  ].join(" ");
 }

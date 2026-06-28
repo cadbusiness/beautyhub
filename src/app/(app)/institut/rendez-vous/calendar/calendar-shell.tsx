@@ -13,6 +13,7 @@ import { AppointmentEditDialog } from "./appointment-edit-dialog";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { AppointmentForm } from "../appointment-form";
 import type {
+  AppointmentCreateDraft,
   CalendarAppointment,
   CalendarColumn,
   CalendarOption,
@@ -63,6 +64,7 @@ export function CalendarShell({
   } | null>(null);
   const [editAppt, setEditAppt] = useState<CalendarAppointment | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createDraft, setCreateDraft] = useState<AppointmentCreateDraft | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshPending, startRefresh] = useTransition();
   const [actionPending, startAction] = useTransition();
@@ -116,6 +118,20 @@ export function CalendarShell({
 
   function handleSelect(appt: CalendarAppointment, el: HTMLElement) {
     setPopover({ appt, rect: el.getBoundingClientRect() });
+  }
+
+  function openCreateDialog(draft: AppointmentCreateDraft | null = null) {
+    setCreateDraft(draft);
+    setCreateOpen(true);
+  }
+
+  function closeCreateDialog() {
+    setCreateOpen(false);
+    setCreateDraft(null);
+  }
+
+  function handleSlotClick(draft: AppointmentCreateDraft) {
+    openCreateDialog(draft);
   }
 
   function handleMove(payload: MovePayload) {
@@ -184,7 +200,7 @@ export function CalendarShell({
         services={services}
         staff={staff}
         refreshing={refreshPending}
-        onNewAppointment={() => setCreateOpen(true)}
+        onNewAppointment={() => openCreateDialog()}
       />
 
       {showStaffChips ? (
@@ -209,6 +225,7 @@ export function CalendarShell({
           appointments={filtered}
           onSelect={handleSelect}
           onMove={handleMove}
+          onSlotClick={handleSlotClick}
           movePending={actionPending}
         />
       ) : null}
@@ -219,6 +236,7 @@ export function CalendarShell({
           appointments={filtered}
           onSelect={handleSelect}
           onMove={handleMove}
+          onSlotClick={handleSlotClick}
           movePending={actionPending}
         />
       ) : null}
@@ -254,18 +272,24 @@ export function CalendarShell({
 
       <FormDialog
         open={createOpen}
-        onClose={() => setCreateOpen(false)}
+        onClose={closeCreateDialog}
         title={tCal("dialogTitle")}
         size="lg"
       >
         {createOpen ? (
           <AppointmentForm
+            key={
+              createDraft
+                ? `${createDraft.startsAt}-${createDraft.staffId ?? ""}-${createDraft.resourceId ?? ""}`
+                : "blank"
+            }
+            draft={createDraft ?? undefined}
             clients={clients}
             services={services}
             staff={staff}
             resources={resources}
             onSuccess={() => {
-              setCreateOpen(false);
+              closeCreateDialog();
               refreshCalendar();
             }}
           />

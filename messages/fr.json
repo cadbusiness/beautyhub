@@ -390,6 +390,7 @@
       "retry": "Réessayer",
       "newAppointment": "Nouveau RDV",
       "dialogTitle": "Nouveau rendez-vous",
+      "slotClickHint": "Cliquer pour créer un rendez-vous",
       "emptyStaff": "Ajoute du personnel dans Équipe pour afficher le calendrier.",
       "emptyResources": "Ajoute des cabines dans Équipe pour afficher le calendrier.",
       "monthAppointments": "{count, plural, one {# RDV} other {# RDV}}",

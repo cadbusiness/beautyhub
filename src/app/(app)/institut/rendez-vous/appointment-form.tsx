@@ -49,6 +49,7 @@ function toDatetimeLocal(iso: string): string {
 export function AppointmentForm({
   mode = "create",
   appointment,
+  draft,
   clients,
   services,
   staff,
@@ -57,6 +58,11 @@ export function AppointmentForm({
 }: {
   mode?: "create" | "edit";
   appointment?: CalendarAppointment;
+  draft?: {
+    startsAt?: string;
+    staffId?: string | null;
+    resourceId?: string | null;
+  };
   clients: Option[];
   services: ServiceOption[];
   staff: Option[];
@@ -219,7 +225,7 @@ export function AppointmentForm({
         <Select
           id="staff_id"
           name="staff_id"
-          defaultValue={appointment?.staff_id ?? ""}
+          defaultValue={appointment?.staff_id ?? draft?.staffId ?? ""}
         >
           <option value="">{t("anyStaff")}</option>
           {staff.map((s) => (
@@ -234,7 +240,7 @@ export function AppointmentForm({
           <Select
             id="resource_id"
             name="resource_id"
-            defaultValue={appointment?.resource_id ?? ""}
+            defaultValue={appointment?.resource_id ?? draft?.resourceId ?? ""}
           >
             <option value="">{t("noResource")}</option>
             {resources.map((r) => (
@@ -252,7 +258,11 @@ export function AppointmentForm({
           type="datetime-local"
           required
           defaultValue={
-            appointment ? toDatetimeLocal(appointment.starts_at) : undefined
+            appointment
+              ? toDatetimeLocal(appointment.starts_at)
+              : draft?.startsAt
+                ? toDatetimeLocal(draft.startsAt)
+                : undefined
           }
         />
       </Field>

@@ -163,7 +163,7 @@ export function AppointmentBlock({
         setDragTop(null);
       }}
       className={cn(
-        "absolute left-1 right-1 overflow-hidden rounded-md border border-slate-200 bg-white px-2 py-1 text-left text-xs shadow-sm transition-shadow hover:shadow-md",
+        "absolute left-1 right-1 z-10 overflow-hidden rounded-md border border-slate-200 bg-white px-2 py-1 text-left text-xs shadow-sm transition-shadow hover:shadow-md",
         cancelled && "opacity-50",
         dragTop !== null && "z-20 ring-2 ring-slate-400",
       )}

@@ -40,6 +40,13 @@ export interface CalendarOption {
   label: string;
 }
 
+/** Préremplissage du formulaire après clic sur un créneau vide. */
+export interface AppointmentCreateDraft {
+  startsAt: string;
+  staffId?: string | null;
+  resourceId?: string | null;
+}
+
 export interface WorkingHourRow {
   weekday: number;
   start_time: string;

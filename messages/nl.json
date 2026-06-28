@@ -390,6 +390,7 @@
       "retry": "Opnieuw proberen",
       "newAppointment": "Nieuwe afspraak",
       "dialogTitle": "Nieuwe afspraak",
+      "slotClickHint": "Klik om een afspraak te maken",
       "emptyStaff": "Voeg personeel toe in Team om de kalender te tonen.",
       "emptyResources": "Voeg cabines toe in Team om de kalender te tonen.",
       "monthAppointments": "{count, plural, one {# afspr.} other {# afspr.}}",

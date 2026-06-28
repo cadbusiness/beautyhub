@@ -1,5 +1,9 @@
 import type { SiteBlock, SiteBlockType } from "@/lib/institut/site-pages";
 
+function col(id: string, heading: string, body: string) {
+  return { id, heading, body };
+}
+
 export function createSiteBlock(type: SiteBlockType): SiteBlock {
   const id = crypto.randomUUID();
   switch (type) {
@@ -14,6 +18,33 @@ export function createSiteBlock(type: SiteBlockType): SiteBlock {
       };
     case "about":
       return { id, type, title: "À propos", body: "Texte de présentation…" };
+    case "text":
+      return { id, type, heading: "", body: "Votre texte ici…", align: "left" };
+    case "image":
+      return {
+        id,
+        type,
+        imageUrl: "",
+        caption: "",
+        alt: "",
+        linkHref: "",
+        width: "full",
+      };
+    case "columns":
+      return {
+        id,
+        type,
+        title: "",
+        columnCount: 2,
+        columns: [
+          col(crypto.randomUUID(), "Colonne 1", "Contenu…"),
+          col(crypto.randomUUID(), "Colonne 2", "Contenu…"),
+        ],
+      };
+    case "spacer":
+      return { id, type, height: 32 };
+    case "divider":
+      return { id, type, style: "line" };
     case "services":
       return {
         id,

@@ -3,12 +3,17 @@ import type { PublicService } from "@/lib/public/booking-load";
 import type {
   SiteAboutBlock,
   SiteBlock,
+  SiteColumnsBlock,
   SiteContactBlock,
   SiteCtaBlock,
+  SiteDividerBlock,
   SiteGalleryBlock,
   SiteHeroBlock,
   SiteHoursBlock,
+  SiteImageBlock,
   SiteServicesBlock,
+  SiteSpacerBlock,
+  SiteTextBlock,
   SiteTemplateId,
 } from "@/lib/institut/site-pages";
 import { normalizeHoursBlock, normalizeServicesBlock } from "@/lib/institut/site-pages";
@@ -233,6 +238,89 @@ function CtaBlock({
   );
 }
 
+function TextBlock({ block }: { block: SiteTextBlock }) {
+  return (
+    <section className="px-4 py-8 lg:px-6">
+      <div className={`mx-auto max-w-5xl ${block.align === "center" ? "text-center" : "text-left"}`}>
+        {block.heading ? (
+          <h2 className="text-2xl font-semibold text-slate-900">{block.heading}</h2>
+        ) : null}
+        <p className={`whitespace-pre-wrap text-slate-600 leading-relaxed ${block.heading ? "mt-3" : ""}`}>
+          {block.body}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function ImageBlock({ block }: { block: SiteImageBlock }) {
+  const widthClass =
+    block.width === "small" ? "max-w-md" : block.width === "medium" ? "max-w-2xl" : "max-w-5xl";
+  const img = block.imageUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={block.imageUrl}
+      alt={block.alt || block.caption || ""}
+      className="w-full rounded-lg object-cover"
+    />
+  ) : (
+    <div className="flex aspect-[16/9] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">
+      Image
+    </div>
+  );
+
+  return (
+    <section className="px-4 py-8 lg:px-6">
+      <figure className={`mx-auto ${widthClass}`}>
+        {block.linkHref ? (
+          <a href={block.linkHref}>{img}</a>
+        ) : (
+          img
+        )}
+        {block.caption ? (
+          <figcaption className="mt-2 text-center text-sm text-slate-500">{block.caption}</figcaption>
+        ) : null}
+      </figure>
+    </section>
+  );
+}
+
+function ColumnsBlock({ block }: { block: SiteColumnsBlock }) {
+  const cols =
+    block.columnCount === 3 ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1 md:grid-cols-2";
+
+  return (
+    <section className="px-4 py-10 lg:px-6">
+      <div className="mx-auto max-w-5xl">
+        {block.title ? <h2 className="mb-6 text-2xl font-semibold text-slate-900">{block.title}</h2> : null}
+        <div className={`grid gap-6 ${cols}`}>
+          {block.columns.slice(0, block.columnCount).map((col) => (
+            <div key={col.id} className="rounded-lg border border-slate-100 bg-slate-50/50 p-4">
+              {col.heading ? <h3 className="font-semibold text-slate-900">{col.heading}</h3> : null}
+              <p className={`whitespace-pre-wrap text-sm text-slate-600 leading-relaxed ${col.heading ? "mt-2" : ""}`}>
+                {col.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SpacerBlock({ block }: { block: SiteSpacerBlock }) {
+  return <div aria-hidden style={{ height: block.height }} />;
+}
+
+function DividerBlock({ block }: { block: SiteDividerBlock }) {
+  if (block.style === "space") return <div className="py-6" aria-hidden />;
+  return (
+    <div className="px-4 py-4 lg:px-6">
+      <hr className="mx-auto max-w-5xl border-slate-200" />
+    </div>
+  );
+}
+
 export function SitePageRenderer({
   blocks,
   templateId,
@@ -264,6 +352,16 @@ export function SitePageRenderer({
             );
           case "about":
             return <AboutBlock key={block.id} block={block} template={templateId} />;
+          case "text":
+            return <TextBlock key={block.id} block={block} />;
+          case "image":
+            return <ImageBlock key={block.id} block={block} />;
+          case "columns":
+            return <ColumnsBlock key={block.id} block={block} />;
+          case "spacer":
+            return <SpacerBlock key={block.id} block={block} />;
+          case "divider":
+            return <DividerBlock key={block.id} block={block} />;
           case "services":
             return (
               <SiteServicesBlockView

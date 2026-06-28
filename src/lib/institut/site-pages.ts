@@ -1,7 +1,19 @@
 export type SitePageType = "home" | "booking" | "catalog" | "contact";
 export type SiteTemplateId = "elegant" | "modern";
 
-export type SiteBlockType = "hero" | "about" | "services" | "cta" | "hours" | "gallery" | "contact";
+export type SiteBlockType =
+  | "hero"
+  | "about"
+  | "text"
+  | "services"
+  | "cta"
+  | "hours"
+  | "gallery"
+  | "contact"
+  | "image"
+  | "columns"
+  | "spacer"
+  | "divider";
 
 export interface SiteGalleryImage {
   id: string;
@@ -45,6 +57,45 @@ export interface SiteAboutBlock extends SiteBlockBase {
   body: string;
 }
 
+export interface SiteTextBlock extends SiteBlockBase {
+  type: "text";
+  heading: string;
+  body: string;
+  align: "left" | "center";
+}
+
+export interface SiteImageBlock extends SiteBlockBase {
+  type: "image";
+  imageUrl: string;
+  caption: string;
+  alt: string;
+  linkHref: string;
+  width: "full" | "medium" | "small";
+}
+
+export interface SiteColumnItem {
+  id: string;
+  heading: string;
+  body: string;
+}
+
+export interface SiteColumnsBlock extends SiteBlockBase {
+  type: "columns";
+  title: string;
+  columnCount: 2 | 3;
+  columns: SiteColumnItem[];
+}
+
+export interface SiteSpacerBlock extends SiteBlockBase {
+  type: "spacer";
+  height: number;
+}
+
+export interface SiteDividerBlock extends SiteBlockBase {
+  type: "divider";
+  style: "line" | "space";
+}
+
 export interface SiteServicesBlock extends SiteBlockBase {
   type: "services";
   title: string;
@@ -72,11 +123,16 @@ export interface SiteCtaBlock extends SiteBlockBase {
 export type SiteBlock =
   | SiteHeroBlock
   | SiteAboutBlock
+  | SiteTextBlock
   | SiteServicesBlock
   | SiteCtaBlock
   | SiteHoursBlock
   | SiteGalleryBlock
-  | SiteContactBlock;
+  | SiteContactBlock
+  | SiteImageBlock
+  | SiteColumnsBlock
+  | SiteSpacerBlock
+  | SiteDividerBlock;
 
 export interface SitePageRow {
   id: string;
@@ -163,13 +219,18 @@ export const SITE_PAGE_TYPES: {
 ];
 
 export const SITE_BLOCK_TYPES: { type: SiteBlockType; labelKey: string }[] = [
+  { type: "columns", labelKey: "columns" },
+  { type: "spacer", labelKey: "spacer" },
+  { type: "divider", labelKey: "divider" },
+  { type: "text", labelKey: "text" },
   { type: "hero", labelKey: "hero" },
   { type: "about", labelKey: "about" },
-  { type: "services", labelKey: "services" },
+  { type: "cta", labelKey: "cta" },
+  { type: "image", labelKey: "image" },
   { type: "gallery", labelKey: "gallery" },
+  { type: "services", labelKey: "services" },
   { type: "hours", labelKey: "hours" },
   { type: "contact", labelKey: "contact" },
-  { type: "cta", labelKey: "cta" },
 ];
 
 export function normalizeServicesBlock(block: SiteServicesBlock): SiteServicesBlock {

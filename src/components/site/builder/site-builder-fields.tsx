@@ -7,13 +7,16 @@ import {
   InspectorCheckbox,
   InspectorRow,
   InspectorSelect,
+  InspectorSlider,
   InspectorTextInput,
   InspectorTextarea,
 } from "@/components/site/builder/builder-inspector-primitives";
 import type {
   SiteBlock,
+  SiteColumnsBlock,
   SiteGalleryBlock,
   SiteGalleryImage,
+  SiteImageBlock,
 } from "@/lib/institut/site-pages";
 
 type BuilderT = ReturnType<typeof useTranslations<"institut.marketing.website.builder">>;
@@ -62,6 +65,51 @@ export function SiteBuilderBlockFields({
             <InspectorTextarea value={block.body} onChange={(v) => onChange({ body: v })} rows={3} />
           </div>
         </div>
+      );
+    case "text":
+      return (
+        <div className="space-y-2">
+          <InspectorRow label={t("fields.heading")}>
+            <InspectorTextInput value={block.heading} onChange={(v) => onChange({ heading: v })} />
+          </InspectorRow>
+          <div className="grid grid-cols-[92px_minmax(0,1fr)] gap-2">
+            <span className="pt-1 text-[11px] text-slate-600">{t("fields.body")}</span>
+            <InspectorTextarea value={block.body} onChange={(v) => onChange({ body: v })} rows={4} />
+          </div>
+          <InspectorRow label={t("fields.align")}>
+            <InspectorSelect value={block.align} onChange={(v) => onChange({ align: v as "left" | "center" })}>
+              <option value="left">{t("fields.alignLeft")}</option>
+              <option value="center">{t("fields.alignCenter")}</option>
+            </InspectorSelect>
+          </InspectorRow>
+        </div>
+      );
+    case "image":
+      return <ImageBlockFields block={block} onChange={onChange} t={t} />;
+    case "columns":
+      return <ColumnsBlockFields block={block} onChange={onChange} t={t} />;
+    case "spacer":
+      return (
+        <InspectorRow label={t("fields.height")}>
+          <InspectorSlider
+            value={block.height}
+            min={8}
+            max={120}
+            onChange={(height) => onChange({ height })}
+          />
+        </InspectorRow>
+      );
+    case "divider":
+      return (
+        <InspectorRow label={t("fields.style")}>
+          <InspectorSelect
+            value={block.style}
+            onChange={(v) => onChange({ style: v as "line" | "space" })}
+          >
+            <option value="line">{t("fields.dividerLine")}</option>
+            <option value="space">{t("fields.dividerSpace")}</option>
+          </InspectorSelect>
+        </InspectorRow>
       );
     case "services":
       return (
@@ -161,6 +209,122 @@ export function SiteBuilderBlockFields({
     default:
       return null;
   }
+}
+
+function ImageBlockFields({
+  block,
+  onChange,
+  t,
+}: {
+  block: SiteImageBlock;
+  onChange: (patch: Partial<SiteImageBlock>) => void;
+  t: BuilderT;
+}) {
+  const [uploading, startUpload] = useTransition();
+
+  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.set("file", file);
+    startUpload(async () => {
+      const res = await uploadSiteGalleryImage(fd);
+      if (res.error) alert(res.error);
+      else if (res.url) onChange({ imageUrl: res.url });
+    });
+    e.target.value = "";
+  }
+
+  return (
+    <div className="space-y-2">
+      <label className="flex cursor-pointer items-center gap-2 text-[10px] text-slate-600">
+        <input type="file" accept="image/*" className="text-[10px]" onChange={handleUpload} disabled={uploading} />
+        {uploading ? t("fields.uploading") : t("fields.uploadImage")}
+      </label>
+      <InspectorRow label={t("fields.imageUrl")}>
+        <InspectorTextInput value={block.imageUrl} onChange={(v) => onChange({ imageUrl: v })} />
+      </InspectorRow>
+      <InspectorRow label={t("fields.caption")}>
+        <InspectorTextInput value={block.caption} onChange={(v) => onChange({ caption: v })} />
+      </InspectorRow>
+      <InspectorRow label={t("fields.alt")}>
+        <InspectorTextInput value={block.alt} onChange={(v) => onChange({ alt: v })} />
+      </InspectorRow>
+      <InspectorRow label={t("fields.link")}>
+        <InspectorTextInput value={block.linkHref} onChange={(v) => onChange({ linkHref: v })} />
+      </InspectorRow>
+      <InspectorRow label={t("fields.width")}>
+        <InspectorSelect
+          value={block.width}
+          onChange={(v) => onChange({ width: v as SiteImageBlock["width"] })}
+        >
+          <option value="full">{t("fields.widthFull")}</option>
+          <option value="medium">{t("fields.widthMedium")}</option>
+          <option value="small">{t("fields.widthSmall")}</option>
+        </InspectorSelect>
+      </InspectorRow>
+    </div>
+  );
+}
+
+function ColumnsBlockFields({
+  block,
+  onChange,
+  t,
+}: {
+  block: SiteColumnsBlock;
+  onChange: (patch: Partial<SiteColumnsBlock>) => void;
+  t: BuilderT;
+}) {
+  function setColumnCount(count: 2 | 3) {
+    const columns = [...block.columns];
+    while (columns.length < count) {
+      columns.push({ id: crypto.randomUUID(), heading: `Colonne ${columns.length + 1}`, body: "" });
+    }
+    onChange({ columnCount: count, columns: columns.slice(0, count) });
+  }
+
+  function updateColumn(id: string, patch: { heading?: string; body?: string }) {
+    onChange({
+      columns: block.columns.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    });
+  }
+
+  return (
+    <div className="space-y-2">
+      <InspectorRow label={t("fields.title")}>
+        <InspectorTextInput value={block.title} onChange={(v) => onChange({ title: v })} />
+      </InspectorRow>
+      <InspectorRow label={t("fields.columns")}>
+        <InspectorSelect
+          value={String(block.columnCount)}
+          onChange={(v) => setColumnCount(Number(v) as 2 | 3)}
+        >
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </InspectorSelect>
+      </InspectorRow>
+      {block.columns.slice(0, block.columnCount).map((col, i) => (
+        <div key={col.id} className="rounded border border-slate-100 p-2">
+          <p className="mb-1 text-[10px] font-medium text-slate-500">
+            {t("fields.columnN", { n: i + 1 })}
+          </p>
+          <div className="space-y-1.5">
+            <InspectorTextInput
+              value={col.heading}
+              onChange={(v) => updateColumn(col.id, { heading: v })}
+              placeholder={t("fields.heading")}
+            />
+            <InspectorTextarea
+              value={col.body}
+              onChange={(v) => updateColumn(col.id, { body: v })}
+              rows={2}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function GalleryBlockFields({

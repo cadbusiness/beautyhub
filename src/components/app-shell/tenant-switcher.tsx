@@ -1,17 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { selectTenant } from "@/lib/tenant/actions";
 import type { TenantOption } from "@/lib/tenant/defaults";
 import { cn } from "@/lib/utils";
-
-const ROLE_LABELS: Record<string, string> = {
-  platform_admin: "Super admin",
-  brand_owner: "Propriétaire marque",
-  tenant_owner: "Propriétaire",
-  staff: "Staff",
-  coach: "Coach",
-};
 
 export function TenantSwitcher({
   tenants,
@@ -51,22 +42,5 @@ export function TenantSwitcher({
         ))}
       </select>
     </form>
-  );
-}
-
-export function roleLabel(role: string) {
-  return ROLE_LABELS[role] ?? role;
-}
-
-export function AppLogo() {
-  return (
-    <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-sm font-bold text-white">
-        B
-      </span>
-      <span className="hidden text-base font-semibold text-slate-900 sm:inline">
-        BeautyHub
-      </span>
-    </Link>
   );
 }

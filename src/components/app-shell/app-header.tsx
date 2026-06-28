@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/login/actions";
-import {
-  AppLogo,
-  roleLabel,
-  TenantSwitcher,
-} from "@/components/app-shell/tenant-switcher";
+import { roleLabel } from "@/lib/auth/role-labels";
+import { AppLogo } from "@/components/app-shell/app-logo";
+import { TenantSwitcher } from "@/components/app-shell/tenant-switcher";
 import type { TenantOption } from "@/lib/tenant/defaults";
 
 export function AppHeader({

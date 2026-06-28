@@ -374,7 +374,7 @@
       "editTitle": "Modifier le rendez-vous",
       "allServices": "Toutes les prestations",
       "allStaff": "Toute l'équipe",
-      "publicPage": "Page publique ↗",
+      "publicPage": "Réservation publique",
       "views": {
         "month": "Mois",
         "week": "Semaine",
@@ -402,6 +402,50 @@
         "fri": "Ven",
         "sat": "Sam",
         "sun": "Dim"
+      }
+    },
+    "bookingPublic": {
+      "title": "Réservation publique",
+      "intro": "Configurez un ou plusieurs parcours de réservation en ligne : règles du formulaire, liens directs et code embed pour votre site.",
+      "backToCalendar": "Retour au calendrier",
+      "newFlow": "Nouveau parcours",
+      "empty": "Aucun parcours configuré.",
+      "footer": "{count, plural, one {# parcours} other {# parcours}}",
+      "defaultBadge": "Par défaut",
+      "defaultSlug": "/reserver",
+      "published": "Publié",
+      "draft": "Brouillon",
+      "share": "Lien & embed",
+      "setDefault": "Définir par défaut",
+      "copy": "Copier",
+      "createTitle": "Nouveau parcours",
+      "editTitle": "Modifier le parcours",
+      "shareTitle": "Partager — {name}",
+      "publicLink": "Lien public",
+      "embedLink": "URL embed",
+      "embedCode": "Code iframe",
+      "openPreview": "Ouvrir la page",
+      "columns": {
+        "name": "Nom",
+        "slug": "URL",
+        "status": "Statut",
+        "actions": "Actions"
+      },
+      "form": {
+        "name": "Nom du parcours",
+        "slug": "Segment d'URL",
+        "slugPlaceholder": "ex. coiffure",
+        "slugHint": "Accessible sur /reserver/{slug}",
+        "defaultSlugHint": "Le parcours par défaut est accessible sur /reserver",
+        "published": "Publié (visible en ligne)",
+        "setDefault": "Définir comme parcours par défaut",
+        "processTitle": "Parcours client",
+        "showStaffPicker": "Proposer le choix du praticien",
+        "requireStaff": "Praticien obligatoire",
+        "showExtrasStep": "Étape suppléments / extras",
+        "requirePhone": "Téléphone obligatoire",
+        "allowedServices": "Prestations autorisées",
+        "allowedServicesHint": "Laissez vide pour toutes les prestations du catalogue public."
       }
     }
   },
@@ -1764,6 +1808,8 @@
         "servicePlaceholder": "Choisir une prestation",
         "staffLabel": "Praticien (facultatif)",
         "staffAny": "Sans préférence",
+        "staffPlaceholder": "Choisir un praticien",
+        "staffRequired": "Veuillez choisir un praticien.",
         "durationMin": "{min} min",
         "quoteBadge": "Devis",
         "manualBadge": "Sur mesure",

@@ -1,8 +1,8 @@
 import { getPublicSiteTenant } from "@/lib/tenant/public-site";
 import { loadPublicBookingFlow } from "@/lib/public/booking-flow-load";
-import { BookingPublicView } from "./booking-public-view";
+import { BookingPublicView } from "@/app/(public)/reserver/booking-public-view";
 
-export default async function ReserverPage({
+export default async function EmbedReserverPage({
   searchParams,
 }: {
   searchParams: Promise<{ service?: string }>;
@@ -15,6 +15,6 @@ export default async function ReserverPage({
   if (!flow) return null;
 
   return (
-    <BookingPublicView flow={flow} initialServiceId={initialServiceId ?? ""} />
+    <BookingPublicView flow={flow} initialServiceId={initialServiceId ?? ""} embed />
   );
 }

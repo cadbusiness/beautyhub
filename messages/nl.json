@@ -374,7 +374,7 @@
       "editTitle": "Afspraak bewerken",
       "allServices": "Alle behandelingen",
       "allStaff": "Heel team",
-      "publicPage": "Publieke pagina ↗",
+      "publicPage": "Online reserveren",
       "views": {
         "month": "Maand",
         "week": "Week",
@@ -402,6 +402,50 @@
         "fri": "Vr",
         "sat": "Za",
         "sun": "Zo"
+      }
+    },
+    "bookingPublic": {
+      "title": "Online reserveren",
+      "intro": "Configureer een of meer reserveringsflows: regels, directe links en embed-code voor uw site.",
+      "backToCalendar": "Terug naar kalender",
+      "newFlow": "Nieuwe flow",
+      "empty": "Geen flows geconfigureerd.",
+      "footer": "{count, plural, one {# flow} other {# flows}}",
+      "defaultBadge": "Standaard",
+      "defaultSlug": "/reserver",
+      "published": "Gepubliceerd",
+      "draft": "Concept",
+      "share": "Link & embed",
+      "setDefault": "Als standaard instellen",
+      "copy": "Kopiëren",
+      "createTitle": "Nieuwe flow",
+      "editTitle": "Flow bewerken",
+      "shareTitle": "Delen — {name}",
+      "publicLink": "Publieke link",
+      "embedLink": "Embed-URL",
+      "embedCode": "Iframe-code",
+      "openPreview": "Pagina openen",
+      "columns": {
+        "name": "Naam",
+        "slug": "URL",
+        "status": "Status",
+        "actions": "Acties"
+      },
+      "form": {
+        "name": "Naam van de flow",
+        "slug": "URL-segment",
+        "slugPlaceholder": "bv. kapster",
+        "slugHint": "Beschikbaar op /reserver/{slug}",
+        "defaultSlugHint": "De standaardflow is bereikbaar op /reserver",
+        "published": "Gepubliceerd (online zichtbaar)",
+        "setDefault": "Instellen als standaardflow",
+        "processTitle": "Klanttraject",
+        "showStaffPicker": "Keuze behandelaar tonen",
+        "requireStaff": "Behandelaar verplicht",
+        "showExtrasStep": "Stap extra's",
+        "requirePhone": "Telefoon verplicht",
+        "allowedServices": "Toegestane behandelingen",
+        "allowedServicesHint": "Laat leeg voor alle behandelingen in de publieke catalogus."
       }
     }
   },
@@ -1747,6 +1791,8 @@
         "servicePlaceholder": "Kies een behandeling",
         "staffLabel": "Behandelaar (optioneel)",
         "staffAny": "Geen voorkeur",
+        "staffPlaceholder": "Kies een behandelaar",
+        "staffRequired": "Kies een behandelaar.",
         "durationMin": "{min} min",
         "quoteBadge": "Offerte",
         "manualBadge": "Maatwerk",

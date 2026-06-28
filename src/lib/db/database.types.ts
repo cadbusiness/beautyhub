@@ -1696,6 +1696,54 @@ export type Database = {
           },
         ]
       }
+      }
+      inst_booking_flows: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          is_default: boolean
+          is_published: boolean
+          name: string
+          slug: string
+          sort_order: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_published?: boolean
+          name: string
+          slug?: string
+          sort_order?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_published?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_booking_flows_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_site_settings: {
         Row: {
           created_at: string
@@ -2617,6 +2665,15 @@ export type Database = {
       get_public_booking_enabled: {
         Args: { p_tenant_id: string }
         Returns: boolean
+      }
+      get_public_booking_flow: {
+        Args: { p_tenant_id: string; p_slug?: string }
+        Returns: {
+          id: string
+          name: string
+          slug: string
+          config: Json
+        }[]
       }
       get_public_opening_hours: {
         Args: { p_tenant_id: string }

@@ -17,6 +17,7 @@ import { Field, Input, Select } from "@/components/ui/input";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { BookingExtraLine, ServiceExtraConfig } from "@/lib/institut/service-extras";
 import { totalDurationMin, totalPriceCents } from "@/lib/institut/service-extras";
+import type { BookingFlowConfig } from "@/lib/institut/booking-flows";
 import {
   groupSlotsByDate,
   type AvailabilityPreferences,
@@ -63,10 +64,14 @@ async function fetchBookingSlotsByAvailability(
 export function BookingWizard({
   initialServiceId = "",
   services,
+  flowConfig,
 }: {
   initialServiceId?: string;
   services: PublicService[];
+  flowConfig?: BookingFlowConfig;
+  flowName?: string;
 }) {
+  const cfg = flowConfig;
   const t = useTranslations("public.booking");
   const tCommon = useTranslations("common");
   const format = useFormatter();
@@ -92,7 +97,11 @@ export function BookingWizard({
   );
 
   const selectedService = services.find((s) => s.id === serviceId);
-  const hasExtras = extraCatalog.length > 0;
+  const showExtrasStep = cfg?.showExtrasStep !== false;
+  const hasExtras = showExtrasStep && extraCatalog.length > 0;
+  const showStaffPicker = cfg?.showStaffPicker !== false;
+  const requireStaff = cfg?.requireStaff === true;
+  const requirePhone = cfg?.requirePhone === true;
 
   const stepFlow = useMemo((): WizardStep[] => {
     const flow: WizardStep[] = ["service"];
@@ -188,6 +197,10 @@ export function BookingWizard({
 
   function continueFromService() {
     if (!serviceId || !availabilityValid) return;
+    if (requireStaff && !staffId) {
+      setError(t("step1.staffRequired"));
+      return;
+    }
     setError(null);
     if (hasExtras) setStep("extras");
     else loadSlots();
@@ -290,14 +303,21 @@ export function BookingWizard({
                 </Select>
               </Field>
 
-              {serviceId && staff.length > 0 ? (
+              {serviceId && showStaffPicker && staff.length > 0 ? (
                 <Field label={t("step1.staffLabel")} htmlFor="booking_staff">
                   <Select
                     id="booking_staff"
                     value={staffId}
                     onChange={(e) => setStaffId(e.target.value)}
+                    required={requireStaff}
                   >
-                    <option value="">{t("step1.staffAny")}</option>
+                    {!requireStaff ? (
+                      <option value="">{t("step1.staffAny")}</option>
+                    ) : (
+                      <option value="" disabled>
+                        {t("step1.staffPlaceholder")}
+                      </option>
+                    )}
                     {staff.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.full_name}
@@ -452,13 +472,21 @@ export function BookingWizard({
             />
           </Field>
           <Field label={tCommon("phone")} htmlFor="phone">
-            <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <Input
+              id="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required={requirePhone}
+            />
           </Field>
           <div className="flex justify-between gap-2 pt-2">
             <Button variant="outline" onClick={() => setStep("slots")}>
               {tCommon("back")}
             </Button>
-            <Button disabled={pending || !email || !fullName} onClick={confirmBooking}>
+            <Button
+              disabled={pending || !email || !fullName || (requirePhone && !phone.trim())}
+              onClick={confirmBooking}
+            >
               {pending ? t("step5.confirming") : t("step5.confirm")}
             </Button>
           </div>

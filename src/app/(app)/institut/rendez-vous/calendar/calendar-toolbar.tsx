@@ -119,7 +119,7 @@ export function CalendarToolbar({
           >
             ↻
           </Button>
-          <Link href="/reserver" target="_blank">
+          <Link href="/institut/rendez-vous/reservation-publique">
             <Button variant="outline" className="h-9">
               {t("publicPage")}
             </Button>

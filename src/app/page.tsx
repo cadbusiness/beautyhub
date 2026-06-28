@@ -25,6 +25,7 @@ export default async function Home() {
             content: parseSiteBlocks(home.content),
             seo_title: home.seo_title,
             seo_description: home.seo_description,
+            page_style: home.page_style,
           }}
           services={services}
           activePath="/"

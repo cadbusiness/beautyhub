@@ -3,7 +3,9 @@
 import { useTranslations } from "next-intl";
 import { SiteLayoutPickerCard } from "@/components/site/site-page-thumbnail";
 import { SiteBuilderBlockFields } from "@/components/site/builder/site-builder-fields";
+import { SitePageStyleFields } from "@/components/site/builder/site-page-style-fields";
 import { Field, Input, Textarea } from "@/components/ui/input";
+import type { SitePageStyle } from "@/lib/institut/site-page-style";
 import {
   SITE_BLOCK_TYPES,
   type SiteBlock,
@@ -39,6 +41,7 @@ export function SiteBuilderSidebar({
   seoTitle,
   seoDescription,
   published,
+  pageStyle,
   pending,
   layoutPending,
   onSelectBlock,
@@ -49,6 +52,7 @@ export function SiteBuilderSidebar({
   onSeoTitleChange,
   onSeoDescriptionChange,
   onPublishedChange,
+  onPageStyleChange,
   onApplyLayout,
 }: {
   tab: BuilderSidebarTab;
@@ -62,6 +66,7 @@ export function SiteBuilderSidebar({
   seoTitle: string;
   seoDescription: string;
   published: boolean;
+  pageStyle: SitePageStyle;
   pending: boolean;
   layoutPending: boolean;
   onSelectBlock: (id: string) => void;
@@ -72,6 +77,7 @@ export function SiteBuilderSidebar({
   onSeoTitleChange: (value: string) => void;
   onSeoDescriptionChange: (value: string) => void;
   onPublishedChange: (value: boolean) => void;
+  onPageStyleChange: (patch: Partial<SitePageStyle>) => void;
   onApplyLayout: (layoutId: string) => void;
 }) {
   const t = useTranslations("institut.marketing.website.builder");
@@ -164,6 +170,12 @@ export function SiteBuilderSidebar({
           </div>
         ) : (
           <div className="space-y-6 p-4">
+            <SitePageStyleFields
+              style={pageStyle}
+              onChange={onPageStyleChange}
+              t={t}
+            />
+
             <section className="space-y-2">
               <h3 className="text-sm font-semibold text-slate-900">{t("pageLayout")}</h3>
               <p className="text-xs text-slate-500">{t("pageLayoutHint")}</p>

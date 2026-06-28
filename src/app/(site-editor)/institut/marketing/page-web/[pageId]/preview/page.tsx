@@ -37,9 +37,10 @@ export default async function SitePagePreviewPage({
             layout_id: page.layout_id,
             title: page.title,
             content: normalizeSiteBlocks(page.content),
-            seo_title: page.seo_title,
-            seo_description: page.seo_description,
-          }}
+          seo_title: page.seo_title,
+          seo_description: page.seo_description,
+          page_style: page.page_style,
+        }}
           services={services}
           activePath={
             page.page_type === "booking" ? "/reserver" : page.is_home ? "/" : `/p/${page.slug}`

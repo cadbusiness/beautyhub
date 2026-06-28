@@ -21,6 +21,10 @@ import {
   type SitePageType,
 } from "@/lib/institut/site-pages";
 import {
+  parseSitePageStyle,
+  type SitePageStyle,
+} from "@/lib/institut/site-page-style";
+import {
   ensureSiteSettings,
   type SiteSettingsRow,
 } from "@/lib/institut/site-settings";
@@ -43,6 +47,7 @@ function mapRow(row: {
   content: unknown;
   seo_title: string | null;
   seo_description: string | null;
+  page_style?: unknown;
   created_at: string;
   updated_at: string;
 }): SitePageRow {
@@ -56,6 +61,7 @@ function mapRow(row: {
     show_in_nav: row.show_in_nav ?? defaults.show_in_nav,
     sort_order: row.sort_order ?? defaults.sort_order,
     content: parseSiteBlocks(row.content),
+    page_style: parseSitePageStyle(row.page_style),
   };
 }
 
@@ -382,12 +388,15 @@ export async function saveSitePageBuilder(
   const seoTitle = String(formData.get("seo_title") ?? "").trim() || null;
   const seoDescription = String(formData.get("seo_description") ?? "").trim() || null;
   const isPublished = formData.get("is_published") === "1";
+  const pageStyleJson = String(formData.get("page_style_json") ?? "{}");
 
   if (!id || !title) return { error: "Données invalides." };
 
   let blocks: SiteBlock[];
+  let pageStyle: SitePageStyle;
   try {
     blocks = parseSiteBlocks(JSON.parse(blocksJson));
+    pageStyle = parseSitePageStyle(JSON.parse(pageStyleJson));
   } catch {
     return { error: "Contenu invalide." };
   }
@@ -400,6 +409,7 @@ export async function saveSitePageBuilder(
       seo_title: seoTitle,
       seo_description: seoDescription,
       is_published: isPublished,
+      page_style: pageStyle as unknown as Json,
     })
     .eq("id", id)
     .eq("tenant_id", session.tenant.id);

@@ -35,6 +35,7 @@ export default async function PublicSiteSlugPage({
         content: parseSiteBlocks(page.content),
         seo_title: page.seo_title,
         seo_description: page.seo_description,
+        page_style: page.page_style,
       }}
       services={services}
       activePath={`/p/${slug}`}

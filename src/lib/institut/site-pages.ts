@@ -93,6 +93,7 @@ export interface SitePageRow {
   content: SiteBlock[];
   seo_title: string | null;
   seo_description: string | null;
+  page_style: import("./site-page-style").SitePageStyle;
   created_at: string;
   updated_at: string;
 }

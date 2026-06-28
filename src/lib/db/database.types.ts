@@ -1455,6 +1455,7 @@ export type Database = {
           is_home: boolean
           is_published: boolean
           page_type: string
+          page_style: Json
           seo_description: string | null
           seo_title: string | null
           show_in_nav: boolean
@@ -1472,6 +1473,7 @@ export type Database = {
           is_home?: boolean
           is_published?: boolean
           page_type: string
+          page_style?: Json
           seo_description?: string | null
           seo_title?: string | null
           show_in_nav?: boolean
@@ -1489,6 +1491,7 @@ export type Database = {
           is_home?: boolean
           is_published?: boolean
           page_type?: string
+          page_style?: Json
           seo_description?: string | null
           seo_title?: string | null
           show_in_nav?: boolean
@@ -2231,6 +2234,7 @@ export type Database = {
           content: Json
           id: string
           page_type: string
+          page_style: Json
           seo_description: string | null
           seo_title: string | null
           slug: string
@@ -2244,6 +2248,7 @@ export type Database = {
           content: Json
           id: string
           page_type: string
+          page_style: Json
           seo_description: string | null
           seo_title: string | null
           slug: string
@@ -2257,6 +2262,7 @@ export type Database = {
           content: Json
           id: string
           page_type: string
+          page_style: Json
           seo_description: string | null
           seo_title: string | null
           slug: string

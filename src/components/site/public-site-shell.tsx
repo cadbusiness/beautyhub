@@ -53,6 +53,7 @@ export function PublicSiteHeader({
 export function PublicSiteShell({
   shell,
   activePath,
+  mainStyle,
   children,
 }: {
   shell: {
@@ -63,10 +64,11 @@ export function PublicSiteShell({
     navLinks: PublicSiteNavLink[];
   };
   activePath?: string;
+  mainStyle?: React.CSSProperties;
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
+    <div className="flex min-h-full flex-col bg-white">
       <PublicSiteHeader
         displayName={shell.displayName}
         logoUrl={shell.logoUrl}
@@ -74,7 +76,9 @@ export function PublicSiteShell({
         navLinks={shell.navLinks}
         activePath={activePath}
       />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1" style={mainStyle}>
+        {children}
+      </main>
       {shell.footerText ? (
         <footer className="border-t border-slate-200 px-4 py-4 text-center text-xs text-slate-500 lg:px-6">
           {shell.footerText}

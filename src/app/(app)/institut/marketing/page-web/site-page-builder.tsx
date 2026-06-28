@@ -19,6 +19,8 @@ import {
 import type { FormattedOpeningDay } from "@/components/site/site-page-renderer";
 import { Button } from "@/components/ui/button";
 import type { SiteBlock, SiteBlockType, SitePageRow } from "@/lib/institut/site-pages";
+import type { SitePageStyle } from "@/lib/institut/site-page-style";
+import type { PublicSiteShellData } from "@/lib/institut/site-settings";
 
 const initial: ActionResult = {};
 
@@ -27,11 +29,15 @@ export function SitePageBuilder({
   previewServices,
   scheduleDays = [],
   accentColor = "#0f172a",
+  shell,
+  activePath,
 }: {
   page: SitePageRow;
   previewServices: PublicService[];
   scheduleDays?: FormattedOpeningDay[];
   accentColor?: string;
+  shell: PublicSiteShellData;
+  activePath: string;
 }) {
   const t = useTranslations("institut.marketing.website.builder");
   const tCommon = useTranslations("common");
@@ -42,10 +48,12 @@ export function SitePageBuilder({
   const [seoTitle, setSeoTitle] = useState(page.seo_title ?? "");
   const [seoDescription, setSeoDescription] = useState(page.seo_description ?? "");
   const [published, setPublished] = useState(page.is_published);
+  const [pageStyle, setPageStyle] = useState<SitePageStyle>(page.page_style);
   const [selectedId, setSelectedId] = useState<string | null>(page.content[0]?.id ?? null);
   const [sidebarTab, setSidebarTab] = useState<BuilderSidebarTab>("block");
 
   const blocksJson = useMemo(() => JSON.stringify(blocks), [blocks]);
+  const pageStyleJson = useMemo(() => JSON.stringify(pageStyle), [pageStyle]);
   const selectedBlock = blocks.find((b) => b.id === selectedId) ?? null;
   const previewTemplateId = layoutVisualStyle(page.layout_id);
 
@@ -75,6 +83,10 @@ export function SitePageBuilder({
   function handleSelectBlock(id: string | null) {
     setSelectedId(id);
     if (id) setSidebarTab("block");
+  }
+
+  function updatePageStyle(patch: Partial<SitePageStyle>) {
+    setPageStyle((prev) => ({ ...prev, ...patch }));
   }
 
   function handleApplyLayout(layoutId: string) {
@@ -111,6 +123,7 @@ export function SitePageBuilder({
         <form action={action} className="flex shrink-0 items-center gap-2">
           <input type="hidden" name="id" value={page.id} />
           <input type="hidden" name="blocks_json" value={blocksJson} />
+          <input type="hidden" name="page_style_json" value={pageStyleJson} />
           <input type="hidden" name="title" value={title} />
           <input type="hidden" name="seo_title" value={seoTitle} />
           <input type="hidden" name="seo_description" value={seoDescription} />
@@ -145,6 +158,7 @@ export function SitePageBuilder({
           seoTitle={seoTitle}
           seoDescription={seoDescription}
           published={published}
+          pageStyle={pageStyle}
           pending={pending}
           layoutPending={layoutPending}
           onSelectBlock={(id) => handleSelectBlock(id)}
@@ -155,6 +169,7 @@ export function SitePageBuilder({
           onSeoTitleChange={setSeoTitle}
           onSeoDescriptionChange={setSeoDescription}
           onPublishedChange={setPublished}
+          onPageStyleChange={updatePageStyle}
           onApplyLayout={handleApplyLayout}
         />
 
@@ -165,6 +180,9 @@ export function SitePageBuilder({
           services={previewServices}
           scheduleDays={scheduleDays}
           accent={accentColor}
+          shell={shell}
+          activePath={activePath}
+          pageStyle={pageStyle}
           onSelect={handleSelectBlock}
           onReorder={setBlocks}
         />

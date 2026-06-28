@@ -5,7 +5,7 @@ import { loadSitePageForBuilder } from "@/app/(app)/institut/marketing/page-web/
 import { SitePageBuilder } from "@/app/(app)/institut/marketing/page-web/site-page-builder";
 import type { PublicService } from "@/lib/public/booking-load";
 import type { FormattedOpeningDay } from "@/components/site/site-page-renderer";
-import { ensureSiteSettings } from "@/lib/institut/site-settings";
+import { ensureSiteSettings, loadPublicSiteShellData } from "@/lib/institut/site-settings";
 import {
   fetchPublicOpeningHours,
   formatTimeLabel,
@@ -42,6 +42,7 @@ export default async function SitePageBuilderPage({
   const session = await requireModule("institut");
   const { pageId } = await params;
   const supabase = await createClient();
+  const tNav = await getTranslations("public.site.nav");
   const [page, services, scheduleDays, settings] = await Promise.all([
     loadSitePageForBuilder(pageId),
     supabase.rpc("get_public_services", { p_tenant_id: session.tenant.id }),
@@ -50,12 +51,23 @@ export default async function SitePageBuilderPage({
   ]);
   if (!page) notFound();
 
+  const shell = await loadPublicSiteShellData(supabase, session.tenant, {
+    home: tNav("home"),
+    book: tNav("book"),
+    account: tNav("account"),
+  });
+
+  const activePath =
+    page.page_type === "booking" ? "/reserver" : page.is_home ? "/" : `/p/${page.slug}`;
+
   return (
     <SitePageBuilder
       page={page}
       previewServices={(services.data ?? []) as PublicService[]}
       scheduleDays={scheduleDays}
       accentColor={settings.primary_color}
+      shell={shell}
+      activePath={activePath}
     />
   );
 }

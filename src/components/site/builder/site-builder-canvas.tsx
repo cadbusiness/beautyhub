@@ -21,8 +21,16 @@ import {
   SitePageRenderer,
   type FormattedOpeningDay,
 } from "@/components/site/site-page-renderer";
+import { PublicSiteShell } from "@/components/site/public-site-shell";
+import { SitePageStyleWrapper } from "@/components/site/site-page-style-wrapper";
 import type { PublicService } from "@/lib/public/booking-load";
 import type { SiteBlock, SiteTemplateId } from "@/lib/institut/site-pages";
+import {
+  normalizeSitePageStyle,
+  sitePageMainStyle,
+  type SitePageStyle,
+} from "@/lib/institut/site-page-style";
+import type { PublicSiteShellData } from "@/lib/institut/site-settings";
 import { cn } from "@/lib/utils";
 
 function SortableBlock({
@@ -62,7 +70,10 @@ function SortableBlock({
       <div
         role="button"
         tabIndex={0}
-        onClick={() => onSelect(block.id)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect(block.id);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -122,6 +133,9 @@ export function SiteBuilderCanvas({
   services,
   scheduleDays,
   accent,
+  shell,
+  activePath,
+  pageStyle,
   onSelect,
   onReorder,
 }: {
@@ -131,10 +145,14 @@ export function SiteBuilderCanvas({
   services: PublicService[];
   scheduleDays: FormattedOpeningDay[];
   accent: string;
+  shell: PublicSiteShellData;
+  activePath: string;
+  pageStyle: SitePageStyle;
   onSelect: (id: string | null) => void;
   onReorder: (blocks: SiteBlock[]) => void;
 }) {
   const t = useTranslations("institut.marketing.website.builder");
+  const normalizedStyle = normalizeSitePageStyle(pageStyle);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -157,38 +175,44 @@ export function SiteBuilderCanvas({
 
   return (
     <div
-      className="min-h-0 flex-1 overflow-y-auto bg-slate-200/80 p-4 lg:p-8"
+      className="min-h-0 flex-1 overflow-y-auto bg-white"
       onClick={() => onSelect(null)}
       onKeyDown={() => {}}
       role="presentation"
     >
-      {blocks.length === 0 ? (
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <p className="max-w-sm rounded-lg border border-dashed border-slate-300 bg-white px-6 py-8 text-center text-sm text-slate-500">
-            {t("emptyCanvas")}
-          </p>
-        </div>
-      ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-            <div className="mx-auto max-w-5xl overflow-hidden rounded-lg bg-white shadow-md ring-1 ring-slate-200/80">
-              {blocks.map((block) => (
-                <SortableBlock
-                  key={block.id}
-                  block={block}
-                  selected={selectedId === block.id}
-                  label={t(`blockTypes.${block.type}`)}
-                  templateId={templateId}
-                  services={services}
-                  scheduleDays={scheduleDays}
-                  accent={accent}
-                  onSelect={onSelect}
-                />
-              ))}
+      <PublicSiteShell
+        shell={shell}
+        activePath={activePath}
+        mainStyle={sitePageMainStyle(normalizedStyle)}
+      >
+        <SitePageStyleWrapper style={normalizedStyle}>
+          {blocks.length === 0 ? (
+            <div className="flex min-h-[40vh] items-center justify-center px-6 py-16">
+              <p className="max-w-sm text-center text-sm text-slate-500">{t("emptyCanvas")}</p>
             </div>
-          </SortableContext>
-        </DndContext>
-      )}
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+                <div>
+                  {blocks.map((block) => (
+                    <SortableBlock
+                      key={block.id}
+                      block={block}
+                      selected={selectedId === block.id}
+                      label={t(`blockTypes.${block.type}`)}
+                      templateId={templateId}
+                      services={services}
+                      scheduleDays={scheduleDays}
+                      accent={accent}
+                      onSelect={onSelect}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </SitePageStyleWrapper>
+      </PublicSiteShell>
     </div>
   );
 }

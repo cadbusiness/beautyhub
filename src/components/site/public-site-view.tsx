@@ -16,6 +16,12 @@ import {
 import type { SiteBlock, SitePageType } from "@/lib/institut/site-pages";
 import { normalizeSiteBlocks } from "@/lib/institut/site-pages";
 import { layoutVisualStyle } from "@/lib/institut/site-page-layouts";
+import {
+  normalizeSitePageStyle,
+  sitePageMainStyle,
+  type SitePageStyle,
+} from "@/lib/institut/site-page-style";
+import { SitePageStyleWrapper } from "@/components/site/site-page-style-wrapper";
 import type { TenantContext } from "@/lib/tenant/context";
 import { loadPublicSiteShellData } from "@/lib/institut/site-settings";
 
@@ -56,6 +62,7 @@ export async function PublicSiteView({
     content: SiteBlock[];
     seo_title: string | null;
     seo_description: string | null;
+    page_style?: SitePageStyle | unknown;
   };
   services: PublicService[];
   activePath?: string;
@@ -74,17 +81,21 @@ export async function PublicSiteView({
     formatScheduleDays(tenant.id),
   ]);
 
+  const pageStyle = normalizeSitePageStyle(page.page_style);
+
   return (
-    <PublicSiteShell shell={shell} activePath={activePath}>
-      <SitePageRenderer
-        blocks={normalizeSiteBlocks(page.content)}
-        templateId={layoutVisualStyle(page.layout_id)}
-        services={services}
-        scheduleDays={scheduleDays}
-        accent={shell.primaryColor}
-        compactHero={compactHero}
-      />
-      {children}
+    <PublicSiteShell shell={shell} activePath={activePath} mainStyle={sitePageMainStyle(pageStyle)}>
+      <SitePageStyleWrapper style={pageStyle}>
+        <SitePageRenderer
+          blocks={normalizeSiteBlocks(page.content)}
+          templateId={layoutVisualStyle(page.layout_id)}
+          services={services}
+          scheduleDays={scheduleDays}
+          accent={shell.primaryColor}
+          compactHero={compactHero}
+        />
+        {children}
+      </SitePageStyleWrapper>
       {!shell.footerText && !previewMode ? <AppFooter /> : null}
     </PublicSiteShell>
   );

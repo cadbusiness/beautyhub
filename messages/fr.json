@@ -543,6 +543,7 @@
         "title": "Pages web",
         "description": "Créez et personnalisez les pages publiques de votre institut : accueil, catalogue, contact.",
         "publicBase": "Site public",
+        "customDomain": "Domaine personnalisé",
         "pagesTitle": "Mes pages",
         "addPage": "Nouvelle page",
         "chooseType": "Type de page",
@@ -598,7 +599,9 @@
             "hero": "Bannière",
             "about": "Texte",
             "services": "Prestations",
+            "gallery": "Galerie",
             "hours": "Horaires",
+            "contact": "Contact",
             "cta": "Appel à l'action"
           },
           "fields": {
@@ -606,7 +609,23 @@
             "subheadline": "Sous-titre",
             "ctaLabel": "Libellé du bouton",
             "ctaHref": "Lien du bouton",
-            "showPrices": "Afficher les prix"
+            "imageUrl": "URL image de fond",
+            "showPrices": "Afficher les prix",
+            "showImages": "Afficher les photos",
+            "showSearch": "Barre de recherche",
+            "useSchedule": "Horaires depuis le planning",
+            "hoursNote": "Note complémentaire",
+            "phone": "Téléphone",
+            "email": "E-mail",
+            "address": "Adresse",
+            "note": "Note",
+            "addImage": "Ajouter une image",
+            "uploading": "Envoi…",
+            "caption": "Légende",
+            "removeImage": "Retirer",
+            "galleryCols2": "2 colonnes",
+            "galleryCols3": "3 colonnes",
+            "galleryCols4": "4 colonnes"
           }
         }
       },
@@ -1132,6 +1151,7 @@
     "booking": {
       "title": "Prendre rendez-vous",
       "subtitle": "{name} — réservation en ligne",
+      "wizardTitle": "Votre réservation",
       "steps": {
         "service": "1. Prestation",
         "staff": "2. Praticien",

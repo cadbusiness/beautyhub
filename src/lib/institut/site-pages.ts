@@ -1,7 +1,29 @@
 export type SitePageType = "home" | "booking" | "catalog" | "contact";
 export type SiteTemplateId = "elegant" | "modern";
 
-export type SiteBlockType = "hero" | "about" | "services" | "cta" | "hours";
+export type SiteBlockType = "hero" | "about" | "services" | "cta" | "hours" | "gallery" | "contact";
+
+export interface SiteGalleryImage {
+  id: string;
+  url: string;
+  caption?: string;
+}
+
+export interface SiteGalleryBlock extends SiteBlockBase {
+  type: "gallery";
+  title: string;
+  images: SiteGalleryImage[];
+  columns: 2 | 3 | 4;
+}
+
+export interface SiteContactBlock extends SiteBlockBase {
+  type: "contact";
+  title: string;
+  phone: string;
+  email: string;
+  address: string;
+  note: string;
+}
 
 export interface SiteBlockBase {
   id: string;
@@ -27,7 +49,16 @@ export interface SiteServicesBlock extends SiteBlockBase {
   type: "services";
   title: string;
   showPrices: boolean;
+  showImages: boolean;
+  showSearch: boolean;
   limit: number;
+}
+
+export interface SiteHoursBlock extends SiteBlockBase {
+  type: "hours";
+  title: string;
+  note: string;
+  useSchedule: boolean;
 }
 
 export interface SiteCtaBlock extends SiteBlockBase {
@@ -38,18 +69,14 @@ export interface SiteCtaBlock extends SiteBlockBase {
   buttonHref: string;
 }
 
-export interface SiteHoursBlock extends SiteBlockBase {
-  type: "hours";
-  title: string;
-  note: string;
-}
-
 export type SiteBlock =
   | SiteHeroBlock
   | SiteAboutBlock
   | SiteServicesBlock
   | SiteCtaBlock
-  | SiteHoursBlock;
+  | SiteHoursBlock
+  | SiteGalleryBlock
+  | SiteContactBlock;
 
 export interface SitePageRow {
   id: string;
@@ -128,9 +155,34 @@ export const SITE_BLOCK_TYPES: { type: SiteBlockType; labelKey: string }[] = [
   { type: "hero", labelKey: "hero" },
   { type: "about", labelKey: "about" },
   { type: "services", labelKey: "services" },
+  { type: "gallery", labelKey: "gallery" },
   { type: "hours", labelKey: "hours" },
+  { type: "contact", labelKey: "contact" },
   { type: "cta", labelKey: "cta" },
 ];
+
+export function normalizeServicesBlock(block: SiteServicesBlock): SiteServicesBlock {
+  return {
+    ...block,
+    showImages: block.showImages ?? true,
+    showSearch: block.showSearch ?? false,
+  };
+}
+
+export function normalizeHoursBlock(block: SiteHoursBlock): SiteHoursBlock {
+  return {
+    ...block,
+    useSchedule: block.useSchedule ?? false,
+  };
+}
+
+export function normalizeSiteBlocks(blocks: SiteBlock[]): SiteBlock[] {
+  return blocks.map((b) => {
+    if (b.type === "services") return normalizeServicesBlock(b);
+    if (b.type === "hours") return normalizeHoursBlock(b);
+    return b;
+  });
+}
 
 function blockId(): string {
   return crypto.randomUUID();
@@ -161,6 +213,8 @@ export function defaultBlocksForPageType(
         type: "services",
         title: "Nos prestations",
         showPrices: true,
+        showImages: true,
+        showSearch: false,
         limit: 6,
       },
       {
@@ -189,7 +243,9 @@ export function defaultBlocksForPageType(
         type: "services",
         title: "Catalogue",
         showPrices: true,
-        limit: 12,
+        showImages: true,
+        showSearch: true,
+        limit: 24,
       },
     ];
   }
@@ -208,7 +264,17 @@ export function defaultBlocksForPageType(
         id: blockId(),
         type: "hours",
         title: "Horaires",
-        note: "Sur rendez-vous uniquement.",
+        note: "",
+        useSchedule: true,
+      },
+      {
+        id: blockId(),
+        type: "contact",
+        title: "Nous contacter",
+        phone: "",
+        email: "",
+        address: "",
+        note: "",
       },
     ];
   }
@@ -217,10 +283,16 @@ export function defaultBlocksForPageType(
     {
       id: blockId(),
       type: "hero",
-      headline: "Réserver",
-      subheadline: "Prenez rendez-vous en ligne",
+      headline: "Réserver en ligne",
+      subheadline: "Choisissez votre prestation et votre créneau",
       ctaLabel: "Commencer",
-      ctaHref: "/reserver",
+      ctaHref: "#booking",
+    },
+    {
+      id: blockId(),
+      type: "about",
+      title: "Comment ça marche ?",
+      body: "1. Choisissez une prestation\n2. Sélectionnez votre praticien\n3. Réservez votre créneau",
     },
   ];
 }

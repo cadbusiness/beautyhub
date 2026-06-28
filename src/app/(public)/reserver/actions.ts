@@ -14,6 +14,7 @@ export interface PublicService {
   price_cents: number;
   color: string | null;
   extras_step_position: string;
+  image_url: string | null;
 }
 
 export interface PublicStaff {

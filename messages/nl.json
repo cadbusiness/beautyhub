@@ -521,6 +521,7 @@
         "title": "Webpagina's",
         "description": "Maak en pas de openbare pagina's van uw instituut aan: home, catalogus, contact.",
         "publicBase": "Openbare site",
+        "customDomain": "Aangepast domein",
         "pagesTitle": "Mijn pagina's",
         "addPage": "Nieuwe pagina",
         "chooseType": "Paginatype",
@@ -576,7 +577,9 @@
             "hero": "Banner",
             "about": "Tekst",
             "services": "Behandelingen",
+            "gallery": "Galerij",
             "hours": "Openingstijden",
+            "contact": "Contact",
             "cta": "Call-to-action"
           },
           "fields": {
@@ -584,7 +587,23 @@
             "subheadline": "Ondertitel",
             "ctaLabel": "Knoplabel",
             "ctaHref": "Knoplink",
-            "showPrices": "Prijzen tonen"
+            "imageUrl": "Achtergrondafbeelding URL",
+            "showPrices": "Prijzen tonen",
+            "showImages": "Foto's tonen",
+            "showSearch": "Zoekbalk",
+            "useSchedule": "Openingstijden uit planning",
+            "hoursNote": "Aanvullende opmerking",
+            "phone": "Telefoon",
+            "email": "E-mail",
+            "address": "Adres",
+            "note": "Opmerking",
+            "addImage": "Afbeelding toevoegen",
+            "uploading": "Uploaden…",
+            "caption": "Bijschrift",
+            "removeImage": "Verwijderen",
+            "galleryCols2": "2 kolommen",
+            "galleryCols3": "3 kolommen",
+            "galleryCols4": "4 kolommen"
           }
         }
       },
@@ -1107,6 +1126,7 @@
     "booking": {
       "title": "Afspraak maken",
       "subtitle": "{name} — online reservering",
+      "wizardTitle": "Uw reservering",
       "steps": {
         "service": "1. Behandeling",
         "staff": "2. Behandelaar",

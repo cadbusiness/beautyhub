@@ -77,6 +77,15 @@ export async function loadPublicSiteHome(tenantId: string) {
   return data;
 }
 
+/** Charge une page publiée par type (booking, etc.). */
+export async function loadPublicSitePageByType(tenantId: string, pageType: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .rpc("get_public_site_page_by_type", { p_tenant_id: tenantId, p_page_type: pageType })
+    .maybeSingle();
+  return data;
+}
+
 /** Contexte tenant pour pages publiques : hôte d'abord, sinon cookie (preview back-office). */
 export async function getPublicSiteTenant(): Promise<TenantContext | null> {
   return (await getPublicTenantFromHost()) ?? (await getTenantContext());

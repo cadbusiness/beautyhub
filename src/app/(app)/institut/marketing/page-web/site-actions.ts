@@ -66,26 +66,83 @@ export async function ensureDefaultSitePages(tenantId: string, instituteName: st
   await supabase.from("inst_site_pages").insert(inserts);
 }
 
+const BUCKET = "site-images";
+const MAX_BYTES = 5 * 1024 * 1024;
+const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+
+function extForMime(mime: string): string {
+  switch (mime) {
+    case "image/jpeg":
+      return "jpg";
+    case "image/png":
+      return "png";
+    case "image/webp":
+      return "webp";
+    case "image/gif":
+      return "gif";
+    default:
+      return "bin";
+  }
+}
+
+export async function uploadSiteGalleryImage(
+  formData: FormData,
+): Promise<{ error?: string; url?: string }> {
+  const session = await requireModule("institut");
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Fichier requis." };
+  }
+  if (file.size > MAX_BYTES) {
+    return { error: "Image trop volumineuse (max 5 Mo)." };
+  }
+  if (!ALLOWED.has(file.type)) {
+    return { error: "Format non supporté (JPEG, PNG, WebP, GIF)." };
+  }
+
+  const supabase = await createClient();
+  const path = `${session.tenant.id}/gallery/${crypto.randomUUID()}.${extForMime(file.type)}`;
+  const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
+    contentType: file.type,
+    upsert: false,
+  });
+  if (upErr) return { error: upErr.message };
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return { url: publicUrl };
+}
+
 export async function loadSitePagesAdmin(): Promise<{
   pages: SitePageRow[];
   publicBaseUrl: string;
+  customDomain: string | null;
 }> {
   const session = await requireModule("institut");
   const supabase = await createClient();
   await ensureDefaultSitePages(session.tenant.id, session.tenant.name);
 
-  const { data } = await supabase
-    .from("inst_site_pages")
-    .select("*")
-    .eq("tenant_id", session.tenant.id)
-    .order("is_home", { ascending: false })
-    .order("created_at");
+  const [{ data }, { data: tenantRow }] = await Promise.all([
+    supabase
+      .from("inst_site_pages")
+      .select("*")
+      .eq("tenant_id", session.tenant.id)
+      .order("is_home", { ascending: false })
+      .order("created_at"),
+    supabase
+      .from("tenants")
+      .select("custom_domain")
+      .eq("id", session.tenant.id)
+      .maybeSingle(),
+  ]);
 
   const publicBaseUrl = await getTenantPublicBaseUrl(session.tenant.slug, session.tenant);
 
   return {
     pages: (data ?? []).map((row) => mapRow(row)),
     publicBaseUrl,
+    customDomain: tenantRow?.custom_domain ?? null,
   };
 }
 

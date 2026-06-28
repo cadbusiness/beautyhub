@@ -4,7 +4,13 @@ import { SitePagesManager } from "./site-pages-manager";
 
 export default async function MarketingPageWebPage() {
   await requireModule("institut");
-  const { pages, publicBaseUrl } = await loadSitePagesAdmin();
+  const { pages, publicBaseUrl, customDomain } = await loadSitePagesAdmin();
 
-  return <SitePagesManager pages={pages} publicBaseUrl={publicBaseUrl} />;
+  return (
+    <SitePagesManager
+      pages={pages}
+      publicBaseUrl={publicBaseUrl}
+      customDomain={customDomain}
+    />
+  );
 }

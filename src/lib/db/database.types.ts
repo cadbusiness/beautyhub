@@ -2019,6 +2019,7 @@ export type Database = {
           price_cents: number
           color: string | null
           extras_step_position: string
+          image_url: string | null
         }[]
       }
       get_public_service_extras: {
@@ -2094,6 +2095,27 @@ export type Database = {
           slug: string
           template_id: string
           title: string
+        }[]
+      }
+      get_public_site_page_by_type: {
+        Args: { p_tenant_id: string; p_page_type: string }
+        Returns: {
+          content: Json
+          id: string
+          page_type: string
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          template_id: string
+          title: string
+        }[]
+      }
+      get_public_opening_hours: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          weekday: number
+          start_time: string
+          end_time: string
         }[]
       }
       inst_loyalty_credit: {

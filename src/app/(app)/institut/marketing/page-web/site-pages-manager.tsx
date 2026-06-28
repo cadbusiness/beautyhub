@@ -19,9 +19,11 @@ import { ListToolbar } from "@/components/ui/list-toolbar";
 export function SitePagesManager({
   pages,
   publicBaseUrl,
+  customDomain,
 }: {
   pages: SitePageRow[];
   publicBaseUrl: string;
+  customDomain: string | null;
 }) {
   const t = useTranslations("institut.marketing.website");
   const tCommon = useTranslations("common");
@@ -60,6 +62,12 @@ export function SitePagesManager({
       <p className="text-xs text-slate-400">
         {t("publicBase")}: <span className="font-mono">{publicBaseUrl}</span>
       </p>
+      {customDomain ? (
+        <p className="text-xs text-slate-400">
+          {t("customDomain")}:{" "}
+          <span className="font-mono">https://{customDomain}</span>
+        </p>
+      ) : null}
 
       <ListPanel className="flex-none">
         <ListToolbar

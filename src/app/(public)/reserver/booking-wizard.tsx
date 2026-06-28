@@ -22,7 +22,7 @@ import { totalDurationMin, totalPriceCents } from "@/lib/institut/service-extras
 
 type WizardStep = "service" | "staff" | "extras" | "date" | "slots" | "done";
 
-export function BookingWizard() {
+export function BookingWizard({ initialServiceId = "" }: { initialServiceId?: string }) {
   const t = useTranslations("public.booking");
   const tCommon = useTranslations("common");
   const format = useFormatter();
@@ -31,7 +31,7 @@ export function BookingWizard() {
   const [staff, setStaff] = useState<PublicStaff[]>([]);
   const [extraCatalog, setExtraCatalog] = useState<ServiceExtraConfig[]>([]);
   const [slots, setSlots] = useState<PublicSlot[]>([]);
-  const [serviceId, setServiceId] = useState("");
+  const [serviceId, setServiceId] = useState(initialServiceId);
   const [staffId, setStaffId] = useState("");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState<PublicSlot | null>(null);
@@ -43,7 +43,13 @@ export function BookingWizard() {
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    loadPublicServices().then(setServices);
+    loadPublicServices().then((list) => {
+      setServices(list);
+      if (initialServiceId && list.some((s) => s.id === initialServiceId)) {
+        pickService(initialServiceId);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on mount with deep link
   }, []);
 
   const selectedService = services.find((s) => s.id === serviceId);

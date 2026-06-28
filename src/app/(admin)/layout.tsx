@@ -31,8 +31,8 @@ export default async function AdminLayout({
           </form>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-5xl p-8">{children}</div>
+      <main className="min-w-0 flex-1 overflow-auto">
+        <div className="w-full px-4 py-4 lg:px-6 lg:py-5">{children}</div>
       </main>
     </div>
   );

@@ -16,6 +16,7 @@ import {
 import type { SiteBlock, SiteTemplateId } from "@/lib/institut/site-pages";
 import { normalizeSiteBlocks } from "@/lib/institut/site-pages";
 import type { TenantContext } from "@/lib/tenant/context";
+import { loadPublicSiteShellData } from "@/lib/institut/site-settings";
 
 async function formatScheduleDays(tenantId: string): Promise<FormattedOpeningDay[]> {
   const supabase = await createClient();
@@ -43,6 +44,7 @@ export async function PublicSiteView({
   services,
   activePath = "/",
   compactHero = false,
+  previewMode = false,
   children,
 }: {
   tenant: TenantContext;
@@ -56,23 +58,32 @@ export async function PublicSiteView({
   services: PublicService[];
   activePath?: string;
   compactHero?: boolean;
+  previewMode?: boolean;
   children?: React.ReactNode;
 }) {
-  const branding = tenant.branding as { primaryColor?: string };
-  const scheduleDays = await formatScheduleDays(tenant.id);
+  const supabase = await createClient();
+  const tNav = await getTranslations("public.site.nav");
+  const [shell, scheduleDays] = await Promise.all([
+    loadPublicSiteShellData(supabase, tenant, {
+      home: tNav("home"),
+      book: tNav("book"),
+      account: tNav("account"),
+    }),
+    formatScheduleDays(tenant.id),
+  ]);
 
   return (
-    <PublicSiteShell tenant={tenant} activePath={activePath}>
+    <PublicSiteShell shell={shell} activePath={activePath}>
       <SitePageRenderer
         blocks={normalizeSiteBlocks(page.content)}
         templateId={page.template_id}
         services={services}
         scheduleDays={scheduleDays}
-        accent={branding.primaryColor ?? "#0f172a"}
+        accent={shell.primaryColor}
         compactHero={compactHero}
       />
       {children}
-      <AppFooter />
+      {!shell.footerText && !previewMode ? <AppFooter /> : null}
     </PublicSiteShell>
   );
 }

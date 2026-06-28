@@ -78,15 +78,21 @@ export function SitePageBuilder({
   page,
   previewServices,
   scheduleDays = [],
+  globalTemplateId,
 }: {
   page: SitePageRow;
   previewServices: PublicService[];
   scheduleDays?: FormattedOpeningDay[];
+  globalTemplateId: SiteTemplateId;
 }) {
   const t = useTranslations("institut.marketing.website.builder");
   const tCommon = useTranslations("common");
   const [state, action, pending] = useActionState(saveSitePageBuilder, initial);
-  const [templateId, setTemplateId] = useState<SiteTemplateId>(page.template_id);
+  const hasTemplateOverride = page.template_id !== globalTemplateId;
+  const [templateOverride, setTemplateOverride] = useState(hasTemplateOverride);
+  const [templateId, setTemplateId] = useState<SiteTemplateId>(
+    hasTemplateOverride ? page.template_id : globalTemplateId,
+  );
   const [title, setTitle] = useState(page.title);
   const [blocks, setBlocks] = useState<SiteBlock[]>(page.content);
   const [seoTitle, setSeoTitle] = useState(page.seo_title ?? "");
@@ -129,6 +135,8 @@ export function SitePageBuilder({
     setBlocks((prev) => [...prev, newBlock(type)]);
   }
 
+  const previewTemplateId = templateOverride ? templateId : globalTemplateId;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
       <div className="w-full shrink-0 border-b border-slate-200 bg-white lg:w-[420px] lg:border-b-0 lg:border-r">
@@ -147,32 +155,50 @@ export function SitePageBuilder({
         <form action={action} className="space-y-6 overflow-y-auto px-4 py-4 lg:max-h-[calc(100dvh-8rem)]">
           <input type="hidden" name="id" value={page.id} />
           <input type="hidden" name="template_id" value={templateId} />
+          <input type="hidden" name="template_override" value={templateOverride ? "1" : "0"} />
           <input type="hidden" name="blocks_json" value={blocksJson} />
 
           {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
           {state.ok ? <p className="text-sm text-green-600">{state.message ?? t("saved")}</p> : null}
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-900">{t("template")}</h3>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {SITE_TEMPLATES.map((tpl) => (
-                <button
-                  key={tpl.id}
-                  type="button"
-                  onClick={() => setTemplateId(tpl.id)}
-                  className={`rounded-lg border p-3 text-left text-sm ${
-                    templateId === tpl.id
-                      ? "border-slate-900 bg-slate-50"
-                      : "border-slate-200 hover:border-slate-300"
-                  }`}
-                >
-                  <p className="font-medium">{t(`templates.${tpl.id}`)}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {t(`templates.${tpl.id}Desc`)}
-                  </p>
-                </button>
-              ))}
-            </div>
+            <p className="text-sm text-slate-600">
+              {t("globalTemplate")}:{" "}
+              <span className="font-medium text-slate-900">{t(`templates.${globalTemplateId}`)}</span>
+              {" · "}
+              <Link href="/institut/marketing/page-web/theme" className="text-slate-700 underline">
+                {t("editTheme")}
+              </Link>
+            </p>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={templateOverride}
+                onChange={(e) => {
+                  setTemplateOverride(e.target.checked);
+                  if (!e.target.checked) setTemplateId(globalTemplateId);
+                }}
+              />
+              {t("templateOverride")}
+            </label>
+            {templateOverride ? (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {SITE_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => setTemplateId(tpl.id)}
+                    className={`rounded-lg border p-3 text-left text-sm ${
+                      templateId === tpl.id
+                        ? "border-slate-900 bg-slate-50"
+                        : "border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    <p className="font-medium">{t(`templates.${tpl.id}`)}</p>
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </section>
 
           <section className="space-y-3">
@@ -285,12 +311,20 @@ export function SitePageBuilder({
       </div>
 
       <div className="min-h-[480px] flex-1 overflow-y-auto bg-slate-100">
-        <div className="sticky top-0 z-10 border-b border-slate-200 bg-white px-4 py-2 text-xs text-slate-500">
-          {t("previewLabel")}
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2 text-xs text-slate-500">
+          <span>{t("previewLabel")}</span>
+          <a
+            href={`/institut/marketing/page-web/${page.id}/preview`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-slate-700 hover:text-slate-900"
+          >
+            {t("previewFull")}
+          </a>
         </div>
         <SitePageRenderer
           blocks={blocks}
-          templateId={templateId}
+          templateId={previewTemplateId}
           services={services}
           scheduleDays={scheduleDays}
           accent="#0f172a"

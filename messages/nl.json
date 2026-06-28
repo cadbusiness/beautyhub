@@ -527,9 +527,56 @@
         "chooseType": "Paginatype",
         "homeBadge": "Home",
         "editBuilder": "Builder",
-        "preview": "Voorbeeld",
+        "previewBtn": "Voorbeeld",
+        "previewFull": "Volledig voorbeeld",
+        "previewPage": "Paginavoorbeeld",
+        "viewLive": "Live bekijken",
         "deleteConfirm": "Deze pagina verwijderen?",
         "footer": "{count, plural, one {# pagina} other {# pagina's}}",
+        "tabs": {
+          "pages": "Pagina's",
+          "theme": "Thema"
+        },
+        "hub": {
+          "title": "Uw online site",
+          "themeLink": "Thema aanpassen",
+          "editHome": "Home bewerken",
+          "sitePreview": "Sitevoorbeeld"
+        },
+        "toggles": {
+          "published": "Gepubliceerd",
+          "showInNav": "Tonen in menu"
+        },
+        "previewPanel": {
+          "title": "Voorbeeld",
+          "desktop": "Desktop",
+          "mobile": "Mobiel",
+          "openFull": "Openen",
+          "bannerDraft": "Voorbeeldmodus — ongepubliceerd concept",
+          "bannerPublished": "Voorbeeldmodus — gepubliceerde pagina",
+          "backToBuilder": "Terug naar builder"
+        },
+        "theme": {
+          "template": "Globaal template",
+          "displayName": "Weergavenaam",
+          "primaryColor": "Hoofdkleur",
+          "logo": "Logo",
+          "uploadLogo": "Logo uploaden",
+          "replaceLogo": "Logo vervangen",
+          "removeLogo": "Logo verwijderen",
+          "uploading": "Uploaden…",
+          "footerText": "Voettekst",
+          "previewLabel": "Themavoorbeeld",
+          "saved": "Thema opgeslagen.",
+          "templates": {
+            "elegant": "Elegant",
+            "modern": "Modern"
+          },
+          "navSample": {
+            "home": "Home",
+            "book": "Reserveren"
+          }
+        },
         "columns": {
           "title": "Titel",
           "type": "Type",
@@ -559,6 +606,10 @@
         "builder": {
           "back": "Webpagina's",
           "template": "Template",
+          "globalTemplate": "Sitetemplate",
+          "editTheme": "Thema bewerken",
+          "templateOverride": "Specifiek template voor deze pagina",
+          "previewFull": "Volledig voorbeeld",
           "pageTitle": "Paginatitel",
           "seoTitle": "SEO-titel",
           "seoDescription": "SEO-beschrijving",
@@ -1123,6 +1174,13 @@
     }
   },
   "public": {
+    "site": {
+      "nav": {
+        "home": "Home",
+        "book": "Reserveren",
+        "account": "Mijn account"
+      }
+    },
     "booking": {
       "title": "Afspraak maken",
       "subtitle": "{name} — online reservering",

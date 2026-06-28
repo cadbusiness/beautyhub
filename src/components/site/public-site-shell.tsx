@@ -1,33 +1,37 @@
 import Link from "next/link";
-import type { TenantContext } from "@/lib/tenant/context";
+
+export interface PublicSiteNavLink {
+  href: string;
+  label: string;
+}
 
 export function PublicSiteHeader({
-  tenant,
+  displayName,
+  logoUrl,
+  primaryColor,
+  navLinks,
   activePath = "/",
 }: {
-  tenant: TenantContext;
+  displayName: string;
+  logoUrl: string | null;
+  primaryColor: string;
+  navLinks: PublicSiteNavLink[];
   activePath?: string;
 }) {
-  const branding = tenant.branding as { appName?: string; primaryColor?: string };
-  const name = branding.appName ?? tenant.name;
-  const accent = branding.primaryColor ?? "#0f172a";
-
-  const links = [
-    { href: "/", label: "Accueil" },
-    { href: "/reserver", label: "Réserver" },
-    { href: "/client/login", label: "Mon compte" },
-  ];
-
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 lg:px-6">
-        <Link href="/" className="min-w-0">
-          <p className="truncate text-lg font-semibold text-slate-900" style={{ color: accent }}>
-            {name}
+        <Link href="/" className="flex min-w-0 items-center gap-3">
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="" className="h-8 w-auto max-w-[140px] shrink-0 object-contain" />
+          ) : null}
+          <p className="truncate text-lg font-semibold" style={{ color: primaryColor }}>
+            {displayName}
           </p>
         </Link>
-        <nav className="flex shrink-0 gap-4 text-sm">
-          {links.map((link) => (
+        <nav className="flex shrink-0 flex-wrap justify-end gap-x-4 gap-y-1 text-sm">
+          {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -47,18 +51,35 @@ export function PublicSiteHeader({
 }
 
 export function PublicSiteShell({
-  tenant,
+  shell,
   activePath,
   children,
 }: {
-  tenant: TenantContext;
+  shell: {
+    displayName: string;
+    logoUrl: string | null;
+    primaryColor: string;
+    footerText: string | null;
+    navLinks: PublicSiteNavLink[];
+  };
   activePath?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <PublicSiteHeader tenant={tenant} activePath={activePath} />
+      <PublicSiteHeader
+        displayName={shell.displayName}
+        logoUrl={shell.logoUrl}
+        primaryColor={shell.primaryColor}
+        navLinks={shell.navLinks}
+        activePath={activePath}
+      />
       <main className="flex-1">{children}</main>
+      {shell.footerText ? (
+        <footer className="border-t border-slate-200 px-4 py-4 text-center text-xs text-slate-500 lg:px-6">
+          {shell.footerText}
+        </footer>
+      ) : null}
     </div>
   );
 }

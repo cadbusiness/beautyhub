@@ -1433,7 +1433,9 @@ export type Database = {
           page_type: string
           seo_description: string | null
           seo_title: string | null
+          show_in_nav: boolean
           slug: string
+          sort_order: number
           template_id: string
           tenant_id: string
           title: string
@@ -1448,7 +1450,9 @@ export type Database = {
           page_type: string
           seo_description?: string | null
           seo_title?: string | null
+          show_in_nav?: boolean
           slug?: string
+          sort_order?: number
           template_id?: string
           tenant_id: string
           title: string
@@ -1463,7 +1467,9 @@ export type Database = {
           page_type?: string
           seo_description?: string | null
           seo_title?: string | null
+          show_in_nav?: boolean
           slug?: string
+          sort_order?: number
           template_id?: string
           tenant_id?: string
           title?: string
@@ -1474,6 +1480,47 @@ export type Database = {
             foreignKeyName: "inst_site_pages_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_site_settings: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          footer_text: string | null
+          logo_url: string | null
+          primary_color: string
+          template_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          footer_text?: string | null
+          logo_url?: string | null
+          primary_color?: string
+          template_id?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          footer_text?: string | null
+          logo_url?: string | null
+          primary_color?: string
+          template_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_site_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
@@ -2109,6 +2156,30 @@ export type Database = {
           template_id: string
           title: string
         }[]
+      }
+      get_public_site_settings: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          display_name: string | null
+          footer_text: string | null
+          logo_url: string | null
+          primary_color: string
+          template_id: string
+        }[]
+      }
+      get_public_site_nav: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          id: string
+          page_type: string
+          slug: string
+          sort_order: number
+          title: string
+        }[]
+      }
+      get_public_booking_enabled: {
+        Args: { p_tenant_id: string }
+        Returns: boolean
       }
       get_public_opening_hours: {
         Args: { p_tenant_id: string }

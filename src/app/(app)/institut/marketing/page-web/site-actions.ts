@@ -10,11 +10,16 @@ import {
   defaultTitleForPageType,
   parseSiteBlocks,
   SITE_PAGE_TYPES,
+  SITE_PAGE_TYPE_SORT,
   type SiteBlock,
   type SitePageRow,
   type SitePageType,
   type SiteTemplateId,
 } from "@/lib/institut/site-pages";
+import {
+  ensureSiteSettings,
+  type SiteSettingsRow,
+} from "@/lib/institut/site-settings";
 
 const ADMIN_PATH = "/institut/marketing/page-web";
 
@@ -29,16 +34,22 @@ function mapRow(row: {
   title: string;
   is_published: boolean;
   is_home: boolean;
+  show_in_nav?: boolean;
+  sort_order?: number;
   content: unknown;
   seo_title: string | null;
   seo_description: string | null;
   created_at: string;
   updated_at: string;
 }): SitePageRow {
+  const pageType = row.page_type as SitePageType;
+  const defaults = SITE_PAGE_TYPE_SORT[pageType] ?? { sort_order: 0, show_in_nav: true };
   return {
     ...row,
-    page_type: row.page_type as SitePageRow["page_type"],
+    page_type: pageType,
     template_id: row.template_id as SitePageRow["template_id"],
+    show_in_nav: row.show_in_nav ?? defaults.show_in_nav,
+    sort_order: row.sort_order ?? defaults.sort_order,
     content: parseSiteBlocks(row.content),
   };
 }
@@ -59,6 +70,8 @@ export async function ensureDefaultSitePages(tenantId: string, instituteName: st
     title: defaultTitleForPageType(def.type, instituteName),
     is_home: def.type === "home",
     is_published: def.type === "home",
+    show_in_nav: SITE_PAGE_TYPE_SORT[def.type].show_in_nav,
+    sort_order: SITE_PAGE_TYPE_SORT[def.type].sort_order,
     template_id: "elegant" as SiteTemplateId,
     content: defaultBlocksForPageType(def.type, instituteName) as unknown as Json,
   }));
@@ -85,23 +98,18 @@ function extForMime(mime: string): string {
   }
 }
 
-export async function uploadSiteGalleryImage(
-  formData: FormData,
+async function uploadSiteImage(
+  tenantId: string,
+  folder: string,
+  file: File,
 ): Promise<{ error?: string; url?: string }> {
-  const session = await requireModule("institut");
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
-    return { error: "Fichier requis." };
-  }
-  if (file.size > MAX_BYTES) {
-    return { error: "Image trop volumineuse (max 5 Mo)." };
-  }
+  if (file.size > MAX_BYTES) return { error: "Image trop volumineuse (max 5 Mo)." };
   if (!ALLOWED.has(file.type)) {
     return { error: "Format non supporté (JPEG, PNG, WebP, GIF)." };
   }
 
   const supabase = await createClient();
-  const path = `${session.tenant.id}/gallery/${crypto.randomUUID()}.${extForMime(file.type)}`;
+  const path = `${tenantId}/${folder}/${crypto.randomUUID()}.${extForMime(file.type)}`;
   const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
     contentType: file.type,
     upsert: false,
@@ -114,21 +122,45 @@ export async function uploadSiteGalleryImage(
   return { url: publicUrl };
 }
 
+export async function uploadSiteGalleryImage(
+  formData: FormData,
+): Promise<{ error?: string; url?: string }> {
+  const session = await requireModule("institut");
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Fichier requis." };
+  }
+  return uploadSiteImage(session.tenant.id, "gallery", file);
+}
+
+export async function uploadSiteLogo(
+  formData: FormData,
+): Promise<{ error?: string; url?: string }> {
+  const session = await requireModule("institut");
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Fichier requis." };
+  }
+  return uploadSiteImage(session.tenant.id, "logo", file);
+}
+
 export async function loadSitePagesAdmin(): Promise<{
   pages: SitePageRow[];
   publicBaseUrl: string;
   customDomain: string | null;
+  homePageId: string | null;
 }> {
   const session = await requireModule("institut");
   const supabase = await createClient();
   await ensureDefaultSitePages(session.tenant.id, session.tenant.name);
+  await ensureSiteSettings(supabase, session.tenant.id);
 
   const [{ data }, { data: tenantRow }] = await Promise.all([
     supabase
       .from("inst_site_pages")
       .select("*")
       .eq("tenant_id", session.tenant.id)
-      .order("is_home", { ascending: false })
+      .order("sort_order")
       .order("created_at"),
     supabase
       .from("tenants")
@@ -137,13 +169,106 @@ export async function loadSitePagesAdmin(): Promise<{
       .maybeSingle(),
   ]);
 
+  const pages = (data ?? []).map((row) => mapRow(row));
   const publicBaseUrl = await getTenantPublicBaseUrl(session.tenant.slug, session.tenant);
 
   return {
-    pages: (data ?? []).map((row) => mapRow(row)),
+    pages,
     publicBaseUrl,
     customDomain: tenantRow?.custom_domain ?? null,
+    homePageId: pages.find((p) => p.is_home)?.id ?? null,
   };
+}
+
+export async function loadSiteSettingsAdmin(): Promise<SiteSettingsRow> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  await ensureDefaultSitePages(session.tenant.id, session.tenant.name);
+  return ensureSiteSettings(supabase, session.tenant.id);
+}
+
+export async function saveSiteTheme(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  const templateId = String(formData.get("template_id") ?? "elegant") as SiteTemplateId;
+  const primaryColor = String(formData.get("primary_color") ?? "#0f172a").trim();
+  const displayName = String(formData.get("display_name") ?? "").trim() || null;
+  const logoUrl = String(formData.get("logo_url") ?? "").trim() || null;
+  const footerText = String(formData.get("footer_text") ?? "").trim() || null;
+
+  await ensureSiteSettings(supabase, session.tenant.id);
+
+  const { error } = await supabase
+    .from("inst_site_settings")
+    .update({
+      template_id: templateId,
+      primary_color: primaryColor,
+      display_name: displayName,
+      logo_url: logoUrl,
+      footer_text: footerText,
+    })
+    .eq("tenant_id", session.tenant.id);
+
+  if (error) return { error: error.message };
+
+  await supabase
+    .from("inst_site_pages")
+    .update({ template_id: templateId })
+    .eq("tenant_id", session.tenant.id);
+
+  revalidatePath(ADMIN_PATH);
+  revalidatePath(`${ADMIN_PATH}/theme`);
+  return { ok: true, message: "Thème enregistré." };
+}
+
+export async function toggleSitePagePublished(
+  pageId: string,
+  published: boolean,
+): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("inst_site_pages")
+    .update({ is_published: published })
+    .eq("id", pageId)
+    .eq("tenant_id", session.tenant.id);
+
+  if (error) return { error: error.message };
+  revalidatePath(ADMIN_PATH);
+  revalidatePath(`${ADMIN_PATH}/${pageId}/preview`);
+  return { ok: true };
+}
+
+export async function toggleSitePageNav(
+  pageId: string,
+  showInNav: boolean,
+): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+
+  const { data: page } = await supabase
+    .from("inst_site_pages")
+    .select("is_home")
+    .eq("id", pageId)
+    .eq("tenant_id", session.tenant.id)
+    .maybeSingle();
+
+  if (!page) return { error: "Page introuvable." };
+  if (page.is_home) return { error: "L'accueil est toujours dans le menu." };
+
+  const { error } = await supabase
+    .from("inst_site_pages")
+    .update({ show_in_nav: showInNav })
+    .eq("id", pageId)
+    .eq("tenant_id", session.tenant.id);
+
+  if (error) return { error: error.message };
+  revalidatePath(ADMIN_PATH);
+  return { ok: true };
 }
 
 export async function loadSitePageForBuilder(pageId: string): Promise<SitePageRow | null> {
@@ -174,6 +299,9 @@ export async function createSitePage(pageType: SitePageType): Promise<ActionResu
     if (existing) return { error: "Une page d'accueil existe déjà." };
   }
 
+  const settings = await ensureSiteSettings(supabase, session.tenant.id);
+  const sort = SITE_PAGE_TYPE_SORT[pageType];
+
   const { data, error } = await supabase
     .from("inst_site_pages")
     .insert({
@@ -182,7 +310,9 @@ export async function createSitePage(pageType: SitePageType): Promise<ActionResu
       slug: def.defaultSlug,
       title: defaultTitleForPageType(pageType, session.tenant.name),
       is_home: pageType === "home",
-      template_id: "elegant",
+      show_in_nav: sort.show_in_nav,
+      sort_order: sort.sort_order,
+      template_id: settings.template_id,
       content: defaultBlocksForPageType(pageType, session.tenant.name) as unknown as Json,
     })
     .select("id")
@@ -200,12 +330,15 @@ export async function saveSitePageBuilder(
   const session = await requireModule("institut");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
-  const templateId = String(formData.get("template_id") ?? "elegant") as SiteTemplateId;
   const title = String(formData.get("title") ?? "").trim();
   const blocksJson = String(formData.get("blocks_json") ?? "[]");
   const seoTitle = String(formData.get("seo_title") ?? "").trim() || null;
   const seoDescription = String(formData.get("seo_description") ?? "").trim() || null;
   const isPublished = formData.get("is_published") === "1";
+  const templateOverride = formData.get("template_override") === "1";
+  const templateId = templateOverride
+    ? (String(formData.get("template_id") ?? "elegant") as SiteTemplateId)
+    : null;
 
   if (!id || !title) return { error: "Données invalides." };
 
@@ -216,22 +349,39 @@ export async function saveSitePageBuilder(
     return { error: "Contenu invalide." };
   }
 
+  const update: {
+    title: string;
+    content: Json;
+    seo_title: string | null;
+    seo_description: string | null;
+    is_published: boolean;
+    template_id: SiteTemplateId;
+  } = {
+    title,
+    content: blocks as unknown as Json,
+    seo_title: seoTitle,
+    seo_description: seoDescription,
+    is_published: isPublished,
+    template_id: "elegant",
+  };
+
+  if (templateOverride && templateId) {
+    update.template_id = templateId;
+  } else {
+    const settings = await ensureSiteSettings(supabase, session.tenant.id);
+    update.template_id = settings.template_id;
+  }
+
   const { error } = await supabase
     .from("inst_site_pages")
-    .update({
-      template_id: templateId,
-      title,
-      content: blocks as unknown as Json,
-      seo_title: seoTitle,
-      seo_description: seoDescription,
-      is_published: isPublished,
-    })
+    .update(update)
     .eq("id", id)
     .eq("tenant_id", session.tenant.id);
 
   if (error) return { error: error.message };
   revalidatePath(ADMIN_PATH);
   revalidatePath(`${ADMIN_PATH}/${id}/builder`);
+  revalidatePath(`${ADMIN_PATH}/${id}/preview`);
   return { ok: true, message: "Page enregistrée." };
 }
 

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { loadSitePageForBuilder } from "../../site-actions";
+import { loadSitePageForBuilder, loadSiteSettingsAdmin } from "../../site-actions";
 import { SitePageBuilder } from "../../site-page-builder";
 import type { PublicService } from "@/app/(public)/reserver/actions";
 import type { FormattedOpeningDay } from "@/components/site/site-page-renderer";
@@ -40,7 +40,10 @@ export default async function SitePageBuilderPage({
 }) {
   const session = await requireModule("institut");
   const { pageId } = await params;
-  const page = await loadSitePageForBuilder(pageId);
+  const [page, settings] = await Promise.all([
+    loadSitePageForBuilder(pageId),
+    loadSiteSettingsAdmin(),
+  ]);
   if (!page) notFound();
 
   const supabase = await createClient();
@@ -55,6 +58,7 @@ export default async function SitePageBuilderPage({
         page={page}
         previewServices={(services ?? []) as PublicService[]}
         scheduleDays={scheduleDays}
+        globalTemplateId={settings.template_id}
       />
     </div>
   );

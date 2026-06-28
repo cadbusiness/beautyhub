@@ -87,6 +87,8 @@ export interface SitePageRow {
   title: string;
   is_published: boolean;
   is_home: boolean;
+  show_in_nav: boolean;
+  sort_order: number;
   content: SiteBlock[];
   seo_title: string | null;
   seo_description: string | null;
@@ -113,6 +115,13 @@ export const SITE_TEMPLATES: {
   { id: "elegant", labelKey: "elegant", descriptionKey: "elegantDesc" },
   { id: "modern", labelKey: "modern", descriptionKey: "modernDesc" },
 ];
+
+export const SITE_PAGE_TYPE_SORT: Record<SitePageType, { sort_order: number; show_in_nav: boolean }> = {
+  home: { sort_order: 0, show_in_nav: true },
+  catalog: { sort_order: 10, show_in_nav: true },
+  booking: { sort_order: 20, show_in_nav: false },
+  contact: { sort_order: 30, show_in_nav: true },
+};
 
 export const SITE_PAGE_TYPES: {
   type: SitePageType;

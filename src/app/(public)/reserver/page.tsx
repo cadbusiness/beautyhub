@@ -9,13 +9,17 @@ import {
   getPublicSiteTenant,
   loadPublicSitePageByType,
 } from "@/lib/tenant/public-site";
-import { normalizeSiteBlocks, parseSiteBlocks } from "@/lib/institut/site-pages";
+import { normalizeSiteBlocks, parseSiteBlocks, type SiteTemplateId } from "@/lib/institut/site-pages";
 import {
   fetchPublicOpeningHours,
   formatTimeLabel,
   groupOpeningHoursByWeekday,
   weekdayMessageKey,
 } from "@/lib/institut/opening-hours";
+import {
+  fetchPublicSiteSettings,
+  loadPublicSiteShellData,
+} from "@/lib/institut/site-settings";
 
 export default async function ReserverPage({
   searchParams,
@@ -23,6 +27,7 @@ export default async function ReserverPage({
   searchParams: Promise<{ service?: string }>;
 }) {
   const t = await getTranslations("public.booking");
+  const tNav = await getTranslations("public.site.nav");
   const tenant = await getPublicSiteTenant();
   if (!tenant) return null;
 
@@ -31,7 +36,16 @@ export default async function ReserverPage({
   const bookingPage = await loadPublicSitePageByType(tenant.id, "booking");
 
   const supabase = await createClient();
-  const hoursRows = await fetchPublicOpeningHours(supabase, tenant.id);
+  const [hoursRows, shell, settings] = await Promise.all([
+    fetchPublicOpeningHours(supabase, tenant.id),
+    loadPublicSiteShellData(supabase, tenant, {
+      home: tNav("home"),
+      book: tNav("book"),
+      account: tNav("account"),
+    }),
+    fetchPublicSiteSettings(supabase, tenant.id),
+  ]);
+
   const grouped = groupOpeningHoursByWeekday(hoursRows);
   const tWeek = await getTranslations("weekdays");
   const scheduleDays = [];
@@ -46,26 +60,29 @@ export default async function ReserverPage({
     });
   }
 
-  const branding = tenant.branding as { primaryColor?: string };
   const introBlocks = bookingPage
     ? normalizeSiteBlocks(parseSiteBlocks(bookingPage.content))
     : [];
 
+  const templateId = ((bookingPage?.template_id as SiteTemplateId) ??
+    settings?.template_id ??
+    "elegant") as SiteTemplateId;
+
   return (
-    <PublicSiteShell tenant={tenant} activePath="/reserver">
+    <PublicSiteShell shell={shell} activePath="/reserver">
       {introBlocks.length > 0 ? (
         <SitePageRenderer
           blocks={introBlocks}
-          templateId={(bookingPage!.template_id as "elegant" | "modern") ?? "elegant"}
+          templateId={templateId}
           services={services}
           scheduleDays={scheduleDays}
-          accent={branding.primaryColor ?? "#0f172a"}
+          accent={shell.primaryColor}
           compactHero
         />
       ) : (
         <div className="mx-auto max-w-3xl px-4 pt-6 lg:px-6">
           <h1 className="text-2xl font-semibold text-slate-900">{t("title")}</h1>
-          <p className="text-sm text-slate-500">{t("subtitle", { name: tenant.name })}</p>
+          <p className="text-sm text-slate-500">{t("subtitle", { name: shell.displayName })}</p>
         </div>
       )}
 
@@ -75,7 +92,7 @@ export default async function ReserverPage({
         ) : null}
         <BookingWizard initialServiceId={initialServiceId ?? ""} />
       </div>
-      <AppFooter />
+      {!shell.footerText ? <AppFooter /> : null}
     </PublicSiteShell>
   );
 }

@@ -549,9 +549,56 @@
         "chooseType": "Type de page",
         "homeBadge": "Accueil",
         "editBuilder": "Builder",
-        "preview": "Aperçu",
+        "previewBtn": "Aperçu",
+        "previewFull": "Aperçu plein écran",
+        "previewPage": "Aperçu de la page",
+        "viewLive": "Voir en ligne",
         "deleteConfirm": "Supprimer cette page ?",
         "footer": "{count, plural, one {# page} other {# pages}}",
+        "tabs": {
+          "pages": "Pages",
+          "theme": "Thème"
+        },
+        "hub": {
+          "title": "Votre site en ligne",
+          "themeLink": "Personnaliser le thème",
+          "editHome": "Modifier l'accueil",
+          "sitePreview": "Aperçu du site"
+        },
+        "toggles": {
+          "published": "Publiée",
+          "showInNav": "Afficher dans le menu"
+        },
+        "previewPanel": {
+          "title": "Prévisualisation",
+          "desktop": "Bureau",
+          "mobile": "Mobile",
+          "openFull": "Ouvrir",
+          "bannerDraft": "Mode aperçu — brouillon non publié",
+          "bannerPublished": "Mode aperçu — page publiée",
+          "backToBuilder": "Retour au builder"
+        },
+        "theme": {
+          "template": "Template global",
+          "displayName": "Nom affiché",
+          "primaryColor": "Couleur principale",
+          "logo": "Logo",
+          "uploadLogo": "Téléverser un logo",
+          "replaceLogo": "Remplacer le logo",
+          "removeLogo": "Retirer le logo",
+          "uploading": "Envoi…",
+          "footerText": "Texte de pied de page",
+          "previewLabel": "Aperçu du thème",
+          "saved": "Thème enregistré.",
+          "templates": {
+            "elegant": "Élégant",
+            "modern": "Moderne"
+          },
+          "navSample": {
+            "home": "Accueil",
+            "book": "Réserver"
+          }
+        },
         "columns": {
           "title": "Titre",
           "type": "Type",
@@ -581,6 +628,10 @@
         "builder": {
           "back": "Pages web",
           "template": "Template",
+          "globalTemplate": "Template du site",
+          "editTheme": "Modifier le thème",
+          "templateOverride": "Template spécifique pour cette page",
+          "previewFull": "Aperçu plein écran",
           "pageTitle": "Titre de la page",
           "seoTitle": "Titre SEO",
           "seoDescription": "Description SEO",
@@ -1148,6 +1199,13 @@
     }
   },
   "public": {
+    "site": {
+      "nav": {
+        "home": "Accueil",
+        "book": "Réserver",
+        "account": "Mon compte"
+      }
+    },
     "booking": {
       "title": "Prendre rendez-vous",
       "subtitle": "{name} — réservation en ligne",

@@ -1,4 +1,5 @@
 import { institutAiActions } from "./ai-actions";
+import { institutPosAiActions } from "./ai-pos-actions";
 import type { ModuleManifest } from "../types";
 
 export const institutModule: ModuleManifest = {
@@ -26,5 +27,5 @@ export const institutModule: ModuleManifest = {
       roles: ["platform_admin", "brand_owner", "tenant_owner", "staff"],
     },
   ],
-  aiActions: institutAiActions,
+  aiActions: [...institutAiActions, ...institutPosAiActions],
 };

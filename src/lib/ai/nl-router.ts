@@ -3,6 +3,7 @@ import type { ExecuteActionContext } from "./types";
 import { getAiActionsFor } from "@/modules";
 import { createClient } from "@/lib/supabase/server";
 import { fetchTenantContext } from "@/modules/institut/ai-helpers";
+import { fetchPosContext } from "@/modules/institut/ai-pos-helpers";
 
 export type InterpretResult =
   | {
@@ -106,6 +107,7 @@ function heuristicRoute(
   message: string,
   catalog: ActionCatalogEntry[],
   context: Awaited<ReturnType<typeof fetchTenantContext>>,
+  pos: Awaited<ReturnType<typeof fetchPosContext>>,
 ): InterpretResult | null {
   const norm = normalizeText(message);
   const staffNames = context.staff.map((s) => s.full_name);
@@ -170,7 +172,19 @@ function heuristicRoute(
     }
   }
 
-  if (has("liste", "lister", "montre", "affiche", "voir")) {
+  if (has("liste", "lister", "montre", "affiche", "voir", "historique")) {
+    if (has("vente", "ticket", "caisse") && !has("produit")) {
+      return matchList(catalog, "institut.pos_list_sales", { limit: 20 }, "Lister les ventes caisse");
+    }
+    if (has("bon cadeau", "bon-cadeau", "bon cadeaux")) {
+      return matchList(catalog, "institut.pos_list_gift_cards", { limit: 20 }, "Lister les bons cadeaux");
+    }
+    if (has("avoir", "avoirs")) {
+      return matchList(catalog, "institut.pos_list_credit_notes", { limit: 20 }, "Lister les avoirs");
+    }
+    if (has("produit") && has("caisse", "interne")) {
+      return matchList(catalog, "institut.pos_list_products", { limit: 50 }, "Lister les produits caisse");
+    }
     if (has("client")) {
       return matchList(catalog, "institut.list_clients", { limit: 20 }, "Lister les clients");
     }
@@ -192,6 +206,76 @@ function heuristicRoute(
     if (has("absence", "conge", "vacance", "fermeture")) {
       return matchList(catalog, "institut.list_time_off", { upcoming_only: true }, "Lister les absences");
     }
+  }
+
+  if (has("caisse", "session") && has("ouvr", "demarr", "start")) {
+    const floatMatch = message.match(/(\d+(?:[.,]\d+)?)\s*€/);
+    const opening = floatMatch ? Number.parseFloat(floatMatch[1].replace(",", ".")) : 0;
+    return {
+      type: "action",
+      actionName: "institut.pos_open_session",
+      params: { opening_float_euros: opening },
+      summary: `Ouvrir la session caisse${opening ? ` avec ${opening} € de fond` : ""}`,
+      needsConfirm: true,
+    };
+  }
+
+  if (has("rapport x", "ticket x") || (has("rapport") && has("intermediaire"))) {
+    return matchList(
+      catalog,
+      "institut.pos_generate_x_report",
+      {},
+      "Générer un rapport X",
+    );
+  }
+
+  if (
+    has("clotur", "ferme") &&
+    has("caisse", "session", "rapport z", "z")
+  ) {
+    const cashMatch = message.match(/(\d+(?:[.,]\d+)?)\s*€/);
+    if (cashMatch) {
+      return {
+        type: "action",
+        actionName: "institut.pos_close_session",
+        params: { counted_cash_euros: Number.parseFloat(cashMatch[1].replace(",", ".")) },
+        summary: `Clôturer la session caisse (${cashMatch[1]} € comptés)`,
+        needsConfirm: true,
+      };
+    }
+    return {
+      type: "clarify",
+      message: "Indiquez le montant espèces compté en caisse pour la clôture (ex. « clôture caisse avec 250 € »).",
+    };
+  }
+
+  if (
+    has("bon cadeau", "bon-cadeau") &&
+    (has("creer", "créer", "emettre", "émettre", "faire", "ajoute"))
+  ) {
+    const amountMatch = message.match(/(\d+(?:[.,]\d+)?)\s*€/);
+    if (amountMatch) {
+      return {
+        type: "action",
+        actionName: "institut.pos_issue_gift_card",
+        params: { amount_euros: Number.parseFloat(amountMatch[1].replace(",", ".")) },
+        summary: `Émettre un bon cadeau de ${amountMatch[1]} €`,
+        needsConfirm: true,
+      };
+    }
+    return { type: "clarify", message: "Quel montant pour le bon cadeau ? (ex. « bon cadeau 50 € »)" };
+  }
+
+  if (
+    has("caisse", "session") &&
+    (has("etat", "état", "status", "ouverte", "resume", "résumé"))
+  ) {
+    return matchList(
+      catalog,
+      "institut.pos_session_status",
+      {},
+      pos.openSession ? "Résumé session caisse ouverte" : "État de la caisse",
+    );
   }
 
   if (has("cree", "creer", "ajoute", "ajouter", "nouveau", "nouvelle")) {
@@ -239,6 +323,7 @@ async function openAiRoute(
   message: string,
   catalog: ActionCatalogEntry[],
   context: Awaited<ReturnType<typeof fetchTenantContext>>,
+  pos: Awaited<ReturnType<typeof fetchPosContext>>,
 ): Promise<InterpretResult | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
@@ -255,6 +340,11 @@ Contexte tenant:
 - Cabines: ${context.resources.map((r) => r.name).join(", ") || "aucune"}
 - Grilles horaires: ${context.schedules.map((s) => s.name).join(", ") || "aucune"}
 - Prestations: ${context.services.map((s) => s.name).join(", ") || "aucune"}
+
+Caisse:
+- Session: ${pos.openSession ? `ouverte depuis ${pos.openSession.opened_at}` : "fermée"}
+- Dernières ventes: ${pos.recentSales.map((s) => s.ticket_number ?? s.id.slice(0, 8)).join(", ") || "aucune"}
+- Bons cadeaux actifs: ${pos.giftCards.map((g) => g.code).join(", ") || "aucun"}
 
 Date du jour: ${new Date().toISOString().slice(0, 10)}
 
@@ -325,11 +415,12 @@ export async function interpretUserMessage(
   const catalog = buildCatalog(actions);
   const supabase = await createClient();
   const tenantContext = await fetchTenantContext(supabase, ctx.tenantId);
+  const posContext = await fetchPosContext(supabase, ctx.tenantId);
 
-  const llm = await openAiRoute(trimmed, catalog, tenantContext);
+  const llm = await openAiRoute(trimmed, catalog, tenantContext, posContext);
   if (llm) return llm;
 
-  const heuristic = heuristicRoute(trimmed, catalog, tenantContext);
+  const heuristic = heuristicRoute(trimmed, catalog, tenantContext, posContext);
   if (heuristic) return heuristic;
 
   return {

@@ -14,13 +14,8 @@ if [[ ! -f .env.local ]]; then
   exit 1
 fi
 
-# Charge .env.local
-set -a
-# shellcheck disable=SC1091
-source .env.local
-set +a
+eval "$(node "$(dirname "$0")/load-env-local.mjs")"
 
-# Complete service_role si vide
 if [[ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]]; then
   SUPABASE_SERVICE_ROLE_KEY=$(supabase projects api-keys --project-ref cmlnlwqjnqplsfemrvsp -o json \
     | python3 -c "import json,sys; d=json.load(sys.stdin); print(next(x['api_key'] for x in d if x['name']=='service_role'))")
@@ -33,29 +28,28 @@ fi
 
 VERCEL_DOMAIN="${VERCEL_DOMAIN:-beautyhub-seven.vercel.app}"
 
-declare -A VARS=(
-  [NEXT_PUBLIC_SUPABASE_URL]="${NEXT_PUBLIC_SUPABASE_URL}"
-  [NEXT_PUBLIC_SUPABASE_ANON_KEY]="${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
-  [SUPABASE_SERVICE_ROLE_KEY]="${SUPABASE_SERVICE_ROLE_KEY}"
-  [CONNECTIONS_ENCRYPTION_KEY]="${CONNECTIONS_ENCRYPTION_KEY}"
-  [NEXT_PUBLIC_ROOT_DOMAIN]="${VERCEL_DOMAIN}"
-)
-
-echo "→ Liaison projet Vercel (si necessaire)..."
-vercel link --yes 2>/dev/null || true
-
-for name in "${!VARS[@]}"; do
-  value="${VARS[$name]}"
+push_var() {
+  local name="$1"
+  local value="$2"
   if [[ -z "$value" ]]; then
     echo "❌ Variable vide: $name"
     exit 1
   fi
-  for env in production preview; do
+  for env in production; do
     echo "→ $name ($env)"
     vercel env add "$name" "$env" --value "$value" --yes --force --sensitive 2>/dev/null \
       || vercel env add "$name" "$env" --value "$value" --yes --force
   done
-done
+}
+
+echo "→ Liaison projet Vercel (si necessaire)..."
+vercel link --yes 2>/dev/null || true
+
+push_var "NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_URL"
+push_var "NEXT_PUBLIC_SUPABASE_ANON_KEY" "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
+push_var "SUPABASE_SERVICE_ROLE_KEY" "$SUPABASE_SERVICE_ROLE_KEY"
+push_var "CONNECTIONS_ENCRYPTION_KEY" "$CONNECTIONS_ENCRYPTION_KEY"
+push_var "NEXT_PUBLIC_ROOT_DOMAIN" "$VERCEL_DOMAIN"
 
 echo ""
 echo "✅ Variables poussees. Redeploie:"

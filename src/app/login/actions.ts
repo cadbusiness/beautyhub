@@ -41,7 +41,7 @@ export async function signIn(
     redirect("/admin");
   }
 
-  redirect("/institut");
+  redirect("/dashboard");
 }
 
 export async function signOut(): Promise<void> {

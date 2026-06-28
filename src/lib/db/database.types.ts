@@ -1423,6 +1423,62 @@ export type Database = {
           },
         ]
       }
+      inst_site_pages: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          is_home: boolean
+          is_published: boolean
+          page_type: string
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          template_id: string
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_home?: boolean
+          is_published?: boolean
+          page_type: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          template_id?: string
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_home?: boolean
+          is_published?: boolean
+          page_type?: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          template_id?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_site_pages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_services: {
         Row: {
           buffer_after_min: number
@@ -2013,6 +2069,32 @@ export type Database = {
       inst_booking_price_cents: {
         Args: { p_service_id: string; p_extras?: Json }
         Returns: number
+      }
+      get_public_site_home: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          content: Json
+          id: string
+          page_type: string
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          template_id: string
+          title: string
+        }[]
+      }
+      get_public_site_page: {
+        Args: { p_tenant_id: string; p_slug: string }
+        Returns: {
+          content: Json
+          id: string
+          page_type: string
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          template_id: string
+          title: string
+        }[]
       }
       inst_loyalty_credit: {
         Args: {

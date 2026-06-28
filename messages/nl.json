@@ -518,11 +518,75 @@
         }
       },
       "website": {
-        "title": "Webpagina van het instituut",
-        "description": "De openbare pagina waar klanten het instituut ontdekken en reserveren.",
-        "publicUrlLabel": "Reserveringslink",
-        "preview": "Pagina bekijken",
-        "hint": "Aanpassing van inhoud, foto's en custom domein — binnenkort."
+        "title": "Webpagina's",
+        "description": "Maak en pas de openbare pagina's van uw instituut aan: home, catalogus, contact.",
+        "publicBase": "Openbare site",
+        "pagesTitle": "Mijn pagina's",
+        "addPage": "Nieuwe pagina",
+        "chooseType": "Paginatype",
+        "homeBadge": "Home",
+        "editBuilder": "Builder",
+        "preview": "Voorbeeld",
+        "deleteConfirm": "Deze pagina verwijderen?",
+        "footer": "{count, plural, one {# pagina} other {# pagina's}}",
+        "columns": {
+          "title": "Titel",
+          "type": "Type",
+          "template": "Template",
+          "status": "Status"
+        },
+        "status": {
+          "published": "Gepubliceerd",
+          "draft": "Concept"
+        },
+        "types": {
+          "home": "Home",
+          "homeDesc": "Vitrine van het instituut",
+          "booking": "Reserveren",
+          "bookingDesc": "Online afsprakenflow",
+          "catalog": "Catalogus",
+          "catalogDesc": "Lijst van behandelingen",
+          "contact": "Contact",
+          "contactDesc": "Gegevens en openingstijden"
+        },
+        "templates": {
+          "elegant": "Elegant",
+          "elegantDesc": "Serif typografie, luchtige layout",
+          "modern": "Modern",
+          "modernDesc": "Sterk contrast, donkere hero"
+        },
+        "builder": {
+          "back": "Webpagina's",
+          "template": "Template",
+          "pageTitle": "Paginatitel",
+          "seoTitle": "SEO-titel",
+          "seoDescription": "SEO-beschrijving",
+          "published": "Pagina publiceren",
+          "blocks": "Inhoudsblokken",
+          "addBlock": "Blok toevoegen…",
+          "previewLabel": "Live voorbeeld",
+          "saved": "Pagina opgeslagen.",
+          "templates": {
+            "elegant": "Elegant",
+            "elegantDesc": "Klassiek en verfijnd",
+            "modern": "Modern",
+            "modernDesc": "Contrast en impact"
+          },
+          "blockTypes": {
+            "hero": "Banner",
+            "about": "Tekst",
+            "services": "Behandelingen",
+            "hours": "Openingstijden",
+            "cta": "Call-to-action"
+          },
+          "fields": {
+            "headline": "Hoofdtitel",
+            "subheadline": "Ondertitel",
+            "ctaLabel": "Knoplabel",
+            "ctaHref": "Knoplink",
+            "showPrices": "Prijzen tonen"
+          }
+        }
       },
       "promos": {
         "title": "Promoties",

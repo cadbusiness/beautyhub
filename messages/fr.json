@@ -540,11 +540,75 @@
         }
       },
       "website": {
-        "title": "Page web de l'institut",
-        "description": "La page publique où vos clientes découvrent l'institut et prennent rendez-vous.",
-        "publicUrlLabel": "Lien de réservation",
-        "preview": "Voir la page",
-        "hint": "Personnalisation du contenu, des photos et du domaine custom — à venir."
+        "title": "Pages web",
+        "description": "Créez et personnalisez les pages publiques de votre institut : accueil, catalogue, contact.",
+        "publicBase": "Site public",
+        "pagesTitle": "Mes pages",
+        "addPage": "Nouvelle page",
+        "chooseType": "Type de page",
+        "homeBadge": "Accueil",
+        "editBuilder": "Builder",
+        "preview": "Aperçu",
+        "deleteConfirm": "Supprimer cette page ?",
+        "footer": "{count, plural, one {# page} other {# pages}}",
+        "columns": {
+          "title": "Titre",
+          "type": "Type",
+          "template": "Template",
+          "status": "Statut"
+        },
+        "status": {
+          "published": "Publiée",
+          "draft": "Brouillon"
+        },
+        "types": {
+          "home": "Accueil",
+          "homeDesc": "Page vitrine de l'institut",
+          "booking": "Réservation",
+          "bookingDesc": "Parcours de prise de RDV en ligne",
+          "catalog": "Catalogue",
+          "catalogDesc": "Liste des prestations",
+          "contact": "Contact",
+          "contactDesc": "Coordonnées et horaires"
+        },
+        "templates": {
+          "elegant": "Élégant",
+          "elegantDesc": "Typographie serif, mise en page aérée",
+          "modern": "Moderne",
+          "modernDesc": "Contraste fort, hero sombre"
+        },
+        "builder": {
+          "back": "Pages web",
+          "template": "Template",
+          "pageTitle": "Titre de la page",
+          "seoTitle": "Titre SEO",
+          "seoDescription": "Description SEO",
+          "published": "Publier la page",
+          "blocks": "Blocs de contenu",
+          "addBlock": "Ajouter un bloc…",
+          "previewLabel": "Aperçu en direct",
+          "saved": "Page enregistrée.",
+          "templates": {
+            "elegant": "Élégant",
+            "elegantDesc": "Classique et raffiné",
+            "modern": "Moderne",
+            "modernDesc": "Contraste et impact"
+          },
+          "blockTypes": {
+            "hero": "Bannière",
+            "about": "Texte",
+            "services": "Prestations",
+            "hours": "Horaires",
+            "cta": "Appel à l'action"
+          },
+          "fields": {
+            "headline": "Titre principal",
+            "subheadline": "Sous-titre",
+            "ctaLabel": "Libellé du bouton",
+            "ctaHref": "Lien du bouton",
+            "showPrices": "Afficher les prix"
+          }
+        }
       },
       "promos": {
         "title": "Promotions",

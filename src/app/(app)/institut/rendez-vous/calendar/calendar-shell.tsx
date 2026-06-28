@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -53,7 +53,6 @@ export function CalendarShell({
   initialDate: string;
 }) {
   const router = useRouter();
-  const t = useTranslations("common");
   const tCal = useTranslations("appointments.calendar");
   const [viewMode, setViewMode] = useState<CalendarViewMode>("day");
   const [columnMode, setColumnMode] = useState<ColumnMode>("staff");
@@ -71,25 +70,34 @@ export function CalendarShell({
   const [error, setError] = useState<string | null>(null);
   const [fetchPending, startFetch] = useTransition();
   const [actionPending, startAction] = useTransition();
+  const skipInitialFetch = useRef(true);
 
   const range = useMemo(() => getRangeForView(anchor, viewMode), [anchor, viewMode]);
 
   const loadAppointments = useCallback(() => {
     startFetch(async () => {
-      try {
-        const data = await getCalendarAppointments(
-          range.start.toISOString(),
-          range.end.toISOString(),
-        );
-        setAppointments(data as CalendarAppointment[]);
-        setError(null);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : t("loadingError"));
+      const result = await getCalendarAppointments(
+        range.start.toISOString(),
+        range.end.toISOString(),
+      );
+      if (!result.ok) {
+        setError(result.error || tCal("loadError"));
+        return;
       }
+      setAppointments(result.appointments as CalendarAppointment[]);
+      setError(null);
     });
-  }, [range.end, range.start]);
+  }, [range.end, range.start, tCal]);
 
   useEffect(() => {
+    setAppointments(initialAppointments);
+  }, [initialAppointments]);
+
+  useEffect(() => {
+    if (skipInitialFetch.current) {
+      skipInitialFetch.current = false;
+      return;
+    }
     loadAppointments();
   }, [loadAppointments]);
 

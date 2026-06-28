@@ -297,6 +297,7 @@
       },
       "today": "Vandaag",
       "weekOf": "Week van {date}",
+      "loadError": "Kalender kon niet worden geladen.",
       "newAppointment": "Nieuwe afspraak",
       "dialogTitle": "Nieuwe afspraak",
       "emptyStaff": "Voeg personeel toe in Team om de kalender te tonen.",
@@ -539,14 +540,20 @@
         "footer": "{count, plural, one {# pagina} other {# pagina's}}",
         "tabs": {
           "pages": "Pagina's",
-          "theme": "Thema"
+          "theme": "Thema",
+          "branding": "Visuele identiteit"
         },
         "hub": {
           "title": "Uw online site",
           "themeLink": "Thema aanpassen",
+          "brandingLink": "Visuele identiteit",
           "editHome": "Home bewerken",
           "sitePreview": "Sitevoorbeeld"
         },
+        "currentLayout": "Model",
+        "changeLayout": "Model wijzigen",
+        "hideLayouts": "Modellen verbergen",
+        "layoutChangeConfirm": "Dit model toepassen? De huidige inhoud wordt vervangen door de structuur van het model.",
         "toggles": {
           "published": "Gepubliceerd",
           "showInNav": "Tonen in menu"
@@ -561,7 +568,7 @@
           "backToBuilder": "Terug naar builder"
         },
         "theme": {
-          "template": "Globaal template",
+          "description": "Kleuren, logo en naam voor de hele site. Paginamodellen kiest u per pagina.",
           "displayName": "Weergavenaam",
           "primaryColor": "Hoofdkleur",
           "logo": "Logo",
@@ -580,6 +587,28 @@
             "home": "Home",
             "book": "Reserveren"
           }
+        },
+        "layouts": {
+          "homeVitrine": "Klassieke vitrine",
+          "homeVitrineDesc": "Hero, intro, behandelingen en CTA",
+          "homeImpact": "Visuele impact",
+          "homeImpactDesc": "Donkere hero, behandelingen en CTA",
+          "homeMinimal": "Minimaal",
+          "homeMinimalDesc": "Hero en reserveringsknop",
+          "catalogGrille": "Fotoraster",
+          "catalogGrilleDesc": "Catalogus met zoeken en foto's",
+          "catalogListe": "Eenvoudige lijst",
+          "catalogListeDesc": "Prijzen zonder foto's, met zoeken",
+          "catalogVitrine": "Behandelingenvitrine",
+          "catalogVitrineDesc": "Visuele nadruk + CTA",
+          "bookingGuide": "Met gids",
+          "bookingGuideDesc": "Intro + stappen vóór de wizard",
+          "bookingDirect": "Direct",
+          "bookingDirectDesc": "Compacte titel, direct wizard",
+          "contactComplet": "Volledig",
+          "contactCompletDesc": "Automatische uren + contactgegevens",
+          "contactSimple": "Eenvoudig",
+          "contactSimpleDesc": "Essentiële contactgegevens"
         },
         "columns": {
           "title": "Titel",
@@ -613,6 +642,9 @@
           "globalTemplate": "Sitetemplate",
           "editTheme": "Thema bewerken",
           "templateOverride": "Specifiek template voor deze pagina",
+          "pageLayout": "Paginamodel",
+          "pageLayoutHint": "Kies de structuur van deze pagina.",
+          "layoutChangeConfirm": "Dit model toepassen? De inhoud wordt vervangen door de structuur van het model.",
           "previewFull": "Volledig voorbeeld",
           "pageTitle": "Paginatitel",
           "seoTitle": "SEO-titel",

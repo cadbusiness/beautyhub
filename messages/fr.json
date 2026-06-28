@@ -297,6 +297,7 @@
       },
       "today": "Aujourd'hui",
       "weekOf": "Semaine du {date}",
+      "loadError": "Impossible de charger le calendrier.",
       "newAppointment": "Nouveau RDV",
       "dialogTitle": "Nouveau rendez-vous",
       "emptyStaff": "Ajoute du personnel dans Équipe pour afficher le calendrier.",
@@ -561,14 +562,20 @@
         "footer": "{count, plural, one {# page} other {# pages}}",
         "tabs": {
           "pages": "Pages",
-          "theme": "Thème"
+          "theme": "Thème",
+          "branding": "Identité visuelle"
         },
         "hub": {
           "title": "Votre site en ligne",
           "themeLink": "Personnaliser le thème",
+          "brandingLink": "Identité visuelle",
           "editHome": "Modifier l'accueil",
           "sitePreview": "Aperçu du site"
         },
+        "currentLayout": "Modèle",
+        "changeLayout": "Changer de modèle",
+        "hideLayouts": "Masquer les modèles",
+        "layoutChangeConfirm": "Appliquer ce modèle ? Le contenu actuel sera remplacé par la structure du modèle.",
         "toggles": {
           "published": "Publiée",
           "showInNav": "Afficher dans le menu"
@@ -583,7 +590,7 @@
           "backToBuilder": "Retour au builder"
         },
         "theme": {
-          "template": "Template global",
+          "description": "Couleurs, logo et nom affichés sur tout le site. Les modèles de page se choisissent page par page.",
           "displayName": "Nom affiché",
           "primaryColor": "Couleur principale",
           "logo": "Logo",
@@ -602,6 +609,28 @@
             "home": "Accueil",
             "book": "Réserver"
           }
+        },
+        "layouts": {
+          "homeVitrine": "Vitrine classique",
+          "homeVitrineDesc": "Hero, présentation, prestations et appel à l'action",
+          "homeImpact": "Impact visuel",
+          "homeImpactDesc": "Hero sombre, prestations et CTA",
+          "homeMinimal": "Minimal",
+          "homeMinimalDesc": "Hero et bouton de réservation",
+          "catalogGrille": "Grille photos",
+          "catalogGrilleDesc": "Catalogue avec recherche et images",
+          "catalogListe": "Liste simple",
+          "catalogListeDesc": "Tarifs sans photos, avec recherche",
+          "catalogVitrine": "Vitrine soins",
+          "catalogVitrineDesc": "Mise en avant visuelle + CTA",
+          "bookingGuide": "Avec guide",
+          "bookingGuideDesc": "Intro + étapes avant le wizard",
+          "bookingDirect": "Direct",
+          "bookingDirectDesc": "Titre compact, wizard immédiat",
+          "contactComplet": "Complet",
+          "contactCompletDesc": "Horaires automatiques + coordonnées",
+          "contactSimple": "Simple",
+          "contactSimpleDesc": "Coordonnées essentielles"
         },
         "columns": {
           "title": "Titre",
@@ -635,6 +664,9 @@
           "globalTemplate": "Template du site",
           "editTheme": "Modifier le thème",
           "templateOverride": "Template spécifique pour cette page",
+          "pageLayout": "Modèle de page",
+          "pageLayoutHint": "Choisissez la structure de cette page.",
+          "layoutChangeConfirm": "Appliquer ce modèle ? Le contenu sera remplacé par la structure du modèle.",
           "previewFull": "Aperçu plein écran",
           "pageTitle": "Titre de la page",
           "seoTitle": "Titre SEO",

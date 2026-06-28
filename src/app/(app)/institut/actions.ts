@@ -484,19 +484,27 @@ export async function moveAppointment(formData: FormData): Promise<ActionResult>
   return { ok: true };
 }
 
-export async function getCalendarAppointments(rangeStart: string, rangeEnd: string) {
-  const session = await requireModule("institut");
-  const supabase = await createClient();
+export type CalendarAppointmentsResult =
+  | { ok: true; appointments: Awaited<ReturnType<typeof fetchAppointmentsInRange>> }
+  | { ok: false; error: string };
+
+export async function getCalendarAppointments(
+  rangeStart: string,
+  rangeEnd: string,
+): Promise<CalendarAppointmentsResult> {
   try {
-    return await fetchAppointmentsInRange(
+    const session = await requireModule("institut");
+    const supabase = await createClient();
+    const appointments = await fetchAppointmentsInRange(
       supabase,
       session.tenant.id,
       new Date(rangeStart),
       new Date(rangeEnd),
     );
+    return { ok: true, appointments };
   } catch (e) {
     const message = e instanceof Error ? e.message : "calendar_load_failed";
-    throw new Error(message);
+    return { ok: false, error: message };
   }
 }
 

@@ -56,7 +56,7 @@ export default async function RendezVousPage({
     .eq("is_active", true)
     .order("name");
 
-  if (servicesWithVisibility.error?.message?.includes("visibility")) {
+  if (servicesWithVisibility.error) {
     const fallback = await supabase
       .from("inst_services")
       .select("id, name, duration_min, price_cents")
@@ -97,7 +97,7 @@ export default async function RendezVousPage({
         .eq("tenant_id", tenantId)
         .order("starts_at", { ascending: true })
         .limit(50),
-      fetchAppointmentsInRange(supabase, tenantId, rangeStart, rangeEnd).catch(() => []),
+      fetchAppointmentsInRange(supabase, tenantId, rangeStart, rangeEnd),
     ]);
 
   const services = catalogServices.map((s) => ({

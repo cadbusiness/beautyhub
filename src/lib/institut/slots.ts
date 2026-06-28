@@ -28,6 +28,38 @@ export interface AppointmentBlock {
 export type ConflictKey = "staffBusy" | "resourceBusy";
 export type ScheduleWarningKey = "noHoursToday" | "outsideSchedule";
 
+export interface CalendarAppointmentRow {
+  id: string;
+  starts_at: string;
+  ends_at: string;
+  status: string;
+  notes: string | null;
+  price_cents: number | null;
+  staff_id: string | null;
+  resource_id: string | null;
+  service_id: string | null;
+  client_id: string | null;
+  service: {
+    name?: string;
+    color?: string | null;
+    duration_min?: number;
+  } | null;
+  staff: { full_name?: string; color?: string | null } | null;
+  client: { full_name?: string | null; email?: string; phone?: string | null } | null;
+  resource: { name?: string } | null;
+  extras: {
+    service_id: string;
+    quantity: number;
+    name: string;
+    price_cents: number;
+    duration_min: number;
+  }[];
+}
+
+function uniqueIds(values: (string | null | undefined)[]): string[] {
+  return [...new Set(values.filter((v): v is string => Boolean(v)))];
+}
+
 /** Verifie chevauchement staff et/ou cabine (buffers inclus). */
 export async function checkAppointmentConflict(
   supabase: Db,
@@ -73,56 +105,102 @@ export async function checkAppointmentConflict(
   return null;
 }
 
-/** Charge les RDV d'une plage pour le calendrier. */
+/** Charge les RDV d'une plage pour le calendrier (sans embeds PostgREST). */
 export async function fetchAppointmentsInRange(
   supabase: Db,
   tenantId: string,
   rangeStart: Date,
   rangeEnd: Date,
-) {
+): Promise<CalendarAppointmentRow[]> {
   const { data, error } = await supabase
     .from("inst_appointments")
     .select(
-      "id, starts_at, ends_at, status, notes, price_cents, staff_id, resource_id, service_id, client_id, service:inst_services(name, color, duration_min), staff:inst_staff(full_name, color), client:clients(full_name, email, phone), resource:inst_resources(name)",
+      "id, starts_at, ends_at, status, notes, price_cents, staff_id, resource_id, service_id, client_id",
     )
     .eq("tenant_id", tenantId)
     .gte("starts_at", rangeStart.toISOString())
     .lt("starts_at", rangeEnd.toISOString())
     .order("starts_at");
 
-  if (error) throw new Error(error.message);
+  if (error || !data?.length) return [];
 
-  const appointments = data ?? [];
-  if (appointments.length === 0) return appointments;
+  const serviceIds = uniqueIds(data.map((a) => a.service_id));
+  const staffIds = uniqueIds(data.map((a) => a.staff_id));
+  const clientIds = uniqueIds(data.map((a) => a.client_id));
+  const resourceIds = uniqueIds(data.map((a) => a.resource_id));
+  const apptIds = data.map((a) => a.id);
 
-  const apptIds = appointments.map((a) => a.id);
-  const { data: extrasRows, error: extrasError } = await supabase
-    .from("inst_appointment_extras")
-    .select("appointment_id, service_id, quantity, name, price_cents, duration_min")
-    .eq("tenant_id", tenantId)
-    .in("appointment_id", apptIds);
+  const [servicesRes, staffRes, clientsRes, resourcesRes, extrasRes] = await Promise.all([
+    serviceIds.length > 0
+      ? supabase
+          .from("inst_services")
+          .select("id, name, color, duration_min")
+          .in("id", serviceIds)
+      : Promise.resolve({ data: [] as { id: string; name: string; color: string | null; duration_min: number }[], error: null }),
+    staffIds.length > 0
+      ? supabase.from("inst_staff").select("id, full_name, color").in("id", staffIds)
+      : Promise.resolve({ data: [] as { id: string; full_name: string; color: string | null }[], error: null }),
+    clientIds.length > 0
+      ? supabase.from("clients").select("id, full_name, email, phone").in("id", clientIds)
+      : Promise.resolve({ data: [] as { id: string; full_name: string | null; email: string; phone: string | null }[], error: null }),
+    resourceIds.length > 0
+      ? supabase.from("inst_resources").select("id, name").in("id", resourceIds)
+      : Promise.resolve({ data: [] as { id: string; name: string }[], error: null }),
+    supabase
+      .from("inst_appointment_extras")
+      .select("appointment_id, service_id, quantity, name, price_cents, duration_min")
+      .eq("tenant_id", tenantId)
+      .in("appointment_id", apptIds),
+  ]);
 
-  if (extrasError) {
-    return appointments.map((a) => ({ ...a, extras: [] }));
+  let services = servicesRes.data ?? [];
+  if (servicesRes.error && serviceIds.length > 0) {
+    const fallback = await supabase
+      .from("inst_services")
+      .select("id, name, duration_min")
+      .in("id", serviceIds);
+    services = (fallback.data ?? []).map((s) => ({ ...s, color: null }));
   }
 
-  const extrasByAppt = new Map<string, NonNullable<typeof extrasRows>>();
-  for (const row of extrasRows ?? []) {
-    const list = extrasByAppt.get(row.appointment_id) ?? [];
-    list.push(row);
-    extrasByAppt.set(row.appointment_id, list);
+  const serviceMap = new Map(services.map((s) => [s.id, s]));
+  const staffMap = new Map((staffRes.data ?? []).map((s) => [s.id, s]));
+  const clientMap = new Map((clientsRes.data ?? []).map((c) => [c.id, c]));
+  const resourceMap = new Map((resourcesRes.data ?? []).map((r) => [r.id, r]));
+
+  const extrasByAppt = new Map<string, NonNullable<typeof extrasRes.data>>();
+  if (!extrasRes.error) {
+    for (const row of extrasRes.data ?? []) {
+      const list = extrasByAppt.get(row.appointment_id) ?? [];
+      list.push(row);
+      extrasByAppt.set(row.appointment_id, list);
+    }
   }
 
-  return appointments.map((a) => ({
-    ...a,
-    extras: (extrasByAppt.get(a.id) ?? []).map((e) => ({
-      service_id: e.service_id,
-      quantity: e.quantity,
-      name: e.name,
-      price_cents: e.price_cents,
-      duration_min: e.duration_min,
-    })),
-  }));
+  return data.map((a) => {
+    const svc = a.service_id ? serviceMap.get(a.service_id) : undefined;
+    const st = a.staff_id ? staffMap.get(a.staff_id) : undefined;
+    const cl = a.client_id ? clientMap.get(a.client_id) : undefined;
+    const res = a.resource_id ? resourceMap.get(a.resource_id) : undefined;
+
+    return {
+      ...a,
+      service: svc
+        ? { name: svc.name, color: svc.color, duration_min: svc.duration_min }
+        : null,
+      staff: st ? { full_name: st.full_name, color: st.color } : null,
+      client: cl
+        ? { full_name: cl.full_name, email: cl.email, phone: cl.phone }
+        : null,
+      resource: res ? { name: res.name } : null,
+      extras: (extrasByAppt.get(a.id) ?? []).map((e) => ({
+        service_id: e.service_id,
+        quantity: e.quantity,
+        name: e.name,
+        price_cents: e.price_cents,
+        duration_min: e.duration_min,
+      })),
+    };
+  });
 }
 
 export interface WorkingHourRow {

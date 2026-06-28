@@ -101,7 +101,8 @@
     "signOut": "Déconnexion",
     "footerRights": "Tous droits réservés.",
     "language": "Langue",
-    "institut": "Institut"
+    "institut": "Institut",
+    "myAccount": "Mon compte"
   },
   "roles": {
     "platform_admin": "Super admin",
@@ -138,6 +139,34 @@
   "errors": {
     "quota": {
       "exceeded": "Limite atteinte pour \"{key}\" (max {limit}). Passez à la formule supérieure."
+    }
+  },
+  "account": {
+    "title": "Mon compte",
+    "subtitle": "Profil, langue et sécurité",
+    "profile": {
+      "sectionTitle": "Profil",
+      "sectionDescription": "Vos informations personnelles visibles dans l'équipe.",
+      "fullName": "Nom complet",
+      "fullNamePlaceholder": "Marie Durand",
+      "phonePlaceholder": "06 12 34 56 78",
+      "language": "Langue de l'interface",
+      "languageHint": "Appliquée immédiatement après enregistrement."
+    },
+    "password": {
+      "sectionTitle": "Mot de passe",
+      "sectionDescription": "Choisissez un mot de passe d'au moins 8 caractères.",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "submit": "Mettre à jour le mot de passe",
+      "submitting": "Mise à jour…"
+    },
+    "actions": {
+      "notAuthenticated": "Session expirée. Reconnectez-vous.",
+      "profileSaved": "Profil enregistré.",
+      "passwordSaved": "Mot de passe mis à jour.",
+      "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas."
     }
   },
   "dashboard": {

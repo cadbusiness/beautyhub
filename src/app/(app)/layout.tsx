@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/session";
+import {
+  getTeamProfile,
+  profileDisplayName,
+  profileInitial,
+} from "@/lib/auth/profile";
 import { getAppShellData } from "@/lib/auth/team-session";
 import { ensureDefaultTenant } from "@/lib/tenant/ensure";
 import { navMessageKey } from "@/lib/i18n/nav";
@@ -27,6 +32,9 @@ export default async function AppLayout({
   const nav = getNavFor(session.enabledModuleIds, session.role);
   const t = await getTranslations("shell");
   const tNav = await getTranslations("nav");
+  const profile = await getTeamProfile();
+  const displayName = profileDisplayName(profile, user.email ?? null);
+  const initial = profileInitial(displayName);
   const platformAdmin = session.role === "platform_admin";
   const aiActions = getAiActionsFor(session.enabledModuleIds, session.role).map(
     (a) => ({ name: a.name, description: a.description }),
@@ -46,6 +54,8 @@ export default async function AppLayout({
         platformAdmin={platformAdmin}
         tenants={tenants}
         currentSlug={session.tenant.slug}
+        displayName={displayName}
+        profileInitial={initial}
       />
 
       <div className="flex min-h-0 flex-1">

@@ -101,7 +101,8 @@
     "signOut": "Afmelden",
     "footerRights": "Alle rechten voorbehouden.",
     "language": "Taal",
-    "institut": "Instituut"
+    "institut": "Instituut",
+    "myAccount": "Mijn account"
   },
   "roles": {
     "platform_admin": "Super admin",
@@ -138,6 +139,34 @@
   "errors": {
     "quota": {
       "exceeded": "Limiet bereikt voor \"{key}\" (max. {limit}). Upgrade naar een hogere formule."
+    }
+  },
+  "account": {
+    "title": "Mijn account",
+    "subtitle": "Profiel, taal en beveiliging",
+    "profile": {
+      "sectionTitle": "Profiel",
+      "sectionDescription": "Uw persoonlijke gegevens zichtbaar voor het team.",
+      "fullName": "Volledige naam",
+      "fullNamePlaceholder": "Marie Durand",
+      "phonePlaceholder": "06 12 34 56 78",
+      "language": "Interface-taal",
+      "languageHint": "Wordt toegepast na opslaan."
+    },
+    "password": {
+      "sectionTitle": "Wachtwoord",
+      "sectionDescription": "Kies een wachtwoord van minstens 8 tekens.",
+      "newPassword": "Nieuw wachtwoord",
+      "confirmPassword": "Bevestig wachtwoord",
+      "submit": "Wachtwoord bijwerken",
+      "submitting": "Bijwerken…"
+    },
+    "actions": {
+      "notAuthenticated": "Sessie verlopen. Meld u opnieuw aan.",
+      "profileSaved": "Profiel opgeslagen.",
+      "passwordSaved": "Wachtwoord bijgewerkt.",
+      "passwordTooShort": "Het wachtwoord moet minstens 8 tekens bevatten.",
+      "passwordMismatch": "De wachtwoorden komen niet overeen."
     }
   },
   "dashboard": {

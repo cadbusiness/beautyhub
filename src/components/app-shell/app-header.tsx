@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Button } from "@/components/ui/button";
-import { signOut } from "@/app/login/actions";
 import { AppLogo } from "@/components/app-shell/app-logo";
-import { LocaleSwitcher } from "@/components/app-shell/locale-switcher";
 import { TenantSwitcher } from "@/components/app-shell/tenant-switcher";
+import { UserMenu } from "@/components/app-shell/user-menu";
 import type { TenantOption } from "@/lib/tenant/defaults";
 
 export async function AppHeader({
@@ -13,12 +11,16 @@ export async function AppHeader({
   platformAdmin,
   tenants,
   currentSlug,
+  displayName,
+  profileInitial,
 }: {
   email: string | null;
   role: string;
   platformAdmin: boolean;
   tenants: TenantOption[];
   currentSlug: string;
+  displayName: string;
+  profileInitial: string;
 }) {
   const t = await getTranslations("shell");
   const tRoles = await getTranslations("roles");
@@ -32,6 +34,7 @@ export async function AppHeader({
   const roleText = knownRoles.includes(role as (typeof knownRoles)[number])
     ? tRoles(role as (typeof knownRoles)[number])
     : role;
+
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-4 lg:px-6">
       <AppLogo />
@@ -51,24 +54,18 @@ export async function AppHeader({
           <Link
             href="/admin"
             prefetch
-            className="hidden text-sm text-slate-600 hover:text-slate-900 sm:inline"
+            className="hidden text-sm text-slate-600 hover:text-slate-900 md:inline"
           >
             {t("administration")}
           </Link>
         ) : null}
 
-        <LocaleSwitcher className="hidden sm:block" />
-
-        <div className="hidden text-right sm:block">
-          <p className="truncate text-sm text-slate-900">{email}</p>
-          <p className="text-xs text-slate-500">{roleText}</p>
-        </div>
-
-        <form action={signOut}>
-          <Button variant="outline" type="submit" className="h-9 px-3 text-sm">
-            {t("signOut")}
-          </Button>
-        </form>
+        <UserMenu
+          email={email}
+          roleText={roleText}
+          displayName={displayName}
+          initial={profileInitial}
+        />
       </div>
     </header>
   );

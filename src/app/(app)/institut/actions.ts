@@ -183,16 +183,48 @@ export async function createClientRecord(
   if (!fields.email) return { error: t("missingFields") };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("clients").insert({
-    tenant_id: session.tenant.id,
-    ...fields,
-  });
+  const { data: created, error } = await supabase
+    .from("clients")
+    .insert({
+      tenant_id: session.tenant.id,
+      ...fields,
+    })
+    .select("id")
+    .single();
   if (error) {
     return {
       error: error.code === "23505" ? t("clientEmailExists") : error.message,
     };
   }
+
+  if (created) {
+    const { provisionClientAccess } = await import("@/lib/institut/client-access");
+    await provisionClientAccess(supabase, session.tenant.id, created.id);
+  }
+
   revalidatePath("/institut/clients");
+  return { ok: true };
+}
+
+export async function regenerateClientPinAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const clientId = String(formData.get("client_id") ?? "").trim();
+  if (!clientId) return { error: t("missingFields") };
+
+  const supabase = await createClient();
+  try {
+    const { regenerateClientPin } = await import("@/lib/institut/client-access");
+    await regenerateClientPin(supabase, session.tenant.id, clientId);
+  } catch {
+    return { error: t("clientPinRegenerateFailed") };
+  }
+
+  revalidatePath("/institut/clients");
+  revalidatePath(`/institut/clients/${clientId}`);
   return { ok: true };
 }
 

@@ -20,6 +20,7 @@ import type {
 } from "@/lib/institut/clients";
 import type { ClientQuotesPayload } from "@/lib/institut/commercial-documents";
 import { ClientQuotesTab } from "./client-quotes-tab";
+import { ClientAccessPanel } from "./client-access-panel";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { ClientForm } from "../client-form";
 
@@ -472,33 +473,7 @@ export function ClientDetail({ overview }: { overview: ClientOverview }) {
           )
         ) : null}
 
-        {tab === "access" ? (
-          <div className="space-y-0">
-            <section className="px-4 py-4 lg:px-6">
-              <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-                {t("accessTitle")}
-              </h2>
-              <dl>
-                <InfoRow
-                  label={t("portalAccount")}
-                  value={client.has_portal_account ? t("portalActive") : t("portalInactive")}
-                />
-                <InfoRow label={tCommon("email")} value={client.email} />
-                <InfoRow
-                  label={t("marketingOptIn")}
-                  value={client.marketing_opt_in ? tCommon("yes") : tCommon("no")}
-                />
-              </dl>
-              {!client.has_portal_account ? (
-                <p className="mt-3 text-xs text-slate-500">{t("portalHint")}</p>
-              ) : null}
-            </section>
-            <section className="border-t border-slate-200 px-4 py-4 lg:px-6">
-              <p className="text-sm text-slate-600">{t("emailsComingSoon")}</p>
-              <p className="mt-1 text-xs text-slate-500">{t("emailsHint")}</p>
-            </section>
-          </div>
-        ) : null}
+        {tab === "access" ? <ClientAccessPanel client={client} /> : null}
       </ListPanel>
 
       <FormDialog open={editOpen} onClose={() => setEditOpen(false)} title={t("editTitle")} size="lg">

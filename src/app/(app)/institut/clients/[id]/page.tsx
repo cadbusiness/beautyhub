@@ -12,9 +12,15 @@ export default async function ClientDetailPage({
   const { id } = await params;
   const session = await requireModule("institut");
   const supabase = await createClient();
-  const overview = await fetchClientOverview(supabase, session.tenant.id, id);
+  let overview = await fetchClientOverview(supabase, session.tenant.id, id);
 
   if (!overview) notFound();
+
+  if (!overview.client.login_id || !overview.client.pin_code) {
+    const { provisionClientAccess } = await import("@/lib/institut/client-access");
+    await provisionClientAccess(supabase, session.tenant.id, id);
+    overview = (await fetchClientOverview(supabase, session.tenant.id, id)) ?? overview;
+  }
 
   return <ClientDetail overview={overview} />;
 }

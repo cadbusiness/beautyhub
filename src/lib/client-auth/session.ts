@@ -8,6 +8,7 @@ export interface ClientSession {
   clientId: string;
   tenantId: string;
   email: string;
+  loginId?: string;
 }
 
 function secret(): string {
@@ -65,11 +66,17 @@ export async function getClientSession(
       clientId: string;
       tenantId: string;
       email: string;
+      loginId?: string;
       exp: number;
     };
     if (data.exp < Math.floor(Date.now() / 1000)) return null;
     if (data.tenantId !== tenantId) return null;
-    return { clientId: data.clientId, tenantId: data.tenantId, email: data.email };
+    return {
+      clientId: data.clientId,
+      tenantId: data.tenantId,
+      email: data.email,
+      loginId: data.loginId,
+    };
   } catch {
     return null;
   }

@@ -12,7 +12,6 @@ const initial: ClientAuthResult = {};
 
 export default function ClientLoginPage() {
   const t = useTranslations("public.client.login");
-  const tCommon = useTranslations("common");
   const [state, action, pending] = useActionState(clientLogin, initial);
 
   return (
@@ -20,16 +19,29 @@ export default function ClientLoginPage() {
       <h1 className="text-xl font-semibold text-slate-900">{t("title")}</h1>
       <p className="text-sm text-slate-500">{t("subtitle")}</p>
       <form action={action} className="space-y-4">
-        <Field label={tCommon("email")} htmlFor="email">
-          <Input id="email" name="email" type="email" required autoComplete="email" />
-        </Field>
-        <Field label={tCommon("password")} htmlFor="password">
+        <Field label={t("loginId")} htmlFor="login_id">
           <Input
-            id="password"
-            name="password"
-            type="password"
+            id="login_id"
+            name="login_id"
+            inputMode="numeric"
+            autoComplete="username"
             required
-            autoComplete="current-password"
+            placeholder={t("loginIdPlaceholder")}
+            pattern="\d{4,8}"
+          />
+        </Field>
+        <Field label={t("pin")} htmlFor="pin">
+          <Input
+            id="pin"
+            name="pin"
+            type="password"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+            maxLength={4}
+            minLength={4}
+            pattern="\d{4}"
+            placeholder="••••"
           />
         </Field>
         {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
@@ -37,12 +49,7 @@ export default function ClientLoginPage() {
           {pending ? t("submitting") : t("submit")}
         </Button>
       </form>
-      <p className="text-center text-sm text-slate-500">
-        {t("noAccount")}{" "}
-        <Link href="/client/inscription" className="text-slate-900 underline">
-          {t("createAccount")}
-        </Link>
-      </p>
+      <p className="text-center text-sm text-slate-500">{t("credentialsHint")}</p>
     </Card>
   );
 }

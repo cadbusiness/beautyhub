@@ -8,7 +8,8 @@ import {
   getClientSession,
   setClientSession,
 } from "@/lib/client-auth/session";
-import { hashPassword, verifyPassword } from "@/lib/client-auth/password";
+import { isValidLoginId, isValidPin, verifyPin } from "@/lib/client-auth/pin";
+import { verifyPassword } from "@/lib/client-auth/password";
 import { createServiceClient } from "@/lib/supabase/service";
 
 export interface ClientAuthResult {
@@ -35,28 +36,37 @@ export async function clientLogin(
   const supabase = dbOrError();
   if (!supabase) return { error: actions("serverConfigIncomplete") };
 
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: actions("emailPasswordRequired") };
+  const loginId = String(formData.get("login_id") ?? "").trim();
+  const pin = String(formData.get("pin") ?? "").trim();
+  if (!loginId || !pin) return { error: actions("loginIdPinRequired") };
+  if (!isValidLoginId(loginId)) return { error: actions("invalidLoginId") };
+  if (!isValidPin(pin)) return { error: actions("invalidPin") };
 
   const { data: client } = await supabase
     .from("clients")
-    .select("id, email, password_hash")
+    .select("id, email, login_id, pin_hash, password_hash")
     .eq("tenant_id", tenant.id)
-    .eq("email", email)
+    .eq("login_id", loginId)
     .maybeSingle();
 
-  if (!client?.password_hash) {
+  if (!client) {
     return { error: actions("accountNotFound") };
   }
 
-  const valid = await verifyPassword(password, client.password_hash);
+  let valid = false;
+  if (client.pin_hash) {
+    valid = await verifyPin(pin, client.pin_hash);
+  } else if (client.password_hash) {
+    valid = await verifyPassword(pin, client.password_hash);
+  }
+
   if (!valid) return { error: actions("invalidCredentials") };
 
   await setClientSession({
     clientId: client.id,
     tenantId: tenant.id,
     email: client.email,
+    loginId: client.login_id ?? loginId,
   });
 
   redirect("/client/compte");
@@ -64,64 +74,10 @@ export async function clientLogin(
 
 export async function clientRegister(
   _prev: ClientAuthResult,
-  formData: FormData,
+  _formData: FormData,
 ): Promise<ClientAuthResult> {
   const actions = await getTranslations("institut.actions");
-  const tenant = await getTenantContext();
-  if (!tenant) return { error: actions("tenantNotFound") };
-
-  const supabase = dbOrError();
-  if (!supabase) return { error: actions("serverConfigIncomplete") };
-
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
-  const fullName = String(formData.get("full_name") ?? "").trim();
-  if (!email || !password || !fullName) return { error: actions("allFieldsRequired") };
-  if (password.length < 8) return { error: actions("passwordMinLength") };
-
-  const passwordHash = await hashPassword(password);
-
-  const { data: existing } = await supabase
-    .from("clients")
-    .select("id, password_hash")
-    .eq("tenant_id", tenant.id)
-    .eq("email", email)
-    .maybeSingle();
-
-  if (existing?.password_hash) {
-    return { error: actions("accountAlreadyExists") };
-  }
-
-  if (existing) {
-    await supabase
-      .from("clients")
-      .update({ password_hash: passwordHash, full_name: fullName })
-      .eq("id", existing.id);
-    await setClientSession({
-      clientId: existing.id,
-      tenantId: tenant.id,
-      email,
-    });
-  } else {
-    const { data: created, error } = await supabase
-      .from("clients")
-      .insert({
-        tenant_id: tenant.id,
-        email,
-        full_name: fullName,
-        password_hash: passwordHash,
-      })
-      .select("id")
-      .single();
-    if (error || !created) return { error: error?.message ?? actions("accountCreateError") };
-    await setClientSession({
-      clientId: created.id,
-      tenantId: tenant.id,
-      email,
-    });
-  }
-
-  redirect("/client/compte");
+  return { error: actions("clientSelfRegisterDisabled") };
 }
 
 export async function clientLogout(): Promise<void> {

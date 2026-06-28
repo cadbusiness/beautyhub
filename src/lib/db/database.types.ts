@@ -155,11 +155,14 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          login_id: string | null
           marketing_opt_in: boolean
           metadata: Json
           notes: string | null
           password_hash: string | null
           phone: string | null
+          pin_code: string | null
+          pin_hash: string | null
           postal_code: string | null
           tags: string[]
           tenant_id: string
@@ -175,11 +178,14 @@ export type Database = {
           email: string
           full_name?: string | null
           id?: string
+          login_id?: string | null
           marketing_opt_in?: boolean
           metadata?: Json
           notes?: string | null
           password_hash?: string | null
           phone?: string | null
+          pin_code?: string | null
+          pin_hash?: string | null
           postal_code?: string | null
           tags?: string[]
           tenant_id: string
@@ -195,11 +201,14 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          login_id?: string | null
           marketing_opt_in?: boolean
           metadata?: Json
           notes?: string | null
           password_hash?: string | null
           phone?: string | null
+          pin_code?: string | null
+          pin_hash?: string | null
           postal_code?: string | null
           tags?: string[]
           tenant_id?: string

@@ -18,6 +18,8 @@ export type ClientRow = {
   tags: string[];
   marketing_opt_in: boolean;
   has_portal_account: boolean;
+  login_id: string | null;
+  pin_code: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -102,7 +104,7 @@ export type ClientProfile = ClientOverview & {
 };
 
 const CLIENT_SELECT =
-  "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, password_hash, created_at, updated_at";
+  "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_code, pin_hash, password_hash, created_at, updated_at";
 
 function mapClient(row: Record<string, unknown>): ClientRow {
   return {
@@ -119,7 +121,9 @@ function mapClient(row: Record<string, unknown>): ClientRow {
     notes: (row.notes as string | null) ?? null,
     tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
     marketing_opt_in: Boolean(row.marketing_opt_in),
-    has_portal_account: Boolean(row.password_hash),
+    has_portal_account: Boolean(row.pin_hash ?? row.password_hash),
+    login_id: (row.login_id as string | null) ?? null,
+    pin_code: (row.pin_code as string | null) ?? null,
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
   };

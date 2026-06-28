@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { CookieBanner } from "@/components/compliance/cookie-banner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -40,6 +41,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} key={locale}>
           {children}
+          <CookieBanner />
         </NextIntlClientProvider>
       </body>
     </html>

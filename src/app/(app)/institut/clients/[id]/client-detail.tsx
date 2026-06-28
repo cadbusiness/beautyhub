@@ -22,9 +22,10 @@ import type { ClientQuotesPayload } from "@/lib/institut/commercial-documents";
 import { ClientQuotesTab } from "./client-quotes-tab";
 import { ClientAccessPanel } from "./client-access-panel";
 import { formatDateTime, formatPrice } from "@/lib/utils";
+import { ClientPrivacyPanel } from "@/components/compliance/client-privacy-panel";
 import { ClientForm } from "../client-form";
 
-type Tab = "overview" | "appointments" | "sales" | "quotes" | "access";
+type Tab = "overview" | "appointments" | "sales" | "quotes" | "access" | "privacy";
 
 function StatCell({ label, value }: { label: string; value: string }) {
   return (
@@ -62,7 +63,15 @@ function TabLoading() {
   );
 }
 
-export function ClientDetail({ overview }: { overview: ClientOverview }) {
+export function ClientDetail({
+  overview,
+  canAnonymize,
+  isAnonymized,
+}: {
+  overview: ClientOverview;
+  canAnonymize: boolean;
+  isAnonymized: boolean;
+}) {
   const t = useTranslations("institut.clients.detail");
   const tAppt = useTranslations("appointments.status");
   const tCommon = useTranslations("common");
@@ -102,6 +111,7 @@ export function ClientDetail({ overview }: { overview: ClientOverview }) {
       label: t("tabs.quotes"),
     },
     { id: "access" as const, label: t("tabs.access") },
+    { id: "privacy" as const, label: t("tabs.privacy") },
   ];
 
   const loadTabData = useCallback(
@@ -474,6 +484,16 @@ export function ClientDetail({ overview }: { overview: ClientOverview }) {
         ) : null}
 
         {tab === "access" ? <ClientAccessPanel client={client} /> : null}
+
+        {tab === "privacy" ? (
+          <div className="px-4 py-4 lg:px-6">
+            <ClientPrivacyPanel
+              clientId={client.id}
+              canAnonymize={canAnonymize}
+              isAnonymized={isAnonymized}
+            />
+          </div>
+        ) : null}
       </ListPanel>
 
       <FormDialog open={editOpen} onClose={() => setEditOpen(false)} title={t("editTitle")} size="lg">

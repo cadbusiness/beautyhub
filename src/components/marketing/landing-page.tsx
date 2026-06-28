@@ -138,7 +138,18 @@ export async function LandingPage() {
       </section>
 
       <footer className="border-t border-slate-200 px-6 py-8 text-center text-xs text-slate-500">
-        {t("footer")}
+        <p>{t("footer")}</p>
+        <nav className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1">
+          <Link href="/legal/confidentialite" className="hover:text-slate-700">
+            {t("footerLinks.privacy")}
+          </Link>
+          <Link href="/legal/cgu" className="hover:text-slate-700">
+            {t("footerLinks.terms")}
+          </Link>
+          <Link href="/legal/securite" className="hover:text-slate-700">
+            {t("footerLinks.security")}
+          </Link>
+        </nav>
       </footer>
     </div>
   );

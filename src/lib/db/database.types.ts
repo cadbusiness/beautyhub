@@ -224,6 +224,113 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          actor_type: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          metadata: Json
+          resource_id: string | null
+          resource_type: string
+          tenant_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          actor_type: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          resource_id?: string | null
+          resource_type: string
+          tenant_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          actor_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          resource_id?: string | null
+          resource_type?: string
+          tenant_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consent_events: {
+        Row: {
+          actor_id: string | null
+          actor_type: string
+          client_id: string
+          consent_type: string
+          created_at: string
+          granted: boolean
+          id: string
+          ip_address: string | null
+          source: string
+          tenant_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_type: string
+          client_id: string
+          consent_type: string
+          created_at?: string
+          granted: boolean
+          id?: string
+          ip_address?: string | null
+          source: string
+          tenant_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_type?: string
+          client_id?: string
+          consent_type?: string
+          created_at?: string
+          granted?: boolean
+          id?: string
+          ip_address?: string | null
+          source?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consent_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       connections: {
         Row: {
           config: Json
@@ -2461,8 +2568,10 @@ export type Database = {
         Row: {
           brand_id: string
           branding: Json
+          compliance: Json
           created_at: string
           custom_domain: string | null
+          data_retention_days: number | null
           id: string
           name: string
           slug: string
@@ -2471,8 +2580,10 @@ export type Database = {
         Insert: {
           brand_id: string
           branding?: Json
+          compliance?: Json
           created_at?: string
           custom_domain?: string | null
+          data_retention_days?: number | null
           id?: string
           name: string
           slug: string
@@ -2481,8 +2592,10 @@ export type Database = {
         Update: {
           brand_id?: string
           branding?: Json
+          compliance?: Json
           created_at?: string
           custom_domain?: string | null
+          data_retention_days?: number | null
           id?: string
           name?: string
           slug?: string

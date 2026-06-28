@@ -8,6 +8,7 @@ import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/compone
 import { ListPanel } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatDateTime } from "@/lib/utils";
+import { ClientPortalPrivacyPanel } from "@/components/compliance/client-portal-privacy-panel";
 import { cancelClientAppointment, clientLogout } from "../actions";
 
 const STATUS_KEYS = ["booked", "confirmed", "completed", "cancelled", "no_show"] as const;
@@ -96,6 +97,10 @@ export default async function ClientComptePage() {
           </tbody>
         </table>
       </DataTable>
+
+      <div className="px-4 pb-6 lg:px-6">
+        <ClientPortalPrivacyPanel />
+      </div>
     </ListPanel>
   );
 }

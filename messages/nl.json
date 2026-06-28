@@ -184,7 +184,8 @@
       "institut": "Instituut",
       "woocommerce": "WooCommerce",
       "stripe": "Stripe Connect",
-      "pos": "Kassa"
+      "pos": "Kassa",
+      "compliance": "Conformiteit"
     },
     "profile": {
       "sectionTitle": "Profiel",
@@ -1060,7 +1061,8 @@
           "appointments": "Afspraken",
           "sales": "Facturen & aankopen",
           "quotes": "Offertes",
-          "access": "Toegang & e-mails"
+          "access": "Toegang & e-mails",
+          "privacy": "Persoonsgegevens"
         },
         "stats": {
           "totalSpent": "Totaal besteed",
@@ -2685,7 +2687,12 @@
       "teamLogin": "Teamaanmelding",
       "book": "Afspraak maken"
     },
-    "footer": "BeautyHub · SaaS-platform voor schoonheidsinstituten"
+    "footer": "BeautyHub · SaaS-platform voor schoonheidsinstituten",
+    "footerLinks": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "security": "Security"
+    }
   },
   "ui": {
     "formDialog": {
@@ -2696,6 +2703,209 @@
     },
     "dataTable": {
       "emptyDefault": "Geen items."
+    }
+  },
+  "compliance": {
+    "actions": {
+      "clientNotFound": "Customer not found.",
+      "forbidden": "Action restricted to institute owners.",
+      "tenantNotFound": "Institute not found.",
+      "unauthorized": "Session expired.",
+      "serverConfig": "Incomplete server configuration."
+    },
+    "clientPanel": {
+      "description": "Export this customer's data or anonymize their record (sales kept for legal obligations).",
+      "export": "Export (JSON)",
+      "anonymize": "Anonymize record",
+      "alreadyAnonymized": "This record has already been anonymized.",
+      "confirmTitle": "Anonymize this customer?",
+      "confirmDescription": "Personal data will be erased. Sales and appointments are kept where required by law.",
+      "confirmHint": "This action cannot be undone.",
+      "confirmAction": "Confirm anonymization",
+      "cancel": "Cancel"
+    },
+    "portal": {
+      "title": "Your personal data",
+      "description": "Download a copy of your data or request erasure of your customer record.",
+      "export": "Download my data",
+      "erase": "Request erasure",
+      "legalNote": "Some data may be kept for accounting obligations. See",
+      "privacyLink": "privacy policy"
+    },
+    "institut": {
+      "checklistTitle": "GDPR compliance checklist",
+      "checklistHint": "Check each step when done. You are the data controller for your end customers.",
+      "progress": "{done} / {total} steps completed",
+      "checkedAt": "Completed on {date}",
+      "checklist": {
+        "privacy_policy": {
+          "title": "Privacy policy published",
+          "hint": "Inform customers how their data is processed."
+        },
+        "client_notices": {
+          "title": "Form notices",
+          "hint": "Purpose, legal basis and policy link on booking forms."
+        },
+        "dpa_signed": {
+          "title": "DPA signed",
+          "hint": "Art. 28 GDPR agreement between your institute and BeautyHub."
+        },
+        "retention_policy": {
+          "title": "Retention periods set",
+          "hint": "Configure inactive client retention below."
+        },
+        "team_training": {
+          "title": "Team trained",
+          "hint": "Limited access, passwords, incident reporting."
+        }
+      },
+      "retentionTitle": "Data retention",
+      "retentionHint": "Retention for inactive client records (automatic purge — coming soon). Leave empty for no limit.",
+      "retentionLabel": "Days",
+      "retentionPlaceholder": "e.g. 1095",
+      "retentionSave": "Save",
+      "retentionInvalid": "Between 30 and 3650 days, or empty.",
+      "documentsTitle": "Documents",
+      "documentsHint": "Templates provided by BeautyHub — validate with legal counsel.",
+      "downloadDpa": "Download DPA",
+      "platformPrivacy": "Platform privacy",
+      "subprocessors": "Sub-processors"
+    }
+  },
+  "legal": {
+    "nav": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "subprocessors": "Sub-processors",
+      "security": "Security",
+      "dpa": "DPA"
+    },
+    "cookies": {
+      "title": "Cookies",
+      "description": "We use essential cookies and, with your consent, analytics cookies.",
+      "learnMore": "Learn more",
+      "essentialOnly": "Essential only",
+      "acceptAll": "Accept all"
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "intro": "How BeautyHub processes personal data when you use the platform.",
+      "updated": "Last updated: June 2026 — draft for legal review.",
+      "sections": {
+        "1": {
+          "title": "Data controller",
+          "body": "Institutes are controllers for their end customers. BeautyHub acts as processor."
+        },
+        "2": {
+          "title": "Data collected",
+          "body": "Identity, contact details, appointments, purchases, marketing preferences, access logs."
+        },
+        "3": {
+          "title": "Purposes",
+          "body": "Contract, booking, POS, support, security. Marketing: consent."
+        },
+        "4": {
+          "title": "Recipients",
+          "body": "See Sub-processors page. Data isolated per tenant (RLS)."
+        },
+        "5": {
+          "title": "Retention",
+          "body": "Contract duration plus legal periods. Export and anonymization in product."
+        },
+        "6": {
+          "title": "Your rights",
+          "body": "Access, rectification, erasure, portability, objection. Contact your institute or supervisory authority."
+        },
+        "7": {
+          "title": "Security",
+          "body": "TLS, AES-256-GCM for secrets, authentication, audit logs. See /legal/securite."
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms of use",
+      "intro": "BeautyHub platform terms — draft.",
+      "sections": {
+        "1": {
+          "title": "Purpose",
+          "body": "SaaS for beauty institutes (appointments, clients, POS)."
+        },
+        "2": {
+          "title": "Accounts",
+          "body": "You are responsible for credentials and team access."
+        },
+        "3": {
+          "title": "Data",
+          "body": "Institute guarantees legal bases. BeautyHub processes on institute instructions."
+        },
+        "4": {
+          "title": "Availability",
+          "body": "Service as-is; planned maintenance."
+        },
+        "5": {
+          "title": "IP",
+          "body": "BeautyHub owns the software. Institute owns its data."
+        },
+        "6": {
+          "title": "Law",
+          "body": "French law unless mandatory otherwise."
+        }
+      }
+    },
+    "subprocessors": {
+      "title": "Sub-processors",
+      "intro": "Technical sub-processors used by hosted BeautyHub.",
+      "columns": {
+        "name": "Provider",
+        "purpose": "Purpose",
+        "location": "Location",
+        "safeguards": "Safeguards"
+      },
+      "purposes": {
+        "database": "Database, auth, storage",
+        "hosting": "Application hosting",
+        "payments": "Online payments",
+        "ai": "AI assistant (if enabled)"
+      },
+      "locations": {
+        "euUs": "EU / US",
+        "global": "Global",
+        "us": "United States"
+      },
+      "safeguards": {
+        "dpaScc": "DPA + SCCs",
+        "dpaOptIn": "DPA; configurable per institute"
+      },
+      "note": "Indicative list — update when adding providers."
+    },
+    "security": {
+      "title": "Security & trust",
+      "intro": "Documented technical measures. Not ISO 27001 or HIPAA certification.",
+      "metricsTitle": "Measures in place",
+      "metrics": {
+        "rls": "Row Level Security (multi-tenant)",
+        "encryption": "Secrets encryption",
+        "isolation": "Per-institute isolation",
+        "auth": "Authentication"
+      },
+      "yes": "Yes",
+      "no": "No",
+      "roadmapTitle": "Compliance roadmap",
+      "roadmapBody": "Operational GDPR (legal pages, export, anonymization, consent, audit).\nNext: pentest, public SLA, ISO 27001 (organization).\nHIPAA: US medical segment only.",
+      "certificationsNote": "For personal data, see",
+      "privacyLink": "privacy policy"
+    },
+    "dpa": {
+      "title": "Data Processing Agreement (DPA)",
+      "intro": "Art. 28 GDPR template between your institute (controller) and BeautyHub (processor).",
+      "points": {
+        "controller": "Institute is controller for end customers.",
+        "processor": "BeautyHub processes data only to provide the service.",
+        "signature": "Download, complete and keep a signed copy."
+      },
+      "download": "Download template (.md)",
+      "institutChecklist": "Institute checklist",
+      "disclaimer": "Informational template — validate with legal counsel."
     }
   }
 }

@@ -243,6 +243,14 @@ export async function updateClientRecord(
   if (!fields.email) return { error: t("missingFields") };
 
   const supabase = await createClient();
+
+  const { data: before } = await supabase
+    .from("clients")
+    .select("marketing_opt_in")
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", clientId)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("clients")
     .update(fields)
@@ -252,6 +260,20 @@ export async function updateClientRecord(
     return {
       error: error.code === "23505" ? t("clientEmailExists") : error.message,
     };
+  }
+
+  if (before && before.marketing_opt_in !== fields.marketing_opt_in) {
+    const { recordConsentEvent } = await import("@/lib/compliance/consent");
+    const user = await (await import("@/lib/auth/session")).getCurrentUser();
+    await recordConsentEvent(supabase, {
+      tenantId: session.tenant.id,
+      clientId,
+      consentType: "marketing",
+      granted: fields.marketing_opt_in,
+      source: "client_form",
+      actorType: "staff",
+      actorId: user?.id ?? null,
+    });
   }
   revalidatePath("/institut/clients");
   revalidatePath(`/institut/clients/${clientId}`);

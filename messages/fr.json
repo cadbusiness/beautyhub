@@ -184,7 +184,8 @@
       "institut": "Institut",
       "woocommerce": "WooCommerce",
       "stripe": "Stripe Connect",
-      "pos": "Caisse"
+      "pos": "Caisse",
+      "compliance": "Conformité"
     },
     "profile": {
       "sectionTitle": "Profil",
@@ -1060,7 +1061,8 @@
           "appointments": "Rendez-vous",
           "sales": "Factures & achats",
           "quotes": "Devis",
-          "access": "Accès & emails"
+          "access": "Accès & emails",
+          "privacy": "Données personnelles"
         },
         "stats": {
           "totalSpent": "Total dépensé",
@@ -2676,7 +2678,197 @@
       "teamLogin": "Connexion équipe",
       "book": "Prendre RDV"
     },
-    "footer": "BeautyHub · Plateforme SaaS pour instituts de beauté"
+    "footer": "BeautyHub · Plateforme SaaS pour instituts de beauté",
+    "footerLinks": {
+      "privacy": "Confidentialité",
+      "terms": "CGU",
+      "security": "Sécurité"
+    }
+  },
+  "compliance": {
+    "actions": {
+      "clientNotFound": "Client introuvable.",
+      "forbidden": "Action réservée au responsable de l'institut.",
+      "tenantNotFound": "Institut introuvable.",
+      "unauthorized": "Session expirée.",
+      "serverConfig": "Configuration serveur incomplète."
+    },
+    "clientPanel": {
+      "description": "Exportez les données de ce client ou anonymisez sa fiche (conservation des écritures comptables).",
+      "export": "Exporter (JSON)",
+      "anonymize": "Anonymiser la fiche",
+      "alreadyAnonymized": "Cette fiche a déjà été anonymisée.",
+      "confirmTitle": "Anonymiser ce client ?",
+      "confirmDescription": "Les données personnelles seront effacées. Les ventes et rendez-vous restent pour obligations légales.",
+      "confirmHint": "Cette action est irréversible.",
+      "confirmAction": "Confirmer l'anonymisation",
+      "cancel": "Annuler"
+    },
+    "portal": {
+      "title": "Vos données personnelles",
+      "description": "Téléchargez une copie de vos données ou demandez l'effacement de votre fiche client.",
+      "export": "Télécharger mes données",
+      "erase": "Demander l'effacement",
+      "legalNote": "Certaines données peuvent être conservées pour obligations comptables. Voir",
+      "privacyLink": "politique de confidentialité"
+    },
+    "institut": {
+      "checklistTitle": "Checklist conformité RGPD",
+      "checklistHint": "Cochez chaque étape une fois réalisée. Vous êtes responsable de traitement pour vos clients finaux.",
+      "progress": "{done} / {total} étapes complétées",
+      "checkedAt": "Validé le {date}",
+      "checklist": {
+        "privacy_policy": {
+          "title": "Politique de confidentialité publiée",
+          "hint": "Informez vos clients sur le traitement de leurs données (site, accueil, RDV en ligne)."
+        },
+        "client_notices": {
+          "title": "Mentions sur les formulaires",
+          "hint": "Finalité, base légale et lien vers votre politique sur prise de RDV et fiches client."
+        },
+        "dpa_signed": {
+          "title": "Accord de sous-traitance (DPA) signé",
+          "hint": "Contrat art. 28 RGPD entre votre institut et BeautyHub."
+        },
+        "retention_policy": {
+          "title": "Durées de conservation définies",
+          "hint": "Paramétrez ci-dessous la rétention des fiches clients inactifs."
+        },
+        "team_training": {
+          "title": "Équipe sensibilisée",
+          "hint": "Accès limité, mots de passe, signalement des incidents."
+        }
+      },
+      "retentionTitle": "Conservation des données",
+      "retentionHint": "Durée de conservation des fiches clients inactifs (purge automatique — à venir). Laissez vide pour ne pas limiter.",
+      "retentionLabel": "Jours",
+      "retentionPlaceholder": "Ex. 1095",
+      "retentionSave": "Enregistrer",
+      "retentionInvalid": "Durée entre 30 et 3650 jours, ou vide.",
+      "documentsTitle": "Documents",
+      "documentsHint": "Modèles fournis par BeautyHub — à compléter avec votre conseil juridique.",
+      "downloadDpa": "Télécharger le DPA",
+      "platformPrivacy": "Politique plateforme",
+      "subprocessors": "Sous-traitants"
+    }
+  },
+  "legal": {
+    "nav": {
+      "privacy": "Confidentialité",
+      "terms": "CGU",
+      "subprocessors": "Sous-traitants",
+      "security": "Sécurité",
+      "dpa": "DPA"
+    },
+    "cookies": {
+      "title": "Cookies",
+      "description": "Nous utilisons des cookies essentiels au fonctionnement du service et, avec votre accord, des cookies de mesure d'audience.",
+      "learnMore": "En savoir plus",
+      "essentialOnly": "Essentiels uniquement",
+      "acceptAll": "Tout accepter"
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "intro": "Cette politique décrit comment BeautyHub traite les données personnelles lorsque vous utilisez la plateforme (back-office équipe, portail client, site public des instituts).",
+      "updated": "Dernière mise à jour : juin 2026 — document de travail à valider avec votre conseil juridique.",
+      "sections": {
+        "1": {
+          "title": "Responsable de traitement",
+          "body": "Pour les données des clients finaux des instituts, l'institut est responsable de traitement. BeautyHub agit en sous-traitant pour l'hébergement et le traitement technique des données saisies dans le logiciel."
+        },
+        "2": {
+          "title": "Données collectées",
+          "body": "Identité et coordonnées, historique de rendez-vous et achats, préférences marketing, notes internes, identifiants de connexion portail client, journaux techniques (adresse IP, horodatage)."
+        },
+        "3": {
+          "title": "Finalités et bases légales",
+          "body": "Exécution du contrat SaaS, gestion des rendez-vous et de la caisse, support, sécurité du service. Marketing : consentement. Obligations légales : conservation comptable."
+        },
+        "4": {
+          "title": "Destinataires et sous-traitants",
+          "body": "Voir la page Sous-traitants. Les données sont isolées par institut (multi-tenant, RLS)."
+        },
+        "5": {
+          "title": "Durée de conservation",
+          "body": "Durée du contrat + délais légaux. L'institut peut paramétrer une durée de rétention des fiches clients. Export et anonymisation disponibles dans le produit."
+        },
+        "6": {
+          "title": "Vos droits",
+          "body": "Accès, rectification, effacement, limitation, portabilité, opposition. Contactez votre institut (responsable) ou BeautyHub pour l'usage de la plateforme. Réclamation possible auprès de la CNIL."
+        },
+        "7": {
+          "title": "Sécurité",
+          "body": "Chiffrement TLS, chiffrement des secrets (AES-256-GCM), authentification, journal d'audit. Détails sur /legal/securite."
+        }
+      }
+    },
+    "terms": {
+      "title": "Conditions générales d'utilisation",
+      "intro": "CGU de la plateforme BeautyHub — document de travail.",
+      "sections": {
+        "1": { "title": "Objet", "body": "BeautyHub fournit un logiciel SaaS de gestion pour instituts (rendez-vous, clients, caisse, marketing)." },
+        "2": { "title": "Comptes", "body": "L'utilisateur est responsable de la confidentialité de ses identifiants et des accès accordés à son équipe." },
+        "3": { "title": "Données", "body": "L'institut garantit disposer des bases légales pour traiter les données de ses clients. BeautyHub traite ces données sur instruction de l'institut." },
+        "4": { "title": "Disponibilité", "body": "Service fourni en l'état ; maintenance et évolutions planifiées." },
+        "5": { "title": "Propriété intellectuelle", "body": "BeautyHub reste propriétaire du logiciel. Les données saisies par l'institut lui appartiennent." },
+        "6": { "title": "Droit applicable", "body": "Droit français. Tribunaux compétents du siège de l'éditeur, sauf disposition impérative contraire." }
+      }
+    },
+    "subprocessors": {
+      "title": "Sous-traitants",
+      "intro": "Liste des sous-traitants techniques utilisés par BeautyHub en mode hébergé.",
+      "columns": {
+        "name": "Prestataire",
+        "purpose": "Finalité",
+        "location": "Localisation",
+        "safeguards": "Garanties"
+      },
+      "purposes": {
+        "database": "Base de données, auth, stockage",
+        "hosting": "Hébergement application",
+        "payments": "Paiements en ligne",
+        "ai": "Assistant IA (si activé)"
+      },
+      "locations": {
+        "euUs": "UE / États-Unis",
+        "global": "International",
+        "us": "États-Unis"
+      },
+      "safeguards": {
+        "dpaScc": "DPA + clauses contractuelles types",
+        "dpaOptIn": "DPA ; activation configurable par institut"
+      },
+      "note": "Liste indicative — mettre à jour lors de l'ajout de nouveaux prestataires."
+    },
+    "security": {
+      "title": "Sécurité & confiance",
+      "intro": "Mesures techniques documentées. Ce n'est pas une certification ISO 27001 ou HIPAA — voir feuille de route ci-dessous.",
+      "metricsTitle": "Mesures en place",
+      "metrics": {
+        "rls": "Row Level Security (multi-tenant)",
+        "encryption": "Chiffrement des secrets",
+        "isolation": "Isolation par institut",
+        "auth": "Authentification"
+      },
+      "yes": "Oui",
+      "no": "Non",
+      "roadmapTitle": "Feuille de route conformité",
+      "roadmapBody": "RGPD opérationnel (pages légales, export, anonymisation, consentements, audit).\nProchaines étapes : pentest, SLA public, certification ISO 27001 (organisation).\nHIPAA : uniquement si segment médical US explicite.",
+      "certificationsNote": "Pour la protection des données personnelles, voir",
+      "privacyLink": "politique de confidentialité"
+    },
+    "dpa": {
+      "title": "Accord de sous-traitance (DPA)",
+      "intro": "Modèle art. 28 RGPD entre votre institut (responsable de traitement) et BeautyHub (sous-traitant).",
+      "points": {
+        "controller": "L'institut est responsable vis-à-vis de ses clients finaux.",
+        "processor": "BeautyHub traite les données uniquement pour fournir le service.",
+        "signature": "Téléchargez, complétez et conservez une version signée."
+      },
+      "download": "Télécharger le modèle (.md)",
+      "institutChecklist": "Checklist institut",
+      "disclaimer": "Modèle informatif — faites valider par votre conseil juridique."
+    }
   },
   "ui": {
     "formDialog": {

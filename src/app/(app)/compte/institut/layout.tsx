@@ -32,6 +32,11 @@ export default async function CompteInstitutLayout({
       label: t("pos"),
       exact: true,
     },
+    {
+      href: "/compte/institut/conformite",
+      label: t("compliance"),
+      exact: true,
+    },
   ];
 
   return (

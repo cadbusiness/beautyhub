@@ -1,6 +1,5 @@
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ui/page-header";
 import { EnrollmentsManager } from "./enrollments-manager";
 
 export default async function ElevesPage() {
@@ -37,13 +36,10 @@ export default async function ElevesPage() {
   }));
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Eleves" />
-      <EnrollmentsManager
-        enrollments={enrollmentRows}
-        courses={courses ?? []}
-        clients={clients ?? []}
-      />
-    </div>
+    <EnrollmentsManager
+      enrollments={enrollmentRows}
+      courses={courses ?? []}
+      clients={clients ?? []}
+    />
   );
 }

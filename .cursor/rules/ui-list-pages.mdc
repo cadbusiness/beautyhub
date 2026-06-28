@@ -1,0 +1,32 @@
+---
+description: Conventions UI pour les pages listes du shell BeautyHub
+globs:
+  - src/app/**/*.tsx
+  - src/components/ui/**/*.tsx
+---
+
+# Pages listes — shell BeautyHub
+
+## Pas de titre de page redondant
+
+- **Ne pas** utiliser `PageHeader` / `<h1>` sur les pages liste dont le libellé est déjà dans la sidebar active.
+- La navigation latérale indique la section ; éviter le double titre qui gaspille la hauteur verticale.
+- Réserver `PageHeader` aux **vues synthèse** (dashboard, accueil module avec KPI) ou aux écrans **hors shell** (portail client sans sidebar).
+
+## Layout liste standard
+
+1. **`ListPanel`** — pleine largeur (`-mx-4 lg:-mx-6`), fond blanc, bordures haut/bas uniquement. Pas de `Card` inset.
+2. **`ListToolbar`** — recherche + action « + … » dans le panneau, sans titre au-dessus.
+3. **Grille de lignes** — colonnes alignées via `DataTable` / `dataTableRow`, pas de grosses cartes.
+4. **`FormDialog`** — création / édition en modale, jamais de colonne latérale 360px.
+5. **`ListPanelFooter`** — compteur discret en bas du panneau si besoin.
+
+## Sections multiples (ex. Équipe)
+
+- Éviter les titres de section (`SectionTitle`) si le toolbar ou le contenu suffit à distinguer les blocs.
+- Préférer deux `ListPanel` empilés avec un espacement minimal (`space-y-6` max).
+
+## Densité
+
+- Contenu principal : padding vertical réduit (`py-3`).
+- Pas de `space-y-6` entre un titre fantôme et la liste : la liste commence directement sous le header app.

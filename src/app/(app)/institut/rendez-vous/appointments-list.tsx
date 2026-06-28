@@ -38,12 +38,14 @@ export function AppointmentsList({
   services,
   staff,
   resources,
+  panelClassName,
 }: {
   appointments: AppointmentRow[];
   clients: Option[];
   services: Option[];
   staff: Option[];
   resources: Option[];
+  panelClassName?: string;
 }) {
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -66,7 +68,7 @@ export function AppointmentsList({
 
   return (
     <>
-      <ListPanel>
+      <ListPanel className={panelClassName}>
         <ListToolbar
           action={
             <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">

@@ -1,6 +1,5 @@
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ui/page-header";
 import { ClientsManager } from "./clients-manager";
 
 export default async function ClientsPage() {
@@ -12,10 +11,5 @@ export default async function ClientsPage() {
     .eq("tenant_id", session.tenant.id)
     .order("created_at", { ascending: false });
 
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Clients" />
-      <ClientsManager clients={clients ?? []} />
-    </div>
-  );
+  return <ClientsManager clients={clients ?? []} />;
 }

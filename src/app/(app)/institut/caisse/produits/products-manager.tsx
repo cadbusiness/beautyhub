@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { deleteInternalProduct } from "../../caisse-actions";
 import { Button } from "@/components/ui/button";
@@ -42,9 +43,16 @@ export function ProductsManager({ products }: { products: ProductRow[] }) {
       <ListPanel>
         <ListToolbar
           action={
-            <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
-              + Nouveau produit
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/institut/caisse">
+                <Button variant="outline" type="button" className="h-9">
+                  Retour caisse
+                </Button>
+              </Link>
+              <Button onClick={() => setDialogOpen(true)} className="h-9">
+                + Nouveau produit
+              </Button>
+            </div>
           }
         >
           <Input

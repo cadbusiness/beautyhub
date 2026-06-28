@@ -2,9 +2,9 @@ import Link from "next/link";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { ListPanel } from "@/components/ui/list-panel";
+import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatPrice } from "@/lib/utils";
 
 const PAYMENT_LABEL: Record<string, string> = {
@@ -37,18 +37,20 @@ export default async function CaisseHistoriquePage() {
     .limit(100);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageHeader title="Historique des ventes" />
-        <Link href="/institut/caisse">
-          <Button variant="outline" type="button" className="h-9">
-            Retour caisse
-          </Button>
-        </Link>
-      </div>
+    <ListPanel>
+      <ListToolbar
+        action={
+          <Link href="/institut/caisse">
+            <Button variant="outline" type="button" className="h-9">
+              Retour caisse
+            </Button>
+          </Link>
+        }
+      >
+        <span className="text-sm text-slate-500">Historique des ventes</span>
+      </ListToolbar>
 
-      <ListPanel>
-        <DataTable empty={(sales ?? []).length === 0 ? "Aucune vente enregistree." : undefined}>
+      <DataTable empty={(sales ?? []).length === 0 ? "Aucune vente enregistree." : undefined}>
         <table className="w-full text-sm">
           <thead className="border-b border-slate-200">
             <tr>
@@ -117,8 +119,7 @@ export default async function CaisseHistoriquePage() {
             })}
           </tbody>
         </table>
-        </DataTable>
-      </ListPanel>
-    </div>
+      </DataTable>
+    </ListPanel>
   );
 }

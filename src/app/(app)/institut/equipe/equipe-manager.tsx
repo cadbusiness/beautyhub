@@ -7,7 +7,6 @@ import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/compone
 import { FormDialog } from "@/components/ui/form-dialog";
 import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
-import { SectionTitle } from "@/components/ui/section-title";
 import { StaffForm } from "./staff-form";
 import { ResourceForm } from "./resource-form";
 
@@ -46,9 +45,7 @@ export function EquipeManager({
 
   return (
     <>
-      <section className="space-y-3">
-        <SectionTitle>Personnel</SectionTitle>
-        <ListPanel>
+      <ListPanel>
         <ListToolbar
           action={
             <Button
@@ -114,12 +111,9 @@ export function EquipeManager({
             </table>
           ) : null}
         </DataTable>
-        </ListPanel>
-      </section>
+      </ListPanel>
 
-      <section className="space-y-3">
-        <SectionTitle>Cabines / ressources</SectionTitle>
-        <ListPanel>
+      <ListPanel className="mt-6">
         <ListToolbar
           action={
             <Button
@@ -162,8 +156,7 @@ export function EquipeManager({
             </table>
           ) : null}
         </DataTable>
-        </ListPanel>
-      </section>
+      </ListPanel>
 
       <FormDialog
         open={staffDialogOpen}

@@ -1,6 +1,5 @@
 import { requirePlatformAdmin } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ui/page-header";
 import { PlansManager } from "./plans-manager";
 
 export default async function PlansPage() {
@@ -16,10 +15,5 @@ export default async function PlansPage() {
     supabase.from("modules").select("id, name").order("name"),
   ]);
 
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Formules" />
-      <PlansManager plans={plans ?? []} modules={modules ?? []} />
-    </div>
-  );
+  return <PlansManager plans={plans ?? []} modules={modules ?? []} />;
 }

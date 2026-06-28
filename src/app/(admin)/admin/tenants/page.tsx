@@ -1,6 +1,5 @@
 import { requirePlatformAdmin } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ui/page-header";
 import { TenantsManager } from "./tenants-manager";
 
 interface TenantRow {
@@ -33,10 +32,5 @@ export default async function TenantsPage() {
     activeModules: t.tenant_modules.filter((m) => m.enabled).length,
   }));
 
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Instituts" />
-      <TenantsManager tenants={rows} plans={plans ?? []} />
-    </div>
-  );
+  return <TenantsManager tenants={rows} plans={plans ?? []} />;
 }

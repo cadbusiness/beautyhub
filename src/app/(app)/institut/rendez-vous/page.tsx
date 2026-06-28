@@ -3,7 +3,7 @@ import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAppointmentsInRange } from "@/lib/institut/slots";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
+import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatPrice } from "@/lib/utils";
 import { CalendarView, type CalendarAppointment } from "./calendar-view";
 import { AppointmentsList } from "./appointments-list";
@@ -101,37 +101,45 @@ export default async function RendezVousPage({
   }));
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageHeader title="Rendez-vous" />
-        <div className="flex flex-wrap gap-2">
-          <Link href="/institut/rendez-vous?view=calendrier">
-            <Button variant={view === "calendrier" ? "primary" : "outline"} className="h-9">
-              Calendrier
-            </Button>
-          </Link>
-          <Link href="/institut/rendez-vous?view=liste">
-            <Button variant={view === "liste" ? "primary" : "outline"} className="h-9">
-              Liste
-            </Button>
-          </Link>
-          <Link href="/reserver" target="_blank">
-            <Button variant="outline" className="h-9">
-              Page publique ↗
-            </Button>
-          </Link>
-        </div>
+    <>
+      <div className="-mx-4 border-b border-slate-200 bg-white lg:-mx-6">
+        <ListToolbar
+          action={
+            <div className="flex flex-wrap gap-2">
+              <Link href="/institut/rendez-vous?view=calendrier">
+                <Button variant={view === "calendrier" ? "primary" : "outline"} className="h-9">
+                  Calendrier
+                </Button>
+              </Link>
+              <Link href="/institut/rendez-vous?view=liste">
+                <Button variant={view === "liste" ? "primary" : "outline"} className="h-9">
+                  Liste
+                </Button>
+              </Link>
+              <Link href="/reserver" target="_blank">
+                <Button variant="outline" className="h-9">
+                  Page publique ↗
+                </Button>
+              </Link>
+            </div>
+          }
+        >
+          <span className="text-sm text-slate-500">Rendez-vous</span>
+        </ListToolbar>
       </div>
 
       {view === "calendrier" ? (
-        <CalendarView
+        <div className="pt-4">
+          <CalendarView
           appointments={calendarAppts as CalendarAppointment[]}
           staffColumns={staffColumns}
           resourceColumns={resourceColumns}
           initialDate={now.toISOString().slice(0, 10)}
-        />
+          />
+        </div>
       ) : (
         <AppointmentsList
+          panelClassName="border-t-0"
           appointments={appointments}
           clients={clients}
           services={services}
@@ -139,6 +147,6 @@ export default async function RendezVousPage({
           resources={resources}
         />
       )}
-    </div>
+    </>
   );
 }

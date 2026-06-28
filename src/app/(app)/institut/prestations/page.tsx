@@ -1,6 +1,5 @@
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ui/page-header";
 import { ServicesManager } from "./services-manager";
 
 export default async function PrestationsPage() {
@@ -14,13 +13,5 @@ export default async function PrestationsPage() {
     .eq("tenant_id", session.tenant.id)
     .order("name");
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Prestations"
-        description="Catalogue des services proposes en rendez-vous et en caisse."
-      />
-      <ServicesManager services={services ?? []} />
-    </div>
-  );
+  return <ServicesManager services={services ?? []} />;
 }

@@ -3,9 +3,9 @@ import { getTenantContext } from "@/lib/tenant/context";
 import { getClientSession } from "@/lib/client-auth/session";
 import { createServiceClient } from "@/lib/supabase/service";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { ListPanel } from "@/components/ui/list-panel";
+import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatDateTime } from "@/lib/utils";
 import { cancelClientAppointment, clientLogout } from "../actions";
 
@@ -47,21 +47,21 @@ export default async function ClientComptePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageHeader title="Mes rendez-vous" description={session.email} />
-        <form action={clientLogout}>
-          <Button variant="outline" type="submit" className="h-9">
-            Deconnexion
-          </Button>
-        </form>
-      </div>
-
-      <ListPanel>
-        <DataTable
-        empty={
-          appointments.length === 0 ? "Aucun rendez-vous a venir." : undefined
+    <ListPanel>
+      <ListToolbar
+        action={
+          <form action={clientLogout}>
+            <Button variant="outline" type="submit" className="h-9">
+              Deconnexion
+            </Button>
+          </form>
         }
+      >
+        <span className="text-sm text-slate-600">{session.email}</span>
+      </ListToolbar>
+
+      <DataTable
+        empty={appointments.length === 0 ? "Aucun rendez-vous a venir." : undefined}
       >
         <table className="w-full text-sm">
           <thead className="border-b border-slate-200">
@@ -98,8 +98,7 @@ export default async function ClientComptePage() {
             ))}
           </tbody>
         </table>
-        </DataTable>
-      </ListPanel>
-    </div>
+      </DataTable>
+    </ListPanel>
   );
 }

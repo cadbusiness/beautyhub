@@ -1,10 +1,8 @@
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
-import { PageHeader } from "@/components/ui/page-header";
 import { EquipeManager } from "./equipe-manager";
 import { WorkingHoursForm } from "./working-hours-form";
-import { SectionTitle } from "@/components/ui/section-title";
 
 export default async function EquipePage() {
   const session = await requireModule("institut");
@@ -31,20 +29,13 @@ export default async function EquipePage() {
   ]);
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Equipe"
-        description="Personnel, cabines et horaires d'ouverture de l'institut."
-      />
-
+    <div className="space-y-6">
       <EquipeManager staff={staffRes.data ?? []} resources={resourcesRes.data ?? []} />
 
-      <section className="space-y-4">
-        <SectionTitle>Horaires d&apos;ouverture (institut)</SectionTitle>
-        <Card>
-          <WorkingHoursForm hours={hoursRes.data ?? []} />
-        </Card>
-      </section>
+      <Card>
+        <p className="mb-3 text-sm font-medium text-slate-900">Horaires d&apos;ouverture</p>
+        <WorkingHoursForm hours={hoursRes.data ?? []} />
+      </Card>
     </div>
   );
 }

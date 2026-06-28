@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/card";
 import {
-  getCurrentUser,
   getRoleForTenant,
   isPlatformAdmin,
 } from "@/lib/auth/session";
@@ -8,7 +7,6 @@ import { getEnabledModuleIds, getTenantContext } from "@/lib/tenant/context";
 import { getAiActionsFor, getNavFor } from "@/modules";
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
   const tenant = await getTenantContext();
   const platformAdmin = await isPlatformAdmin();
 
@@ -25,12 +23,8 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">
-          {tenant?.name ?? "Accueil"}
-        </h1>
-        <p className="text-sm text-slate-500">
-          {user?.email} {role ? `· ${role}` : ""}
-        </p>
+        <h1 className="text-2xl font-semibold text-slate-900">Accueil</h1>
+        <p className="text-sm text-slate-500">{tenant?.name}</p>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2">

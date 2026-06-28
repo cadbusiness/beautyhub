@@ -146,6 +146,9 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
 
   const emptyMessage = services.length === 0 ? t("empty") : t("noResults");
 
+  return (
+    <>
+      <ListPanel>
         <ListToolbar
           trailing={
             slice.totalPages > 1 ? (

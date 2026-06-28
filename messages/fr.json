@@ -601,6 +601,7 @@
           "footerText": "Texte de pied de page",
           "previewLabel": "Aperçu du thème",
           "saved": "Thème enregistré.",
+          "template": "Modèle du site",
           "templates": {
             "elegant": "Élégant",
             "modern": "Moderne"

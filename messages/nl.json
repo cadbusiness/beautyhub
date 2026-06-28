@@ -579,6 +579,7 @@
           "footerText": "Voettekst",
           "previewLabel": "Themavoorbeeld",
           "saved": "Thema opgeslagen.",
+          "template": "Sitemodel",
           "templates": {
             "elegant": "Elegant",
             "modern": "Modern"

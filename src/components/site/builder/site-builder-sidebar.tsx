@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { SiteLayoutPickerCard } from "@/components/site/site-page-thumbnail";
 import { SiteBuilderBlockFields } from "@/components/site/builder/site-builder-fields";
@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export type BuilderSidebarTab = "block" | "page";
+export type BlockSidebarTab = "edit" | "structure" | "add";
 export type PageSidebarTab = "style" | "layout" | "settings";
 
 const BLOCK_ICONS: Record<SiteBlockType, string> = {
@@ -91,17 +92,46 @@ export function SiteBuilderSidebar({
   const t = useTranslations("institut.marketing.website.builder");
   const tCommon = useTranslations("common");
   const [pageSubTab, setPageSubTab] = useState<PageSidebarTab>("style");
+  const [blockSubTab, setBlockSubTab] = useState<BlockSidebarTab>(
+    selectedId ? "edit" : blocks.length > 0 ? "structure" : "add",
+  );
+
+  useEffect(() => {
+    if (selectedId) setBlockSubTab("edit");
+  }, [selectedId]);
+
+  function handleBlockTabClick() {
+    onTabChange("block");
+  }
 
   function handlePageTabClick() {
     onTabChange("page");
   }
 
+  function handleStructureSelect(id: string) {
+    onSelectBlock(id);
+    setBlockSubTab("edit");
+  }
+
+  function handleAddBlock(type: SiteBlockType) {
+    onAddBlock(type);
+    setBlockSubTab("edit");
+  }
+
   return (
     <aside className="flex w-[280px] shrink-0 flex-col border-r border-slate-200 bg-[#fafafa]">
       <div className="flex shrink-0 border-b border-slate-200">
-        <SidebarTab active={tab === "block"} onClick={() => onTabChange("block")} label={t("inspectorBlock")} />
+        <SidebarTab active={tab === "block"} onClick={handleBlockTabClick} label={t("inspectorBlock")} />
         <SidebarTab active={tab === "page"} onClick={handlePageTabClick} label={t("inspectorPage")} />
       </div>
+
+      {tab === "block" ? (
+        <div className="flex shrink-0 border-b border-slate-100 bg-slate-50 px-2 py-1.5">
+          <PageSubTab active={blockSubTab === "edit"} onClick={() => setBlockSubTab("edit")} label={t("blockSubEdit")} />
+          <PageSubTab active={blockSubTab === "structure"} onClick={() => setBlockSubTab("structure")} label={t("blockSubStructure")} />
+          <PageSubTab active={blockSubTab === "add"} onClick={() => setBlockSubTab("add")} label={t("blockSubAdd")} />
+        </div>
+      ) : null}
 
       {tab === "page" ? (
         <div className="flex shrink-0 border-b border-slate-100 bg-slate-50 px-2 py-1.5">
@@ -113,73 +143,80 @@ export function SiteBuilderSidebar({
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {tab === "block" ? (
-          <div className="flex flex-col gap-0">
-            {selectedBlock ? (
-              <section className="border-b border-slate-100 bg-white p-3">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <h3 className="text-xs font-semibold text-slate-900">
-                    {t(`blockTypes.${selectedBlock.type}`)}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => onRemoveBlock(selectedBlock.id)}
-                    className="text-xs text-red-600 hover:text-red-700"
-                  >
-                    {tCommon("delete")}
-                  </button>
-                </div>
-                <SiteBuilderBlockFields
-                  block={selectedBlock}
-                  onChange={(patch) => onUpdateBlock(selectedBlock.id, patch)}
-                  t={t}
-                />
-              </section>
-            ) : (
-              <section className="border-b border-slate-100 bg-white px-3 py-2">
-                <p className="text-[11px] text-slate-500">{t("selectBlockHint")}</p>
-              </section>
-            )}
-
-            {blocks.length > 0 ? (
-              <section className="border-b border-slate-100 bg-white p-3">
-                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  {t("structure")}
-                </p>
-                <ul className="space-y-0.5">
-                  {blocks.map((block) => (
-                    <li key={block.id}>
-                      <button
-                        type="button"
-                        onClick={() => onSelectBlock(block.id)}
-                        className={cn(
-                          "flex w-full items-center gap-2 rounded px-2 py-1 text-left text-[11px] transition",
-                          selectedId === block.id
-                            ? "bg-slate-900 text-white"
-                            : "text-slate-700 hover:bg-slate-100",
-                        )}
-                      >
-                        <span className="w-4 shrink-0 text-center text-xs opacity-70">
-                          {BLOCK_ICONS[block.type]}
-                        </span>
-                        <span className="truncate">{t(`blockTypes.${block.type}`)}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-
-            <section className="bg-white p-3">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                {t("widgets")}
-              </p>
-              <p className="mb-2 text-[10px] text-slate-400">{t("widgetsHint")}</p>
+          blockSubTab === "edit" ? (
+            <div className="bg-white p-3">
+              {selectedBlock ? (
+                <>
+                  <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <div>
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                        {t("blockSubEdit")}
+                      </p>
+                      <h3 className="text-xs font-semibold text-slate-900">
+                        {t(`blockTypes.${selectedBlock.type}`)}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onRemoveBlock(selectedBlock.id)}
+                      className="text-[10px] text-red-600 hover:text-red-700"
+                    >
+                      {tCommon("delete")}
+                    </button>
+                  </div>
+                  <SiteBuilderBlockFields
+                    block={selectedBlock}
+                    onChange={(patch) => onUpdateBlock(selectedBlock.id, patch)}
+                    t={t}
+                  />
+                </>
+              ) : (
+                <p className="text-[11px] leading-relaxed text-slate-500">{t("selectBlockHint")}</p>
+              )}
+            </div>
+          ) : blockSubTab === "structure" ? (
+            <div className="bg-white p-3">
+              {blocks.length > 0 ? (
+                <>
+                  <p className="mb-2 text-[10px] leading-snug text-slate-500">{t("structureHint")}</p>
+                  <ul className="space-y-0.5">
+                    {blocks.map((block, index) => (
+                      <li key={block.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleStructureSelect(block.id)}
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[11px] transition",
+                            selectedId === block.id
+                              ? "bg-slate-900 text-white"
+                              : "text-slate-700 hover:bg-slate-100",
+                          )}
+                        >
+                          <span className="w-4 shrink-0 text-center text-[10px] tabular-nums opacity-60">
+                            {index + 1}
+                          </span>
+                          <span className="w-4 shrink-0 text-center text-xs opacity-70">
+                            {BLOCK_ICONS[block.type]}
+                          </span>
+                          <span className="truncate">{t(`blockTypes.${block.type}`)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p className="text-[11px] text-slate-500">{t("structureEmpty")}</p>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white p-3">
+              <p className="mb-2 text-[10px] leading-snug text-slate-500">{t("widgetsHint")}</p>
               <div className="grid grid-cols-2 gap-1.5">
                 {SITE_BLOCK_TYPES.map(({ type }) => (
                   <button
                     key={type}
                     type="button"
-                    onClick={() => onAddBlock(type)}
+                    onClick={() => handleAddBlock(type)}
                     className="flex flex-col items-center gap-1 rounded border border-slate-200 bg-slate-50 px-1.5 py-2 text-center text-[10px] text-slate-700 transition hover:border-slate-300 hover:bg-white"
                   >
                     <span className="text-sm text-slate-500">{BLOCK_ICONS[type]}</span>
@@ -187,8 +224,8 @@ export function SiteBuilderSidebar({
                   </button>
                 ))}
               </div>
-            </section>
-          </div>
+            </div>
+          )
         ) : pageSubTab === "style" ? (
           <div className="bg-white py-1">
             <SitePageStyleFields style={pageStyle} onChange={onPageStyleChange} t={t} />

@@ -47,33 +47,39 @@ export function UserMenu({
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex items-center gap-2 rounded-lg border border-slate-200 bg-white py-1 pl-1 pr-2.5 text-left transition-colors hover:border-slate-300 hover:bg-slate-50",
-          variant === "sidebar" && "w-full",
+          "flex items-center rounded-lg border border-slate-200 bg-white text-left transition-colors hover:border-slate-300 hover:bg-slate-50",
+          variant === "header" && "h-9 w-9 shrink-0 justify-center sm:w-auto sm:justify-start sm:gap-1.5 sm:pl-1 sm:pr-2",
+          variant === "sidebar" && "w-full gap-2 py-1 pl-1 pr-2.5",
         )}
         aria-expanded={open}
         aria-haspopup="menu"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-900 text-sm font-semibold text-white">
+        <span
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded-md bg-slate-900 font-semibold text-white",
+            variant === "header" ? "h-6 w-6 text-[11px]" : "h-8 w-8 text-sm",
+          )}
+        >
           {initial}
         </span>
         <span
           className={cn(
-            "min-w-0",
+            "min-w-0 leading-none",
             variant === "header" ? "hidden sm:block" : "flex-1",
           )}
         >
           <span
             className={cn(
-              "block truncate text-sm font-medium text-slate-900",
-              variant === "header" && "max-w-[9rem]",
+              "block truncate font-medium text-slate-900",
+              variant === "header" ? "max-w-[7rem] text-xs" : "text-sm",
             )}
           >
             {displayName}
           </span>
           <span
             className={cn(
-              "block truncate text-xs text-slate-500",
-              variant === "header" && "max-w-[9rem]",
+              "block truncate text-slate-500",
+              variant === "header" ? "mt-0.5 max-w-[7rem] text-[11px]" : "text-xs",
             )}
           >
             {roleText}

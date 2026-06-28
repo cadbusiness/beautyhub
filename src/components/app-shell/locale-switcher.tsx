@@ -25,7 +25,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "inline-flex rounded-lg border border-slate-200 bg-white p-0.5",
+        "inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white p-0.5",
         className,
       )}
       role="group"
@@ -38,7 +38,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
           disabled={pending}
           onClick={() => pick(code)}
           className={cn(
-            "min-w-[2.75rem] rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+            "flex h-8 min-w-[2.25rem] items-center justify-center rounded-md px-2 text-xs font-medium transition-colors",
             activeLocale === code
               ? "bg-slate-900 text-white"
               : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",

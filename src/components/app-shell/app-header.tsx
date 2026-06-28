@@ -50,7 +50,7 @@ export async function AppHeader({
 
       <div className="flex-1" />
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {platformAdmin ? (
           <Link
             href="/admin"

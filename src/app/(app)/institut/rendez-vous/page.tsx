@@ -92,13 +92,11 @@ export default async function RendezVousPage({
         .order("created_at", { ascending: false }),
       supabase
         .from("inst_appointments")
-        .select(
-          "id, starts_at, ends_at, status, price_cents, service:inst_services(name), staff:inst_staff(full_name), client:clients(full_name, email)",
-        )
+        .select("id, starts_at, ends_at, status, price_cents, staff_id, service_id, client_id")
         .eq("tenant_id", tenantId)
         .order("starts_at", { ascending: true })
         .limit(50),
-      fetchAppointmentsInRange(supabase, tenantId, rangeStart, rangeEnd),
+      fetchAppointmentsInRange(supabase, tenantId, rangeStart, rangeEnd).catch(() => []),
     ]);
 
   const services = catalogServices.map((s) => ({
@@ -114,14 +112,20 @@ export default async function RendezVousPage({
     label: c.full_name ? `${c.full_name} (${c.email})` : c.email,
   }));
 
+  const staffMap = new Map((staffRes.data ?? []).map((s) => [s.id, s.full_name]));
+  const serviceMap = new Map(catalogServices.map((s) => [s.id, s.name]));
+  const clientMap = new Map(
+    (clientsRes.data ?? []).map((c) => [c.id, c.full_name ?? c.email]),
+  );
+
   const appointments = (apptsRes.data ?? []).map((a) => ({
     id: a.id,
     starts_at: a.starts_at,
     status: a.status,
     price_cents: a.price_cents ?? 0,
-    serviceName: pick(a.service),
-    clientName: pick(a.client),
-    staffName: pick(a.staff),
+    serviceName: (a.service_id && serviceMap.get(a.service_id)) || "-",
+    clientName: (a.client_id && clientMap.get(a.client_id)) || "-",
+    staffName: (a.staff_id && staffMap.get(a.staff_id)) || "-",
   }));
 
   const staffColumns = (staffRes.data ?? []).map((s) => ({
@@ -134,13 +138,6 @@ export default async function RendezVousPage({
     label: r.name,
     color: null,
   }));
-
-  type Joined = { name?: string; full_name?: string | null; color?: string | null } | null;
-
-  function pick(value: Joined | Joined[]): string {
-    const v = Array.isArray(value) ? value[0] : value;
-    return v?.name ?? v?.full_name ?? "-";
-  }
 
   return (
     <ListPanel>

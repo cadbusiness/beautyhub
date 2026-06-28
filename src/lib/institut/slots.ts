@@ -176,6 +176,24 @@ export async function fetchAppointmentsInRange(
     }
   }
 
+  if (extrasRes.error) {
+    // Table absente ou colonnes snapshot manquantes — repli sans extras
+    return data.map((a) => {
+      const svc = a.service_id ? serviceMap.get(a.service_id) : undefined;
+      const st = a.staff_id ? staffMap.get(a.staff_id) : undefined;
+      const cl = a.client_id ? clientMap.get(a.client_id) : undefined;
+      const res = a.resource_id ? resourceMap.get(a.resource_id) : undefined;
+      return {
+        ...a,
+        service: svc ? { name: svc.name, color: svc.color, duration_min: svc.duration_min } : null,
+        staff: st ? { full_name: st.full_name, color: st.color } : null,
+        client: cl ? { full_name: cl.full_name, email: cl.email, phone: cl.phone } : null,
+        resource: res ? { name: res.name } : null,
+        extras: [],
+      };
+    });
+  }
+
   return data.map((a) => {
     const svc = a.service_id ? serviceMap.get(a.service_id) : undefined;
     const st = a.staff_id ? staffMap.get(a.staff_id) : undefined;

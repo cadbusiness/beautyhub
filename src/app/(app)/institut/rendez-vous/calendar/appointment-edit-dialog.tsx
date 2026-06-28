@@ -33,7 +33,7 @@ export function AppointmentEditDialog({
       title={t("editTitle")}
       size="lg"
     >
-      {appointment ? (
+      {open && appointment ? (
         <AppointmentForm
           mode="edit"
           appointment={appointment}

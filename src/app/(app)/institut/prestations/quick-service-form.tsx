@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createService, type ActionResult } from "../actions";
@@ -12,21 +12,27 @@ const initial: ActionResult = {};
 export function QuickServiceForm({
   onCreated,
   compact = false,
+  refreshOnCreate = false,
 }: {
   onCreated?: (serviceId: string) => void;
   compact?: boolean;
+  /** Rafraîchit la page après création (ex. liste prestations vide). */
+  refreshOnCreate?: boolean;
 }) {
   const t = useTranslations("institut.services.quickForm");
   const tCommon = useTranslations("common");
   const router = useRouter();
   const [state, action, pending] = useActionState(createService, initial);
+  const prevPendingRef = useRef(false);
 
   useEffect(() => {
-    if (state.ok && state.serviceId) {
+    const justFinished = prevPendingRef.current && !pending;
+    prevPendingRef.current = pending;
+    if (justFinished && state.ok && state.serviceId) {
       onCreated?.(state.serviceId);
-      router.refresh();
+      if (refreshOnCreate) router.refresh();
     }
-  }, [state.ok, state.serviceId, onCreated, router]);
+  }, [pending, state.ok, state.serviceId, onCreated, refreshOnCreate, router]);
 
   return (
     <form

@@ -7,7 +7,6 @@ import {
   updateAppointment,
   type ActionResult,
 } from "../actions";
-import { loadInstServiceExtras } from "../prestations/extras-actions";
 import { QuickServiceForm } from "../prestations/quick-service-form";
 import { ExtrasPicker } from "@/components/institut/extras-picker";
 import { Button } from "@/components/ui/button";
@@ -85,20 +84,36 @@ export function AppointmentForm({
       setExtras([]);
       return;
     }
+    let cancelled = false;
     startLoadExtras(async () => {
-      const catalog = await loadInstServiceExtras(serviceId);
-      setExtraCatalog(catalog);
-      if (mode === "edit" && appointment?.extras?.length) {
-        setExtras(
-          appointment.extras.map((e) => ({
-            service_id: e.service_id,
-            quantity: e.quantity,
-          })),
+      try {
+        const res = await fetch(
+          `/api/institut/service-extras?serviceId=${encodeURIComponent(serviceId)}`,
         );
-      } else {
-        setExtras([]);
+        if (!res.ok) throw new Error("load_failed");
+        const catalog = (await res.json()) as ServiceExtraConfig[];
+        if (cancelled) return;
+        setExtraCatalog(catalog);
+        if (mode === "edit" && appointment?.extras?.length) {
+          setExtras(
+            appointment.extras.map((e) => ({
+              service_id: e.service_id,
+              quantity: e.quantity,
+            })),
+          );
+        } else {
+          setExtras([]);
+        }
+      } catch {
+        if (!cancelled) {
+          setExtraCatalog([]);
+          setExtras([]);
+        }
       }
     });
+    return () => {
+      cancelled = true;
+    };
   }, [serviceId, mode, appointment?.extras]);
 
   useEffect(() => {
@@ -175,6 +190,7 @@ export function AppointmentForm({
       {showQuickService || services.length === 0 ? (
         <QuickServiceForm
           compact
+          refreshOnCreate
           onCreated={(id) => {
             setServiceId(id);
             setShowQuickService(false);

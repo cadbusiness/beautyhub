@@ -221,6 +221,46 @@ export async function fetchAppointmentsInRange(
   });
 }
 
+export function serializeCalendarAppointments(rows: CalendarAppointmentRow[]): CalendarAppointmentRow[] {
+  return rows.map((row) => ({
+    id: row.id,
+    starts_at: row.starts_at,
+    ends_at: row.ends_at,
+    status: row.status,
+    notes: row.notes ?? null,
+    price_cents: row.price_cents ?? null,
+    staff_id: row.staff_id ?? null,
+    resource_id: row.resource_id ?? null,
+    service_id: row.service_id ?? null,
+    client_id: row.client_id ?? null,
+    service: row.service
+      ? {
+          name: row.service.name,
+          color: row.service.color ?? null,
+          duration_min: row.service.duration_min,
+        }
+      : null,
+    staff: row.staff
+      ? { full_name: row.staff.full_name, color: row.staff.color ?? null }
+      : null,
+    client: row.client
+      ? {
+          full_name: row.client.full_name ?? null,
+          email: row.client.email,
+          phone: row.client.phone ?? null,
+        }
+      : null,
+    resource: row.resource ? { name: row.resource.name } : null,
+    extras: (row.extras ?? []).map((e) => ({
+      service_id: e.service_id,
+      quantity: e.quantity,
+      name: e.name,
+      price_cents: e.price_cents,
+      duration_min: e.duration_min,
+    })),
+  }));
+}
+
 export interface WorkingHourRow {
   weekday: number;
   start_time: string;

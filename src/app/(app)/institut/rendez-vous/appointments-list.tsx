@@ -152,13 +152,15 @@ export function AppointmentsList({
         title={t("dialogTitle")}
         size="lg"
       >
-        <AppointmentForm
-          clients={clients}
-          services={services}
-          staff={staff}
-          resources={resources}
-          onSuccess={() => setDialogOpen(false)}
-        />
+        {dialogOpen ? (
+          <AppointmentForm
+            clients={clients}
+            services={services}
+            staff={staff}
+            resources={resources}
+            onSuccess={() => setDialogOpen(false)}
+          />
+        ) : null}
       </FormDialog>
     </>
   );

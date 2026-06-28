@@ -3,11 +3,11 @@ import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { todayDateString } from "@/lib/date";
-import { fetchAppointmentsInRange } from "@/lib/institut/slots";
+import { fetchAppointmentsInRange, serializeCalendarAppointments } from "@/lib/institut/slots";
 import { ListPanel } from "@/components/ui/list-panel";
 import { PageTabLinks } from "@/components/ui/page-tabs";
 import { formatPrice } from "@/lib/utils";
-import { CalendarView, type CalendarAppointment } from "./calendar-view";
+import { CalendarView } from "./calendar-view";
 import { AppointmentsList } from "./appointments-list";
 
 const RDV_TAB_HREFS = [
@@ -96,7 +96,9 @@ export default async function RendezVousPage({
         .eq("tenant_id", tenantId)
         .order("starts_at", { ascending: true })
         .limit(50),
-      fetchAppointmentsInRange(supabase, tenantId, rangeStart, rangeEnd).catch(() => []),
+      fetchAppointmentsInRange(supabase, tenantId, rangeStart, rangeEnd)
+        .then(serializeCalendarAppointments)
+        .catch(() => []),
     ]);
 
   const services = catalogServices.map((s) => ({
@@ -147,7 +149,7 @@ export default async function RendezVousPage({
 
       {view === "calendrier" ? (
         <CalendarView
-          initialAppointments={calendarAppts as CalendarAppointment[]}
+          initialAppointments={calendarAppts}
           staffColumns={staffColumns}
           resourceColumns={resourceColumns}
           services={services}

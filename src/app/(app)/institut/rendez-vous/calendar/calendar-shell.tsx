@@ -258,16 +258,18 @@ export function CalendarShell({
         title={tCal("dialogTitle")}
         size="lg"
       >
-        <AppointmentForm
-          clients={clients}
-          services={services}
-          staff={staff}
-          resources={resources}
-          onSuccess={() => {
-            setCreateOpen(false);
-            refreshCalendar();
-          }}
-        />
+        {createOpen ? (
+          <AppointmentForm
+            clients={clients}
+            services={services}
+            staff={staff}
+            resources={resources}
+            onSuccess={() => {
+              setCreateOpen(false);
+              refreshCalendar();
+            }}
+          />
+        ) : null}
       </FormDialog>
     </div>
   );

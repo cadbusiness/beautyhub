@@ -8,40 +8,14 @@ import {
   persistServiceExtras,
   type ServiceExtraLinkInput,
 } from "@/lib/institut/service-extras-persist";
+import { loadServiceExtrasCatalog } from "@/lib/institut/service-extras-load";
 
 export type { ServiceExtraLinkInput };
 
 export async function loadInstServiceExtras(serviceId: string): Promise<ServiceExtraConfig[]> {
   const session = await requireModule("institut");
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("inst_service_extras")
-    .select(
-      "min_qty, max_qty, sort_order, extra:inst_services!inst_service_extras_extra_service_id_fkey(id, name, description, duration_min, price_cents, image_url, is_active)",
-    )
-    .eq("tenant_id", session.tenant.id)
-    .eq("service_id", serviceId)
-    .order("sort_order");
-
-  return (data ?? [])
-    .filter((row) => {
-      const extra = Array.isArray(row.extra) ? row.extra[0] : row.extra;
-      return extra?.is_active;
-    })
-    .map((row) => {
-      const extra = Array.isArray(row.extra) ? row.extra[0]! : row.extra!;
-      return {
-        extra_service_id: extra.id,
-        name: extra.name,
-        description: extra.description,
-        duration_min: extra.duration_min,
-        price_cents: extra.price_cents,
-        image_url: extra.image_url,
-        min_qty: row.min_qty,
-        max_qty: row.max_qty,
-        sort_order: row.sort_order,
-      };
-    });
+  return loadServiceExtrasCatalog(supabase, session.tenant.id, serviceId);
 }
 
 export async function loadServiceExtraLinks(

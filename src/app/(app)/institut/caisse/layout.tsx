@@ -1,15 +1,26 @@
+import { getTranslations } from "next-intl/server";
 import { SectionPanel } from "@/components/ui/section-panel";
+import { navMessageKey } from "@/lib/i18n/nav";
 
-const TABS = [
-  { label: "Terminal", href: "/institut/caisse", exact: true },
-  { label: "Historique", href: "/institut/caisse/historique" },
-  { label: "Produits internes", href: "/institut/caisse/produits" },
+const TAB_HREFS = [
+  { href: "/institut/caisse", exact: true as const },
+  { href: "/institut/caisse/historique" },
+  { href: "/institut/caisse/produits" },
 ];
 
-export default function CaisseLayout({
+export default async function CaisseLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <SectionPanel tabs={TABS}>{children}</SectionPanel>;
+  const tNav = await getTranslations("nav");
+  const tabs = TAB_HREFS.map((tab) => {
+    const labelKey = navMessageKey(tab.href);
+    return {
+      ...tab,
+      label: labelKey ? tNav(labelKey) : tab.href,
+    };
+  });
+
+  return <SectionPanel tabs={tabs}>{children}</SectionPanel>;
 }

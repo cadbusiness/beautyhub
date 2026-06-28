@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
@@ -25,6 +26,7 @@ export function TenantsManager({
   tenants: TenantRow[];
   plans: { id: string; name: string }[];
 }) {
+  const t = useTranslations("admin.tenants");
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -32,12 +34,11 @@ export function TenantsManager({
     const q = query.trim().toLowerCase();
     if (!q) return tenants;
     return tenants.filter(
-      (t) => t.name.toLowerCase().includes(q) || t.slug.toLowerCase().includes(q),
+      (tenant) => tenant.name.toLowerCase().includes(q) || tenant.slug.toLowerCase().includes(q),
     );
   }, [tenants, query]);
 
-  const emptyMessage =
-    tenants.length === 0 ? "Aucun institut pour le moment." : "Aucun resultat.";
+  const emptyMessage = tenants.length === 0 ? t("empty") : t("noResults");
 
   return (
     <>
@@ -45,13 +46,13 @@ export function TenantsManager({
         <ListToolbar
           action={
             <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
-              + Nouvel institut
+              + {t("new")}
             </Button>
           }
         >
           <Input
             type="search"
-            placeholder="Recherche institut, identifiant..."
+            placeholder={t("searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="h-9 sm:max-w-sm"
@@ -62,26 +63,26 @@ export function TenantsManager({
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200">
               <tr>
-                <th className={dataTableHead}>Institut</th>
-                <th className={dataTableHead}>Identifiant</th>
-                <th className={dataTableHead}>Formule</th>
-                <th className={`w-32 ${dataTableHead}`}>Modules actifs</th>
+                <th className={dataTableHead}>{t("columns.institut")}</th>
+                <th className={dataTableHead}>{t("columns.slug")}</th>
+                <th className={dataTableHead}>{t("columns.plan")}</th>
+                <th className={`w-32 ${dataTableHead}`}>{t("columns.activeModules")}</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((t) => (
-                <tr key={t.id} className={dataTableRow}>
+              {filtered.map((tenant) => (
+                <tr key={tenant.id} className={dataTableRow}>
                   <td className={dataTableCell}>
                     <Link
-                      href={`/admin/tenants/${t.id}`}
+                      href={`/admin/tenants/${tenant.id}`}
                       className="font-medium text-slate-900 hover:text-slate-600"
                     >
-                      {t.name}
+                      {tenant.name}
                     </Link>
                   </td>
-                  <td className={`text-slate-500 ${dataTableCell}`}>{t.slug}</td>
-                  <td className={`text-slate-500 ${dataTableCell}`}>{t.planName}</td>
-                  <td className={`text-slate-500 ${dataTableCell}`}>{t.activeModules}</td>
+                  <td className={`text-slate-500 ${dataTableCell}`}>{tenant.slug}</td>
+                  <td className={`text-slate-500 ${dataTableCell}`}>{tenant.planName}</td>
+                  <td className={`text-slate-500 ${dataTableCell}`}>{tenant.activeModules}</td>
                 </tr>
               ))}
             </tbody>
@@ -92,7 +93,7 @@ export function TenantsManager({
       <FormDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        title="Nouvel institut"
+        title={t("dialogTitle")}
         size="lg"
       >
         <CreateTenantForm plans={plans} onSuccess={() => setDialogOpen(false)} />

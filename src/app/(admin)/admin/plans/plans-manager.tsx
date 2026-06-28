@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
@@ -27,6 +28,8 @@ export function PlansManager({
   plans: PlanRow[];
   modules: { id: string; name: string }[];
 }) {
+  const t = useTranslations("admin.plans");
+  const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -36,7 +39,7 @@ export function PlansManager({
     return plans.filter((p) => p.name.toLowerCase().includes(q));
   }, [plans, query]);
 
-  const emptyMessage = plans.length === 0 ? "Aucune formule." : "Aucun resultat.";
+  const emptyMessage = plans.length === 0 ? t("empty") : t("noResults");
 
   return (
     <>
@@ -44,13 +47,13 @@ export function PlansManager({
         <ListToolbar
           action={
             <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
-              + Nouvelle formule
+              + {t("new")}
             </Button>
           }
         >
           <Input
             type="search"
-            placeholder="Recherche formule..."
+            placeholder={t("searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="h-9 sm:max-w-xs"
@@ -61,10 +64,10 @@ export function PlansManager({
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200">
               <tr>
-                <th className={dataTableHead}>Formule</th>
-                <th className={`w-32 ${dataTableHead}`}>Prix</th>
-                <th className={dataTableHead}>Modules</th>
-                <th className={`w-28 ${dataTableHead}`}>Statut</th>
+                <th className={dataTableHead}>{t("columns.plan")}</th>
+                <th className={`w-32 ${dataTableHead}`}>{t("columns.price")}</th>
+                <th className={dataTableHead}>{t("columns.modules")}</th>
+                <th className={`w-28 ${dataTableHead}`}>{t("columns.status")}</th>
               </tr>
             </thead>
             <tbody>
@@ -79,10 +82,11 @@ export function PlansManager({
                     </Link>
                   </td>
                   <td className={`text-slate-500 ${dataTableCell}`}>
-                    {formatPrice(p.price_cents)}/{p.interval === "year" ? "an" : "mois"}
+                    {formatPrice(p.price_cents)}/
+                    {p.interval === "year" ? tCommon("perYear") : tCommon("perMonth")}
                   </td>
                   <td className={`max-w-0 truncate text-slate-500 ${dataTableCell}`}>
-                    {p.modules.join(", ") || "—"}
+                    {p.modules.join(", ") || tCommon("dash")}
                   </td>
                   <td className={dataTableCell}>
                     <span
@@ -92,7 +96,7 @@ export function PlansManager({
                           : "rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500"
                       }
                     >
-                      {p.is_active ? "Active" : "Inactive"}
+                      {p.is_active ? t("active") : t("inactive")}
                     </span>
                   </td>
                 </tr>
@@ -105,7 +109,7 @@ export function PlansManager({
       <FormDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        title="Nouvelle formule"
+        title={t("dialogTitle")}
         size="lg"
       >
         <PlanForm modules={modules} onSuccess={() => setDialogOpen(false)} />

@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/auth/guards";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
+import { translateQuotaError } from "@/lib/i18n/quota";
 
 export interface ActionResult {
   error?: string;
@@ -19,10 +21,11 @@ export async function createCourse(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const actions = await getTranslations("institut.actions");
   const session = await requireModule("academie");
   const supabase = await createClient();
   const title = String(formData.get("title") ?? "").trim();
-  if (!title) return { error: "Titre requis." };
+  if (!title) return { error: actions("titleRequired") };
 
   const { error } = await supabase.from("acad_courses").insert({
     tenant_id: session.tenant.id,
@@ -52,11 +55,12 @@ export async function createEnrollment(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const actions = await getTranslations("institut.actions");
   const session = await requireModule("academie");
   try {
     await assertQuota(session.tenant.id, "students");
   } catch (e) {
-    if (e instanceof QuotaExceededError) return { error: e.message };
+    if (e instanceof QuotaExceededError) return { error: await translateQuotaError(e) };
     throw e;
   }
 
@@ -65,7 +69,7 @@ export async function createEnrollment(
   const studentEmail = String(formData.get("student_email") ?? "").trim().toLowerCase();
   const studentName = String(formData.get("student_name") ?? "").trim();
   if (!courseId || !studentEmail || !studentName) {
-    return { error: "Formation, nom et email requis." };
+    return { error: actions("enrollmentFieldsRequired") };
   }
 
   const { data: course } = await supabase
@@ -74,7 +78,7 @@ export async function createEnrollment(
     .eq("id", courseId)
     .eq("tenant_id", session.tenant.id)
     .maybeSingle();
-  if (!course) return { error: "Formation introuvable." };
+  if (!course) return { error: actions("courseNotFound") };
 
   const clientId = String(formData.get("client_id") ?? "") || null;
 

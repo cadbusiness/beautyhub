@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/auth/guards";
 import { getWooClientForTenant } from "@/lib/woocommerce";
@@ -23,13 +24,28 @@ function revalidateCaisse() {
   revalidatePath("/institut/caisse/produits");
 }
 
+async function translateCartLineError(error: unknown): Promise<string> {
+  const t = await getTranslations("institut.actions");
+  const msg = (error as Error).message;
+  const servicePrefix = "Prestation introuvable: ";
+  const productPrefix = "Produit introuvable: ";
+  if (msg.startsWith(servicePrefix)) {
+    return t("serviceNotFoundInCart", { id: msg.slice(servicePrefix.length) });
+  }
+  if (msg.startsWith(productPrefix)) {
+    return t("productNotFoundInCart", { id: msg.slice(productPrefix.length) });
+  }
+  return msg;
+}
+
 export async function createInternalProduct(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { error: "Nom requis." };
+  if (!name) return { error: t("nameRequired") };
 
   const stockRaw = String(formData.get("stock_quantity") ?? "").trim();
   const stock = stockRaw === "" ? null : Math.max(0, Number.parseInt(stockRaw, 10) || 0);
@@ -71,6 +87,7 @@ export async function processPosCheckout(
     notes?: string;
   },
 ): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
   const supabase = await createClient();
 
@@ -78,19 +95,19 @@ export async function processPosCheckout(
   try {
     cart = parsePosCart(cartJson);
   } catch {
-    return { error: "Panier invalide." };
+    return { error: t("invalidCart") };
   }
-  if (Object.keys(cart).length === 0) return { error: "Panier vide." };
+  if (Object.keys(cart).length === 0) return { error: t("emptyCart") };
 
   let lines;
   try {
     lines = await resolveCartLines(supabase, session.tenant.id, cart);
   } catch (e) {
-    return { error: (e as Error).message };
+    return { error: await translateCartLineError(e) };
   }
 
   const total = lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0);
-  if (total <= 0) return { error: "Montant invalide." };
+  if (total <= 0) return { error: t("invalidAmount") };
 
   if (options?.stripePaymentIntentId) {
     const { data: dup } = await supabase
@@ -99,7 +116,7 @@ export async function processPosCheckout(
       .eq("tenant_id", session.tenant.id)
       .eq("stripe_payment_intent_id", options.stripePaymentIntentId)
       .maybeSingle();
-    if (dup) return { ok: true, message: "Vente deja enregistree." };
+    if (dup) return { ok: true, message: t("saleAlreadyRecorded") };
   }
 
   const wooClient = await getWooClientForTenant(session.tenant.id);
@@ -113,7 +130,7 @@ export async function processPosCheckout(
         const order = await wooClient.createOrder(lineItems, { setPaid: true });
         wooOrderId = order.id;
       } catch (e) {
-        return { error: `Commande WooCommerce echouee: ${(e as Error).message}` };
+        return { error: t("wooOrderFailed", { message: (e as Error).message }) };
       }
     }
   }
@@ -132,7 +149,7 @@ export async function processPosCheckout(
     })
     .select("id")
     .single();
-  if (saleErr || !sale) return { error: saleErr?.message ?? "Erreur vente." };
+  if (saleErr || !sale) return { error: saleErr?.message ?? t("saleError") };
 
   const { error: itemsErr } = await supabase.from("inst_sale_items").insert(
     lines.map((l) => ({
@@ -149,11 +166,11 @@ export async function processPosCheckout(
   if (itemsErr) return { error: itemsErr.message };
 
   revalidateCaisse();
-  const parts: string[] = ["Vente enregistree"];
+  const parts: string[] = [t("saleRecorded")];
   if (wooOrderId) parts.push(`Woo #${wooOrderId}`);
-  if (paymentMethod === "cash") parts.push("(especes)");
-  if (paymentMethod === "stripe") parts.push("(carte Stripe)");
-  if (paymentMethod === "card") parts.push("(carte TPE)");
+  if (paymentMethod === "cash") parts.push(t("paymentCash"));
+  if (paymentMethod === "stripe") parts.push(t("paymentStripe"));
+  if (paymentMethod === "card") parts.push(t("paymentCard"));
   return { ok: true, message: parts.join(" · ") };
 }
 

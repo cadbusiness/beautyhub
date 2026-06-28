@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { selectTenant } from "@/lib/tenant/actions";
 import type { TenantOption } from "@/lib/tenant/defaults";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,8 @@ export function TenantSwitcher({
   currentSlug: string;
   className?: string;
 }) {
+  const t = useTranslations("shell");
+
   if (tenants.length === 0) return null;
 
   if (tenants.length === 1) {
@@ -26,7 +29,7 @@ export function TenantSwitcher({
   return (
     <form action={selectTenant} className={className}>
       <label className="sr-only" htmlFor="tenant-switcher">
-        Institut
+        {t("institut")}
       </label>
       <select
         id="tenant-switcher"

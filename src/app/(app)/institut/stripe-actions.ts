@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/auth/guards";
 import {
@@ -16,11 +17,27 @@ import {
   STRIPE_CONNECT_PROVIDER,
 } from "@/lib/stripe/index";
 import { getRequestOrigin } from "@/lib/stripe/origin";
+import { parsePosCart, resolveCartLines } from "@/lib/institut/pos";
+import { processPosCheckout } from "./caisse-actions";
 
 export interface ActionResult {
   error?: string;
   ok?: boolean;
   message?: string;
+}
+
+async function translateCartLineError(error: unknown): Promise<string> {
+  const t = await getTranslations("institut.actions");
+  const msg = (error as Error).message;
+  const servicePrefix = "Prestation introuvable: ";
+  const productPrefix = "Produit introuvable: ";
+  if (msg.startsWith(servicePrefix)) {
+    return t("serviceNotFoundInCart", { id: msg.slice(servicePrefix.length) });
+  }
+  if (msg.startsWith(productPrefix)) {
+    return t("productNotFoundInCart", { id: msg.slice(productPrefix.length) });
+  }
+  return msg;
 }
 
 async function getOrCreateAccountId(tenantId: string): Promise<string> {
@@ -108,9 +125,6 @@ export async function disconnectStripe(): Promise<void> {
   revalidatePath("/institut/caisse/historique");
 }
 
-import { parsePosCart, resolveCartLines } from "@/lib/institut/pos";
-import { processPosCheckout } from "./caisse-actions";
-
 export interface PaymentIntentResult {
   error?: string;
   clientSecret?: string;
@@ -122,29 +136,30 @@ export interface PaymentIntentResult {
 export async function createStripePaymentIntent(
   cartJson: string,
 ): Promise<PaymentIntentResult> {
+  const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
   const account = await getStripeAccountForTenant(session.tenant.id);
   if (!account) {
-    return { error: "Stripe Connect non configure pour cet institut." };
+    return { error: t("stripeNotConfigured") };
   }
 
   let cart: Record<string, number>;
   try {
     cart = parsePosCart(cartJson);
   } catch {
-    return { error: "Panier invalide." };
+    return { error: t("invalidCart") };
   }
-  if (Object.keys(cart).length === 0) return { error: "Panier vide." };
+  if (Object.keys(cart).length === 0) return { error: t("emptyCart") };
 
   const supabase = await createClient();
   let lines;
   try {
     lines = await resolveCartLines(supabase, session.tenant.id, cart);
   } catch (e) {
-    return { error: (e as Error).message };
+    return { error: await translateCartLineError(e) };
   }
   const total = lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0);
-  if (total <= 0) return { error: "Montant invalide." };
+  if (total <= 0) return { error: t("invalidAmount") };
 
   const stripe = getStripe();
   const paymentIntent = await stripe.paymentIntents.create(
@@ -158,7 +173,7 @@ export async function createStripePaymentIntent(
   );
 
   if (!paymentIntent.client_secret) {
-    return { error: "Impossible de creer le paiement Stripe." };
+    return { error: t("paymentCreateFailed") };
   }
 
   return {
@@ -174,9 +189,10 @@ export async function finalizeStripeCheckout(
   cartJson: string,
   clientId: string | null,
 ): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
   const account = await getStripeAccountForTenant(session.tenant.id);
-  if (!account) return { error: "Stripe Connect non configure." };
+  if (!account) return { error: t("stripeNotConfiguredShort") };
 
   const stripe = getStripe();
   const pi = await stripe.paymentIntents.retrieve(
@@ -185,14 +201,14 @@ export async function finalizeStripeCheckout(
     { stripeAccount: account.accountId },
   );
   if (pi.status !== "succeeded") {
-    return { error: "Paiement non confirme." };
+    return { error: t("paymentNotConfirmed") };
   }
 
   let cart: Record<string, number>;
   try {
     cart = parsePosCart(cartJson);
   } catch {
-    return { error: "Panier invalide." };
+    return { error: t("invalidCart") };
   }
 
   let lines;
@@ -200,12 +216,12 @@ export async function finalizeStripeCheckout(
     const supabase = await createClient();
     lines = await resolveCartLines(supabase, session.tenant.id, cart);
   } catch (e) {
-    return { error: (e as Error).message };
+    return { error: await translateCartLineError(e) };
   }
 
   const total = lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0);
   if (total !== pi.amount) {
-    return { error: "Montant du panier incompatible avec le paiement." };
+    return { error: t("cartAmountMismatch") };
   }
 
   return processPosCheckout(cartJson, clientId, "stripe", {

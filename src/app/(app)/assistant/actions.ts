@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { requireTenantSession } from "@/lib/auth/guards";
 import { executeAction } from "@/lib/ai/runtime";
 import type { ExecuteActionResult } from "@/lib/ai/types";
@@ -11,12 +12,13 @@ export async function runAiAction(
   paramsJson: string,
 ): Promise<RunAiActionResult> {
   const session = await requireTenantSession();
+  const actions = await getTranslations("institut.actions");
 
   let params: unknown;
   try {
     params = paramsJson.trim() ? JSON.parse(paramsJson) : {};
   } catch {
-    return { ok: false, error: "JSON invalide pour les parametres." };
+    return { ok: false, error: actions("invalidJsonParams") };
   }
 
   return executeAction(actionName, params, {

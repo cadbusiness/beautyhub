@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getTenantContext } from "@/lib/tenant/context";
 import {
   clearClientSession,
@@ -27,15 +28,16 @@ export async function clientLogin(
   _prev: ClientAuthResult,
   formData: FormData,
 ): Promise<ClientAuthResult> {
+  const actions = await getTranslations("institut.actions");
   const tenant = await getTenantContext();
-  if (!tenant) return { error: "Institut introuvable." };
+  if (!tenant) return { error: actions("tenantNotFound") };
 
   const supabase = dbOrError();
-  if (!supabase) return { error: "Configuration serveur incomplete (service role)." };
+  if (!supabase) return { error: actions("serverConfigIncomplete") };
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "Email et mot de passe requis." };
+  if (!email || !password) return { error: actions("emailPasswordRequired") };
 
   const { data: client } = await supabase
     .from("clients")
@@ -45,11 +47,11 @@ export async function clientLogin(
     .maybeSingle();
 
   if (!client?.password_hash) {
-    return { error: "Compte introuvable ou mot de passe non defini." };
+    return { error: actions("accountNotFound") };
   }
 
   const valid = await verifyPassword(password, client.password_hash);
-  if (!valid) return { error: "Identifiants incorrects." };
+  if (!valid) return { error: actions("invalidCredentials") };
 
   await setClientSession({
     clientId: client.id,
@@ -64,17 +66,18 @@ export async function clientRegister(
   _prev: ClientAuthResult,
   formData: FormData,
 ): Promise<ClientAuthResult> {
+  const actions = await getTranslations("institut.actions");
   const tenant = await getTenantContext();
-  if (!tenant) return { error: "Institut introuvable." };
+  if (!tenant) return { error: actions("tenantNotFound") };
 
   const supabase = dbOrError();
-  if (!supabase) return { error: "Configuration serveur incomplete (service role)." };
+  if (!supabase) return { error: actions("serverConfigIncomplete") };
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const fullName = String(formData.get("full_name") ?? "").trim();
-  if (!email || !password || !fullName) return { error: "Tous les champs sont requis." };
-  if (password.length < 8) return { error: "Mot de passe: 8 caracteres minimum." };
+  if (!email || !password || !fullName) return { error: actions("allFieldsRequired") };
+  if (password.length < 8) return { error: actions("passwordMinLength") };
 
   const passwordHash = await hashPassword(password);
 
@@ -86,7 +89,7 @@ export async function clientRegister(
     .maybeSingle();
 
   if (existing?.password_hash) {
-    return { error: "Un compte existe deja pour cet email." };
+    return { error: actions("accountAlreadyExists") };
   }
 
   if (existing) {
@@ -110,7 +113,7 @@ export async function clientRegister(
       })
       .select("id")
       .single();
-    if (error || !created) return { error: error?.message ?? "Erreur creation compte." };
+    if (error || !created) return { error: error?.message ?? actions("accountCreateError") };
     await setClientSession({
       clientId: created.id,
       tenantId: tenant.id,

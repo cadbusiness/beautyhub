@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { ListPanel } from "@/components/ui/list-panel";
 
 export default async function InstitutHome() {
+  const t = await getTranslations("institut.overview");
   const session = await requireModule("institut");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
@@ -26,9 +28,9 @@ export default async function InstitutHome() {
   ]);
 
   const stats = [
-    { label: "RDV à venir", value: upcoming.count ?? 0, href: "/institut/rendez-vous" },
-    { label: "Clients", value: clients.count ?? 0, href: "/institut/clients" },
-    { label: "Prestations", value: services.count ?? 0, href: "/institut/prestations" },
+    { label: t("upcomingAppointments"), value: upcoming.count ?? 0, href: "/institut/rendez-vous" },
+    { label: t("clients"), value: clients.count ?? 0, href: "/institut/clients" },
+    { label: t("services"), value: services.count ?? 0, href: "/institut/prestations" },
   ];
 
   return (
@@ -36,7 +38,7 @@ export default async function InstitutHome() {
       <div className="grid divide-y divide-slate-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         {stats.map((s) => (
           <Link
-            key={s.label}
+            key={s.href}
             href={s.href}
             className="px-4 py-5 transition-colors hover:bg-slate-50 lg:px-6"
           >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
@@ -19,6 +20,8 @@ type ClientRow = {
 const rowClass = dataTableRow;
 
 export function ClientsManager({ clients }: { clients: ClientRow[] }) {
+  const t = useTranslations("institut.clients");
+  const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -39,13 +42,13 @@ export function ClientsManager({ clients }: { clients: ClientRow[] }) {
         <ListToolbar
           action={
             <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
-              + Nouveau client
+              + {t("new")}
             </Button>
           }
         >
           <Input
             type="search"
-            placeholder="Recherche nom, email, telephone..."
+            placeholder={t("searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="h-9 sm:max-w-sm"
@@ -56,8 +59,8 @@ export function ClientsManager({ clients }: { clients: ClientRow[] }) {
           empty={
             filtered.length === 0
               ? clients.length === 0
-                ? "Aucun client pour le moment."
-                : "Aucun resultat pour cette recherche."
+                ? t("empty")
+                : t("noResults")
               : undefined
           }
         >
@@ -65,20 +68,20 @@ export function ClientsManager({ clients }: { clients: ClientRow[] }) {
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200">
                 <tr>
-                  <th className={dataTableHead}>Nom</th>
-                  <th className={dataTableHead}>Email</th>
-                  <th className={dataTableHead}>Telephone</th>
+                  <th className={dataTableHead}>{t("columns.name")}</th>
+                  <th className={dataTableHead}>{t("columns.email")}</th>
+                  <th className={dataTableHead}>{t("columns.phone")}</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((c) => (
                   <tr key={c.id} className={rowClass}>
                     <td className={`text-slate-900 ${dataTableCell}`}>
-                      {c.full_name ?? "-"}
+                      {c.full_name ?? tCommon("dash")}
                     </td>
                     <td className={`text-slate-600 ${dataTableCell}`}>{c.email}</td>
                     <td className={`text-slate-600 ${dataTableCell}`}>
-                      {c.phone ?? "-"}
+                      {c.phone ?? tCommon("dash")}
                     </td>
                   </tr>
                 ))}
@@ -89,8 +92,10 @@ export function ClientsManager({ clients }: { clients: ClientRow[] }) {
 
         {filtered.length > 0 ? (
           <ListPanelFooter>
-            {filtered.length} client{filtered.length > 1 ? "s" : ""}
-            {query ? ` sur ${clients.length}` : ""}
+            {t("footer", { count: filtered.length })}
+            {query
+              ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: clients.length })}`
+              : ""}
           </ListPanelFooter>
         ) : null}
       </ListPanel>
@@ -98,7 +103,7 @@ export function ClientsManager({ clients }: { clients: ClientRow[] }) {
       <FormDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        title="Nouveau client"
+        title={t("dialogTitle")}
       >
         <ClientForm onSuccess={() => setDialogOpen(false)} />
       </FormDialog>

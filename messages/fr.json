@@ -17,14 +17,91 @@
     "client": "Client",
     "status": "Statut",
     "notes": "Notes",
-    "refresh": "Rafraîchir"
+    "refresh": "Rafraîchir",
+    "add": "Ajouter",
+    "create": "Créer",
+    "creating": "Création…",
+    "delete": "Supprimer",
+    "search": "Rechercher",
+    "ok": "OK",
+    "yes": "Oui",
+    "no": "Non",
+    "color": "Couleur",
+    "email": "Email",
+    "password": "Mot de passe",
+    "phone": "Téléphone",
+    "name": "Nom",
+    "price": "Prix",
+    "description": "Description",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "published": "Publié",
+    "actions": "Actions",
+    "date": "Date",
+    "service": "Prestation",
+    "staff": "Employé(e)",
+    "confirm": "Confirmer",
+    "execute": "Exécuter",
+    "executing": "Exécution…",
+    "success": "Succès",
+    "saved": "Enregistré",
+    "back": "Retour",
+    "sections": "Sections",
+    "unlimited": "Illimité",
+    "loading": "Chargement…",
+    "prepare": "Préparation…",
+    "pay": "Payer",
+    "cash": "Espèces",
+    "card": "Carte",
+    "note": "Note",
+    "searchArticles": "Rechercher un article…",
+    "total": "Total",
+    "woocommerce": "WooCommerce",
+    "internal": "Interne",
+    "terminal": "Terminal",
+    "history": "Historique",
+    "products": "Produits",
+    "team": "Équipe",
+    "settings": "Paramètres",
+    "overview": "Vue d'ensemble",
+    "modules": "Modules",
+    "contactAdmin": "Contactez votre administrateur pour activer les modules institut ou académie.",
+    "stripe": "Stripe",
+    "woo": "Woo",
+    "connect": "Connecter",
+    "testAndSave": "Test et enregistrement…",
+    "slug": "Identifiant",
+    "plan": "Formule",
+    "interval": "Périodicité",
+    "monthly": "Mensuel",
+    "yearly": "Annuel",
+    "title": "Titre",
+    "duration": "Durée",
+    "stock": "Stock",
+    "sku": "SKU",
+    "visible": "Visible",
+    "hidden": "Masquée",
+    "draft": "Brouillon",
+    "adding": "Ajout…",
+    "none": "Aucun",
+    "choose": "Choisir…",
+    "apply": "Appliquer",
+    "disconnect": "Déconnecter",
+    "connected": "Connecté",
+    "notConnected": "Non connecté",
+    "send": "Envoyer",
+    "step": "Étape {n}",
+    "perMonth": "mois",
+    "perYear": "an",
+    "countOfTotal": "{count} sur {total}"
   },
   "shell": {
     "home": "Accueil",
     "administration": "Administration",
     "signOut": "Déconnexion",
     "footerRights": "Tous droits réservés.",
-    "language": "Langue"
+    "language": "Langue",
+    "institut": "Institut"
   },
   "roles": {
     "platform_admin": "Super admin",
@@ -32,6 +109,85 @@
     "tenant_owner": "Propriétaire",
     "staff": "Staff",
     "coach": "Coach"
+  },
+  "nav": {
+    "institutAppointments": "Rendez-vous",
+    "institutServices": "Prestations",
+    "institutClients": "Clients",
+    "institutTeam": "Équipe",
+    "institutPos": "Caisse",
+    "institutPosHistory": "Historique caisse",
+    "institutPosProducts": "Produits internes",
+    "institutSettings": "Paramètres",
+    "academieOverview": "Académie",
+    "academieCourses": "Formations",
+    "academieStudents": "Élèves",
+    "adminOverview": "Administration",
+    "adminTenants": "Instituts",
+    "adminPlans": "Formules"
+  },
+  "weekdays": {
+    "mon": "Lundi",
+    "tue": "Mardi",
+    "wed": "Mercredi",
+    "thu": "Jeudi",
+    "fri": "Vendredi",
+    "sat": "Samedi",
+    "sun": "Dimanche"
+  },
+  "errors": {
+    "quota": {
+      "exceeded": "Limite atteinte pour \"{key}\" (max {limit}). Passez à la formule supérieure."
+    }
+  },
+  "dashboard": {
+    "subtitle": "Vue d'ensemble — utilisez le menu à gauche pour naviguer.",
+    "kpis": {
+      "title": "Indicateurs",
+      "description": "Chiffres clés de votre institut.",
+      "upcomingAppointments": "RDV à venir",
+      "clients": "Clients",
+      "services": "Prestations"
+    },
+    "quickActions": {
+      "title": "Actions rapides",
+      "description": "Les tâches les plus fréquentes, sans repasser par tout le menu.",
+      "appointments": {
+        "label": "Rendez-vous",
+        "description": "Planning et réservations"
+      },
+      "pos": {
+        "label": "Caisse",
+        "description": "Encaisser une vente"
+      },
+      "clients": {
+        "label": "Clients",
+        "description": "Fiches et coordonnées"
+      },
+      "services": {
+        "label": "Prestations",
+        "description": "Services et tarifs"
+      },
+      "courses": {
+        "label": "Formations",
+        "description": "Catalogue académie"
+      },
+      "students": {
+        "label": "Élèves",
+        "description": "Inscriptions en cours"
+      }
+    },
+    "modules": {
+      "title": "Modules",
+      "emptyDescription": "Aucun module actif pour le moment.",
+      "emptyHint": "Contactez votre administrateur pour activer les modules institut ou académie."
+    },
+    "assistant": {
+      "title": "Assistant",
+      "heading": "Pilotage assisté par IA",
+      "description": "Clients, formations, planning — posez une demande ou choisissez une action prédéfinie dans l'assistant.",
+      "open": "Ouvrir l'assistant"
+    }
   },
   "appointments": {
     "tabs": {
@@ -115,7 +271,49 @@
       "serviceDateRequired": "Prestation et date/heure requises.",
       "missingFields": "Champs requis manquants.",
       "clientEmailExists": "Un client avec cet e-mail existe déjà.",
-      "workingHoursEndBeforeStart": "{day} : l'heure de fin doit être après le début."
+      "workingHoursEndBeforeStart": "{day} : l'heure de fin doit être après le début.",
+      "invalidCart": "Panier invalide.",
+      "emptyCart": "Panier vide.",
+      "invalidAmount": "Montant invalide.",
+      "saleAlreadyRecorded": "Vente déjà enregistrée.",
+      "wooOrderFailed": "Commande WooCommerce échouée : {message}",
+      "saleError": "Erreur vente.",
+      "saleRecorded": "Vente enregistrée",
+      "paymentCash": "(espèces)",
+      "paymentStripe": "(carte Stripe)",
+      "paymentCard": "(carte TPE)",
+      "serviceNotFoundInCart": "Prestation introuvable : {id}",
+      "productNotFoundInCart": "Produit introuvable : {id}",
+      "stripeNotConfigured": "Stripe Connect non configuré pour cet institut.",
+      "stripeNotConfiguredShort": "Stripe Connect non configuré.",
+      "paymentCreateFailed": "Impossible de créer le paiement Stripe.",
+      "paymentNotConfirmed": "Paiement non confirmé.",
+      "cartAmountMismatch": "Montant du panier incompatible avec le paiement.",
+      "urlKeySecretRequired": "URL, clé et secret requis.",
+      "connectionFailed": "Connexion échouée : {message}",
+      "wooConnected": "Boutique WooCommerce connectée.",
+      "titleRequired": "Titre requis.",
+      "enrollmentFieldsRequired": "Formation, nom et email requis.",
+      "courseNotFound": "Formation introuvable.",
+      "nameSlugRequired": "Nom et identifiant (slug) requis.",
+      "platformBrandNotFound": "Brand plateforme introuvable.",
+      "slugTaken": "L'identifiant \"{slug}\" est déjà pris.",
+      "tenantCreateError": "Erreur création institut.",
+      "tenantCreatedOwnerFailed": "Institut créé, mais propriétaire non créé : {message}.",
+      "missingRequiredFields": "Champs requis manquants.",
+      "tenantUpdated": "Institut mis à jour.",
+      "planNameRequired": "Nom de la formule requis.",
+      "tenantNotFound": "Institut introuvable.",
+      "serverConfigIncomplete": "Configuration serveur incomplète (service role).",
+      "emailPasswordRequired": "Email et mot de passe requis.",
+      "accountNotFound": "Compte introuvable ou mot de passe non défini.",
+      "invalidCredentials": "Identifiants incorrects.",
+      "allFieldsRequired": "Tous les champs sont requis.",
+      "passwordMinLength": "Mot de passe : 8 caractères minimum.",
+      "accountAlreadyExists": "Un compte existe déjà pour cet email.",
+      "accountCreateError": "Erreur création compte.",
+      "invalidJsonParams": "JSON invalide pour les paramètres.",
+      "workingHoursSaved": "Horaires enregistrés."
     },
     "scheduling": {
       "conflict": {
@@ -126,6 +324,647 @@
         "noHoursToday": "Aucun horaire d'ouverture ce jour pour ce prestataire.",
         "outsideSchedule": "La période sélectionnée ne correspond pas au planning du prestataire."
       }
+    },
+    "overview": {
+      "upcomingAppointments": "RDV à venir",
+      "clients": "Clients",
+      "services": "Prestations"
+    },
+    "clients": {
+      "new": "Nouveau client",
+      "searchPlaceholder": "Recherche nom, email, téléphone…",
+      "empty": "Aucun client pour le moment.",
+      "noResults": "Aucun résultat pour cette recherche.",
+      "dialogTitle": "Nouveau client",
+      "columns": {
+        "name": "Nom",
+        "email": "Email",
+        "phone": "Téléphone"
+      },
+      "footer": "{count, plural, one {# client} other {# clients}}",
+      "form": {
+        "fullName": "Nom complet",
+        "fullNamePlaceholder": "Marie Durand",
+        "emailPlaceholder": "marie@email.com",
+        "phonePlaceholder": "06 12 34 56 78",
+        "submit": "Ajouter le client",
+        "submitting": "Ajout…"
+      }
+    },
+    "services": {
+      "new": "Nouvelle prestation",
+      "searchPlaceholder": "Recherche par nom…",
+      "filterAll": "Toutes",
+      "filterActive": "Visibles",
+      "filterInactive": "Masquées",
+      "empty": "Aucune prestation pour le moment.",
+      "noResults": "Aucun résultat pour cette recherche.",
+      "columns": {
+        "status": "Statut",
+        "title": "Titre",
+        "duration": "Durée",
+        "price": "Prix",
+        "actions": "Actions"
+      },
+      "durationMin": "{min} min",
+      "visible": "Visible",
+      "hidden": "Masquée",
+      "hiddenBadge": "Masquée",
+      "edit": "Modifier",
+      "deleteShort": "Suppr.",
+      "footer": "{count, plural, one {# prestation} other {# prestations}}",
+      "dialog": {
+        "createTitle": "Nouvelle prestation",
+        "editTitle": "Modifier prestation",
+        "tabs": {
+          "general": "Général",
+          "time": "Horaires",
+          "advanced": "Avancé"
+        },
+        "namePlaceholder": "Soin du visage",
+        "priceEur": "Prix (EUR)",
+        "descriptionPlaceholder": "Optionnel — visible en interne",
+        "visibleLabel": "Visible",
+        "visibleHint": "Désactivé pour masquer aux clients et à la caisse.",
+        "durationMin": "Durée (min)",
+        "bufferBefore": "Tampon avant (min)",
+        "bufferAfter": "Tampon après (min)",
+        "bufferHint": "Les tampons bloquent du temps avant et après chaque rendez-vous.",
+        "minAdvanceHours": "Délai minimum (h)",
+        "maxAdvanceDays": "Résa max (jours)",
+        "bookingWindowHint": "Contrôle la fenêtre de réservation en ligne pour cette prestation.",
+        "createSubmit": "Créer la prestation",
+        "editSubmit": "Enregistrer",
+        "submitting": "Enregistrement…"
+      }
+    },
+    "team": {
+      "tabs": {
+        "personnel": "Personnel",
+        "cabines": "Cabines",
+        "horaires": "Horaires"
+      },
+      "personnel": {
+        "add": "Ajouter du personnel",
+        "searchPlaceholder": "Recherche personnel…",
+        "empty": "Aucun membre du personnel.",
+        "noResults": "Aucun résultat.",
+        "columns": {
+          "color": "Couleur",
+          "name": "Nom",
+          "email": "Email",
+          "actions": "Actions"
+        },
+        "delete": "Supprimer",
+        "footer": "{count, plural, one {# membre} other {# membres}}",
+        "dialogTitle": "Ajouter du personnel",
+        "form": {
+          "fullName": "Nom complet",
+          "fullNamePlaceholder": "Sophie Martin",
+          "emailOptional": "Email (optionnel)",
+          "emailPlaceholder": "sophie@institut.fr",
+          "colorOptional": "Couleur (optionnel)",
+          "submit": "Ajouter",
+          "submitting": "Ajout…"
+        }
+      },
+      "cabines": {
+        "add": "Ajouter une cabine",
+        "subtitle": "Cabines et salles de soin",
+        "empty": "Aucune cabine configurée.",
+        "columns": {
+          "name": "Nom",
+          "actions": "Actions"
+        },
+        "delete": "Supprimer",
+        "footer": "{count, plural, one {# cabine} other {# cabines}}",
+        "dialogTitle": "Ajouter une cabine",
+        "form": {
+          "name": "Nom de la cabine / ressource",
+          "namePlaceholder": "Cabine 1",
+          "submit": "Ajouter",
+          "submitting": "Ajout…"
+        }
+      },
+      "horaires": {
+        "description": "Horaires d'ouverture par défaut de l'institut (utilisés pour les disponibilités en ligne).",
+        "saved": "Horaires enregistrés.",
+        "submit": "Enregistrer les horaires",
+        "submitting": "Enregistrement…"
+      }
+    },
+    "pos": {
+      "syncWoo": "Sync WooCommerce",
+      "emptyCatalog": "Commence par ajouter des prestations, des produits internes ou connecter WooCommerce dans les paramètres.",
+      "linkServices": "Prestations",
+      "linkProducts": "Produits internes",
+      "linkSettings": "Paramètres",
+      "wooNotConnected": "WooCommerce non connecté — seules les prestations et produits internes sont disponibles.",
+      "connectShop": "Connecter la boutique"
+    },
+    "settings": {
+      "securityNote": "Les clés API WooCommerce sont chiffrées (AES-256-GCM) avant stockage. Stripe Connect utilise un compte Express par institut ; les paiements sont routés vers ce compte."
+    },
+    "stripe": {
+      "title": "Stripe Connect",
+      "description": "Encaissement carte à la caisse (compte Express de l'institut).",
+      "active": "Actif",
+      "notConnected": "Non connecté",
+      "missingPlatformKey": "STRIPE_SECRET_KEY non configuré sur la plateforme. Ajoute-la dans .env.local pour activer Stripe Connect.",
+      "missingKeyRedirect": "Clé Stripe plateforme manquante.",
+      "account": "Compte :",
+      "paymentsActive": "· Paiements actifs",
+      "onboardingIncomplete": "· Onboarding incomplet",
+      "disconnect": "Déconnecter Stripe",
+      "connect": "Connecter Stripe",
+      "resumeOnboarding": "Reprendre l'onboarding Stripe"
+    },
+    "woo": {
+      "title": "WooCommerce",
+      "description": "Catalogue produits et commandes de la caisse.",
+      "connected": "Connecté",
+      "notConnected": "Non connecté",
+      "shop": "Boutique :",
+      "disconnect": "Déconnecter",
+      "form": {
+        "shopUrl": "URL de la boutique",
+        "shopUrlPlaceholder": "https://maboutique.com",
+        "consumerKey": "Consumer key",
+        "consumerKeyPlaceholder": "ck_…",
+        "consumerSecret": "Consumer secret",
+        "consumerSecretPlaceholder": "cs_…",
+        "submit": "Connecter WooCommerce",
+        "submitting": "Test et enregistrement…"
+      }
+    }
+  },
+  "academie": {
+    "overview": {
+      "courses": "Formations",
+      "published": "Publiées",
+      "enrolledStudents": "Élèves inscrits"
+    },
+    "courses": {
+      "new": "Nouvelle formation",
+      "searchPlaceholder": "Recherche par titre…",
+      "empty": "Aucune formation pour le moment.",
+      "noResults": "Aucun résultat pour cette recherche.",
+      "columns": {
+        "title": "Titre",
+        "status": "Statut",
+        "price": "Prix",
+        "actions": "Actions"
+      },
+      "published": "Publiée",
+      "draft": "Brouillon",
+      "delete": "Supprimer",
+      "footer": "{count, plural, one {# formation} other {# formations}}",
+      "dialogTitle": "Nouvelle formation",
+      "form": {
+        "title": "Titre",
+        "titlePlaceholder": "Ma formation",
+        "priceEur": "Prix (EUR)",
+        "descriptionPlaceholder": "Optionnel",
+        "publishImmediately": "Publier immédiatement",
+        "submit": "Créer la formation",
+        "submitting": "Création…"
+      }
+    },
+    "students": {
+      "newEnrollment": "Nouvelle inscription",
+      "searchPlaceholder": "Recherche élève, email, formation…",
+      "empty": "Aucune inscription pour le moment.",
+      "noResults": "Aucun résultat pour cette recherche.",
+      "columns": {
+        "student": "Élève",
+        "course": "Formation",
+        "status": "Statut"
+      },
+      "status": {
+        "enrolled": "Inscrit",
+        "completed": "Terminé",
+        "cancelled": "Annulé"
+      },
+      "footer": "{count, plural, one {# inscription} other {# inscriptions}}",
+      "dialogTitle": "Nouvelle inscription",
+      "form": {
+        "noCourses": "Créez d'abord une formation avant d'inscrire un élève.",
+        "course": "Formation",
+        "chooseCourse": "Choisir…",
+        "studentName": "Nom de l'élève",
+        "studentNamePlaceholder": "Marie Durand",
+        "emailPlaceholder": "marie@email.com",
+        "linkClient": "Lier à un client (optionnel)",
+        "submit": "Inscrire l'élève",
+        "submitting": "Inscription…"
+      }
+    },
+    "enrollments": {
+      "title": "Inscriptions"
+    }
+  },
+  "admin": {
+    "layout": {
+      "subtitle": "Administration plateforme"
+    },
+    "dashboard": {
+      "title": "Tableau de bord",
+      "description": "Vue d'ensemble de la plateforme.",
+      "stats": {
+        "tenants": "Instituts",
+        "activeSubscriptions": "Abonnements actifs",
+        "plans": "Formules",
+        "catalogModules": "Modules au catalogue"
+      },
+      "manageTenants": "Gérer les instituts",
+      "managePlans": "Gérer les formules"
+    },
+    "tenants": {
+      "new": "Nouvel institut",
+      "searchPlaceholder": "Recherche institut, identifiant…",
+      "empty": "Aucun institut pour le moment.",
+      "noResults": "Aucun résultat.",
+      "dialogTitle": "Nouvel institut",
+      "columns": {
+        "institut": "Institut",
+        "slug": "Identifiant",
+        "plan": "Formule",
+        "activeModules": "Modules actifs"
+      },
+      "form": {
+        "name": "Nom de l'institut",
+        "namePlaceholder": "Institut Beauté Lyon",
+        "slug": "Identifiant (sous-domaine)",
+        "slugPlaceholder": "beaute-lyon",
+        "plan": "Formule",
+        "noPlan": "— Aucune pour l'instant —",
+        "ownerLegend": "Compte propriétaire (optionnel)",
+        "ownerEmailPlaceholder": "proprio@institut.fr",
+        "ownerPasswordPlaceholder": "min. 6 caractères",
+        "submit": "Créer l'institut",
+        "submitting": "Création…"
+      },
+      "detail": {
+        "back": "← Instituts",
+        "info": "Informations",
+        "accessHint": "Accès institut : {slug}.localhost:3000",
+        "usage": "Usage rendez-vous",
+        "usageThisMonth": "Ce mois-ci : {count}",
+        "usageLimit": " / {limit} (formule {plan})",
+        "usageUnlimited": " (illimité)",
+        "featureActive": "active",
+        "featureInactive": "désactivé",
+        "subscription": "Abonnement",
+        "activePlan": "Formule active",
+        "noPlan": "— Aucune —",
+        "applyPlan": "Appliquer",
+        "applyPlanHint": "Appliquer une formule active automatiquement ses modules inclus.",
+        "modules": "Modules",
+        "enable": "Activer",
+        "disable": "Désactiver",
+        "team": "Équipe",
+        "teamCount": "{count} membre(s) : {roles}",
+        "teamNone": "aucun"
+      }
+    },
+    "plans": {
+      "new": "Nouvelle formule",
+      "searchPlaceholder": "Recherche formule…",
+      "empty": "Aucune formule.",
+      "noResults": "Aucun résultat.",
+      "dialogTitle": "Nouvelle formule",
+      "back": "← Formules",
+      "columns": {
+        "plan": "Formule",
+        "price": "Prix",
+        "modules": "Modules",
+        "status": "Statut"
+      },
+      "active": "Active",
+      "inactive": "Inactive",
+      "form": {
+        "namePlaceholder": "Pro",
+        "priceEur": "Prix (EUR)",
+        "pricePlaceholder": "59",
+        "interval": "Périodicité",
+        "monthly": "Mensuel",
+        "yearly": "Annuel",
+        "includedModules": "Modules inclus",
+        "rdvFeatures": "Fonctionnalités RDV",
+        "featureCalendar": "Calendrier RDV",
+        "featureClientBooking": "Réservation client en ligne",
+        "featureSms": "Notifications SMS",
+        "quotas": "Quotas",
+        "quotasHint": "(vide = illimité)",
+        "limitStaff": "Membres d'équipe",
+        "limitClients": "Fiches clients",
+        "limitAppointments": "RDV / mois",
+        "limitStudents": "Élèves (académie)",
+        "unlimitedPlaceholder": "∞",
+        "isActive": "Formule active (proposable aux instituts)",
+        "createSubmit": "Créer la formule",
+        "editSubmit": "Enregistrer",
+        "submitting": "Enregistrement…"
+      }
+    }
+  },
+  "auth": {
+    "backToHome": "← BeautyHub",
+    "title": "Connexion équipe",
+    "subtitle": "Back-office institut & plateforme.",
+    "setupRequired": "Base de données non connectée sur ce déploiement. Configure les variables Supabase sur Vercel puis redéploie.",
+    "email": "Email",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "submitting": "Connexion…",
+    "supabaseNotConfigured": "Service indisponible : Supabase non configuré sur ce déploiement.",
+    "testAccounts": {
+      "title": "Comptes de test",
+      "sharedPassword": "Mot de passe commun :",
+      "roles": {
+        "platformAdmin": "Super admin plateforme",
+        "brandOwner": "Propriétaire marque",
+        "demoOwner": "Propriétaire institut demo",
+        "demoStaff": "Staff institut demo",
+        "demoCoach": "Coach académie demo"
+      }
+    }
+  },
+  "public": {
+    "booking": {
+      "title": "Prendre rendez-vous",
+      "subtitle": "{name} — réservation en ligne",
+      "steps": "Étape {n}",
+      "confirmed": {
+        "title": "Rendez-vous confirmé",
+        "emailHint": "Un email de confirmation vous sera envoyé prochainement."
+      },
+      "step1": {
+        "title": "Choisir une prestation",
+        "empty": "Aucune prestation disponible.",
+        "durationMin": "{min} min"
+      },
+      "step2": {
+        "title": "Choisir un praticien"
+      },
+      "step3": {
+        "title": "Choisir une date",
+        "seeSlots": "Voir les créneaux"
+      },
+      "step4": {
+        "title": "Choisir un créneau",
+        "noSlots": "Aucun créneau disponible ce jour.",
+        "fullName": "Nom complet",
+        "confirm": "Confirmer le rendez-vous",
+        "confirming": "Confirmation…"
+      }
+    },
+    "client": {
+      "login": {
+        "title": "Mon compte",
+        "subtitle": "Connectez-vous pour voir vos rendez-vous.",
+        "submit": "Se connecter",
+        "submitting": "Connexion…",
+        "noAccount": "Pas de compte ?",
+        "createAccount": "Créer un compte"
+      },
+      "register": {
+        "title": "Créer un compte",
+        "fullName": "Nom complet",
+        "submit": "Créer mon compte",
+        "submitting": "Création…",
+        "hasAccount": "Déjà un compte ?"
+      },
+      "account": {
+        "logout": "Déconnexion",
+        "empty": "Aucun rendez-vous à venir.",
+        "columns": {
+          "service": "Prestation",
+          "date": "Date",
+          "status": "Statut",
+          "actions": "Actions"
+        },
+        "cancel": "Annuler",
+        "status": {
+          "booked": "Réservé",
+          "confirmed": "Confirmé",
+          "completed": "Terminé",
+          "cancelled": "Annulé",
+          "no_show": "Absent"
+        }
+      }
+    }
+  },
+  "assistant": {
+    "panel": {
+      "open": "Ouvrir l'assistant IA",
+      "closeOverlay": "Fermer l'assistant",
+      "closeChat": "Fermer le chat",
+      "title": "Assistant IA",
+      "subtitle": "Pilotage de l'institut",
+      "greeting": "Bonjour ! Utilise une action rapide ci-dessous ou décris ce que tu veux faire.",
+      "notRecognized": "Je n'ai pas reconnu cette demande. Choisis une action rapide ci-dessous.",
+      "quickActions": "Actions rapides",
+      "messagePlaceholder": "Votre message…",
+      "send": "Envoyer",
+      "sendPending": "…",
+      "fabLabel": "Assistant",
+      "actions": {
+        "createClient": "Créer un client",
+        "listClients": "Lister les clients",
+        "listCourses": "Voir les formations",
+        "createCourse": "Nouvelle formation"
+      },
+      "modules": {
+        "institut": "Institut",
+        "academie": "Académie"
+      }
+    },
+    "page": {
+      "availableActions": "Actions disponibles",
+      "noActions": "Aucune action IA.",
+      "conversation": "Conversation",
+      "systemHint": "Choisis une action ci-dessous ou saisis une requête (bientôt disponible).",
+      "action": "Action",
+      "paramsJson": "Paramètres (JSON)",
+      "invalidJson": "JSON invalide.",
+      "createClient": {
+        "title": "Créer un client",
+        "fullName": "Nom complet",
+        "fullNamePlaceholder": "Marie Durand",
+        "emailPlaceholder": "marie@email.com",
+        "phonePlaceholder": "06 12 34 56 78"
+      },
+      "listClients": {
+        "title": "Lister les clients",
+        "limit": "Limite"
+      }
+    }
+  },
+  "pos": {
+    "terminal": {
+      "tabs": {
+        "all": "Tout",
+        "services": "Prestations",
+        "woo": "Boutique Woo",
+        "internal": "Interne"
+      },
+      "categories": {
+        "service": "Prestation",
+        "woocommerce": "Woo",
+        "internal": "Interne"
+      },
+      "searchArticles": "Rechercher un article…",
+      "searchAria": "Rechercher",
+      "emptyCategory": "Aucun article dans cette catégorie. Ajoute des prestations, synchronise WooCommerce ou crée des produits internes.",
+      "cart": {
+        "title": "Panier",
+        "clear": "Vider",
+        "empty": "Aucun article.",
+        "total": "Total",
+        "noClient": "— Sans client —",
+        "notePlaceholder": "Note interne (optionnel)",
+        "clientAria": "Client"
+      },
+      "checkout": {
+        "cashPending": "Encaissement…",
+        "cash": "Espèces · {total}",
+        "cardPending": "Enregistrement…",
+        "card": "Carte TPE · {total}"
+      }
+    },
+    "stripe": {
+      "paymentFailed": "Paiement échoué.",
+      "paymentNotConfirmed": "Paiement non confirmé.",
+      "paymentRecorded": "Paiement enregistré.",
+      "startFailed": "Impossible de démarrer le paiement.",
+      "prepare": "Préparation…",
+      "pay": "Payer {total}",
+      "payPending": "Paiement…"
+    },
+    "products": {
+      "new": "Nouveau produit",
+      "searchPlaceholder": "Recherche nom, SKU…",
+      "empty": "Aucun produit interne.",
+      "noResults": "Aucun résultat pour cette recherche.",
+      "columns": {
+        "name": "Nom",
+        "sku": "SKU",
+        "stock": "Stock",
+        "price": "Prix",
+        "actions": "Actions"
+      },
+      "delete": "Supprimer",
+      "footer": "{count, plural, one {# produit} other {# produits}}",
+      "dialogTitle": "Nouveau produit",
+      "form": {
+        "namePlaceholder": "Huile visage 30 ml",
+        "priceEur": "Prix (EUR)",
+        "stockOptional": "Optionnel",
+        "skuOptional": "Optionnel",
+        "submit": "Ajouter le produit",
+        "submitting": "Ajout…"
+      }
+    },
+    "history": {
+      "empty": "Aucune vente enregistrée.",
+      "columns": {
+        "date": "Date",
+        "client": "Client",
+        "items": "Articles",
+        "payment": "Paiement",
+        "total": "Total"
+      },
+      "paymentMethods": {
+        "cash": "Espèces",
+        "card": "Carte TPE",
+        "stripe": "Stripe"
+      }
+    }
+  },
+  "landing": {
+    "brand": "BeautyHub",
+    "nav": {
+      "book": "Réserver",
+      "teamLogin": "Connexion équipe"
+    },
+    "hero": {
+      "badge": "SaaS multi-tenant · Instituts & académies",
+      "titleLine1": "Gère ton institut",
+      "titleLine2": "comme une plateforme pro",
+      "description": "Rendez-vous, caisse WooCommerce, clients, équipe et formations — un seul back-office. Revendable en marque blanche ou self-hosted.",
+      "ctaBackOffice": "Accéder au back-office",
+      "ctaClient": "Espace client",
+      "stats": {
+        "modules": { "value": "6+", "label": "Modules métier" },
+        "isolation": { "value": "RLS", "label": "Isolation tenant" },
+        "ai": { "value": "IA", "label": "Actions intégrées" }
+      }
+    },
+    "modules": {
+      "title": "Tout ce qu'il faut pour ton activité",
+      "subtitle": "Chaque module s'active selon la formule de l'institut. Pas de usine à gaz.",
+      "items": {
+        "appointments": {
+          "title": "Rendez-vous",
+          "text": "Calendrier praticien/cabine, réservation en ligne, portail client."
+        },
+        "pos": {
+          "title": "Caisse unifiée",
+          "text": "Prestations, produits WooCommerce et articles internes dans un seul panier."
+        },
+        "academie": {
+          "title": "Académie",
+          "text": "Formations, inscriptions et suivi des élèves."
+        },
+        "assistant": {
+          "title": "Assistant IA",
+          "text": "Actions déclarées par module — pilotage sans recâblage."
+        },
+        "whitelabel": {
+          "title": "Marque blanche",
+          "text": "Plateforme → marques → instituts, domaines et branding custom."
+        },
+        "multitenant": {
+          "title": "Multi-tenant",
+          "text": "Isolation stricte par institut, RLS Supabase, rôles équipe."
+        }
+      }
+    },
+    "steps": {
+      "title": "Démarrage rapide",
+      "items": {
+        "1": {
+          "title": "Connecte ton institut",
+          "text": "WooCommerce, Stripe, équipe et prestations."
+        },
+        "2": {
+          "title": "Active tes modules",
+          "text": "Institut, Académie — selon ta formule."
+        },
+        "3": {
+          "title": "Encaisse et planifie",
+          "text": "Caisse, RDV publics et assistant IA."
+        }
+      }
+    },
+    "cta": {
+      "title": "Prêt à piloter ton institut ?",
+      "subtitle": "Connecte-toi avec ton compte équipe ou réserve un créneau en ligne.",
+      "teamLogin": "Connexion équipe",
+      "book": "Prendre RDV"
+    },
+    "footer": "BeautyHub · Plateforme SaaS pour instituts de beauté"
+  },
+  "ui": {
+    "formDialog": {
+      "close": "Fermer"
+    },
+    "pageTabs": {
+      "sectionsAriaLabel": "Sections"
+    },
+    "dataTable": {
+      "emptyDefault": "Aucun élément."
     }
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { runAiAction, type RunAiActionResult } from "@/app/(app)/assistant/actions";
@@ -12,47 +13,47 @@ type Message =
   | { role: "user"; text: string }
   | { role: "result"; result: RunAiActionResult };
 
-const ACTION_LABELS: Record<string, string> = {
-  "institut.create_client": "Créer un client",
-  "institut.list_clients": "Lister les clients",
-  "academie.list_courses": "Voir les formations",
-  "academie.create_course": "Nouvelle formation",
+const ACTION_KEYS: Record<string, "createClient" | "listClients" | "listCourses" | "createCourse"> = {
+  "institut.create_client": "createClient",
+  "institut.list_clients": "listClients",
+  "academie.list_courses": "listCourses",
+  "academie.create_course": "createCourse",
 };
 
-const MODULE_LABELS: Record<string, string> = {
-  institut: "Institut",
-  academie: "Académie",
+const MODULE_KEYS: Record<string, "institut" | "academie"> = {
+  institut: "institut",
+  academie: "academie",
 };
-
-function actionLabel(action: Action) {
-  return (
-    ACTION_LABELS[action.name] ??
-    action.description.replace(/\.$/, "").slice(0, 48)
-  );
-}
-
-function groupActions(actions: Action[]) {
-  const groups = new Map<string, Action[]>();
-  for (const action of actions) {
-    const mod = action.name.split(".")[0] ?? "autre";
-    const label = MODULE_LABELS[mod] ?? mod;
-    const list = groups.get(label) ?? [];
-    list.push(action);
-    groups.set(label, list);
-  }
-  return groups;
-}
 
 export function AssistantPanel({ actions }: { actions: Action[] }) {
+  const t = useTranslations("assistant.panel");
+  const tActions = useTranslations("assistant.panel.actions");
+  const tModules = useTranslations("assistant.panel.modules");
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      text: "Bonjour ! Utilise une action rapide ci-dessous ou décris ce que tu veux faire.",
-    },
+    { role: "assistant", text: t("greeting") },
   ]);
   const [pending, startTransition] = useTransition();
+
+  function actionLabel(action: Action) {
+    const key = ACTION_KEYS[action.name];
+    if (key) return tActions(key);
+    return action.description.replace(/\.$/, "").slice(0, 48);
+  }
+
+  const grouped = useMemo(() => {
+    const groups = new Map<string, Action[]>();
+    for (const action of actions) {
+      const mod = action.name.split(".")[0] ?? "other";
+      const labelKey = MODULE_KEYS[mod];
+      const label = labelKey ? tModules(labelKey) : mod;
+      const list = groups.get(label) ?? [];
+      list.push(action);
+      groups.set(label, list);
+    }
+    return groups;
+  }, [actions, tModules]);
 
   useEffect(() => {
     if (!open) return;
@@ -91,17 +92,12 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
     } else {
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          text: "Je n'ai pas reconnu cette demande. Choisis une action rapide ci-dessous.",
-        },
+        { role: "assistant", text: t("notRecognized") },
       ]);
     }
   }
 
   if (actions.length === 0) return null;
-
-  const grouped = groupActions(actions);
 
   return (
     <>
@@ -110,10 +106,10 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
           type="button"
           onClick={() => setOpen(true)}
           className="fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-lg transition hover:bg-primary-hover"
-          aria-label="Ouvrir l'assistant IA"
+          aria-label={t("open")}
         >
           <span className="text-base">✦</span>
-          <span className="hidden sm:inline">Assistant</span>
+          <span className="hidden sm:inline">{t("fabLabel")}</span>
         </button>
       ) : null}
 
@@ -122,7 +118,7 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
           type="button"
           className="fixed inset-0 z-40 bg-black/20 lg:bg-black/10"
           onClick={() => setOpen(false)}
-          aria-label="Fermer l'assistant"
+          aria-label={t("closeOverlay")}
         />
       ) : null}
 
@@ -134,14 +130,14 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
       >
         <header className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
           <div>
-            <p className="text-sm font-semibold text-slate-900">Assistant IA</p>
-            <p className="text-xs text-slate-500">Pilotage de l&apos;institut</p>
+            <p className="text-sm font-semibold text-slate-900">{t("title")}</p>
+            <p className="text-xs text-slate-500">{t("subtitle")}</p>
           </div>
           <button
             type="button"
             onClick={() => setOpen(false)}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-            aria-label="Fermer le chat"
+            aria-label={t("closeChat")}
           >
             <span className="text-lg leading-none">×</span>
           </button>
@@ -178,7 +174,7 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
         <div className="space-y-3 border-t border-slate-100 p-4">
           <div className="space-y-3">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Actions rapides
+              {t("quickActions")}
             </p>
             {[...grouped.entries()].map(([module, moduleActions]) => (
               <div key={module} className="space-y-1.5">
@@ -209,11 +205,11 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Votre message..."
+              placeholder={t("messagePlaceholder")}
               className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
             />
             <Button type="submit" disabled={pending} className="shrink-0">
-              {pending ? "..." : "Envoyer"}
+              {pending ? t("sendPending") : t("send")}
             </Button>
           </form>
         </div>

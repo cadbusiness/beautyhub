@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { getAccessibleTenants, isPlatformAdmin } from "@/lib/auth/session";
@@ -23,7 +24,8 @@ export async function signIn(
   formData: FormData,
 ): Promise<AuthState> {
   if (!isSupabaseConfigured()) {
-    return { error: "Service indisponible: Supabase non configuré sur ce déploiement." };
+    const t = await getTranslations("auth");
+    return { error: t("supabaseNotConfigured") };
   }
 
   const email = String(formData.get("email") ?? "");

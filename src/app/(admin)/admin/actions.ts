@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requirePlatformAdmin } from "@/lib/auth/guards";
@@ -73,6 +74,7 @@ export async function createTenant(
   formData: FormData,
 ): Promise<ActionResult> {
   await requirePlatformAdmin();
+  const actions = await getTranslations("institut.actions");
   const supabase = await createClient();
 
   const name = String(formData.get("name") ?? "").trim();
@@ -81,14 +83,14 @@ export async function createTenant(
   const ownerEmail = String(formData.get("owner_email") ?? "").trim();
   const ownerPassword = String(formData.get("owner_password") ?? "");
 
-  if (!name || !slug) return { error: "Nom et identifiant (slug) requis." };
+  if (!name || !slug) return { error: actions("nameSlugRequired") };
 
   const { data: brand } = await supabase
     .from("brands")
     .select("id")
     .eq("is_platform", true)
     .maybeSingle();
-  if (!brand) return { error: "Brand plateforme introuvable." };
+  if (!brand) return { error: actions("platformBrandNotFound") };
 
   const { data: tenant, error: tErr } = await supabase
     .from("tenants")
@@ -98,8 +100,8 @@ export async function createTenant(
   if (tErr || !tenant) {
     return {
       error: tErr?.message.includes("duplicate")
-        ? `L'identifiant "${slug}" est deja pris.`
-        : (tErr?.message ?? "Erreur creation institut."),
+        ? actions("slugTaken", { slug })
+        : (tErr?.message ?? actions("tenantCreateError")),
     };
   }
 
@@ -138,7 +140,7 @@ export async function createTenant(
       revalidatePath("/admin/tenants");
       return {
         ok: true,
-        message: `Institut cree, mais proprietaire non cree: ${(e as Error).message}.`,
+        message: actions("tenantCreatedOwnerFailed", { message: (e as Error).message }),
       };
     }
   }
@@ -152,12 +154,13 @@ export async function updateTenant(
   formData: FormData,
 ): Promise<ActionResult> {
   await requirePlatformAdmin();
+  const actions = await getTranslations("institut.actions");
   const supabase = await createClient();
 
   const id = String(formData.get("tenant_id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   const slug = slugify(String(formData.get("slug") ?? ""));
-  if (!id || !name || !slug) return { error: "Champs requis manquants." };
+  if (!id || !name || !slug) return { error: actions("missingRequiredFields") };
 
   const { error } = await supabase
     .from("tenants")
@@ -166,12 +169,12 @@ export async function updateTenant(
   if (error) {
     return {
       error: error.message.includes("duplicate")
-        ? `L'identifiant "${slug}" est deja pris.`
+        ? actions("slugTaken", { slug })
         : error.message,
     };
   }
   revalidatePath(`/admin/tenants/${id}`);
-  return { ok: true, message: "Institut mis a jour." };
+  return { ok: true, message: actions("tenantUpdated") };
 }
 
 export async function setTenantPlan(formData: FormData): Promise<void> {
@@ -221,11 +224,12 @@ export async function savePlan(
   formData: FormData,
 ): Promise<ActionResult> {
   await requirePlatformAdmin();
+  const actions = await getTranslations("institut.actions");
   const supabase = await createClient();
 
   const id = String(formData.get("plan_id") ?? "") || null;
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { error: "Nom de la formule requis." };
+  if (!name) return { error: actions("planNameRequired") };
 
   const payload = {
     name,

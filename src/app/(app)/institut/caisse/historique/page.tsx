@@ -1,15 +1,13 @@
+import { getFormatter, getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { formatPrice } from "@/lib/utils";
 
-const PAYMENT_LABEL: Record<string, string> = {
-  cash: "Especes",
-  card: "Carte TPE",
-  stripe: "Stripe",
-};
-
 export default async function CaisseHistoriquePage() {
+  const t = await getTranslations("pos.history");
+  const tCommon = await getTranslations("common");
+  const format = await getFormatter();
   const session = await requireModule("institut");
   const supabase = await createClient();
 
@@ -34,15 +32,15 @@ export default async function CaisseHistoriquePage() {
 
   return (
     <>
-      <DataTable empty={(sales ?? []).length === 0 ? "Aucune vente enregistree." : undefined}>
+      <DataTable empty={(sales ?? []).length === 0 ? t("empty") : undefined}>
         <table className="w-full text-sm">
           <thead className="border-b border-slate-200">
             <tr>
-              <th className={dataTableHead}>Date</th>
-              <th className={dataTableHead}>Client</th>
-              <th className={dataTableHead}>Articles</th>
-              <th className={`w-28 ${dataTableHead}`}>Paiement</th>
-              <th className={`w-28 text-right ${dataTableHead}`}>Total</th>
+              <th className={dataTableHead}>{t("columns.date")}</th>
+              <th className={dataTableHead}>{t("columns.client")}</th>
+              <th className={dataTableHead}>{t("columns.items")}</th>
+              <th className={`w-28 ${dataTableHead}`}>{t("columns.payment")}</th>
+              <th className={`w-28 text-right ${dataTableHead}`}>{t("columns.total")}</th>
             </tr>
           </thead>
           <tbody>
@@ -57,12 +55,17 @@ export default async function CaisseHistoriquePage() {
                 unit_price_cents: number;
                 item_type: string;
               }>;
-              const date = new Date(sale.created_at).toLocaleString("fr-FR", {
+              const date = format.dateTime(new Date(sale.created_at), {
                 dateStyle: "medium",
                 timeStyle: "short",
               });
+              const paymentKey = sale.payment_method ?? "cash";
               const payment =
-                PAYMENT_LABEL[sale.payment_method ?? "cash"] ?? sale.payment_method;
+                paymentKey === "cash" ||
+                paymentKey === "card" ||
+                paymentKey === "stripe"
+                  ? t(`paymentMethods.${paymentKey}`)
+                  : sale.payment_method;
               const itemsSummary = items
                 .map((item) => `${item.quantity}× ${item.name}`)
                 .join(", ");
@@ -81,12 +84,12 @@ export default async function CaisseHistoriquePage() {
                         ) : null}
                       </>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-slate-400">{tCommon("dash")}</span>
                     )}
                   </td>
                   <td className={`max-w-0 ${dataTableCell}`}>
                     <p className="truncate text-slate-600" title={itemsSummary}>
-                      {itemsSummary || "—"}
+                      {itemsSummary || tCommon("dash")}
                     </p>
                     {sale.notes ? (
                       <p className="truncate text-xs italic text-slate-400">{sale.notes}</p>

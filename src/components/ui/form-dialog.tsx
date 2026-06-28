@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 export function FormDialog({
@@ -16,6 +17,7 @@ export function FormDialog({
   children: React.ReactNode;
   size?: "md" | "lg";
 }) {
+  const t = useTranslations("ui.formDialog");
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export function FormDialog({
             type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-            aria-label="Fermer"
+            aria-label={t("close")}
           >
             ✕
           </button>

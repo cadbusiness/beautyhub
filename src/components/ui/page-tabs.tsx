@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -75,8 +76,10 @@ export function PageTabs<T extends string>({
   onChange: (id: T) => void;
   className?: string;
 }) {
+  const t = useTranslations("ui.pageTabs");
+
   return (
-    <nav className={cn(tabBarClass, className)} aria-label="Sections">
+    <nav className={cn(tabBarClass, className)} aria-label={t("sectionsAriaLabel")}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -104,11 +107,12 @@ export function PageTabLinks({
   items: PageTabLinkItem[];
   className?: string;
 }) {
+  const t = useTranslations("ui.pageTabs");
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   return (
-    <nav className={cn(tabBarClass, className)} aria-label="Sections">
+    <nav className={cn(tabBarClass, className)} aria-label={t("sectionsAriaLabel")}>
       {items.map((item) => {
         const active = isLinkActive(item, pathname, searchParams, items);
         return (

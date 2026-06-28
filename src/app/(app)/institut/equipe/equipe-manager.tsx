@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { deleteStaffMember, deleteResource } from "../actions";
 import { Button } from "@/components/ui/button";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
@@ -41,6 +42,8 @@ export function EquipeManager({
   resources: ResourceRow[];
   hours: HourRow[];
 }) {
+  const t = useTranslations("institut.team");
+  const tCommon = useTranslations("common");
   const [tab, setTab] = useState<Tab>("personnel");
   const [staffQuery, setStaffQuery] = useState("");
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
@@ -61,9 +64,9 @@ export function EquipeManager({
       <ListPanel>
         <PageTabs
           tabs={[
-            { id: "personnel", label: "Personnel", count: staff.length },
-            { id: "cabines", label: "Cabines", count: resources.length },
-            { id: "horaires", label: "Horaires" },
+            { id: "personnel", label: t("tabs.personnel"), count: staff.length },
+            { id: "cabines", label: t("tabs.cabines"), count: resources.length },
+            { id: "horaires", label: t("tabs.horaires") },
           ]}
           active={tab}
           onChange={setTab}
@@ -77,13 +80,13 @@ export function EquipeManager({
                   onClick={() => setStaffDialogOpen(true)}
                   className="h-9 w-full sm:w-auto"
                 >
-                  + Ajouter du personnel
+                  + {t("personnel.add")}
                 </Button>
               }
             >
               <input
                 type="search"
-                placeholder="Recherche personnel..."
+                placeholder={t("personnel.searchPlaceholder")}
                 value={staffQuery}
                 onChange={(e) => setStaffQuery(e.target.value)}
                 className="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 sm:max-w-xs"
@@ -93,9 +96,9 @@ export function EquipeManager({
             <DataTable
               empty={
                 staff.length === 0
-                  ? "Aucun membre du personnel."
+                  ? t("personnel.empty")
                   : filteredStaff.length === 0
-                    ? "Aucun resultat."
+                    ? t("personnel.noResults")
                     : undefined
               }
             >
@@ -103,10 +106,12 @@ export function EquipeManager({
                 <table className="w-full text-sm">
                   <thead className="border-b border-slate-200">
                     <tr>
-                      <th className={`w-10 ${dataTableHead}`} aria-label="Couleur" />
-                      <th className={dataTableHead}>Nom</th>
-                      <th className={dataTableHead}>Email</th>
-                      <th className={`w-28 text-right ${dataTableHead}`}>Actions</th>
+                      <th className={`w-10 ${dataTableHead}`} aria-label={t("personnel.columns.color")} />
+                      <th className={dataTableHead}>{t("personnel.columns.name")}</th>
+                      <th className={dataTableHead}>{t("personnel.columns.email")}</th>
+                      <th className={`w-28 text-right ${dataTableHead}`}>
+                        {t("personnel.columns.actions")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -122,13 +127,13 @@ export function EquipeManager({
                           {s.full_name}
                         </td>
                         <td className={`text-slate-600 ${dataTableCell}`}>
-                          {s.email ?? "—"}
+                          {s.email ?? tCommon("dash")}
                         </td>
                         <td className={`text-right ${dataTableCell}`}>
                           <form action={deleteStaffMember}>
                             <input type="hidden" name="id" value={s.id} />
                             <Button variant="ghost" type="submit" className="h-8 text-red-600">
-                              Supprimer
+                              {t("personnel.delete")}
                             </Button>
                           </form>
                         </td>
@@ -141,8 +146,10 @@ export function EquipeManager({
 
             {staff.length > 0 ? (
               <ListPanelFooter>
-                {filteredStaff.length} membre{filteredStaff.length > 1 ? "s" : ""}
-                {staffQuery.trim() ? ` sur ${staff.length}` : ""}
+                {t("personnel.footer", { count: filteredStaff.length })}
+                {staffQuery.trim()
+                  ? ` · ${tCommon("countOfTotal", { count: filteredStaff.length, total: staff.length })}`
+                  : ""}
               </ListPanelFooter>
             ) : null}
           </>
@@ -156,22 +163,22 @@ export function EquipeManager({
                   onClick={() => setResourceDialogOpen(true)}
                   className="h-9 w-full sm:w-auto"
                 >
-                  + Ajouter une cabine
+                  + {t("cabines.add")}
                 </Button>
               }
             >
-              <span className="text-sm text-slate-500">Cabines et salles de soin</span>
+              <span className="text-sm text-slate-500">{t("cabines.subtitle")}</span>
             </ListToolbar>
 
-            <DataTable
-              empty={resources.length === 0 ? "Aucune cabine configuree." : undefined}
-            >
+            <DataTable empty={resources.length === 0 ? t("cabines.empty") : undefined}>
               {resources.length > 0 ? (
                 <table className="w-full text-sm">
                   <thead className="border-b border-slate-200">
                     <tr>
-                      <th className={dataTableHead}>Nom</th>
-                      <th className={`w-28 text-right ${dataTableHead}`}>Actions</th>
+                      <th className={dataTableHead}>{t("cabines.columns.name")}</th>
+                      <th className={`w-28 text-right ${dataTableHead}`}>
+                        {t("cabines.columns.actions")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -184,7 +191,7 @@ export function EquipeManager({
                           <form action={deleteResource}>
                             <input type="hidden" name="id" value={r.id} />
                             <Button variant="ghost" type="submit" className="h-8 text-red-600">
-                              Supprimer
+                              {t("cabines.delete")}
                             </Button>
                           </form>
                         </td>
@@ -197,7 +204,7 @@ export function EquipeManager({
 
             {resources.length > 0 ? (
               <ListPanelFooter>
-                {resources.length} cabine{resources.length > 1 ? "s" : ""}
+                {t("cabines.footer", { count: resources.length })}
               </ListPanelFooter>
             ) : null}
           </>
@@ -205,10 +212,7 @@ export function EquipeManager({
 
         {tab === "horaires" ? (
           <div className="px-4 py-4 lg:px-6">
-            <p className="mb-4 text-sm text-slate-600">
-              Horaires d&apos;ouverture par defaut de l&apos;institut (utilises pour les
-              disponibilites en ligne).
-            </p>
+            <p className="mb-4 text-sm text-slate-600">{t("horaires.description")}</p>
             <WorkingHoursForm hours={hours} />
           </div>
         ) : null}
@@ -217,7 +221,7 @@ export function EquipeManager({
       <FormDialog
         open={staffDialogOpen}
         onClose={() => setStaffDialogOpen(false)}
-        title="Ajouter du personnel"
+        title={t("personnel.dialogTitle")}
       >
         <StaffForm onSuccess={() => setStaffDialogOpen(false)} />
       </FormDialog>
@@ -225,7 +229,7 @@ export function EquipeManager({
       <FormDialog
         open={resourceDialogOpen}
         onClose={() => setResourceDialogOpen(false)}
-        title="Ajouter une cabine"
+        title={t("cabines.dialogTitle")}
       >
         <ResourceForm onSuccess={() => setResourceDialogOpen(false)} />
       </FormDialog>

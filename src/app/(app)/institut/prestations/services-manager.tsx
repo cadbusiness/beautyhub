@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { deleteService } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,8 @@ import { ServiceDialog, type ServiceRow } from "./service-dialog";
 type Filter = "all" | "active" | "inactive";
 
 export function ServicesManager({ services }: { services: ServiceRow[] }) {
+  const t = useTranslations("institut.services");
+  const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -46,10 +49,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
     setEditing(null);
   }
 
-  const emptyMessage =
-    services.length === 0
-      ? "Aucune prestation pour le moment."
-      : "Aucun resultat pour cette recherche.";
+  const emptyMessage = services.length === 0 ? t("empty") : t("noResults");
 
   return (
     <>
@@ -57,13 +57,13 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
         <ListToolbar
           action={
             <Button onClick={openCreate} className="h-9 w-full sm:w-auto">
-              + Nouvelle prestation
+              + {t("new")}
             </Button>
           }
         >
           <Input
             type="search"
-            placeholder="Recherche par nom..."
+            placeholder={t("searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="h-9 sm:max-w-xs"
@@ -73,9 +73,9 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
             onChange={(e) => setFilter(e.target.value as Filter)}
             className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 sm:w-36"
           >
-            <option value="all">Toutes</option>
-            <option value="active">Visibles</option>
-            <option value="inactive">Masquees</option>
+            <option value="all">{t("filterAll")}</option>
+            <option value="active">{t("filterActive")}</option>
+            <option value="inactive">{t("filterInactive")}</option>
           </select>
         </ListToolbar>
 
@@ -83,24 +83,23 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200">
               <tr>
-                <th className={`w-10 ${dataTableHead}`} aria-label="Statut" />
-                <th className={dataTableHead}>Titre</th>
-                <th className={`hidden w-28 sm:table-cell ${dataTableHead}`}>Duree</th>
-                <th className={`w-28 text-right ${dataTableHead}`}>Prix</th>
-                <th className={`w-32 text-right ${dataTableHead}`}>Actions</th>
+                <th className={`w-10 ${dataTableHead}`} aria-label={t("columns.status")} />
+                <th className={dataTableHead}>{t("columns.title")}</th>
+                <th className={`hidden w-28 sm:table-cell ${dataTableHead}`}>
+                  {t("columns.duration")}
+                </th>
+                <th className={`w-28 text-right ${dataTableHead}`}>{t("columns.price")}</th>
+                <th className={`w-32 text-right ${dataTableHead}`}>{t("columns.actions")}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((s) => (
-                <tr
-                  key={s.id}
-                  className={dataTableRow}
-                >
+                <tr key={s.id} className={dataTableRow}>
                   <td className={dataTableCell}>
                     <span
                       className="inline-block h-2.5 w-2.5 rounded-full"
                       style={{ backgroundColor: s.color ?? "#64748b" }}
-                      title={s.is_active ? "Visible" : "Masquee"}
+                      title={s.is_active ? t("visible") : t("hidden")}
                     />
                   </td>
                   <td className={`max-w-0 ${dataTableCell}`}>
@@ -115,7 +114,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
                         </span>
                         {!s.is_active ? (
                           <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                            Masquee
+                            {t("hiddenBadge")}
                           </span>
                         ) : null}
                       </span>
@@ -127,7 +126,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
                     </button>
                   </td>
                   <td className={`hidden text-slate-600 sm:table-cell ${dataTableCell}`}>
-                    {s.duration_min} min
+                    {t("durationMin", { min: s.duration_min })}
                   </td>
                   <td
                     className={`whitespace-nowrap text-right tabular-nums text-slate-900 ${dataTableCell}`}
@@ -142,7 +141,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
                         className="h-8 px-2 text-xs"
                         onClick={() => openEdit(s)}
                       >
-                        Modifier
+                        {t("edit")}
                       </Button>
                       <form action={deleteService}>
                         <input type="hidden" name="id" value={s.id} />
@@ -151,7 +150,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
                           type="submit"
                           className="h-8 px-2 text-xs text-red-600"
                         >
-                          Suppr.
+                          {t("deleteShort")}
                         </Button>
                       </form>
                     </div>
@@ -164,8 +163,10 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
 
         {filtered.length > 0 ? (
           <ListPanelFooter>
-            {filtered.length} prestation{filtered.length > 1 ? "s" : ""}
-            {filter !== "all" || query ? ` sur ${services.length}` : ""}
+            {t("footer", { count: filtered.length })}
+            {filter !== "all" || query
+              ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: services.length })}`
+              : ""}
           </ListPanelFooter>
         ) : null}
       </ListPanel>

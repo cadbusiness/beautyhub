@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   getRoleForTenant,
@@ -9,36 +10,36 @@ import { getAiActionsFor, getNavFor } from "@/modules";
 import { Button } from "@/components/ui/button";
 import { ListPanel } from "@/components/ui/list-panel";
 
-const QUICK_ACTIONS = [
+const QUICK_ACTION_KEYS = [
   {
     href: "/institut/rendez-vous",
-    label: "Rendez-vous",
-    description: "Planning et réservations",
+    labelKey: "appointments",
+    descriptionKey: "appointments",
   },
   {
     href: "/institut/caisse",
-    label: "Caisse",
-    description: "Encaisser une vente",
+    labelKey: "pos",
+    descriptionKey: "pos",
   },
   {
     href: "/institut/clients",
-    label: "Clients",
-    description: "Fiches et coordonnées",
+    labelKey: "clients",
+    descriptionKey: "clients",
   },
   {
     href: "/institut/prestations",
-    label: "Prestations",
-    description: "Services et tarifs",
+    labelKey: "services",
+    descriptionKey: "services",
   },
   {
     href: "/academie/formations",
-    label: "Formations",
-    description: "Catalogue académie",
+    labelKey: "courses",
+    descriptionKey: "courses",
   },
   {
     href: "/academie/eleves",
-    label: "Élèves",
-    description: "Inscriptions en cours",
+    labelKey: "students",
+    descriptionKey: "students",
   },
 ] as const;
 
@@ -73,6 +74,7 @@ function DashboardSection({
 }
 
 export default async function DashboardPage() {
+  const t = await getTranslations("dashboard");
   const tenant = await getTenantContext();
   const platformAdmin = await isPlatformAdmin();
 
@@ -87,9 +89,15 @@ export default async function DashboardPage() {
   const aiActions = role ? getAiActionsFor(enabledModuleIds, role) : [];
   const navHrefs = new Set(nav.map((item) => item.href));
 
-  const quickActions = QUICK_ACTIONS.filter((action) =>
+  const quickActions = QUICK_ACTION_KEYS.filter((action) =>
     nav.some((item) => item.href === action.href || item.href.startsWith(`${action.href}/`)),
-  ).slice(0, 4);
+  )
+    .slice(0, 4)
+    .map((action) => ({
+      href: action.href,
+      label: t(`quickActions.${action.labelKey}.label`),
+      description: t(`quickActions.${action.descriptionKey}.description`),
+    }));
 
   const hasInstitut = enabledModuleIds.includes("institut");
   let kpis: { label: string; value: number; href: string }[] = [];
@@ -116,17 +124,17 @@ export default async function DashboardPage() {
 
     kpis = [
       {
-        label: "RDV à venir",
+        label: t("kpis.upcomingAppointments"),
         value: upcoming.count ?? 0,
         href: "/institut/rendez-vous",
       },
       {
-        label: "Clients",
+        label: t("kpis.clients"),
         value: clients.count ?? 0,
         href: "/institut/clients",
       },
       {
-        label: "Prestations",
+        label: t("kpis.services"),
         value: services.count ?? 0,
         href: "/institut/prestations",
       },
@@ -139,20 +147,18 @@ export default async function DashboardPage() {
         <p className="text-base font-semibold text-slate-900">
           {tenant?.name ?? "BeautyHub"}
         </p>
-        <p className="mt-1 text-sm text-slate-500">
-          Vue d&apos;ensemble — utilisez le menu à gauche pour naviguer.
-        </p>
+        <p className="mt-1 text-sm text-slate-500">{t("subtitle")}</p>
       </div>
 
       {kpis.length > 0 ? (
         <DashboardSection
-          title="Indicateurs"
-          description="Chiffres clés de votre institut."
+          title={t("kpis.title")}
+          description={t("kpis.description")}
         >
           <div className="grid gap-3 sm:grid-cols-3">
             {kpis.map((kpi) => (
               <Link
-                key={kpi.label}
+                key={kpi.href}
                 href={kpi.href}
                 className="rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300 hover:bg-slate-50/50"
               >
@@ -170,8 +176,8 @@ export default async function DashboardPage() {
 
       {quickActions.length > 0 ? (
         <DashboardSection
-          title="Actions rapides"
-          description="Les tâches les plus fréquentes, sans repasser par tout le menu."
+          title={t("quickActions.title")}
+          description={t("quickActions.description")}
           muted
         >
           <div className="grid gap-3 sm:grid-cols-2">
@@ -190,25 +196,25 @@ export default async function DashboardPage() {
           </div>
         </DashboardSection>
       ) : navHrefs.size === 0 ? (
-        <DashboardSection title="Modules" description="Aucun module actif pour le moment.">
-          <p className="text-sm text-slate-500">
-            Contactez votre administrateur pour activer les modules institut ou académie.
-          </p>
+        <DashboardSection
+          title={t("modules.title")}
+          description={t("modules.emptyDescription")}
+        >
+          <p className="text-sm text-slate-500">{t("modules.emptyHint")}</p>
         </DashboardSection>
       ) : null}
 
       {aiActions.length > 0 ? (
-        <DashboardSection title="Assistant">
+        <DashboardSection title={t("assistant.title")}>
           <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="font-medium text-slate-900">Pilotage assisté par IA</p>
+              <p className="font-medium text-slate-900">{t("assistant.heading")}</p>
               <p className="mt-1 max-w-md text-sm text-slate-500">
-                Clients, formations, planning — posez une demande ou choisissez une action
-                prédéfinie dans l&apos;assistant.
+                {t("assistant.description")}
               </p>
             </div>
             <Link href="/assistant" className="shrink-0">
-              <Button className="h-9 w-full sm:w-auto">Ouvrir l&apos;assistant</Button>
+              <Button className="h-9 w-full sm:w-auto">{t("assistant.open")}</Button>
             </Link>
           </div>
         </DashboardSection>

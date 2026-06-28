@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createService, updateService, type ActionResult } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/input";
@@ -24,12 +25,6 @@ export type ServiceRow = {
 type Tab = "general" | "time" | "advanced";
 
 const initial: ActionResult = {};
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "general", label: "General" },
-  { id: "time", label: "Horaires" },
-  { id: "advanced", label: "Avance" },
-];
 
 function centsToEuros(cents: number): string {
   return (cents / 100).toFixed(2);
@@ -58,9 +53,17 @@ export function ServiceDialog({
   service: ServiceRow | null;
   onClose: () => void;
 }) {
+  const t = useTranslations("institut.services.dialog");
+  const tCommon = useTranslations("common");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [tab, setTab] = useState<Tab>("general");
   const isEdit = Boolean(service);
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "general", label: t("tabs.general") },
+    { id: "time", label: t("tabs.time") },
+    { id: "advanced", label: t("tabs.advanced") },
+  ];
 
   const action = isEdit ? updateService : createService;
   const [state, formAction, pending] = useActionState(action, initial);
@@ -94,13 +97,13 @@ export function ServiceDialog({
 
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <h2 className="text-base font-semibold text-slate-900">
-            {isEdit ? "Modifier prestation" : "Nouvelle prestation"}
+            {isEdit ? t("editTitle") : t("createTitle")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-            aria-label="Fermer"
+            aria-label={tCommon("close")}
           >
             ✕
           </button>
@@ -108,19 +111,19 @@ export function ServiceDialog({
 
         {isEdit ? (
           <div className="flex gap-1 border-b border-slate-200 px-5">
-            {TABS.map((t) => (
+            {tabs.map((item) => (
               <button
-                key={t.id}
+                key={item.id}
                 type="button"
-                onClick={() => setTab(t.id)}
+                onClick={() => setTab(item.id)}
                 className={cn(
                   "border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
-                  tab === t.id
+                  tab === item.id
                     ? "border-slate-900 text-slate-900"
                     : "border-transparent text-slate-500 hover:text-slate-800",
                 )}
               >
-                {t.label}
+                {item.label}
               </button>
             ))}
           </div>
@@ -128,18 +131,18 @@ export function ServiceDialog({
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <TabPanel active={!isEdit || tab === "general"}>
-            <Field label="Nom" htmlFor="name">
+            <Field label={tCommon("name")} htmlFor="name">
               <Input
                 id="name"
                 name="name"
                 required
-                placeholder="Soin du visage"
+                placeholder={t("namePlaceholder")}
                 defaultValue={service?.name ?? ""}
               />
             </Field>
 
             <div className="grid grid-cols-[72px_1fr] gap-4">
-              <Field label="Couleur" htmlFor="color">
+              <Field label={tCommon("color")} htmlFor="color">
                 <Input
                   id="color"
                   name="color"
@@ -148,7 +151,7 @@ export function ServiceDialog({
                   defaultValue={service?.color ?? "#64748b"}
                 />
               </Field>
-              <Field label="Prix (EUR)" htmlFor="price">
+              <Field label={t("priceEur")} htmlFor="price">
                 <Input
                   id="price"
                   name="price"
@@ -160,11 +163,11 @@ export function ServiceDialog({
               </Field>
             </div>
 
-            <Field label="Description" htmlFor="description">
+            <Field label={tCommon("description")} htmlFor="description">
               <Textarea
                 id="description"
                 name="description"
-                placeholder="Optionnel — visible en interne"
+                placeholder={t("descriptionPlaceholder")}
                 defaultValue={service?.description ?? ""}
               />
             </Field>
@@ -177,16 +180,14 @@ export function ServiceDialog({
                 className="mt-0.5"
               />
               <span>
-                <span className="block text-sm font-medium text-slate-900">Visible</span>
-                <span className="text-xs text-slate-500">
-                  Desactive pour masquer aux clients et a la caisse.
-                </span>
+                <span className="block text-sm font-medium text-slate-900">{t("visibleLabel")}</span>
+                <span className="text-xs text-slate-500">{t("visibleHint")}</span>
               </span>
             </label>
           </TabPanel>
 
           <TabPanel active={!isEdit || tab === "time"}>
-            <Field label="Duree (min)" htmlFor="duration_min">
+            <Field label={t("durationMin")} htmlFor="duration_min">
               <Input
                 id="duration_min"
                 name="duration_min"
@@ -197,7 +198,7 @@ export function ServiceDialog({
               />
             </Field>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Tampon avant (min)" htmlFor="buffer_before_min">
+              <Field label={t("bufferBefore")} htmlFor="buffer_before_min">
                 <Input
                   id="buffer_before_min"
                   name="buffer_before_min"
@@ -206,7 +207,7 @@ export function ServiceDialog({
                   defaultValue={service?.buffer_before_min ?? 0}
                 />
               </Field>
-              <Field label="Tampon apres (min)" htmlFor="buffer_after_min">
+              <Field label={t("bufferAfter")} htmlFor="buffer_after_min">
                 <Input
                   id="buffer_after_min"
                   name="buffer_after_min"
@@ -216,16 +217,12 @@ export function ServiceDialog({
                 />
               </Field>
             </div>
-            {isEdit ? (
-              <p className="text-xs text-slate-500">
-                Les tampons bloquent du temps avant et apres chaque rendez-vous.
-              </p>
-            ) : null}
+            {isEdit ? <p className="text-xs text-slate-500">{t("bufferHint")}</p> : null}
           </TabPanel>
 
           <TabPanel active={!isEdit || tab === "advanced"}>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Delai minimum (h)" htmlFor="min_advance_hours">
+              <Field label={t("minAdvanceHours")} htmlFor="min_advance_hours">
                 <Input
                   id="min_advance_hours"
                   name="min_advance_hours"
@@ -234,7 +231,7 @@ export function ServiceDialog({
                   defaultValue={service?.min_advance_hours ?? 0}
                 />
               </Field>
-              <Field label="Resa max (jours)" htmlFor="max_advance_days">
+              <Field label={t("maxAdvanceDays")} htmlFor="max_advance_days">
                 <Input
                   id="max_advance_days"
                   name="max_advance_days"
@@ -244,9 +241,7 @@ export function ServiceDialog({
                 />
               </Field>
             </div>
-            <p className="text-xs text-slate-500">
-              Controle la fenetre de reservation en ligne pour cette prestation.
-            </p>
+            <p className="text-xs text-slate-500">{t("bookingWindowHint")}</p>
           </TabPanel>
 
           {state.error ? <p className="mt-4 text-sm text-red-600">{state.error}</p> : null}
@@ -254,10 +249,10 @@ export function ServiceDialog({
 
         <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-4">
           <Button type="button" variant="outline" onClick={onClose}>
-            Annuler
+            {tCommon("cancel")}
           </Button>
           <Button type="submit" disabled={pending}>
-            {pending ? "Enregistrement..." : isEdit ? "Enregistrer" : "Creer la prestation"}
+            {pending ? t("submitting") : isEdit ? t("editSubmit") : t("createSubmit")}
           </Button>
         </div>
       </form>

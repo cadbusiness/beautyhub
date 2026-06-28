@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { deleteInternalProduct } from "../../caisse-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,8 @@ type ProductRow = {
 };
 
 export function ProductsManager({ products }: { products: ProductRow[] }) {
+  const t = useTranslations("pos.products");
+  const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -32,79 +35,74 @@ export function ProductsManager({ products }: { products: ProductRow[] }) {
     );
   }, [products, query]);
 
-  const emptyMessage =
-    products.length === 0
-      ? "Aucun produit interne."
-      : "Aucun resultat pour cette recherche.";
+  const emptyMessage = products.length === 0 ? t("empty") : t("noResults");
 
   return (
     <>
       <ListToolbar
         action={
           <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
-            + Nouveau produit
+            + {t("new")}
           </Button>
         }
       >
-          <Input
-            type="search"
-            placeholder="Recherche nom, SKU..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="h-9 sm:max-w-xs"
-          />
-        </ListToolbar>
+        <Input
+          type="search"
+          placeholder={t("searchPlaceholder")}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="h-9 sm:max-w-xs"
+        />
+      </ListToolbar>
 
-        <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
-          <table className="w-full text-sm">
-            <thead className="border-b border-slate-200">
-              <tr>
-                <th className={dataTableHead}>Nom</th>
-                <th className={`hidden w-28 sm:table-cell ${dataTableHead}`}>SKU</th>
-                <th className={`w-24 ${dataTableHead}`}>Stock</th>
-                <th className={`w-28 text-right ${dataTableHead}`}>Prix</th>
-                <th className={`w-28 text-right ${dataTableHead}`}>Actions</th>
+      <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
+        <table className="w-full text-sm">
+          <thead className="border-b border-slate-200">
+            <tr>
+              <th className={dataTableHead}>{t("columns.name")}</th>
+              <th className={`hidden w-28 sm:table-cell ${dataTableHead}`}>{t("columns.sku")}</th>
+              <th className={`w-24 ${dataTableHead}`}>{t("columns.stock")}</th>
+              <th className={`w-28 text-right ${dataTableHead}`}>{t("columns.price")}</th>
+              <th className={`w-28 text-right ${dataTableHead}`}>{t("columns.actions")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((p) => (
+              <tr key={p.id} className={dataTableRow}>
+                <td className={`font-medium text-slate-900 ${dataTableCell}`}>{p.name}</td>
+                <td className={`hidden text-slate-600 sm:table-cell ${dataTableCell}`}>
+                  {p.sku ?? tCommon("dash")}
+                </td>
+                <td className={`text-slate-600 ${dataTableCell}`}>
+                  {p.stock_quantity ?? tCommon("dash")}
+                </td>
+                <td className={`whitespace-nowrap text-right tabular-nums ${dataTableCell}`}>
+                  {formatPrice(p.price_cents)}
+                </td>
+                <td className={`text-right ${dataTableCell}`}>
+                  <form action={deleteInternalProduct}>
+                    <input type="hidden" name="id" value={p.id} />
+                    <Button variant="ghost" type="submit" className="h-8 text-red-600">
+                      {t("delete")}
+                    </Button>
+                  </form>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filtered.map((p) => (
-                <tr key={p.id} className={dataTableRow}>
-                  <td className={`font-medium text-slate-900 ${dataTableCell}`}>{p.name}</td>
-                  <td className={`hidden text-slate-600 sm:table-cell ${dataTableCell}`}>
-                    {p.sku ?? "—"}
-                  </td>
-                  <td className={`text-slate-600 ${dataTableCell}`}>
-                    {p.stock_quantity ?? "—"}
-                  </td>
-                  <td className={`whitespace-nowrap text-right tabular-nums ${dataTableCell}`}>
-                    {formatPrice(p.price_cents)}
-                  </td>
-                  <td className={`text-right ${dataTableCell}`}>
-                    <form action={deleteInternalProduct}>
-                      <input type="hidden" name="id" value={p.id} />
-                      <Button variant="ghost" type="submit" className="h-8 text-red-600">
-                        Supprimer
-                      </Button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </DataTable>
+            ))}
+          </tbody>
+        </table>
+      </DataTable>
 
-        {filtered.length > 0 ? (
-          <ListPanelFooter>
-            {filtered.length} produit{filtered.length > 1 ? "s" : ""}
-            {query ? ` sur ${products.length}` : ""}
-          </ListPanelFooter>
-        ) : null}
+      {filtered.length > 0 ? (
+        <ListPanelFooter>
+          {t("footer", { count: filtered.length })}
+          {query
+            ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: products.length })}`
+            : ""}
+        </ListPanelFooter>
+      ) : null}
 
-      <FormDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        title="Nouveau produit"
-      >
+      <FormDialog open={dialogOpen} onClose={() => setDialogOpen(false)} title={t("dialogTitle")}>
         <InternalProductForm onSuccess={() => setDialogOpen(false)} />
       </FormDialog>
     </>

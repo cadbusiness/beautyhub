@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/auth/guards";
 import {
@@ -24,21 +25,21 @@ export async function saveWooConnection(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
 
   const url = String(formData.get("url") ?? "").trim();
   const consumerKey = String(formData.get("consumer_key") ?? "").trim();
   const consumerSecret = String(formData.get("consumer_secret") ?? "").trim();
   if (!url || !consumerKey || !consumerSecret) {
-    return { error: "URL, cle et secret requis." };
+    return { error: t("urlKeySecretRequired") };
   }
 
-  // Test de connexion avant d'enregistrer.
   try {
     const client = new WooClient({ url, consumerKey, consumerSecret });
     await client.testConnection();
   } catch (e) {
-    return { error: `Connexion echouee: ${(e as Error).message}` };
+    return { error: t("connectionFailed", { message: (e as Error).message }) };
   }
 
   try {
@@ -55,7 +56,7 @@ export async function saveWooConnection(
 
   revalidatePath("/institut/parametres");
   revalidatePath("/institut/caisse");
-  return { ok: true, message: "Boutique WooCommerce connectee." };
+  return { ok: true, message: t("wooConnected") };
 }
 
 export async function disconnectWoo(): Promise<void> {
@@ -73,7 +74,6 @@ export async function syncWooProducts(): Promise<void> {
   const supabase = await createClient();
   const now = new Date().toISOString();
 
-  // Jusqu'a 5 pages de 50 produits (250) pour le MVP.
   for (let page = 1; page <= 5; page++) {
     const products = await client.listProducts(page, 50);
     if (products.length === 0) break;
@@ -100,4 +100,3 @@ export async function syncWooProducts(): Promise<void> {
 
   revalidatePath("/institut/caisse");
 }
-

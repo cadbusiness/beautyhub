@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import type { CalendarAppointment, CalendarColumn, ColumnMode } from "./types";
 import { addDays, isSameDay, startOfDay, startOfWeek } from "./utils";
 import { TimeGrid } from "./time-grid";
@@ -76,6 +76,7 @@ export function WeekView({
   onMove: (payload: MovePayload) => void;
   movePending?: boolean;
 }) {
+  const format = useFormatter();
   const weekStart = startOfWeek(anchor);
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
@@ -84,7 +85,7 @@ export function WeekView({
 
   const columns = days.map((d) => ({
     id: d.toISOString(),
-    label: d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }),
+    label: format.dateTime(d, { weekday: "short", day: "numeric" }),
   }));
 
   const weekAppts = useMemo(

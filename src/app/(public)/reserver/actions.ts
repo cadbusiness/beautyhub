@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getTenantContext } from "@/lib/tenant/context";
 
@@ -76,8 +77,9 @@ export async function bookPublicAppointment(input: {
   fullName: string;
   phone?: string;
 }): Promise<BookResult> {
+  const actions = await getTranslations("institut.actions");
   const tenant = await getTenantContext();
-  if (!tenant) return { error: "Institut introuvable." };
+  if (!tenant) return { error: actions("tenantNotFound") };
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("book_public_appointment", {

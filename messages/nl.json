@@ -17,14 +17,91 @@
     "client": "Klant",
     "status": "Status",
     "notes": "Notities",
-    "refresh": "Vernieuwen"
+    "refresh": "Vernieuwen",
+    "add": "Toevoegen",
+    "create": "Aanmaken",
+    "creating": "Aanmaken…",
+    "delete": "Verwijderen",
+    "search": "Zoeken",
+    "ok": "OK",
+    "yes": "Ja",
+    "no": "Nee",
+    "color": "Kleur",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "phone": "Telefoon",
+    "name": "Naam",
+    "price": "Prijs",
+    "description": "Beschrijving",
+    "active": "Actief",
+    "inactive": "Inactief",
+    "published": "Gepubliceerd",
+    "actions": "Acties",
+    "date": "Datum",
+    "service": "Behandeling",
+    "staff": "Medewerker",
+    "confirm": "Bevestigen",
+    "execute": "Uitvoeren",
+    "executing": "Uitvoeren…",
+    "success": "Gelukt",
+    "saved": "Opgeslagen",
+    "back": "Terug",
+    "sections": "Secties",
+    "unlimited": "Onbeperkt",
+    "loading": "Laden…",
+    "prepare": "Voorbereiden…",
+    "pay": "Betalen",
+    "cash": "Contant",
+    "card": "Kaart",
+    "note": "Notitie",
+    "searchArticles": "Zoek een artikel…",
+    "total": "Totaal",
+    "woocommerce": "WooCommerce",
+    "internal": "Intern",
+    "terminal": "Terminal",
+    "history": "Geschiedenis",
+    "products": "Producten",
+    "team": "Team",
+    "settings": "Instellingen",
+    "overview": "Overzicht",
+    "modules": "Modules",
+    "contactAdmin": "Neem contact op met uw beheerder om de instituut- of academiemodules te activeren.",
+    "stripe": "Stripe",
+    "woo": "Woo",
+    "connect": "Koppelen",
+    "testAndSave": "Testen en opslaan…",
+    "slug": "Identificatie",
+    "plan": "Formule",
+    "interval": "Periodiciteit",
+    "monthly": "Maandelijks",
+    "yearly": "Jaarlijks",
+    "title": "Titel",
+    "duration": "Duur",
+    "stock": "Voorraad",
+    "sku": "SKU",
+    "visible": "Zichtbaar",
+    "hidden": "Verborgen",
+    "draft": "Concept",
+    "adding": "Toevoegen…",
+    "none": "Geen",
+    "choose": "Kiezen…",
+    "apply": "Toepassen",
+    "disconnect": "Ontkoppelen",
+    "connected": "Gekoppeld",
+    "notConnected": "Niet gekoppeld",
+    "send": "Verzenden",
+    "step": "Stap {n}",
+    "perMonth": "maand",
+    "perYear": "jaar",
+    "countOfTotal": "{count} van {total}"
   },
   "shell": {
     "home": "Home",
     "administration": "Administratie",
     "signOut": "Afmelden",
     "footerRights": "Alle rechten voorbehouden.",
-    "language": "Taal"
+    "language": "Taal",
+    "institut": "Instituut"
   },
   "roles": {
     "platform_admin": "Super admin",
@@ -32,6 +109,85 @@
     "tenant_owner": "Eigenaar",
     "staff": "Medewerker",
     "coach": "Coach"
+  },
+  "nav": {
+    "institutAppointments": "Afspraken",
+    "institutServices": "Behandelingen",
+    "institutClients": "Klanten",
+    "institutTeam": "Team",
+    "institutPos": "Kassa",
+    "institutPosHistory": "Kassageschiedenis",
+    "institutPosProducts": "Interne producten",
+    "institutSettings": "Instellingen",
+    "academieOverview": "Academie",
+    "academieCourses": "Opleidingen",
+    "academieStudents": "Cursisten",
+    "adminOverview": "Administratie",
+    "adminTenants": "Instituten",
+    "adminPlans": "Formules"
+  },
+  "weekdays": {
+    "mon": "Maandag",
+    "tue": "Dinsdag",
+    "wed": "Woensdag",
+    "thu": "Donderdag",
+    "fri": "Vrijdag",
+    "sat": "Zaterdag",
+    "sun": "Zondag"
+  },
+  "errors": {
+    "quota": {
+      "exceeded": "Limiet bereikt voor \"{key}\" (max. {limit}). Upgrade naar een hogere formule."
+    }
+  },
+  "dashboard": {
+    "subtitle": "Overzicht — gebruik het menu links om te navigeren.",
+    "kpis": {
+      "title": "Indicatoren",
+      "description": "Kerncijfers van uw instituut.",
+      "upcomingAppointments": "Komende afspraken",
+      "clients": "Klanten",
+      "services": "Behandelingen"
+    },
+    "quickActions": {
+      "title": "Snelle acties",
+      "description": "De meest gebruikte taken, zonder opnieuw door het hele menu te gaan.",
+      "appointments": {
+        "label": "Afspraken",
+        "description": "Planning en reserveringen"
+      },
+      "pos": {
+        "label": "Kassa",
+        "description": "Een verkoop afrekenen"
+      },
+      "clients": {
+        "label": "Klanten",
+        "description": "Dossiers en contactgegevens"
+      },
+      "services": {
+        "label": "Behandelingen",
+        "description": "Diensten en tarieven"
+      },
+      "courses": {
+        "label": "Opleidingen",
+        "description": "Academiecatalogus"
+      },
+      "students": {
+        "label": "Cursisten",
+        "description": "Lopende inschrijvingen"
+      }
+    },
+    "modules": {
+      "title": "Modules",
+      "emptyDescription": "Geen actieve modules op dit moment.",
+      "emptyHint": "Neem contact op met uw beheerder om de instituut- of academiemodules te activeren."
+    },
+    "assistant": {
+      "title": "Assistent",
+      "heading": "AI-ondersteund beheer",
+      "description": "Klanten, opleidingen, planning — stel een vraag of kies een vooraf ingestelde actie in de assistent.",
+      "open": "Assistent openen"
+    }
   },
   "appointments": {
     "tabs": {
@@ -80,7 +236,7 @@
     "calendar": {
       "editTitle": "Afspraak bewerken",
       "allServices": "Alle behandelingen",
-      "allStaff": "Hele team",
+      "allStaff": "Heel team",
       "publicPage": "Publieke pagina ↗",
       "views": {
         "month": "Maand",
@@ -115,7 +271,49 @@
       "serviceDateRequired": "Behandeling en datum/tijd verplicht.",
       "missingFields": "Verplichte velden ontbreken.",
       "clientEmailExists": "Er bestaat al een klant met dit e-mailadres.",
-      "workingHoursEndBeforeStart": "{day}: eindtijd moet na starttijd liggen."
+      "workingHoursEndBeforeStart": "{day}: eindtijd moet na starttijd liggen.",
+      "invalidCart": "Ongeldige winkelwagen.",
+      "emptyCart": "Lege winkelwagen.",
+      "invalidAmount": "Ongeldig bedrag.",
+      "saleAlreadyRecorded": "Verkoop al geregistreerd.",
+      "wooOrderFailed": "WooCommerce-bestelling mislukt: {message}",
+      "saleError": "Fout bij verkoop.",
+      "saleRecorded": "Verkoop geregistreerd",
+      "paymentCash": "(contant)",
+      "paymentStripe": "(Stripe-kaart)",
+      "paymentCard": "(betaalterminal)",
+      "serviceNotFoundInCart": "Behandeling niet gevonden: {id}",
+      "productNotFoundInCart": "Product niet gevonden: {id}",
+      "stripeNotConfigured": "Stripe Connect niet geconfigureerd voor dit instituut.",
+      "stripeNotConfiguredShort": "Stripe Connect niet geconfigureerd.",
+      "paymentCreateFailed": "Stripe-betaling kon niet worden aangemaakt.",
+      "paymentNotConfirmed": "Betaling niet bevestigd.",
+      "cartAmountMismatch": "Winkelwagenbedrag komt niet overeen met de betaling.",
+      "urlKeySecretRequired": "URL, sleutel en geheim verplicht.",
+      "connectionFailed": "Verbinding mislukt: {message}",
+      "wooConnected": "WooCommerce-winkel gekoppeld.",
+      "titleRequired": "Titel verplicht.",
+      "enrollmentFieldsRequired": "Opleiding, naam en e-mail verplicht.",
+      "courseNotFound": "Opleiding niet gevonden.",
+      "nameSlugRequired": "Naam en identificatie (slug) verplicht.",
+      "platformBrandNotFound": "Platformmerk niet gevonden.",
+      "slugTaken": "De identificatie \"{slug}\" is al in gebruik.",
+      "tenantCreateError": "Fout bij aanmaken instituut.",
+      "tenantCreatedOwnerFailed": "Instituut aangemaakt, maar eigenaar niet aangemaakt: {message}.",
+      "missingRequiredFields": "Verplichte velden ontbreken.",
+      "tenantUpdated": "Instituut bijgewerkt.",
+      "planNameRequired": "Naam formule verplicht.",
+      "tenantNotFound": "Instituut niet gevonden.",
+      "serverConfigIncomplete": "Serverconfiguratie onvolledig (service role).",
+      "emailPasswordRequired": "E-mail en wachtwoord verplicht.",
+      "accountNotFound": "Account niet gevonden of wachtwoord niet ingesteld.",
+      "invalidCredentials": "Onjuiste inloggegevens.",
+      "allFieldsRequired": "Alle velden zijn verplicht.",
+      "passwordMinLength": "Wachtwoord: minimaal 8 tekens.",
+      "accountAlreadyExists": "Er bestaat al een account voor dit e-mailadres.",
+      "accountCreateError": "Fout bij aanmaken account.",
+      "invalidJsonParams": "Ongeldige JSON voor parameters.",
+      "workingHoursSaved": "Openingstijden opgeslagen."
     },
     "scheduling": {
       "conflict": {
@@ -124,8 +322,649 @@
       },
       "schedule": {
         "noHoursToday": "Geen openingstijden op deze dag voor deze behandelaar.",
-        "outsideSchedule": "De geselecteerde periode komt niet overeen met de planning."
+        "outsideSchedule": "De geselecteerde periode komt niet overeen met de planning van de behandelaar."
       }
+    },
+    "overview": {
+      "upcomingAppointments": "Komende afspraken",
+      "clients": "Klanten",
+      "services": "Behandelingen"
+    },
+    "clients": {
+      "new": "Nieuwe klant",
+      "searchPlaceholder": "Zoek naam, e-mail, telefoon…",
+      "empty": "Nog geen klanten.",
+      "noResults": "Geen resultaten voor deze zoekopdracht.",
+      "dialogTitle": "Nieuwe klant",
+      "columns": {
+        "name": "Naam",
+        "email": "E-mail",
+        "phone": "Telefoon"
+      },
+      "footer": "{count, plural, one {# klant} other {# klanten}}",
+      "form": {
+        "fullName": "Volledige naam",
+        "fullNamePlaceholder": "Marie Janssens",
+        "emailPlaceholder": "marie@email.com",
+        "phonePlaceholder": "0476 12 34 56",
+        "submit": "Klant toevoegen",
+        "submitting": "Toevoegen…"
+      }
+    },
+    "services": {
+      "new": "Nieuwe behandeling",
+      "searchPlaceholder": "Zoek op naam…",
+      "filterAll": "Alle",
+      "filterActive": "Zichtbaar",
+      "filterInactive": "Verborgen",
+      "empty": "Nog geen behandelingen.",
+      "noResults": "Geen resultaten voor deze zoekopdracht.",
+      "columns": {
+        "status": "Status",
+        "title": "Titel",
+        "duration": "Duur",
+        "price": "Prijs",
+        "actions": "Acties"
+      },
+      "durationMin": "{min} min",
+      "visible": "Zichtbaar",
+      "hidden": "Verborgen",
+      "hiddenBadge": "Verborgen",
+      "edit": "Bewerken",
+      "deleteShort": "Verw.",
+      "footer": "{count, plural, one {# behandeling} other {# behandelingen}}",
+      "dialog": {
+        "createTitle": "Nieuwe behandeling",
+        "editTitle": "Behandeling bewerken",
+        "tabs": {
+          "general": "Algemeen",
+          "time": "Tijden",
+          "advanced": "Geavanceerd"
+        },
+        "namePlaceholder": "Gezichtsverzorging",
+        "priceEur": "Prijs (EUR)",
+        "descriptionPlaceholder": "Optioneel — alleen intern zichtbaar",
+        "visibleLabel": "Zichtbaar",
+        "visibleHint": "Uitschakelen om te verbergen voor klanten en aan de kassa.",
+        "durationMin": "Duur (min)",
+        "bufferBefore": "Buffer ervoor (min)",
+        "bufferAfter": "Buffer erna (min)",
+        "bufferHint": "Buffers blokkeren tijd vóór en na elke afspraak.",
+        "minAdvanceHours": "Minimumtermijn (u)",
+        "maxAdvanceDays": "Max. reservering (dagen)",
+        "bookingWindowHint": "Bepaalt het online reserveringsvenster voor deze behandeling.",
+        "createSubmit": "Behandeling aanmaken",
+        "editSubmit": "Opslaan",
+        "submitting": "Opslaan…"
+      }
+    },
+    "team": {
+      "tabs": {
+        "personnel": "Personeel",
+        "cabines": "Cabines",
+        "horaires": "Openingstijden"
+      },
+      "personnel": {
+        "add": "Personeel toevoegen",
+        "searchPlaceholder": "Zoek personeel…",
+        "empty": "Geen personeelsleden.",
+        "noResults": "Geen resultaten.",
+        "columns": {
+          "color": "Kleur",
+          "name": "Naam",
+          "email": "E-mail",
+          "actions": "Acties"
+        },
+        "delete": "Verwijderen",
+        "footer": "{count, plural, one {# lid} other {# leden}}",
+        "dialogTitle": "Personeel toevoegen",
+        "form": {
+          "fullName": "Volledige naam",
+          "fullNamePlaceholder": "Sophie Peeters",
+          "emailOptional": "E-mail (optioneel)",
+          "emailPlaceholder": "sophie@instituut.be",
+          "colorOptional": "Kleur (optioneel)",
+          "submit": "Toevoegen",
+          "submitting": "Toevoegen…"
+        }
+      },
+      "cabines": {
+        "add": "Cabine toevoegen",
+        "subtitle": "Cabines en behandelkamers",
+        "empty": "Geen cabines geconfigureerd.",
+        "columns": {
+          "name": "Naam",
+          "actions": "Acties"
+        },
+        "delete": "Verwijderen",
+        "footer": "{count, plural, one {# cabine} other {# cabines}}",
+        "dialogTitle": "Cabine toevoegen",
+        "form": {
+          "name": "Naam cabine / resource",
+          "namePlaceholder": "Cabine 1",
+          "submit": "Toevoegen",
+          "submitting": "Toevoegen…"
+        }
+      },
+      "horaires": {
+        "description": "Standaard openingstijden van het instituut (gebruikt voor online beschikbaarheid).",
+        "saved": "Openingstijden opgeslagen.",
+        "submit": "Openingstijden opslaan",
+        "submitting": "Opslaan…"
+      }
+    },
+    "pos": {
+      "syncWoo": "WooCommerce synchroniseren",
+      "emptyCatalog": "Begin met het toevoegen van behandelingen, interne producten of koppel WooCommerce in de instellingen.",
+      "linkServices": "Behandelingen",
+      "linkProducts": "Interne producten",
+      "linkSettings": "Instellingen",
+      "wooNotConnected": "WooCommerce niet gekoppeld — alleen behandelingen en interne producten zijn beschikbaar.",
+      "connectShop": "Winkel koppelen"
+    },
+    "settings": {
+      "securityNote": "WooCommerce API-sleutels worden versleuteld (AES-256-GCM) vóór opslag. Stripe Connect gebruikt een Express-account per instituut; betalingen worden doorgestuurd naar dat account."
+    },
+    "stripe": {
+      "title": "Stripe Connect",
+      "description": "Kaartbetalingen aan de kassa (Express-account van het instituut).",
+      "active": "Actief",
+      "notConnected": "Niet gekoppeld",
+      "missingPlatformKey": "STRIPE_SECRET_KEY niet geconfigureerd op het platform. Voeg deze toe in .env.local om Stripe Connect te activeren.",
+      "missingKeyRedirect": "Stripe-platformsleutel ontbreekt.",
+      "account": "Account:",
+      "paymentsActive": "· Betalingen actief",
+      "onboardingIncomplete": "· Onboarding onvolledig",
+      "disconnect": "Stripe ontkoppelen",
+      "connect": "Stripe koppelen",
+      "resumeOnboarding": "Stripe-onboarding hervatten"
+    },
+    "woo": {
+      "title": "WooCommerce",
+      "description": "Productcatalogus en kassa-bestellingen.",
+      "connected": "Gekoppeld",
+      "notConnected": "Niet gekoppeld",
+      "shop": "Winkel:",
+      "disconnect": "Ontkoppelen",
+      "form": {
+        "shopUrl": "URL van de winkel",
+        "shopUrlPlaceholder": "https://mijnwinkel.be",
+        "consumerKey": "Consumer key",
+        "consumerKeyPlaceholder": "ck_…",
+        "consumerSecret": "Consumer secret",
+        "consumerSecretPlaceholder": "cs_…",
+        "submit": "WooCommerce koppelen",
+        "submitting": "Testen en opslaan…"
+      }
+    }
+  },
+  "academie": {
+    "overview": {
+      "courses": "Opleidingen",
+      "published": "Gepubliceerd",
+      "enrolledStudents": "Ingeschreven cursisten"
+    },
+    "courses": {
+      "new": "Nieuwe opleiding",
+      "searchPlaceholder": "Zoek op titel…",
+      "empty": "Nog geen opleidingen.",
+      "noResults": "Geen resultaten voor deze zoekopdracht.",
+      "columns": {
+        "title": "Titel",
+        "status": "Status",
+        "price": "Prijs",
+        "actions": "Acties"
+      },
+      "published": "Gepubliceerd",
+      "draft": "Concept",
+      "delete": "Verwijderen",
+      "footer": "{count, plural, one {# opleiding} other {# opleidingen}}",
+      "dialogTitle": "Nieuwe opleiding",
+      "form": {
+        "title": "Titel",
+        "titlePlaceholder": "Mijn opleiding",
+        "priceEur": "Prijs (EUR)",
+        "descriptionPlaceholder": "Optioneel",
+        "publishImmediately": "Onmiddellijk publiceren",
+        "submit": "Opleiding aanmaken",
+        "submitting": "Aanmaken…"
+      }
+    },
+    "students": {
+      "newEnrollment": "Nieuwe inschrijving",
+      "searchPlaceholder": "Zoek cursist, e-mail, opleiding…",
+      "empty": "Nog geen inschrijvingen.",
+      "noResults": "Geen resultaten voor deze zoekopdracht.",
+      "columns": {
+        "student": "Cursist",
+        "course": "Opleiding",
+        "status": "Status"
+      },
+      "status": {
+        "enrolled": "Ingeschreven",
+        "completed": "Afgerond",
+        "cancelled": "Geannuleerd"
+      },
+      "footer": "{count, plural, one {# inschrijving} other {# inschrijvingen}}",
+      "dialogTitle": "Nieuwe inschrijving",
+      "form": {
+        "noCourses": "Maak eerst een opleiding aan voordat u een cursist inschrijft.",
+        "course": "Opleiding",
+        "chooseCourse": "Kiezen…",
+        "studentName": "Naam cursist",
+        "studentNamePlaceholder": "Marie Janssens",
+        "emailPlaceholder": "marie@email.com",
+        "linkClient": "Koppelen aan klant (optioneel)",
+        "submit": "Cursist inschrijven",
+        "submitting": "Inschrijven…"
+      }
+    },
+    "enrollments": {
+      "title": "Inschrijvingen"
+    }
+  },
+  "admin": {
+    "layout": {
+      "subtitle": "Platformadministratie"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Overzicht van het platform.",
+      "stats": {
+        "tenants": "Instituten",
+        "activeSubscriptions": "Actieve abonnementen",
+        "plans": "Formules",
+        "catalogModules": "Modules in catalogus"
+      },
+      "manageTenants": "Instituten beheren",
+      "managePlans": "Formules beheren"
+    },
+    "tenants": {
+      "new": "Nieuw instituut",
+      "searchPlaceholder": "Zoek instituut, identificatie…",
+      "empty": "Nog geen instituten.",
+      "noResults": "Geen resultaten.",
+      "dialogTitle": "Nieuw instituut",
+      "columns": {
+        "institut": "Instituut",
+        "slug": "Identificatie",
+        "plan": "Formule",
+        "activeModules": "Actieve modules"
+      },
+      "form": {
+        "name": "Naam instituut",
+        "namePlaceholder": "Instituut Schoonheid Antwerpen",
+        "slug": "Identificatie (subdomein)",
+        "slugPlaceholder": "schoonheid-antwerpen",
+        "plan": "Formule",
+        "noPlan": "— Nog geen —",
+        "ownerLegend": "Eigenaarsaccount (optioneel)",
+        "ownerEmailPlaceholder": "eigenaar@instituut.be",
+        "ownerPasswordPlaceholder": "min. 6 tekens",
+        "submit": "Instituut aanmaken",
+        "submitting": "Aanmaken…"
+      },
+      "detail": {
+        "back": "← Instituten",
+        "info": "Informatie",
+        "accessHint": "Toegang instituut: {slug}.localhost:3000",
+        "usage": "Afsprakenverbruik",
+        "usageThisMonth": "Deze maand: {count}",
+        "usageLimit": " / {limit} (formule {plan})",
+        "usageUnlimited": " (onbeperkt)",
+        "featureActive": "actief",
+        "featureInactive": "uitgeschakeld",
+        "subscription": "Abonnement",
+        "activePlan": "Actieve formule",
+        "noPlan": "— Geen —",
+        "applyPlan": "Toepassen",
+        "applyPlanHint": "Een actieve formule toepassen activeert automatisch de inbegrepen modules.",
+        "modules": "Modules",
+        "enable": "Activeren",
+        "disable": "Deactiveren",
+        "team": "Team",
+        "teamCount": "{count} lid/lenden: {roles}",
+        "teamNone": "geen"
+      }
+    },
+    "plans": {
+      "new": "Nieuwe formule",
+      "searchPlaceholder": "Zoek formule…",
+      "empty": "Geen formules.",
+      "noResults": "Geen resultaten.",
+      "dialogTitle": "Nieuwe formule",
+      "back": "← Formules",
+      "columns": {
+        "plan": "Formule",
+        "price": "Prijs",
+        "modules": "Modules",
+        "status": "Status"
+      },
+      "active": "Actief",
+      "inactive": "Inactief",
+      "form": {
+        "namePlaceholder": "Pro",
+        "priceEur": "Prijs (EUR)",
+        "pricePlaceholder": "59",
+        "interval": "Periodiciteit",
+        "monthly": "Maandelijks",
+        "yearly": "Jaarlijks",
+        "includedModules": "Inbegrepen modules",
+        "rdvFeatures": "Afspraakfuncties",
+        "featureCalendar": "Afsprakenkalender",
+        "featureClientBooking": "Online klantreservering",
+        "featureSms": "SMS-meldingen",
+        "quotas": "Quota",
+        "quotasHint": "(leeg = onbeperkt)",
+        "limitStaff": "Teamleden",
+        "limitClients": "Klantdossiers",
+        "limitAppointments": "Afspraken / maand",
+        "limitStudents": "Cursisten (academie)",
+        "unlimitedPlaceholder": "∞",
+        "isActive": "Actieve formule (aanbiedbaar aan instituten)",
+        "createSubmit": "Formule aanmaken",
+        "editSubmit": "Opslaan",
+        "submitting": "Opslaan…"
+      }
+    }
+  },
+  "auth": {
+    "backToHome": "← BeautyHub",
+    "title": "Teamaanmelding",
+    "subtitle": "Backoffice instituut & platform.",
+    "setupRequired": "Database niet gekoppeld op deze omgeving. Configureer de Supabase-variabelen op Vercel en deploy opnieuw.",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "submit": "Aanmelden",
+    "submitting": "Aanmelden…",
+    "supabaseNotConfigured": "Dienst niet beschikbaar: Supabase niet geconfigureerd op deze omgeving.",
+    "testAccounts": {
+      "title": "Testaccounts",
+      "sharedPassword": "Gemeenschappelijk wachtwoord:",
+      "roles": {
+        "platformAdmin": "Platform super admin",
+        "brandOwner": "Merkeigenaar",
+        "demoOwner": "Demo-instituut eigenaar",
+        "demoStaff": "Demo-instituut medewerker",
+        "demoCoach": "Demo-academie coach"
+      }
+    }
+  },
+  "public": {
+    "booking": {
+      "title": "Afspraak maken",
+      "subtitle": "{name} — online reservering",
+      "steps": "Stap {n}",
+      "confirmed": {
+        "title": "Afspraak bevestigd",
+        "emailHint": "U ontvangt binnenkort een bevestigingsmail."
+      },
+      "step1": {
+        "title": "Kies een behandeling",
+        "empty": "Geen behandelingen beschikbaar.",
+        "durationMin": "{min} min"
+      },
+      "step2": {
+        "title": "Kies een behandelaar"
+      },
+      "step3": {
+        "title": "Kies een datum",
+        "seeSlots": "Tijdslots bekijken"
+      },
+      "step4": {
+        "title": "Kies een tijdslot",
+        "noSlots": "Geen tijdslots beschikbaar op deze dag.",
+        "fullName": "Volledige naam",
+        "confirm": "Afspraak bevestigen",
+        "confirming": "Bevestigen…"
+      }
+    },
+    "client": {
+      "login": {
+        "title": "Mijn account",
+        "subtitle": "Meld u aan om uw afspraken te bekijken.",
+        "submit": "Aanmelden",
+        "submitting": "Aanmelden…",
+        "noAccount": "Nog geen account?",
+        "createAccount": "Account aanmaken"
+      },
+      "register": {
+        "title": "Account aanmaken",
+        "fullName": "Volledige naam",
+        "submit": "Mijn account aanmaken",
+        "submitting": "Aanmaken…",
+        "hasAccount": "Al een account?"
+      },
+      "account": {
+        "logout": "Afmelden",
+        "empty": "Geen komende afspraken.",
+        "columns": {
+          "service": "Behandeling",
+          "date": "Datum",
+          "status": "Status",
+          "actions": "Acties"
+        },
+        "cancel": "Annuleren",
+        "status": {
+          "booked": "Geboekt",
+          "confirmed": "Bevestigd",
+          "completed": "Afgerond",
+          "cancelled": "Geannuleerd",
+          "no_show": "Niet verschenen"
+        }
+      }
+    }
+  },
+  "assistant": {
+    "panel": {
+      "open": "AI-assistent openen",
+      "closeOverlay": "Assistent sluiten",
+      "closeChat": "Chat sluiten",
+      "title": "AI-assistent",
+      "subtitle": "Instituutbeheer",
+      "greeting": "Hallo! Gebruik een snelle actie hieronder of beschrijf wat u wilt doen.",
+      "notRecognized": "Ik herkende dit verzoek niet. Kies een snelle actie hieronder.",
+      "quickActions": "Snelle acties",
+      "messagePlaceholder": "Uw bericht…",
+      "send": "Verzenden",
+      "sendPending": "…",
+      "fabLabel": "Assistent",
+      "actions": {
+        "createClient": "Klant aanmaken",
+        "listClients": "Klanten tonen",
+        "listCourses": "Opleidingen bekijken",
+        "createCourse": "Nieuwe opleiding"
+      },
+      "modules": {
+        "institut": "Instituut",
+        "academie": "Academie"
+      }
+    },
+    "page": {
+      "availableActions": "Beschikbare acties",
+      "noActions": "Geen AI-acties.",
+      "conversation": "Gesprek",
+      "systemHint": "Kies een actie hieronder of voer een vraag in (binnenkort beschikbaar).",
+      "action": "Actie",
+      "paramsJson": "Parameters (JSON)",
+      "invalidJson": "Ongeldige JSON.",
+      "createClient": {
+        "title": "Klant aanmaken",
+        "fullName": "Volledige naam",
+        "fullNamePlaceholder": "Marie Janssens",
+        "emailPlaceholder": "marie@email.com",
+        "phonePlaceholder": "0476 12 34 56"
+      },
+      "listClients": {
+        "title": "Klanten tonen",
+        "limit": "Limiet"
+      }
+    }
+  },
+  "pos": {
+    "terminal": {
+      "tabs": {
+        "all": "Alles",
+        "services": "Behandelingen",
+        "woo": "Woo-winkel",
+        "internal": "Intern"
+      },
+      "categories": {
+        "service": "Behandeling",
+        "woocommerce": "Woo",
+        "internal": "Intern"
+      },
+      "searchArticles": "Zoek een artikel…",
+      "searchAria": "Zoeken",
+      "emptyCategory": "Geen artikelen in deze categorie. Voeg behandelingen toe, synchroniseer WooCommerce of maak interne producten aan.",
+      "cart": {
+        "title": "Winkelwagen",
+        "clear": "Legen",
+        "empty": "Geen artikelen.",
+        "total": "Totaal",
+        "noClient": "— Geen klant —",
+        "notePlaceholder": "Interne notitie (optioneel)",
+        "clientAria": "Klant"
+      },
+      "checkout": {
+        "cashPending": "Afrekenen…",
+        "cash": "Contant · {total}",
+        "cardPending": "Registreren…",
+        "card": "Betaalterminal · {total}"
+      }
+    },
+    "stripe": {
+      "paymentFailed": "Betaling mislukt.",
+      "paymentNotConfirmed": "Betaling niet bevestigd.",
+      "paymentRecorded": "Betaling geregistreerd.",
+      "startFailed": "Betaling kon niet worden gestart.",
+      "prepare": "Voorbereiden…",
+      "pay": "Betalen {total}",
+      "payPending": "Betalen…"
+    },
+    "products": {
+      "new": "Nieuw product",
+      "searchPlaceholder": "Zoek naam, SKU…",
+      "empty": "Geen interne producten.",
+      "noResults": "Geen resultaten voor deze zoekopdracht.",
+      "columns": {
+        "name": "Naam",
+        "sku": "SKU",
+        "stock": "Voorraad",
+        "price": "Prijs",
+        "actions": "Acties"
+      },
+      "delete": "Verwijderen",
+      "footer": "{count, plural, one {# product} other {# producten}}",
+      "dialogTitle": "Nieuw product",
+      "form": {
+        "namePlaceholder": "Gezichtsolie 30 ml",
+        "priceEur": "Prijs (EUR)",
+        "stockOptional": "Optioneel",
+        "skuOptional": "Optioneel",
+        "submit": "Product toevoegen",
+        "submitting": "Toevoegen…"
+      }
+    },
+    "history": {
+      "empty": "Geen geregistreerde verkopen.",
+      "columns": {
+        "date": "Datum",
+        "client": "Klant",
+        "items": "Artikelen",
+        "payment": "Betaling",
+        "total": "Totaal"
+      },
+      "paymentMethods": {
+        "cash": "Contant",
+        "card": "Betaalterminal",
+        "stripe": "Stripe"
+      }
+    }
+  },
+  "landing": {
+    "brand": "BeautyHub",
+    "nav": {
+      "book": "Reserveren",
+      "teamLogin": "Teamaanmelding"
+    },
+    "hero": {
+      "badge": "Multi-tenant SaaS · Instituten & academies",
+      "titleLine1": "Beheer uw instituut",
+      "titleLine2": "als een professioneel platform",
+      "description": "Afspraken, WooCommerce-kassa, klanten, team en opleidingen — één backoffice. Doorverkoopbaar als white label of self-hosted.",
+      "ctaBackOffice": "Naar de backoffice",
+      "ctaClient": "Klantenportaal",
+      "stats": {
+        "modules": { "value": "6+", "label": "Businessmodules" },
+        "isolation": { "value": "RLS", "label": "Tenant-isolatie" },
+        "ai": { "value": "AI", "label": "Geïntegreerde acties" }
+      }
+    },
+    "modules": {
+      "title": "Alles wat u nodig heeft voor uw activiteit",
+      "subtitle": "Elke module wordt geactiveerd volgens de formule van het instituut. Geen overkill.",
+      "items": {
+        "appointments": {
+          "title": "Afspraken",
+          "text": "Kalender behandelaar/cabine, online reservering, klantenportaal."
+        },
+        "pos": {
+          "title": "Geïntegreerde kassa",
+          "text": "Behandelingen, WooCommerce-producten en interne artikelen in één winkelwagen."
+        },
+        "academie": {
+          "title": "Academie",
+          "text": "Opleidingen, inschrijvingen en opvolging van cursisten."
+        },
+        "assistant": {
+          "title": "AI-assistent",
+          "text": "Acties per module gedeclareerd — beheer zonder herconfiguratie."
+        },
+        "whitelabel": {
+          "title": "White label",
+          "text": "Platform → merken → instituten, custom domeinen en branding."
+        },
+        "multitenant": {
+          "title": "Multi-tenant",
+          "text": "Strikte isolatie per instituut, Supabase RLS, teamrollen."
+        }
+      }
+    },
+    "steps": {
+      "title": "Snel van start",
+      "items": {
+        "1": {
+          "title": "Koppel uw instituut",
+          "text": "WooCommerce, Stripe, team en behandelingen."
+        },
+        "2": {
+          "title": "Activeer uw modules",
+          "text": "Instituut, Academie — volgens uw formule."
+        },
+        "3": {
+          "title": "Afrekenen en plannen",
+          "text": "Kassa, publieke afspraken en AI-assistent."
+        }
+      }
+    },
+    "cta": {
+      "title": "Klaar om uw instituut te beheren?",
+      "subtitle": "Meld u aan met uw teamaccount of reserveer online een tijdslot.",
+      "teamLogin": "Teamaanmelding",
+      "book": "Afspraak maken"
+    },
+    "footer": "BeautyHub · SaaS-platform voor schoonheidsinstituten"
+  },
+  "ui": {
+    "formDialog": {
+      "close": "Sluiten"
+    },
+    "pageTabs": {
+      "sectionsAriaLabel": "Secties"
+    },
+    "dataTable": {
+      "emptyDefault": "Geen items."
     }
   }
 }

@@ -5,6 +5,8 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/auth/guards";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
+import { translateQuotaError } from "@/lib/i18n/quota";
+import { weekdayMessageKey } from "@/lib/i18n/nav";
 import {
   checkAppointmentConflict,
   fetchAppointmentsInRange,
@@ -25,13 +27,14 @@ function eurosToCents(value: FormDataEntryValue | null): number {
 
 // --- Prestations -----------------------------------------------------------
 
-function parseServiceForm(formData: FormData) {
+async function parseServiceForm(formData: FormData) {
+  const t = await getTranslations("institut.actions");
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { error: "Nom requis." as const };
+  if (!name) return { error: t("nameRequired") };
 
   const durationMin = Number.parseInt(String(formData.get("duration_min") ?? "30"), 10);
   if (!Number.isFinite(durationMin) || durationMin < 1) {
-    return { error: "Duree invalide." as const };
+    return { error: t("durationInvalid") };
   }
 
   return {
@@ -57,7 +60,7 @@ export async function createService(
   formData: FormData,
 ): Promise<ActionResult> {
   const session = await requireModule("institut");
-  const parsed = parseServiceForm(formData);
+  const parsed = await parseServiceForm(formData);
   if ("error" in parsed) return { error: parsed.error };
 
   const supabase = await createClient();
@@ -75,11 +78,12 @@ export async function updateService(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
   await requireModule("institut");
   const id = String(formData.get("id") ?? "");
-  if (!id) return { error: "Prestation introuvable." };
+  if (!id) return { error: t("serviceNotFound") };
 
-  const parsed = parseServiceForm(formData);
+  const parsed = await parseServiceForm(formData);
   if ("error" in parsed) return { error: parsed.error };
 
   const supabase = await createClient();
@@ -107,11 +111,12 @@ export async function createClientRecord(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
   try {
     await assertQuota(session.tenant.id, "clients");
   } catch (e) {
-    if (e instanceof QuotaExceededError) return { error: e.message };
+    if (e instanceof QuotaExceededError) return { error: await translateQuotaError(e) };
     throw e;
   }
 
@@ -124,7 +129,7 @@ export async function createClientRecord(
   });
   if (error) {
     return {
-      error: error.code === "23505" ? "Un client avec cet email existe deja." : error.message,
+      error: error.code === "23505" ? t("clientEmailExists") : error.message,
     };
   }
   revalidatePath("/institut/clients");
@@ -148,7 +153,7 @@ export async function createAppointment(
   try {
     await assertQuota(session.tenant.id, "appointments_per_month");
   } catch (e) {
-    if (e instanceof QuotaExceededError) return { error: e.message };
+    if (e instanceof QuotaExceededError) return { error: await translateQuotaError(e) };
     throw e;
   }
 
@@ -379,16 +384,17 @@ export async function createStaffMember(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
   try {
     await assertQuota(session.tenant.id, "staff");
   } catch (e) {
-    if (e instanceof QuotaExceededError) return { error: e.message };
+    if (e instanceof QuotaExceededError) return { error: await translateQuotaError(e) };
     throw e;
   }
 
   const fullName = String(formData.get("full_name") ?? "").trim();
-  if (!fullName) return { error: "Nom requis." };
+  if (!fullName) return { error: t("nameRequired") };
 
   const supabase = await createClient();
   const { error } = await supabase.from("inst_staff").insert({
@@ -417,9 +423,10 @@ export async function createResource(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { error: "Nom requis." };
+  if (!name) return { error: t("nameRequired") };
 
   const supabase = await createClient();
   const { error } = await supabase.from("inst_resources").insert({
@@ -444,6 +451,8 @@ export async function saveWorkingHours(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const tWeekdays = await getTranslations("weekdays");
   const session = await requireModule("institut");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
@@ -468,7 +477,11 @@ export async function saveWorkingHours(
     const start = String(formData.get(`start_${day.value}`) ?? "09:00");
     const end = String(formData.get(`end_${day.value}`) ?? "18:00");
     if (start >= end) {
-      return { error: `${day.label}: l'heure de fin doit etre apres le debut.` };
+      return {
+        error: t("workingHoursEndBeforeStart", {
+          day: tWeekdays(weekdayMessageKey(day.value)),
+        }),
+      };
     }
     rows.push({
       tenant_id: tenantId,

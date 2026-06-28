@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getTenantContext } from "@/lib/tenant/context";
 import { getClientSession } from "@/lib/client-auth/session";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -9,15 +10,11 @@ import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatDateTime } from "@/lib/utils";
 import { cancelClientAppointment, clientLogout } from "../actions";
 
-const STATUS: Record<string, string> = {
-  booked: "Reserve",
-  confirmed: "Confirme",
-  completed: "Termine",
-  cancelled: "Annule",
-  no_show: "Absent",
-};
+const STATUS_KEYS = ["booked", "confirmed", "completed", "cancelled", "no_show"] as const;
 
 export default async function ClientComptePage() {
+  const t = await getTranslations("public.client.account");
+  const tCommon = await getTranslations("common");
   const tenant = await getTenantContext();
   if (!tenant) redirect("/");
 
@@ -52,7 +49,7 @@ export default async function ClientComptePage() {
         action={
           <form action={clientLogout}>
             <Button variant="outline" type="submit" className="h-9">
-              Deconnexion
+              {t("logout")}
             </Button>
           </form>
         }
@@ -60,36 +57,36 @@ export default async function ClientComptePage() {
         <span className="text-sm text-slate-600">{session.email}</span>
       </ListToolbar>
 
-      <DataTable
-        empty={appointments.length === 0 ? "Aucun rendez-vous a venir." : undefined}
-      >
+      <DataTable empty={appointments.length === 0 ? t("empty") : undefined}>
         <table className="w-full text-sm">
           <thead className="border-b border-slate-200">
             <tr>
-              <th className={dataTableHead}>Prestation</th>
-              <th className={dataTableHead}>Date</th>
-              <th className={`w-28 ${dataTableHead}`}>Statut</th>
-              <th className={`w-28 text-right ${dataTableHead}`}>Actions</th>
+              <th className={dataTableHead}>{t("columns.service")}</th>
+              <th className={dataTableHead}>{t("columns.date")}</th>
+              <th className={`w-28 ${dataTableHead}`}>{t("columns.status")}</th>
+              <th className={`w-28 text-right ${dataTableHead}`}>{t("columns.actions")}</th>
             </tr>
           </thead>
           <tbody>
             {appointments.map((a) => (
               <tr key={a.id} className={dataTableRow}>
                 <td className={`font-medium text-slate-900 ${dataTableCell}`}>
-                  {a.inst_services?.name ?? "Rendez-vous"}
+                  {a.inst_services?.name ?? tCommon("appointment")}
                 </td>
                 <td className={`text-slate-600 ${dataTableCell}`}>
                   {formatDateTime(a.starts_at)}
                 </td>
                 <td className={`text-slate-600 ${dataTableCell}`}>
-                  {STATUS[a.status] ?? a.status}
+                  {STATUS_KEYS.includes(a.status as (typeof STATUS_KEYS)[number])
+                    ? t(`status.${a.status as (typeof STATUS_KEYS)[number]}`)
+                    : a.status}
                 </td>
                 <td className={`text-right ${dataTableCell}`}>
                   {a.status !== "cancelled" && a.status !== "completed" ? (
                     <form action={cancelClientAppointment}>
                       <input type="hidden" name="id" value={a.id} />
                       <Button variant="outline" type="submit" className="h-8 text-red-600">
-                        Annuler
+                        {t("cancel")}
                       </Button>
                     </form>
                   ) : null}

@@ -6,38 +6,43 @@ import {
   isPlatformAdmin,
 } from "@/lib/auth/session";
 import { getEnabledModuleIds, getTenantContext } from "@/lib/tenant/context";
-import { getAiActionsFor, getNavFor } from "@/modules";
+import { getNavFor } from "@/modules";
 import { getAppShellData } from "@/lib/auth/team-session";
 import { PosSessionBanner } from "@/components/app-shell/pos-session-status";
 import { DashboardAnalytics } from "@/components/institut/dashboard-analytics";
 import { fetchDashboardSnapshot } from "@/lib/institut/dashboard-stats";
-import { Button } from "@/components/ui/button";
 import { ListPanel } from "@/components/ui/list-panel";
 
 const QUICK_ACTION_KEYS = [
   {
     href: "/institut/rendez-vous",
     labelKey: "appointments",
+    descriptionKey: "appointments",
   },
   {
     href: "/institut/caisse",
     labelKey: "pos",
+    descriptionKey: "pos",
   },
   {
     href: "/institut/clients",
     labelKey: "clients",
+    descriptionKey: "clients",
   },
   {
     href: "/institut/prestations",
     labelKey: "services",
+    descriptionKey: "services",
   },
   {
     href: "/academie/formations",
     labelKey: "courses",
+    descriptionKey: "courses",
   },
   {
     href: "/academie/eleves",
     labelKey: "students",
+    descriptionKey: "students",
   },
 ] as const;
 
@@ -76,7 +81,6 @@ export default async function DashboardPage() {
 
   const enabledModuleIds = tenant ? await getEnabledModuleIds(tenant.id) : [];
   const nav = role ? getNavFor(enabledModuleIds, role) : [];
-  const aiActions = role ? getAiActionsFor(enabledModuleIds, role) : [];
   const navHrefs = new Set(nav.map((item) => item.href));
 
   const quickActions = QUICK_ACTION_KEYS.filter((action) =>
@@ -86,6 +90,7 @@ export default async function DashboardPage() {
     .map((action) => ({
       href: action.href,
       label: t(`quickActions.${action.labelKey}.label`),
+      description: t(`quickActions.${action.descriptionKey}.description`),
     }));
 
   const shell = await getAppShellData();
@@ -105,8 +110,6 @@ export default async function DashboardPage() {
     );
   }
 
-  const hasHeaderActions = quickActions.length > 0 || aiActions.length > 0;
-
   return (
     <ListPanel>
       {hasInstitut ? (
@@ -118,31 +121,32 @@ export default async function DashboardPage() {
       ) : null}
 
       <div className="border-b border-slate-200 px-4 py-4 lg:px-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-base font-semibold text-slate-900">
-            {tenant?.name ?? "BeautyHub"}
-          </p>
-          {hasHeaderActions ? (
-            <div className="flex flex-wrap items-center gap-2">
+        <p className="text-base font-semibold text-slate-900">
+          {tenant?.name ?? "BeautyHub"}
+        </p>
+
+        {quickActions.length > 0 ? (
+          <div className="mt-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              {t("shortcuts.title")}
+            </p>
+            <p className="mt-0.5 text-sm text-slate-500">{t("shortcuts.description")}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {quickActions.map((action) => (
                 <Link
                   key={action.href}
                   href={action.href}
-                  className="inline-flex h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+                  className="flex min-h-[3.25rem] flex-col justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 transition-colors hover:border-slate-300 hover:bg-slate-50"
                 >
-                  {action.label}
+                  <span className="text-sm font-medium text-slate-900">{action.label}</span>
+                  <span className="mt-0.5 truncate text-xs text-slate-500">
+                    {action.description}
+                  </span>
                 </Link>
               ))}
-              {aiActions.length > 0 ? (
-                <Link href="/assistant" className="shrink-0">
-                  <Button variant="outline" className="h-8 px-3">
-                    {t("assistant.openShort")}
-                  </Button>
-                </Link>
-              ) : null}
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </div>
 
       {dashboardSnapshot ? (

@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const base =
-  "h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white";
+  "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20";
 
 export function Input({
   className,
@@ -41,10 +41,7 @@ export function Field({
 }) {
   return (
     <div className="space-y-1">
-      <label
-        htmlFor={htmlFor}
-        className="text-sm font-medium text-slate-700 dark:text-slate-300"
-      >
+      <label htmlFor={htmlFor} className="text-sm font-medium text-slate-700">
         {label}
       </label>
       {children}

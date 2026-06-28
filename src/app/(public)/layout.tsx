@@ -13,20 +13,20 @@ export default async function PublicLayout({
   const branding = tenant.branding as { appName?: string; primaryColor?: string };
 
   return (
-    <div className="min-h-dvh bg-slate-50 dark:bg-slate-950">
-      <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+    <div className="min-h-dvh bg-slate-50">
+      <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <div>
-            <p className="text-lg font-semibold text-slate-900 dark:text-white">
+            <p className="text-lg font-semibold text-slate-900">
               {branding.appName ?? tenant.name}
             </p>
             <p className="text-xs text-slate-500">Reservation en ligne</p>
           </div>
           <div className="flex gap-3 text-sm">
-            <Link href="/reserver" className="text-slate-600 hover:underline dark:text-slate-300">
+            <Link href="/reserver" className="text-slate-600 hover:text-violet-700 hover:underline">
               Reserver
             </Link>
-            <Link href="/client/login" className="text-slate-600 hover:underline dark:text-slate-300">
+            <Link href="/client/login" className="text-slate-600 hover:text-violet-700 hover:underline">
               Mon compte
             </Link>
           </div>

@@ -50,3 +50,80 @@ export async function getRoleForTenant(
   if (brandOwner) return "brand_owner";
   return null;
 }
+
+/** Tenants accessibles pour l'utilisateur courant (hors domaine racine). */
+export const getAccessibleTenants = cache(async () => {
+  const memberships = await getMemberships();
+  if (memberships.length === 0) return [];
+
+  const supabase = await createClient();
+  const platformAdmin = memberships.some((m) => m.role === "platform_admin");
+  if (platformAdmin) {
+    const { data } = await supabase
+      .from("tenants")
+      .select("id, name, slug")
+      .order("name");
+    return (data ?? []).map((t) => ({
+      id: t.id,
+      name: t.name,
+      slug: t.slug,
+      role: "platform_admin" as TeamRole,
+    }));
+  }
+
+  const brandIds = [
+    ...new Set(
+      memberships
+        .filter((m) => m.role === "brand_owner" && m.brand_id)
+        .map((m) => m.brand_id as string),
+    ),
+  ];
+  const tenantIds = [
+    ...new Set(
+      memberships
+        .filter((m) => m.tenant_id)
+        .map((m) => m.tenant_id as string),
+    ),
+  ];
+
+  const results: { id: string; name: string; slug: string; role: TeamRole }[] =
+    [];
+
+  if (brandIds.length > 0) {
+    const { data } = await supabase
+      .from("tenants")
+      .select("id, name, slug, brand_id")
+      .in("brand_id", brandIds)
+      .order("name");
+    for (const t of data ?? []) {
+      results.push({
+        id: t.id,
+        name: t.name,
+        slug: t.slug,
+        role: "brand_owner",
+      });
+    }
+  }
+
+  if (tenantIds.length > 0) {
+    const { data } = await supabase
+      .from("tenants")
+      .select("id, name, slug")
+      .in("id", tenantIds)
+      .order("name");
+    for (const t of data ?? []) {
+      const mem = memberships.find((m) => m.tenant_id === t.id);
+      if (!mem) continue;
+      if (!results.some((r) => r.id === t.id)) {
+        results.push({
+          id: t.id,
+          name: t.name,
+          slug: t.slug,
+          role: mem.role,
+        });
+      }
+    }
+  }
+
+  return results;
+});

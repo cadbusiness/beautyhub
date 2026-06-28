@@ -11,12 +11,10 @@ export default async function AdminLayout({
   const session = await requirePlatformAdmin();
 
   return (
-    <div className="flex min-h-dvh bg-slate-50 dark:bg-slate-950">
-      <aside className="flex w-60 flex-col border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="flex min-h-dvh bg-slate-50">
+      <aside className="flex w-60 flex-col border-r border-slate-200 bg-white p-4">
         <div className="px-2 pb-4">
-          <p className="text-sm font-semibold text-slate-900 dark:text-white">
-            BeautyHub
-          </p>
+          <p className="text-sm font-semibold text-slate-900">BeautyHub</p>
           <p className="text-xs text-slate-500">Administration plateforme</p>
         </div>
         <nav className="flex-1 space-y-1">
@@ -24,7 +22,7 @@ export default async function AdminLayout({
           <NavLink href="/admin/tenants" label="Instituts" />
           <NavLink href="/admin/plans" label="Formules" />
         </nav>
-        <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
+        <div className="border-t border-slate-200 pt-4">
           <p className="px-2 pb-2 text-xs text-slate-400">{session.email}</p>
           <form action={signOut}>
             <Button variant="outline" type="submit" className="w-full">

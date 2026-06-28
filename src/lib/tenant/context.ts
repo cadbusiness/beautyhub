@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { getTenantSlugFromCookie } from "./cookie";
 import { parseTenantIdentifier } from "./resolve";
 
 export interface TenantContext {
@@ -21,9 +22,11 @@ export const getTenantContext = cache(async (): Promise<TenantContext | null> =>
   const host = headerList.get("host") ?? "";
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "localhost:3000";
 
-  const { host: normalizedHost, slug } = parseTenantIdentifier(host, rootDomain);
-  if (!slug && normalizedHost === stripPort(rootDomain)) {
-    return null;
+  let { host: normalizedHost, slug } = parseTenantIdentifier(host, rootDomain);
+  const onRootDomain = !slug && normalizedHost === stripPort(rootDomain);
+  if (onRootDomain) {
+    slug = (await getTenantSlugFromCookie()) ?? null;
+    if (!slug) return null;
   }
 
   const supabase = await createClient();

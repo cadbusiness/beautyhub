@@ -61,6 +61,37 @@ Variables d'environnement (toutes pilotees par env pour la portabilite self-host
 - `SUPABASE_SERVICE_ROLE_KEY` (operations admin serveur, jamais expose au client)
 - `NEXT_PUBLIC_ROOT_DOMAIN` (resolution des sous-domaines)
 - `CONNECTIONS_ENCRYPTION_KEY` (chiffrement des credentials d'integrations)
+- `NEXT_PUBLIC_SHOW_TEST_ACCOUNTS=true` (optionnel, affiche les comptes de test sur `/login`)
+
+## Deploiement Vercel
+
+```bash
+vercel login
+cp .env.example .env.local   # remplir Supabase + secrets
+bash scripts/push-vercel-env.sh
+vercel --prod
+```
+
+Sur le domaine racine (`beautyhub-seven.vercel.app`), choisis l'institut depuis le
+tableau de bord apres connexion. En local : `demo.localhost:3000` ou cookie tenant.
+
+## Comptes de test
+
+Apres migrations, creer les utilisateurs :
+
+```bash
+npm run seed:test-users
+```
+
+| Email | Role | Institut |
+| --- | --- | --- |
+| `admin@beautyhub.test` | Super admin plateforme | — |
+| `brand@beautyhub.test` | Proprietaire marque | Tous (brand plateforme) |
+| `owner@demo.test` | Proprietaire | Institut Demo |
+| `staff@demo.test` | Staff | Institut Demo |
+| `coach@demo.test` | Coach | Institut Demo |
+
+Mot de passe commun (dev/staging) : `BeautyHub2026!`
 
 ## Roadmap
 

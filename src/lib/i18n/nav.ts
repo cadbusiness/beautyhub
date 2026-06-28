@@ -5,6 +5,8 @@ const NAV_MESSAGE_KEYS = {
   "/institut/clients": "institutClients",
   "/institut/equipe": "institutTeam",
   "/institut/caisse": "institutPos",
+  "/institut/caisse/session": "institutPosSession",
+  "/institut/caisse/bons": "institutPosVouchers",
   "/institut/caisse/historique": "institutPosHistory",
   "/institut/caisse/produits": "institutPosProducts",
   "/institut/parametres": "institutSettings",

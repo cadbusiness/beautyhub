@@ -4,6 +4,8 @@ import { navMessageKey } from "@/lib/i18n/nav";
 
 const TAB_HREFS = [
   { href: "/institut/caisse", exact: true as const },
+  { href: "/institut/caisse/session" },
+  { href: "/institut/caisse/bons" },
   { href: "/institut/caisse/historique" },
   { href: "/institut/caisse/produits" },
 ];

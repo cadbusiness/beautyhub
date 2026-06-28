@@ -1,13 +1,9 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import Link from "next/link";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  checkoutCash,
-  checkoutCardManual,
-  type ActionResult,
-} from "../caisse-actions";
-import { Button } from "@/components/ui/button";
+import { checkoutPos, type ActionResult } from "../caisse-actions";
 import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { formatPrice } from "@/lib/utils";
@@ -16,11 +12,17 @@ import {
   type PosCatalogItem,
   type PosCategory,
 } from "@/lib/institut/pos";
-import { StripePosPayment } from "./stripe-pos-payment";
+import { computeCartTotals } from "@/lib/institut/pos-totals";
+import {
+  vatRateForLineType,
+  type PosSettings,
+} from "@/lib/institut/pos-settings";
+import { CheckoutPanel } from "./checkout-panel";
 
 interface Option {
   id: string;
   label: string;
+  clientId?: string;
 }
 
 const initial: ActionResult = {};
@@ -28,26 +30,54 @@ const initial: ActionResult = {};
 export function PosTerminal({
   catalog,
   clients,
+  staff,
+  appointments,
+  settings,
+  sessionOpen,
+  requireSession,
   stripeEnabled,
   stripePublishableKey,
   stripeAccountId,
 }: {
   catalog: PosCatalogItem[];
   clients: Option[];
+  staff: Option[];
+  appointments: Option[];
+  settings: PosSettings;
+  sessionOpen: boolean;
+  requireSession: boolean;
   stripeEnabled?: boolean;
   stripePublishableKey?: string;
   stripeAccountId?: string;
 }) {
   const t = useTranslations("pos.terminal");
-  const tCommon = useTranslations("common");
   const [cart, setCart] = useState<Record<string, number>>({});
   const [tab, setTab] = useState<PosCategory>("all");
   const [query, setQuery] = useState("");
   const [clientId, setClientId] = useState("");
+  const [staffId, setStaffId] = useState("");
+  const [appointmentId, setAppointmentId] = useState("");
   const [notes, setNotes] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [cashState, cashAction, cashPending] = useActionState(checkoutCash, initial);
-  const [cardState, cardAction, cardPending] = useActionState(checkoutCardManual, initial);
+  const [cartDiscountEuros, setCartDiscountEuros] = useState("0");
+  const [checkoutState, checkoutAction, checkoutPending] = useActionState(
+    checkoutPos,
+    initial,
+  );
+  const [lastSale, setLastSale] = useState<ActionResult | null>(null);
+  const lastRecordedSale = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (
+      checkoutState.ok &&
+      checkoutState.saleId &&
+      checkoutState.saleId !== lastRecordedSale.current
+    ) {
+      lastRecordedSale.current = checkoutState.saleId;
+      setLastSale(checkoutState);
+      setCart({});
+      setCartDiscountEuros("0");
+    }
+  }, [checkoutState]);
 
   const tabs: { id: PosCategory; label: string }[] = [
     { id: "all", label: t("tabs.all") },
@@ -62,7 +92,6 @@ export function PosTerminal({
     internal: t("categories.internal"),
   };
 
-  const total = useMemo(() => cartTotal(cart, catalog), [cart, catalog]);
   const cartJson = JSON.stringify(cart);
   const cartEmpty = Object.keys(cart).length === 0;
 
@@ -85,13 +114,57 @@ export function PosTerminal({
       .filter((l) => l.item);
   }, [cart, catalog]);
 
+  const resolvedForTotals = useMemo(() => {
+    const byKey = new Map(catalog.map((i) => [i.key, i]));
+    return Object.entries(cart).flatMap(([key, qty]) => {
+      const item = byKey.get(key);
+      if (!item) return [];
+      return [
+        {
+          key,
+          type: item.type,
+          name: item.name,
+          quantity: qty,
+          unit_price_cents: item.price_cents,
+          product_id: item.type === "product" ? item.id : null,
+          service_id: item.type === "service" ? item.id : null,
+          woo_id: null,
+        },
+      ];
+    });
+  }, [cart, catalog]);
+
+  const discountCents = useMemo(() => {
+    const n = Number.parseFloat(cartDiscountEuros.replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0;
+  }, [cartDiscountEuros]);
+
+  const totals = useMemo(() => {
+    if (resolvedForTotals.length === 0) {
+      return {
+        subtotal_cents: 0,
+        vat_cents: 0,
+        total_cents: 0,
+        cart_discount_cents: 0,
+        gross_cents: 0,
+        lines: [],
+      };
+    }
+    return computeCartTotals(resolvedForTotals, {
+      priceDisplay: settings.price_display,
+      vatRateForType: (type) => vatRateForLineType(settings, type),
+      cartDiscountCents: discountCents,
+    });
+  }, [resolvedForTotals, settings, discountCents]);
+
+  const catalogTotal = useMemo(() => cartTotal(cart, catalog), [cart, catalog]);
+
   function add(key: string) {
-    setMessage(null);
+    setLastSale(null);
     setCart((c) => ({ ...c, [key]: (c[key] ?? 0) + 1 }));
   }
 
   function remove(key: string) {
-    setMessage(null);
     setCart((c) => {
       const next = { ...c };
       const q = (next[key] ?? 0) - 1;
@@ -103,26 +176,20 @@ export function PosTerminal({
 
   function clearCart() {
     setCart({});
-    setMessage(null);
+    setCartDiscountEuros("0");
   }
 
-  function handleSuccess(msg: string) {
+  function handleStripeSuccess(message: string) {
     setCart({});
-    setMessage(msg);
+    setCartDiscountEuros("0");
+    setNotes("");
+    void message;
   }
 
-  const actionError = cashState.error ?? cardState.error;
-  const actionOk = cashState.ok ? cashState.message : cardState.ok ? cardState.message : null;
-  const pending = cashPending || cardPending;
-
-  const showStripe =
-    stripeEnabled &&
-    stripePublishableKey &&
-    stripeAccountId &&
-    !cartEmpty;
+  const tCheckout = useTranslations("pos.checkout");
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
           {tabs.map((item) => (
@@ -195,6 +262,36 @@ export function PosTerminal({
       </div>
 
       <Card className="h-fit space-y-4 lg:sticky lg:top-4">
+        {lastSale?.ok && lastSale.saleId ? (
+          <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+            <p>{lastSale.message}</p>
+            <Link
+              href={`/institut/caisse/ticket/${lastSale.saleId}`}
+              className="mt-1 inline-block underline"
+              target="_blank"
+            >
+              {tCheckout("viewTicket")}
+            </Link>
+          </div>
+        ) : null}
+
+        {requireSession && !sessionOpen ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            {t("sessionRequired")}{" "}
+            <Link href="/institut/caisse/session" className="underline">
+              {t("openSession")}
+            </Link>
+          </div>
+        ) : null}
+
+        {!requireSession && !sessionOpen ? (
+          <p className="text-xs text-slate-400">
+            <Link href="/institut/caisse/session" className="underline">
+              {t("noSessionHint")}
+            </Link>
+          </p>
+        ) : null}
+
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             {t("cart.title")}
@@ -243,16 +340,52 @@ export function PosTerminal({
           </ul>
         )}
 
-        <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-          <span className="text-sm text-slate-500">{t("cart.total")}</span>
-          <span className="text-xl font-semibold text-slate-900">
-            {formatPrice(total)}
-          </span>
-        </div>
+        {!cartEmpty ? (
+          <div className="space-y-2">
+            <label className="block text-xs text-slate-500" htmlFor="cart-discount">
+              {t("cart.discount")}
+            </label>
+            <Input
+              id="cart-discount"
+              type="number"
+              min={0}
+              step="0.01"
+              max={(catalogTotal / 100).toFixed(2)}
+              value={cartDiscountEuros}
+              onChange={(e) => setCartDiscountEuros(e.target.value)}
+            />
+          </div>
+        ) : null}
 
-        {message ? <p className="text-sm text-green-600">{message}</p> : null}
-        {actionError ? <p className="text-sm text-red-600">{actionError}</p> : null}
-        {actionOk && !message ? <p className="text-sm text-green-600">{actionOk}</p> : null}
+        <Select
+          value={staffId}
+          onChange={(e) => setStaffId(e.target.value)}
+          aria-label={t("cart.staffAria")}
+        >
+          <option value="">{t("cart.noStaff")}</option>
+          {staff.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.label}
+            </option>
+          ))}
+        </Select>
+
+        <Select
+          value={appointmentId}
+          onChange={(e) => {
+            setAppointmentId(e.target.value);
+            const appt = appointments.find((a) => a.id === e.target.value);
+            if (appt?.clientId) setClientId(appt.clientId);
+          }}
+          aria-label={t("cart.appointmentAria")}
+        >
+          <option value="">{t("cart.noAppointment")}</option>
+          {appointments.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.label}
+            </option>
+          ))}
+        </Select>
 
         <Select
           value={clientId}
@@ -274,51 +407,35 @@ export function PosTerminal({
           rows={2}
         />
 
-        <form action={cashAction} className="space-y-2">
-          <input type="hidden" name="cart" value={cartJson} />
-          <input type="hidden" name="client_id" value={clientId} />
-          <input type="hidden" name="notes" value={notes} />
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={pending || cartEmpty}
-            onClick={() => setMessage(null)}
-          >
-            {cashPending
-              ? t("checkout.cashPending")
-              : t("checkout.cash", { total: formatPrice(total) })}
-          </Button>
-        </form>
-
-        <form action={cardAction}>
-          <input type="hidden" name="cart" value={cartJson} />
-          <input type="hidden" name="client_id" value={clientId} />
-          <input type="hidden" name="notes" value={notes} />
-          <Button
-            type="submit"
-            variant="outline"
-            className="w-full"
-            disabled={pending || cartEmpty}
-            onClick={() => setMessage(null)}
-          >
-            {cardPending
-              ? t("checkout.cardPending")
-              : t("checkout.card", { total: formatPrice(total) })}
-          </Button>
-        </form>
-
-        {showStripe ? (
-          <StripePosPayment
+        {!cartEmpty ? (
+          <CheckoutPanel
             cartJson={cartJson}
             clientId={clientId}
-            totalCents={total}
-            clients={clients}
-            publishableKey={stripePublishableKey}
+            staffId={staffId}
+            appointmentId={appointmentId}
+            notes={notes}
+            cartDiscountEuros={cartDiscountEuros}
+            totals={totals}
+            settings={settings}
+            stripeEnabled={Boolean(stripeEnabled)}
+            stripePublishableKey={stripePublishableKey}
             stripeAccountId={stripeAccountId}
             disabled={cartEmpty}
-            onSuccess={handleSuccess}
+            checkoutAction={checkoutAction}
+            checkoutPending={checkoutPending}
+            checkoutState={checkoutState}
+            onSuccess={handleStripeSuccess}
           />
-        ) : null}
+        ) : (
+          <p className="text-sm text-slate-400">{t("cart.addToCheckout")}</p>
+        )}
+
+        <Link
+          href="/compte/institut/caisse"
+          className="block text-center text-xs text-slate-400 hover:text-slate-600"
+        >
+          {t("cart.settingsLink")}
+        </Link>
       </Card>
     </div>
   );

@@ -19,6 +19,8 @@ import {
 } from "@/lib/stripe/index";
 import { getRequestOrigin } from "@/lib/stripe/origin";
 import { parsePosCart, resolveCartLines } from "@/lib/institut/pos";
+import { getPosSettings, vatRateForLineType } from "@/lib/institut/pos-settings";
+import { computeCartTotals, parseCartDiscountCents } from "@/lib/institut/pos-totals";
 import { processPosCheckout } from "./caisse-actions";
 
 export interface ActionResult {
@@ -138,6 +140,7 @@ export interface PaymentIntentResult {
 /** Cree un PaymentIntent sur le compte Connect du tenant. */
 export async function createStripePaymentIntent(
   cartJson: string,
+  cartDiscountEuros = "0",
 ): Promise<PaymentIntentResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
@@ -155,20 +158,25 @@ export async function createStripePaymentIntent(
   if (Object.keys(cart).length === 0) return { error: t("emptyCart") };
 
   const supabase = await createClient();
+  const settings = await getPosSettings(supabase, session.tenant.id);
   let lines;
   try {
     lines = await resolveCartLines(supabase, session.tenant.id, cart);
   } catch (e) {
     return { error: await translateCartLineError(e) };
   }
-  const total = lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0);
-  if (total <= 0) return { error: t("invalidAmount") };
+  const totals = computeCartTotals(lines, {
+    priceDisplay: settings.price_display,
+    vatRateForType: (type) => vatRateForLineType(settings, type),
+    cartDiscountCents: parseCartDiscountCents(cartDiscountEuros),
+  });
+  if (totals.total_cents <= 0) return { error: t("invalidAmount") };
 
   const stripe = getStripe();
   const paymentIntent = await stripe.paymentIntents.create(
     {
-      amount: total,
-      currency: "eur",
+      amount: totals.total_cents,
+      currency: settings.currency,
       automatic_payment_methods: { enabled: true },
       metadata: { tenant_id: session.tenant.id },
     },
@@ -182,7 +190,7 @@ export async function createStripePaymentIntent(
   return {
     clientSecret: paymentIntent.client_secret,
     paymentIntentId: paymentIntent.id,
-    totalCents: total,
+    totalCents: totals.total_cents,
   };
 }
 
@@ -191,6 +199,7 @@ export async function finalizeStripeCheckout(
   paymentIntentId: string,
   cartJson: string,
   clientId: string | null,
+  cartDiscountEuros = "0",
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
@@ -207,27 +216,27 @@ export async function finalizeStripeCheckout(
     return { error: t("paymentNotConfirmed") };
   }
 
-  let cart: Record<string, number>;
-  try {
-    cart = parsePosCart(cartJson);
-  } catch {
-    return { error: t("invalidCart") };
-  }
-
+  const supabase = await createClient();
+  const settings = await getPosSettings(supabase, session.tenant.id);
   let lines;
   try {
-    const supabase = await createClient();
-    lines = await resolveCartLines(supabase, session.tenant.id, cart);
+    lines = await resolveCartLines(supabase, session.tenant.id, parsePosCart(cartJson));
   } catch (e) {
     return { error: await translateCartLineError(e) };
   }
 
-  const total = lines.reduce((s, l) => s + l.unit_price_cents * l.quantity, 0);
-  if (total !== pi.amount) {
+  const totals = computeCartTotals(lines, {
+    priceDisplay: settings.price_display,
+    vatRateForType: (type) => vatRateForLineType(settings, type),
+    cartDiscountCents: parseCartDiscountCents(cartDiscountEuros),
+  });
+  if (totals.total_cents !== pi.amount) {
     return { error: t("cartAmountMismatch") };
   }
 
   return processPosCheckout(cartJson, clientId, "stripe", {
     stripePaymentIntentId: paymentIntentId,
+    cartDiscountCents: totals.cart_discount_cents,
+    totalCents: totals.total_cents,
   });
 }

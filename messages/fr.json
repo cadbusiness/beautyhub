@@ -117,6 +117,8 @@
     "institutClients": "Clients",
     "institutTeam": "Équipe",
     "institutPos": "Caisse",
+    "institutPosSession": "Session",
+    "institutPosVouchers": "Bons & avoirs",
     "institutPosHistory": "Historique caisse",
     "institutPosProducts": "Produits internes",
     "institutSettings": "Paramètres",
@@ -150,7 +152,8 @@
       "security": "Sécurité",
       "institut": "Institut",
       "woocommerce": "WooCommerce",
-      "stripe": "Stripe Connect"
+      "stripe": "Stripe Connect",
+      "pos": "Caisse"
     },
     "profile": {
       "sectionTitle": "Profil",
@@ -348,7 +351,34 @@
       "accountAlreadyExists": "Un compte existe déjà pour cet email.",
       "accountCreateError": "Erreur création compte.",
       "invalidJsonParams": "JSON invalide pour les paramètres.",
-      "workingHoursSaved": "Horaires enregistrés."
+      "workingHoursSaved": "Horaires enregistrés.",
+      "posSettingsSaved": "Paramètres caisse enregistrés.",
+      "noPayments": "Ajoutez au moins un paiement.",
+      "overpaid": "Le total des paiements dépasse le montant dû.",
+      "invalidPayments": "Paiements invalides.",
+      "paymentMethodDisabled": "Moyen de paiement désactivé : {method}",
+      "sessionAlreadyOpen": "Une session est déjà ouverte.",
+      "sessionOpened": "Session de caisse ouverte.",
+      "noOpenSession": "Aucune session ouverte — ouvrez la caisse d'abord.",
+      "reasonRequired": "Motif requis.",
+      "invalidMovementType": "Type de mouvement invalide.",
+      "movementRecorded": "Mouvement enregistré.",
+      "reportFailed": "Impossible de générer le rapport.",
+      "sessionClosed": "Clôture Z effectuée",
+      "giftCardIssued": "Bon-cadeau émis",
+      "creditNoteCreated": "Avoir créé",
+      "creditAmountInvalid": "Montant d'avoir invalide.",
+      "saleNotFound": "Vente introuvable.",
+      "saleNotPartial": "Cette vente n'est pas un acompte en attente.",
+      "balancePaid": "Solde encaissé",
+      "giftCardInvalid": "Bon-cadeau invalide.",
+      "giftCardInsufficient": "Solde bon-cadeau insuffisant.",
+      "giftCardExpired": "Bon-cadeau expiré.",
+      "giftCardCodeRequired": "Code bon-cadeau requis.",
+      "creditNoteInvalid": "Avoir invalide.",
+      "creditNoteInsufficient": "Solde avoir insuffisant.",
+      "creditNoteExpired": "Avoir expiré.",
+      "creditNoteRefRequired": "Numéro d'avoir requis."
     },
     "scheduling": {
       "conflict": {
@@ -495,7 +525,51 @@
       "linkProducts": "Produits internes",
       "linkSettings": "Paramètres",
       "wooNotConnected": "WooCommerce non connecté — seules les prestations et produits internes sont disponibles.",
-      "connectShop": "Connecter la boutique"
+      "connectShop": "Connecter la boutique",
+      "settingsButton": "Paramètres caisse"
+    },
+    "posSettings": {
+      "title": "Paramètres caisse",
+      "description": "TVA, moyens de paiement, mentions légales et modèle de ticket.",
+      "configured": "Configurable",
+      "form": {
+        "saved": "Paramètres enregistrés.",
+        "generalTitle": "Général",
+        "country": "Pays",
+        "currency": "Devise",
+        "priceDisplay": "Affichage des prix",
+        "priceTtc": "TTC (prix catalogue incluant la TVA)",
+        "priceHt": "HT (TVA ajoutée à l'encaissement)",
+        "fiscalRegime": "Régime fiscal",
+        "regimeStandard": "Standard",
+        "regimeNf525": "France — préparation NF525",
+        "regimeBeVat": "Belgique — TVA",
+        "regimeBeGks": "Belgique — GKS (horeca)",
+        "vatTitle": "TVA",
+        "defaultVat": "Taux par défaut (%)",
+        "serviceVat": "Prestations (%)",
+        "productVat": "Produits (%)",
+        "paymentsTitle": "Moyens de paiement",
+        "paymentMethods": {
+          "cash": "Espèces",
+          "card": "Carte TPE",
+          "transfer": "Virement",
+          "gift_card": "Bon-cadeau",
+          "stripe": "Stripe (en ligne)"
+        },
+        "legalTitle": "Mentions légales",
+        "legalName": "Raison sociale",
+        "legalAddress": "Adresse",
+        "vatNumber": "N° TVA intracommunautaire",
+        "siret": "SIRET / BCE",
+        "ticketTitle": "Ticket de caisse",
+        "ticketPrefix": "Préfixe numérotation",
+        "ticketHeader": "En-tête ticket",
+        "ticketFooter": "Pied de ticket",
+        "sessionTitle": "Session de caisse",
+        "requireOpenSession": "Session obligatoire pour encaisser",
+        "defaultOpeningFloat": "Fond de caisse par défaut (€)"
+      }
     },
     "settings": {
       "securityNote": "Les clés API WooCommerce sont chiffrées (AES-256-GCM) avant stockage. Stripe Connect utilise un compte Express par institut ; les paiements sont routés vers ce compte."
@@ -857,15 +931,53 @@
         "clear": "Vider",
         "empty": "Aucun article.",
         "total": "Total",
+        "discount": "Remise panier (€)",
         "noClient": "— Sans client —",
         "notePlaceholder": "Note interne (optionnel)",
-        "clientAria": "Client"
+        "clientAria": "Client",
+        "staffAria": "Praticien",
+        "noStaff": "— Sans praticien —",
+        "appointmentAria": "Rendez-vous",
+        "noAppointment": "— Sans RDV —",
+        "addToCheckout": "Ajoute des articles pour encaisser.",
+        "settingsLink": "Paramètres caisse →"
       },
+      "sessionRequired": "Session caisse requise.",
+      "openSession": "Ouvrir la caisse",
+      "noSessionHint": "Ouvrir une session pour le suivi espèces",
       "checkout": {
         "cashPending": "Encaissement…",
         "cash": "Espèces · {total}",
         "cardPending": "Enregistrement…",
         "card": "Carte TPE · {total}"
+      }
+    },
+    "checkout": {
+      "subtotalHt": "Sous-total HT",
+      "vat": "TVA",
+      "discount": "Remise",
+      "totalTtc": "Total TTC",
+      "payments": "Paiements",
+      "methodAria": "Moyen de paiement",
+      "amountAria": "Montant",
+      "giftCodePlaceholder": "Code bon",
+      "fillRemaining": "Solde",
+      "addPayment": "Ajouter un moyen de paiement",
+      "overpaid": "Trop-perçu : {amount}",
+      "remaining": "Reste à payer : {amount}",
+      "viewTicket": "Voir le ticket",
+      "submitting": "Encaissement…",
+      "submit": "Encaisser {total}",
+      "submitPartial": "Acompte {paid} / {total}",
+      "pricesTtcHint": "Les prix catalogue sont TTC.",
+      "pricesHtHint": "Les prix catalogue sont HT — la TVA est calculée à l'encaissement.",
+      "creditNotePlaceholder": "N° avoir (AV-…)",
+      "methods": {
+        "cash": "Espèces",
+        "card": "Carte TPE",
+        "transfer": "Virement",
+        "gift_card": "Bon-cadeau",
+        "credit_note": "Avoir"
       }
     },
     "stripe": {
@@ -903,18 +1015,147 @@
     },
     "history": {
       "empty": "Aucune vente enregistrée.",
+      "viewTicket": "Ticket",
+      "paidShort": "payé",
+      "payBalance": "Solde",
+      "mixedPayments": "{count} paiements",
       "columns": {
         "date": "Date",
+        "ticket": "Ticket",
         "client": "Client",
         "items": "Articles",
+        "status": "Statut",
         "payment": "Paiement",
         "total": "Total"
+      },
+      "status": {
+        "paid": "Payé",
+        "partial": "Acompte"
       },
       "paymentMethods": {
         "cash": "Espèces",
         "card": "Carte TPE",
-        "stripe": "Stripe"
+        "stripe": "Stripe",
+        "transfer": "Virement",
+        "gift_card": "Bon-cadeau",
+        "credit_note": "Avoir",
+        "mixed": "Mixte",
+        "other": "Autre"
       }
+    },
+    "ticket": {
+      "noNumber": "Ticket",
+      "print": "Imprimer",
+      "vat": "TVA",
+      "item": "Article",
+      "qty": "Qté",
+      "total": "Total",
+      "subtotalHt": "Sous-total HT",
+      "discount": "Remise",
+      "vatAmount": "TVA",
+      "totalTtc": "Total TTC",
+      "paid": "Encaissé",
+      "payments": "Paiements",
+      "thanks": "Merci de votre visite !",
+      "methods": {
+        "cash": "Espèces",
+        "card": "Carte",
+        "stripe": "Stripe",
+        "transfer": "Virement",
+        "gift_card": "Bon-cadeau",
+        "credit_note": "Avoir",
+        "other": "Autre"
+      }
+    },
+    "session": {
+      "openTitle": "Ouvrir la caisse",
+      "openDescription": "Démarrez une session avec le fond de caisse initial.",
+      "sessionOpen": "Session en cours",
+      "openingFloat": "Fond de caisse",
+      "generateX": "Rapport X",
+      "byPayment": "Par moyen de paiement",
+      "movements": "Mouvements espèces",
+      "noMovements": "Aucun mouvement.",
+      "closeTitle": "Clôture Z",
+      "closeDescription": "Comptez les espèces en caisse et clôturez la journée.",
+      "reports": "Rapports générés",
+      "backToPos": "Retour caisse",
+      "stats": {
+        "sales": "Ventes",
+        "total": "CA TTC",
+        "expectedCash": "Espèces attendues",
+        "partial": "Acomptes"
+      },
+      "methods": {
+        "cash": "Espèces",
+        "card": "Carte",
+        "stripe": "Stripe",
+        "transfer": "Virement",
+        "gift_card": "Bon-cadeau",
+        "credit_note": "Avoir"
+      },
+      "movementTypes": {
+        "in": "Entrée",
+        "out": "Sortie",
+        "expense": "Note de frais"
+      },
+      "openForm": {
+        "float": "Fond de caisse (€)",
+        "submit": "Ouvrir la session",
+        "defaultHint": "Valeur par défaut : {amount}"
+      },
+      "movementForm": {
+        "types": { "in": "Entrée", "out": "Sortie", "expense": "Dépense" },
+        "reasonPlaceholder": "Motif (courses, retrait…)",
+        "submit": "Enregistrer"
+      },
+      "closeForm": {
+        "expected": "Espèces attendues",
+        "counted": "Espèces comptées (€)",
+        "notesPlaceholder": "Notes de clôture (optionnel)",
+        "submit": "Clôturer (Z)"
+      }
+    },
+    "vouchers": {
+      "issueGiftCard": "Émettre un bon-cadeau",
+      "issueCreditNote": "Créer un avoir",
+      "giftCardsTitle": "Bons-cadeaux",
+      "creditNotesTitle": "Avoirs",
+      "noGiftCards": "Aucun bon-cadeau.",
+      "noCreditNotes": "Aucun avoir.",
+      "columns": {
+        "code": "Code",
+        "balance": "Solde",
+        "number": "N°",
+        "remaining": "Restant",
+        "status": "Statut",
+        "date": "Date"
+      },
+      "status": {
+        "active": "Actif",
+        "depleted": "Épuisé",
+        "cancelled": "Annulé"
+      },
+      "giftForm": {
+        "amount": "Montant (€)",
+        "recipient": "Destinataire (optionnel)",
+        "submit": "Émettre le bon"
+      },
+      "creditForm": {
+        "selectSale": "Vente source",
+        "noSalesHint": "Aucune vente récente avec encaissement.",
+        "amount": "Montant avoir (€)",
+        "reason": "Motif",
+        "submit": "Créer l'avoir"
+      }
+    },
+    "balance": {
+      "sale": "Vente",
+      "total": "Total TTC",
+      "paid": "Déjà payé",
+      "remaining": "Reste à payer",
+      "pay": "Encaisser {amount}",
+      "back": "Historique"
     }
   },
   "landing": {

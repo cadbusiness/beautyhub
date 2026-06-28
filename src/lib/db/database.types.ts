@@ -311,6 +311,313 @@ export type Database = {
           },
         ]
       }
+      inst_cash_movements: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          movement_type: string
+          reason: string
+          session_id: string
+          tenant_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          movement_type: string
+          reason: string
+          session_id: string
+          tenant_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          movement_type?: string
+          reason?: string
+          session_id?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      inst_cash_reports: {
+        Row: {
+          created_at: string
+          id: string
+          report_number: string
+          report_type: string
+          session_id: string
+          snapshot: Json
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report_number: string
+          report_type: string
+          session_id: string
+          snapshot?: Json
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report_number?: string
+          report_type?: string
+          session_id?: string
+          snapshot?: Json
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      inst_cash_sessions: {
+        Row: {
+          closed_at: string | null
+          closing_counted_cents: number | null
+          closing_expected_cents: number | null
+          closing_variance_cents: number | null
+          created_at: string
+          id: string
+          notes: string | null
+          opened_at: string
+          opening_float_cents: number
+          status: string
+          tenant_id: string
+          updated_at: string
+          z_report_number: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          closing_counted_cents?: number | null
+          closing_expected_cents?: number | null
+          closing_variance_cents?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          opened_at?: string
+          opening_float_cents?: number
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          z_report_number?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          closing_counted_cents?: number | null
+          closing_expected_cents?: number | null
+          closing_variance_cents?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          opened_at?: string
+          opening_float_cents?: number
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          z_report_number?: string | null
+        }
+        Relationships: []
+      }
+      inst_credit_notes: {
+        Row: {
+          amount_cents: number
+          client_id: string | null
+          created_at: string
+          credit_number: string
+          expires_at: string | null
+          id: string
+          reason: string | null
+          remaining_cents: number
+          sale_id: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          client_id?: string | null
+          created_at?: string
+          credit_number: string
+          expires_at?: string | null
+          id?: string
+          reason?: string | null
+          remaining_cents: number
+          sale_id?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          client_id?: string | null
+          created_at?: string
+          credit_number?: string
+          expires_at?: string | null
+          id?: string
+          reason?: string | null
+          remaining_cents?: number
+          sale_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inst_gift_cards: {
+        Row: {
+          balance_cents: number
+          client_id: string | null
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          initial_balance_cents: number
+          recipient_name: string | null
+          sale_id: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          balance_cents: number
+          client_id?: string | null
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          initial_balance_cents: number
+          recipient_name?: string | null
+          sale_id?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          balance_cents?: number
+          client_id?: string | null
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          initial_balance_cents?: number
+          recipient_name?: string | null
+          sale_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inst_document_sequences: {
+        Row: {
+          doc_type: string
+          last_number: number
+          tenant_id: string
+        }
+        Insert: {
+          doc_type: string
+          last_number?: number
+          tenant_id: string
+        }
+        Update: {
+          doc_type?: string
+          last_number?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_document_sequences_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_pos_settings: {
+        Row: {
+          country_code: string
+          created_at: string
+          currency: string
+          default_vat_rate_bps: number
+          fiscal_regime: string
+          legal_address: string | null
+          legal_name: string | null
+          payment_methods: Json
+          price_display: string
+          product_vat_rate_bps: number
+          service_vat_rate_bps: number
+          siret: string | null
+          tenant_id: string
+          ticket_footer: string | null
+          ticket_header: string | null
+          ticket_prefix: string
+          updated_at: string
+          vat_number: string | null
+          require_open_session: boolean
+          default_opening_float_cents: number
+          credit_note_prefix: string
+          gift_card_prefix: string
+        }
+        Insert: {
+          country_code?: string
+          created_at?: string
+          currency?: string
+          default_vat_rate_bps?: number
+          fiscal_regime?: string
+          legal_address?: string | null
+          legal_name?: string | null
+          payment_methods?: Json
+          price_display?: string
+          product_vat_rate_bps?: number
+          service_vat_rate_bps?: number
+          siret?: string | null
+          tenant_id: string
+          ticket_footer?: string | null
+          ticket_header?: string | null
+          ticket_prefix?: string
+          updated_at?: string
+          vat_number?: string | null
+          require_open_session?: boolean
+          default_opening_float_cents?: number
+          credit_note_prefix?: string
+          gift_card_prefix?: string
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          currency?: string
+          default_vat_rate_bps?: number
+          fiscal_regime?: string
+          legal_address?: string | null
+          legal_name?: string | null
+          payment_methods?: Json
+          price_display?: string
+          product_vat_rate_bps?: number
+          service_vat_rate_bps?: number
+          siret?: string | null
+          tenant_id?: string
+          ticket_footer?: string | null
+          ticket_header?: string | null
+          ticket_prefix?: string
+          updated_at?: string
+          vat_number?: string | null
+          require_open_session?: boolean
+          default_opening_float_cents?: number
+          credit_note_prefix?: string
+          gift_card_prefix?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_pos_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_products: {
         Row: {
           created_at: string
@@ -408,8 +715,12 @@ export type Database = {
       inst_sale_items: {
         Row: {
           appointment_id: string | null
+          discount_cents: number
           id: string
           item_type: string
+          line_subtotal_cents: number
+          line_total_cents: number
+          line_vat_cents: number
           name: string
           product_id: string | null
           quantity: number
@@ -417,11 +728,16 @@ export type Database = {
           service_id: string | null
           tenant_id: string
           unit_price_cents: number
+          vat_rate_bps: number
         }
         Insert: {
           appointment_id?: string | null
+          discount_cents?: number
           id?: string
           item_type?: string
+          line_subtotal_cents?: number
+          line_total_cents?: number
+          line_vat_cents?: number
           name: string
           product_id?: string | null
           quantity?: number
@@ -429,11 +745,16 @@ export type Database = {
           service_id?: string | null
           tenant_id: string
           unit_price_cents?: number
+          vat_rate_bps?: number
         }
         Update: {
           appointment_id?: string | null
+          discount_cents?: number
           id?: string
           item_type?: string
+          line_subtotal_cents?: number
+          line_total_cents?: number
+          line_vat_cents?: number
           name?: string
           product_id?: string | null
           quantity?: number
@@ -441,6 +762,7 @@ export type Database = {
           service_id?: string | null
           tenant_id?: string
           unit_price_cents?: number
+          vat_rate_bps?: number
         }
         Relationships: [
           {
@@ -473,50 +795,128 @@ export type Database = {
           },
         ]
       }
+      inst_sale_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          credit_note_id: string | null
+          gift_card_id: string | null
+          id: string
+          method: string
+          reference: string | null
+          sale_id: string
+          tenant_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          credit_note_id?: string | null
+          gift_card_id?: string | null
+          id?: string
+          method: string
+          reference?: string | null
+          sale_id: string
+          tenant_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          credit_note_id?: string | null
+          gift_card_id?: string | null
+          id?: string
+          method?: string
+          reference?: string | null
+          sale_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_sale_payments_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "inst_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_sale_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_sales: {
         Row: {
+          amount_paid_cents: number
           appointment_id: string | null
+          cash_session_id: string | null
           client_id: string | null
           created_at: string
           currency: string
+          discount_cents: number
           id: string
           notes: string | null
+          parent_sale_id: string | null
           payment_method: string
+          sale_kind: string
+          staff_id: string | null
           status: string
           stripe_payment_intent_id: string | null
+          subtotal_cents: number
           tenant_id: string
+          ticket_number: string | null
           total_cents: number
           updated_at: string
+          vat_cents: number
           woo_order_id: number | null
         }
         Insert: {
+          amount_paid_cents?: number
           appointment_id?: string | null
+          cash_session_id?: string | null
           client_id?: string | null
           created_at?: string
           currency?: string
+          discount_cents?: number
           id?: string
           notes?: string | null
+          parent_sale_id?: string | null
           payment_method?: string
+          sale_kind?: string
+          staff_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
+          subtotal_cents?: number
           tenant_id: string
+          ticket_number?: string | null
           total_cents?: number
           updated_at?: string
+          vat_cents?: number
           woo_order_id?: number | null
         }
         Update: {
+          amount_paid_cents?: number
           appointment_id?: string | null
+          cash_session_id?: string | null
           client_id?: string | null
           created_at?: string
           currency?: string
+          discount_cents?: number
           id?: string
           notes?: string | null
+          parent_sale_id?: string | null
           payment_method?: string
+          sale_kind?: string
+          staff_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
+          subtotal_cents?: number
           tenant_id?: string
+          ticket_number?: string | null
           total_cents?: number
           updated_at?: string
+          vat_cents?: number
           woo_order_id?: number | null
         }
         Relationships: [
@@ -987,6 +1387,10 @@ export type Database = {
           name: string
           slug: string
         }[]
+      }
+      next_document_number: {
+        Args: { p_doc_type: string; p_tenant_id: string }
+        Returns: number
       }
       get_public_services: {
         Args: { p_tenant_id: string }

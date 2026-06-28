@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
+import { canManageInstitutSettings } from "@/lib/auth/institut-settings";
 import { createClient } from "@/lib/supabase/server";
 import { getTenantConnectionStatus } from "@/lib/connections";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { getStripeAccountForTenant } from "@/lib/stripe/index";
 import { buildCatalog } from "@/lib/institut/pos";
+import { getPosSettings } from "@/lib/institut/pos-settings";
+import { getOpenCashSession } from "@/lib/institut/pos-session";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PosTerminal } from "./pos-terminal";
@@ -17,7 +20,8 @@ export default async function CaissePage() {
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
-  const [woo, stripeAccount, servicesRes, productsRes, clientsRes] = await Promise.all([
+  const [woo, stripeAccount, servicesRes, productsRes, clientsRes, posSettings, staffRes, apptsRes, cashSession] =
+    await Promise.all([
     getTenantConnectionStatus(tenantId, WOO_PROVIDER),
     getStripeAccountForTenant(tenantId),
     supabase
@@ -37,6 +41,21 @@ export default async function CaissePage() {
       .select("id, full_name, email")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false }),
+    getPosSettings(supabase, tenantId),
+    supabase
+      .from("inst_staff")
+      .select("id, full_name")
+      .eq("tenant_id", tenantId)
+      .order("full_name"),
+    supabase
+      .from("inst_appointments")
+      .select("id, client_id, starts_at, clients(full_name, email), inst_services(name)")
+      .eq("tenant_id", tenantId)
+      .gte("starts_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+      .lte("starts_at", new Date(new Date().setHours(23, 59, 59, 999)).toISOString())
+      .in("status", ["booked", "confirmed", "completed"])
+      .order("starts_at"),
+    getOpenCashSession(supabase, tenantId),
   ]);
 
   const connected = woo?.status === "connected";
@@ -45,21 +64,49 @@ export default async function CaissePage() {
     id: c.id,
     label: c.full_name ? `${c.full_name} (${c.email})` : c.email,
   }));
+  const staff = (staffRes.data ?? []).map((s) => ({
+    id: s.id,
+    label: s.full_name,
+  }));
+  const appointments = (apptsRes.data ?? []).map((a) => {
+    const client = a.clients as { full_name: string | null; email: string } | null;
+    const service = a.inst_services as { name: string } | null;
+    const time = new Date(a.starts_at).toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return {
+      id: a.id,
+      clientId: a.client_id ?? undefined,
+      label: `${time} · ${service?.name ?? "?"} · ${client?.full_name ?? client?.email ?? "—"}`,
+    };
+  });
 
   const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
   const stripeEnabled = Boolean(stripeAccount && stripePublishableKey);
+  const canSettings = canManageInstitutSettings(
+    session.role,
+    session.enabledModuleIds,
+  );
 
   return (
     <div className="space-y-4 px-4 py-4 lg:px-6">
-      {connected ? (
-        <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {canSettings ? (
+          <Link href="/compte/institut/caisse">
+            <Button variant="outline" className="h-9">
+              {t("settingsButton")}
+            </Button>
+          </Link>
+        ) : null}
+        {connected ? (
           <form action={syncWooProducts}>
             <Button variant="outline" type="submit" className="h-9">
               {t("syncWoo")}
             </Button>
           </form>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       {!connected && catalog.length === 0 ? (
         <Card className="space-y-3">
@@ -89,6 +136,11 @@ export default async function CaissePage() {
           <PosTerminal
             catalog={catalog}
             clients={clients}
+            staff={staff}
+            appointments={appointments}
+            settings={posSettings}
+            sessionOpen={Boolean(cashSession)}
+            requireSession={posSettings.require_open_session}
             stripeEnabled={stripeEnabled}
             stripePublishableKey={stripePublishableKey}
             stripeAccountId={stripeAccount?.accountId}

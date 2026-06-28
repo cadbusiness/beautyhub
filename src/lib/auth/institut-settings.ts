@@ -10,6 +10,7 @@ export const INSTITUT_SETTINGS_ROLES = [
 
 export const COMPTE_INSTITUT_WOO = "/compte/institut/woocommerce";
 export const COMPTE_INSTITUT_STRIPE = "/compte/institut/stripe";
+export const COMPTE_INSTITUT_CAISSE = "/compte/institut/caisse";
 
 export function canManageInstitutSettings(
   role: string,

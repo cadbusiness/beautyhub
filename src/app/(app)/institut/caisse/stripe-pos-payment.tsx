@@ -16,20 +16,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 
-interface Option {
-  id: string;
-  label: string;
-}
-
 function PaymentForm({
   cartJson,
   clientId,
+  cartDiscountEuros,
   totalCents,
   onSuccess,
   onCancel,
 }: {
   cartJson: string;
   clientId: string;
+  cartDiscountEuros: string;
   totalCents: number;
   onSuccess: (message: string) => void;
   onCancel: () => void;
@@ -66,6 +63,7 @@ function PaymentForm({
       paymentIntent.id,
       cartJson,
       clientId || null,
+      cartDiscountEuros,
     );
     if (result.error) {
       setError(result.error);
@@ -96,7 +94,7 @@ export function StripePosPayment({
   cartJson,
   clientId: initialClientId,
   totalCents,
-  clients: _clients,
+  cartDiscountEuros = "0",
   publishableKey,
   stripeAccountId,
   disabled,
@@ -105,7 +103,7 @@ export function StripePosPayment({
   cartJson: string;
   clientId: string;
   totalCents: number;
-  clients: Option[];
+  cartDiscountEuros?: string;
   publishableKey: string;
   stripeAccountId: string;
   disabled: boolean;
@@ -125,7 +123,7 @@ export function StripePosPayment({
   async function startPayment() {
     setLoading(true);
     setError(null);
-    const result = await createStripePaymentIntent(cartJson);
+    const result = await createStripePaymentIntent(cartJson, cartDiscountEuros);
     if (result.error || !result.clientSecret) {
       setError(result.error ?? t("startFailed"));
       setLoading(false);
@@ -141,6 +139,7 @@ export function StripePosPayment({
         <PaymentForm
           cartJson={cartJson}
           clientId={initialClientId}
+          cartDiscountEuros={cartDiscountEuros}
           totalCents={totalCents}
           onSuccess={onSuccess}
           onCancel={() => setClientSecret(null)}

@@ -117,6 +117,8 @@
     "institutClients": "Klanten",
     "institutTeam": "Team",
     "institutPos": "Kassa",
+    "institutPosSession": "Sessie",
+    "institutPosVouchers": "Bons & tegoeden",
     "institutPosHistory": "Kassageschiedenis",
     "institutPosProducts": "Interne producten",
     "institutSettings": "Instellingen",
@@ -150,7 +152,8 @@
       "security": "Beveiliging",
       "institut": "Instituut",
       "woocommerce": "WooCommerce",
-      "stripe": "Stripe Connect"
+      "stripe": "Stripe Connect",
+      "pos": "Kassa"
     },
     "profile": {
       "sectionTitle": "Profiel",
@@ -348,7 +351,12 @@
       "accountAlreadyExists": "Er bestaat al een account voor dit e-mailadres.",
       "accountCreateError": "Fout bij aanmaken account.",
       "invalidJsonParams": "Ongeldige JSON voor parameters.",
-      "workingHoursSaved": "Openingstijden opgeslagen."
+      "workingHoursSaved": "Openingstijden opgeslagen.",
+      "posSettingsSaved": "Kassa-instellingen opgeslagen.",
+      "noPayments": "Voeg minstens één betaling toe.",
+      "overpaid": "Het totaal van de betalingen overschrijdt het verschuldigde bedrag.",
+      "invalidPayments": "Ongeldige betalingen.",
+      "paymentMethodDisabled": "Betaalmethode uitgeschakeld: {method}"
     },
     "scheduling": {
       "conflict": {
@@ -495,7 +503,48 @@
       "linkProducts": "Interne producten",
       "linkSettings": "Instellingen",
       "wooNotConnected": "WooCommerce niet gekoppeld — alleen behandelingen en interne producten zijn beschikbaar.",
-      "connectShop": "Winkel koppelen"
+      "connectShop": "Winkel koppelen",
+      "settingsButton": "Kassa-instellingen"
+    },
+    "posSettings": {
+      "title": "Kassa-instellingen",
+      "description": "BTW, betaalmethoden, wettelijke vermeldingen en ticketmodel.",
+      "configured": "Configureerbaar",
+      "form": {
+        "saved": "Instellingen opgeslagen.",
+        "generalTitle": "Algemeen",
+        "country": "Land",
+        "currency": "Valuta",
+        "priceDisplay": "Prijsweergave",
+        "priceTtc": "Incl. BTW (catalogusprijs incl. BTW)",
+        "priceHt": "Excl. BTW (BTW toegevoegd bij afrekenen)",
+        "fiscalRegime": "Fiscaal regime",
+        "regimeStandard": "Standaard",
+        "regimeNf525": "Frankrijk — NF525-voorbereiding",
+        "regimeBeVat": "België — BTW",
+        "regimeBeGks": "België — GKS (horeca)",
+        "vatTitle": "BTW",
+        "defaultVat": "Standaardtarief (%)",
+        "serviceVat": "Behandelingen (%)",
+        "productVat": "Producten (%)",
+        "paymentsTitle": "Betaalmethoden",
+        "paymentMethods": {
+          "cash": "Contant",
+          "card": "Betaalterminal",
+          "transfer": "Overschrijving",
+          "gift_card": "Cadeaubon",
+          "stripe": "Stripe (online)"
+        },
+        "legalTitle": "Wettelijke vermeldingen",
+        "legalName": "Handelsnaam",
+        "legalAddress": "Adres",
+        "vatNumber": "BTW-nummer",
+        "siret": "SIRET / KBO",
+        "ticketTitle": "Kassaticket",
+        "ticketPrefix": "Nummerprefix",
+        "ticketHeader": "Ticketkop",
+        "ticketFooter": "Ticketvoettekst"
+      }
     },
     "settings": {
       "securityNote": "WooCommerce API-sleutels worden versleuteld (AES-256-GCM) vóór opslag. Stripe Connect gebruikt een Express-account per instituut; betalingen worden doorgestuurd naar dat account."
@@ -857,15 +906,44 @@
         "clear": "Legen",
         "empty": "Geen artikelen.",
         "total": "Totaal",
+        "discount": "Winkelwagenkorting (€)",
         "noClient": "— Geen klant —",
         "notePlaceholder": "Interne notitie (optioneel)",
-        "clientAria": "Klant"
+        "clientAria": "Klant",
+        "addToCheckout": "Voeg artikelen toe om af te rekenen.",
+        "settingsLink": "Kassa-instellingen →"
       },
       "checkout": {
         "cashPending": "Afrekenen…",
         "cash": "Contant · {total}",
         "cardPending": "Registreren…",
         "card": "Betaalterminal · {total}"
+      }
+    },
+    "checkout": {
+      "subtotalHt": "Subtotaal excl. BTW",
+      "vat": "BTW",
+      "discount": "Korting",
+      "totalTtc": "Totaal incl. BTW",
+      "payments": "Betalingen",
+      "methodAria": "Betaalmethode",
+      "amountAria": "Bedrag",
+      "giftCodePlaceholder": "Boncode",
+      "fillRemaining": "Saldo",
+      "addPayment": "Betaalmethode toevoegen",
+      "overpaid": "Te veel ontvangen: {amount}",
+      "remaining": "Nog te betalen: {amount}",
+      "viewTicket": "Ticket bekijken",
+      "submitting": "Afrekenen…",
+      "submit": "Afrekenen {total}",
+      "submitPartial": "Voorschot {paid} / {total}",
+      "pricesTtcHint": "Catalogusprijzen zijn incl. BTW.",
+      "pricesHtHint": "Catalogusprijzen zijn excl. BTW — BTW wordt berekend bij afrekenen.",
+      "methods": {
+        "cash": "Contant",
+        "card": "Betaalterminal",
+        "transfer": "Overschrijving",
+        "gift_card": "Cadeaubon"
       }
     },
     "stripe": {
@@ -903,17 +981,53 @@
     },
     "history": {
       "empty": "Geen geregistreerde verkopen.",
+      "viewTicket": "Ticket",
+      "paidShort": "betaald",
+      "mixedPayments": "{count} betalingen",
       "columns": {
         "date": "Datum",
+        "ticket": "Ticket",
         "client": "Klant",
         "items": "Artikelen",
+        "status": "Status",
         "payment": "Betaling",
         "total": "Totaal"
+      },
+      "status": {
+        "paid": "Betaald",
+        "partial": "Voorschot"
       },
       "paymentMethods": {
         "cash": "Contant",
         "card": "Betaalterminal",
-        "stripe": "Stripe"
+        "stripe": "Stripe",
+        "transfer": "Overschrijving",
+        "gift_card": "Cadeaubon",
+        "mixed": "Gemengd",
+        "other": "Anders"
+      }
+    },
+    "ticket": {
+      "noNumber": "Ticket",
+      "print": "Afdrukken",
+      "vat": "BTW",
+      "item": "Artikel",
+      "qty": "Aantal",
+      "total": "Totaal",
+      "subtotalHt": "Subtotaal excl. BTW",
+      "discount": "Korting",
+      "vatAmount": "BTW",
+      "totalTtc": "Totaal incl. BTW",
+      "paid": "Ontvangen",
+      "payments": "Betalingen",
+      "thanks": "Bedankt voor uw bezoek!",
+      "methods": {
+        "cash": "Contant",
+        "card": "Kaart",
+        "stripe": "Stripe",
+        "transfer": "Overschrijving",
+        "gift_card": "Cadeaubon",
+        "other": "Anders"
       }
     }
   },

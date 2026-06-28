@@ -27,6 +27,11 @@ export default async function CompteInstitutLayout({
       label: t("stripe"),
       exact: true,
     },
+    {
+      href: "/compte/institut/caisse",
+      label: t("pos"),
+      exact: true,
+    },
   ];
 
   return (

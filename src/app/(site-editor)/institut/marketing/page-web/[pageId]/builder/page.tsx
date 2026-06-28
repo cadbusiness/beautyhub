@@ -1,17 +1,18 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { loadSitePageForBuilder } from "../../site-actions";
-import { SitePageBuilder } from "../../site-page-builder";
+import { loadSitePageForBuilder } from "@/app/(app)/institut/marketing/page-web/site-actions";
+import { SitePageBuilder } from "@/app/(app)/institut/marketing/page-web/site-page-builder";
 import type { PublicService } from "@/lib/public/booking-load";
 import type { FormattedOpeningDay } from "@/components/site/site-page-renderer";
+import { ensureSiteSettings } from "@/lib/institut/site-settings";
 import {
   fetchPublicOpeningHours,
   formatTimeLabel,
   groupOpeningHoursByWeekday,
   weekdayMessageKey,
 } from "@/lib/institut/opening-hours";
+import { getTranslations } from "next-intl/server";
 
 async function loadScheduleDays(tenantId: string): Promise<FormattedOpeningDay[]> {
   const supabase = await createClient();
@@ -41,20 +42,20 @@ export default async function SitePageBuilderPage({
   const session = await requireModule("institut");
   const { pageId } = await params;
   const supabase = await createClient();
-  const [page, services, scheduleDays] = await Promise.all([
+  const [page, services, scheduleDays, settings] = await Promise.all([
     loadSitePageForBuilder(pageId),
     supabase.rpc("get_public_services", { p_tenant_id: session.tenant.id }),
     loadScheduleDays(session.tenant.id),
+    ensureSiteSettings(supabase, session.tenant.id),
   ]);
   if (!page) notFound();
 
   return (
-    <div className="-mx-4 flex min-h-[calc(100dvh-7rem)] flex-col lg:-mx-6">
-      <SitePageBuilder
-        page={page}
-        previewServices={(services.data ?? []) as PublicService[]}
-        scheduleDays={scheduleDays}
-      />
-    </div>
+    <SitePageBuilder
+      page={page}
+      previewServices={(services.data ?? []) as PublicService[]}
+      scheduleDays={scheduleDays}
+      accentColor={settings.primary_color}
+    />
   );
 }

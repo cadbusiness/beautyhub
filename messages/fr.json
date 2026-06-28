@@ -761,6 +761,13 @@
           "blocks": "Blocs de contenu",
           "addBlock": "Ajouter un bloc…",
           "previewLabel": "Aperçu en direct",
+          "modeLabel": "Mode builder",
+          "widgets": "Blocs",
+          "widgetsHint": "Cliquez pour ajouter au bas de la page",
+          "inspectorBlock": "Bloc",
+          "inspectorPage": "Page",
+          "selectBlockHint": "Cliquez sur un bloc dans l'aperçu pour le modifier.",
+          "emptyCanvas": "Ajoutez un bloc depuis le panneau de gauche pour commencer.",
           "saved": "Page enregistrée.",
           "templates": {
             "elegant": "Élégant",

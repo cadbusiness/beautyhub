@@ -1,7 +1,7 @@
 import { requireModule } from "@/lib/auth/guards";
 
-/** Aperçu site web : auth requise, sans shell back-office (sidebar, header, assistant). */
-export default async function SitePreviewLayout({
+/** Builder / aperçu site web : auth requise, sans shell back-office. */
+export default async function SiteEditorLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -747,6 +747,13 @@
           "blocks": "Inhoudsblokken",
           "addBlock": "Blok toevoegen…",
           "previewLabel": "Live voorbeeld",
+          "modeLabel": "Buildermodus",
+          "widgets": "Blokken",
+          "widgetsHint": "Klik om onderaan de pagina toe te voegen",
+          "inspectorBlock": "Blok",
+          "inspectorPage": "Pagina",
+          "selectBlockHint": "Klik op een blok in het voorbeeld om het te bewerken.",
+          "emptyCanvas": "Voeg een blok toe via het linkerpaneel om te beginnen.",
           "saved": "Pagina opgeslagen.",
           "templates": {
             "elegant": "Elegant",

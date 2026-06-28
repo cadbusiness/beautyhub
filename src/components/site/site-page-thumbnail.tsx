@@ -22,10 +22,12 @@ export function SitePageThumbnail({
   pageType,
   layoutId,
   className = "",
+  compact = false,
 }: {
   pageType: SitePageType;
   layoutId: SitePageLayoutId;
   className?: string;
+  compact?: boolean;
 }) {
   const layout = getLayoutDef(pageType, layoutId);
   const blocks = layout?.thumbnailBlocks ?? ["hero"];
@@ -33,7 +35,9 @@ export function SitePageThumbnail({
 
   return (
     <div
-      className={`relative aspect-[16/10] overflow-hidden rounded-lg border border-slate-200 bg-white ${className}`}
+      className={`relative overflow-hidden rounded-md border border-slate-200 bg-white ${
+        compact ? "aspect-[5/3] w-full" : "aspect-[16/10] rounded-lg"
+      } ${className}`}
       aria-hidden
     >
       <div className="flex h-[14%] items-center gap-1 border-b border-slate-100 px-1.5">
@@ -87,12 +91,14 @@ export function SiteLayoutPickerCard({
   selected,
   onSelect,
   disabled,
+  compact = false,
 }: {
   pageType: SitePageType;
   layoutId: SitePageLayoutId;
   selected: boolean;
   onSelect: () => void;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   const t = useTranslations("institut.marketing.website");
   const tLayouts = useTranslations("institut.marketing.website");
@@ -104,19 +110,29 @@ export function SiteLayoutPickerCard({
       type="button"
       disabled={disabled}
       onClick={onSelect}
-      className={`w-full rounded-xl border p-2 text-left transition-colors disabled:opacity-50 ${
+      className={`w-full rounded-lg border p-2 text-left transition-colors disabled:opacity-50 ${
+        compact ? "max-w-[140px]" : ""
+      } ${
         selected
           ? "border-slate-900 ring-1 ring-slate-900"
           : "border-slate-200 hover:border-slate-300"
       }`}
     >
-      <SitePageThumbnail pageType={pageType} layoutId={layoutId} />
-      <p className="mt-2 text-xs font-medium text-slate-900">
-        {tLayouts(`layouts.${layout.labelKey}` as "layouts.homeVitrine")}
-      </p>
-      <p className="text-[10px] leading-tight text-slate-500">
-        {tLayouts(`layouts.${layout.descriptionKey}` as "layouts.homeVitrineDesc")}
-      </p>
+      <SitePageThumbnail pageType={pageType} layoutId={layoutId} compact={compact} />
+      {!compact ? (
+        <>
+          <p className="mt-2 text-xs font-medium text-slate-900">
+            {tLayouts(`layouts.${layout.labelKey}` as "layouts.homeVitrine")}
+          </p>
+          <p className="text-[10px] leading-tight text-slate-500">
+            {tLayouts(`layouts.${layout.descriptionKey}` as "layouts.homeVitrineDesc")}
+          </p>
+        </>
+      ) : (
+        <p className="mt-1 truncate text-[10px] font-medium text-slate-800">
+          {tLayouts(`layouts.${layout.labelKey}` as "layouts.homeVitrine")}
+        </p>
+      )}
     </button>
   );
 }

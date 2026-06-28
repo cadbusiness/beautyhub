@@ -53,8 +53,8 @@ export function SiteThemeForm({
   const previewName = displayName.trim() || instituteName;
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
-      <form action={action} className="w-full space-y-6 lg:max-w-md lg:shrink-0">
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+      <form action={action} className="w-full space-y-5 lg:max-w-sm lg:shrink-0">
         <input type="hidden" name="primary_color" value={primaryColor} />
         <input type="hidden" name="display_name" value={displayName} />
         <input type="hidden" name="logo_url" value={logoUrl} />

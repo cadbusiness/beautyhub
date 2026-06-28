@@ -11,6 +11,7 @@ import {
   toggleSitePageNav,
   toggleSitePagePublished,
 } from "./site-actions";
+import { SiteWebSubNav } from "./site-web-sub-nav";
 import {
   getLayoutDef,
   layoutsForPageType,
@@ -96,36 +97,25 @@ export function SitePagesManager({
   }
 
   return (
-    <div className="space-y-6 px-4 py-4 lg:px-6">
-      <section className="rounded-xl border border-slate-200 bg-slate-50 p-4 lg:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-1">
-            <h2 className="text-base font-semibold text-slate-900">{t("hub.title")}</h2>
-            <p className="text-sm text-slate-500">{t("description")}</p>
-            <p className="text-xs text-slate-400">
-              {t("publicBase")}: <span className="font-mono">{publicBaseUrl}</span>
-            </p>
-            {customDomain ? (
-              <p className="text-xs text-slate-400">
-                {t("customDomain")}:{" "}
-                <span className="font-mono">https://{customDomain}</span>
-              </p>
-            ) : null}
-          </div>
-          <Link
-            href="/institut/marketing/page-web/theme"
-            className="inline-flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 hover:bg-slate-50"
-          >
-            {t("hub.brandingLink")}
-          </Link>
-        </div>
-      </section>
+    <div className="px-4 py-4 lg:px-6">
+      <div className="mx-auto max-w-3xl space-y-5">
+        <SiteWebSubNav />
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-semibold text-slate-900">{t("pagesTitle")}</h3>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 space-y-0.5">
+            <h2 className="text-base font-semibold text-slate-900">{t("hub.title")}</h2>
+            <p className="truncate text-xs text-slate-400">
+              {t("publicBase")}: <span className="font-mono">{publicBaseUrl}</span>
+              {customDomain ? (
+                <>
+                  {" · "}
+                  <span className="font-mono">https://{customDomain}</span>
+                </>
+              ) : null}
+            </p>
+          </div>
           <Button
-            className="h-9"
+            className="h-8 shrink-0 px-3 text-sm"
             onClick={() => setCreateOpen((v) => !v)}
             disabled={pending || creatableTypes.length === 0}
           >
@@ -134,10 +124,8 @@ export function SitePagesManager({
         </div>
 
         {createOpen && creatableTypes.length > 0 ? (
-          <div className="rounded-xl border border-slate-200 p-4">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-              {t("chooseType")}
-            </p>
+          <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-3">
+            <p className="mb-2 text-xs font-medium text-slate-500">{t("chooseType")}</p>
             <div className="flex flex-wrap gap-2">
               {creatableTypes.map((def) => (
                 <button
@@ -145,161 +133,169 @@ export function SitePagesManager({
                   type="button"
                   disabled={pending}
                   onClick={() => handleCreate(def.type)}
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-slate-300 disabled:opacity-50"
+                  className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-left text-sm hover:border-slate-300 disabled:opacity-50"
                 >
                   <span className="font-medium text-slate-900">{t(`types.${def.type}`)}</span>
-                  <span className="mt-0.5 block text-xs text-slate-500">
-                    {t(`types.${def.type}Desc`)}
-                  </span>
                 </button>
               ))}
             </div>
           </div>
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white">
           {pages.map((page) => {
             const layout = getLayoutDef(page.page_type, page.layout_id);
+            const layoutOpen = layoutPickerPageId === page.id;
+
             return (
-              <article
-                key={page.id}
-                className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
-              >
-                <Link
-                  href={`/institut/marketing/page-web/${page.id}/builder`}
-                  className="block p-3 pb-0 hover:opacity-90"
-                >
-                  <SitePageThumbnail
-                    pageType={page.page_type}
-                    layoutId={page.layout_id}
-                    className="w-full"
-                  />
-                </Link>
+              <li key={page.id}>
+                <div className="flex gap-3 p-3">
+                  <Link
+                    href={`/institut/marketing/page-web/${page.id}/builder`}
+                    className="w-[88px] shrink-0 hover:opacity-90 sm:w-[96px]"
+                  >
+                    <SitePageThumbnail
+                      pageType={page.page_type}
+                      layoutId={page.layout_id}
+                      compact
+                    />
+                  </Link>
 
-                <div className="flex flex-1 flex-col p-4 pt-3">
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h4 className="truncate font-medium text-slate-900">
-                        {page.title}
-                        {page.is_home ? (
-                          <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                            {t("homeBadge")}
-                          </span>
-                        ) : null}
-                      </h4>
-                      <p className="text-xs text-slate-500">{t(`types.${page.page_type}`)}</p>
-                      <p className="mt-0.5 text-xs text-slate-400">
-                        {t("currentLayout")}:{" "}
-                        {layout
-                          ? t(`layouts.${layout.labelKey}` as "layouts.homeVitrine")
-                          : page.layout_id}
-                      </p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-900">
+                          {page.title}
+                          {page.is_home ? (
+                            <span className="ml-1.5 text-xs font-normal text-slate-400">
+                              ({t("homeBadge")})
+                            </span>
+                          ) : null}
+                        </p>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {t(`types.${page.page_type}`)}
+                          {layout ? (
+                            <>
+                              {" · "}
+                              {t(`layouts.${layout.labelKey}` as "layouts.homeVitrine")}
+                            </>
+                          ) : null}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
+                          page.is_published
+                            ? "bg-green-50 text-green-700"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {page.is_published ? t("status.published") : t("status.draft")}
+                      </span>
                     </div>
-                    <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                        page.is_published
-                          ? "bg-green-50 text-green-700"
-                          : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {page.is_published ? t("status.published") : t("status.draft")}
-                    </span>
-                  </div>
 
-                  <div className="mb-3 space-y-2 border-t border-slate-100 pt-3">
-                    <label className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-slate-700">{t("toggles.published")}</span>
-                      <input
-                        type="checkbox"
-                        checked={page.is_published}
-                        disabled={pending}
-                        onChange={(e) => handleTogglePublished(page, e.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300"
-                      />
-                    </label>
-                    {!page.is_home ? (
-                      <label className="flex items-center justify-between gap-3 text-sm">
-                        <span className="text-slate-700">{t("toggles.showInNav")}</span>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      <label className="inline-flex items-center gap-1.5 text-slate-600">
                         <input
                           type="checkbox"
-                          checked={page.show_in_nav}
-                          disabled={pending || !page.is_published}
-                          onChange={(e) => handleToggleNav(page, e.target.checked)}
-                          className="h-4 w-4 rounded border-slate-300"
-                        />
-                      </label>
-                    ) : null}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="mb-3 text-left text-xs font-medium text-slate-600 hover:text-slate-900"
-                    onClick={() =>
-                      setLayoutPickerPageId((id) => (id === page.id ? null : page.id))
-                    }
-                  >
-                    {layoutPickerPageId === page.id ? t("hideLayouts") : t("changeLayout")}
-                  </button>
-
-                  {layoutPickerPageId === page.id ? (
-                    <div className="mb-3 grid grid-cols-2 gap-2">
-                      {layoutsForPageType(page.page_type).map((l) => (
-                        <SiteLayoutPickerCard
-                          key={l.id}
-                          pageType={page.page_type}
-                          layoutId={l.id}
-                          selected={page.layout_id === l.id}
+                          checked={page.is_published}
                           disabled={pending}
-                          onSelect={() => handleApplyLayout(page, l.id)}
+                          onChange={(e) => handleTogglePublished(page, e.target.checked)}
+                          className="h-3.5 w-3.5 rounded border-slate-300"
                         />
-                      ))}
+                        {t("toggles.published")}
+                      </label>
+                      {!page.is_home ? (
+                        <label className="inline-flex items-center gap-1.5 text-slate-600">
+                          <input
+                            type="checkbox"
+                            checked={page.show_in_nav}
+                            disabled={pending || !page.is_published}
+                            onChange={(e) => handleToggleNav(page, e.target.checked)}
+                            className="h-3.5 w-3.5 rounded border-slate-300"
+                          />
+                          {t("toggles.showInNav")}
+                        </label>
+                      ) : null}
                     </div>
-                  ) : null}
 
-                  <div className="mt-auto flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-                    <Link
-                      href={`/institut/marketing/page-web/${page.id}/builder`}
-                      className="text-sm font-medium text-slate-700 hover:text-slate-900"
-                    >
-                      {t("editBuilder")}
-                    </Link>
-                    <a
-                      href={`/institut/marketing/page-web/${page.id}/preview`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-slate-600 hover:text-slate-900"
-                    >
-                      {t("previewFull")}
-                    </a>
-                    {page.is_published ? (
+                    <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                      <Link
+                        href={`/institut/marketing/page-web/${page.id}/builder`}
+                        className="font-medium text-slate-700 hover:text-slate-900"
+                      >
+                        {t("editBuilder")}
+                      </Link>
+                      <span className="text-slate-300">·</span>
                       <a
-                        href={pagePublicUrl(publicBaseUrl, page)}
+                        href={`/institut/marketing/page-web/${page.id}/preview`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-slate-600 hover:text-slate-900"
+                        className="text-slate-500 hover:text-slate-800"
                       >
-                        {t("viewLive")}
+                        {t("previewFull")}
                       </a>
-                    ) : null}
-                    {!page.is_home ? (
+                      {page.is_published ? (
+                        <>
+                          <span className="text-slate-300">·</span>
+                          <a
+                            href={pagePublicUrl(publicBaseUrl, page)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-slate-500 hover:text-slate-800"
+                          >
+                            {t("viewLive")}
+                          </a>
+                        </>
+                      ) : null}
+                      <span className="text-slate-300">·</span>
                       <button
                         type="button"
-                        onClick={() => handleDelete(page)}
-                        disabled={pending}
-                        className="text-sm text-red-600 hover:text-red-700"
+                        className="text-slate-500 hover:text-slate-800"
+                        onClick={() =>
+                          setLayoutPickerPageId((id) => (id === page.id ? null : page.id))
+                        }
                       >
-                        {tCommon("delete")}
+                        {layoutOpen ? t("hideLayouts") : t("changeLayout")}
                       </button>
-                    ) : null}
+                      {!page.is_home ? (
+                        <>
+                          <span className="text-slate-300">·</span>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(page)}
+                            disabled={pending}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            {tCommon("delete")}
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-              </article>
+
+                {layoutOpen ? (
+                  <div className="flex flex-wrap gap-2 border-t border-slate-100 bg-slate-50/80 px-3 py-3">
+                    {layoutsForPageType(page.page_type).map((l) => (
+                      <SiteLayoutPickerCard
+                        key={l.id}
+                        pageType={page.page_type}
+                        layoutId={l.id}
+                        selected={page.layout_id === l.id}
+                        disabled={pending}
+                        compact
+                        onSelect={() => handleApplyLayout(page, l.id)}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </li>
             );
           })}
-        </div>
+        </ul>
 
-        <p className="text-xs text-slate-400">{t("footer", { count: pages.length })}</p>
-      </section>
+        <p className="text-center text-xs text-slate-400">{t("footer", { count: pages.length })}</p>
+      </div>
     </div>
   );
 }

@@ -1,11 +1,8 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAppointmentsInRange } from "@/lib/institut/slots";
-import { Button } from "@/components/ui/button";
 import { ListPanel } from "@/components/ui/list-panel";
-import { ListToolbar } from "@/components/ui/list-toolbar";
 import { PageTabLinks } from "@/components/ui/page-tabs";
 import { formatPrice } from "@/lib/utils";
 import { CalendarView, type CalendarAppointment } from "./calendar-view";
@@ -40,9 +37,9 @@ export default async function RendezVousPage({
 
   const now = new Date();
   const rangeStart = new Date(now);
-  rangeStart.setDate(rangeStart.getDate() - 7);
+  rangeStart.setDate(rangeStart.getDate() - 35);
   const rangeEnd = new Date(now);
-  rangeEnd.setDate(rangeEnd.getDate() + 21);
+  rangeEnd.setDate(rangeEnd.getDate() + 35);
 
   const [servicesRes, staffRes, resourcesRes, clientsRes, apptsRes, calendarAppts] =
     await Promise.all([
@@ -119,27 +116,16 @@ export default async function RendezVousPage({
       </Suspense>
 
       {view === "calendrier" ? (
-        <>
-          <ListToolbar
-            action={
-              <Link href="/reserver" target="_blank">
-                <Button variant="outline" className="h-9">
-                  Page publique ↗
-                </Button>
-              </Link>
-            }
-          >
-            <span className="text-sm text-slate-500">Planning par praticien et cabine</span>
-          </ListToolbar>
-          <div className="px-4 py-4 lg:px-6">
-            <CalendarView
-              appointments={calendarAppts as CalendarAppointment[]}
-              staffColumns={staffColumns}
-              resourceColumns={resourceColumns}
-              initialDate={now.toISOString().slice(0, 10)}
-            />
-          </div>
-        </>
+        <CalendarView
+          initialAppointments={calendarAppts as CalendarAppointment[]}
+          staffColumns={staffColumns}
+          resourceColumns={resourceColumns}
+          services={services}
+          staff={staff}
+          resources={resources}
+          clients={clients}
+          initialDate={now.toISOString().slice(0, 10)}
+        />
       ) : (
         <AppointmentsList
           appointments={appointments}

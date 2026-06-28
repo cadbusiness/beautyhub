@@ -4,11 +4,16 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/auth/guards";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
-import { checkAppointmentConflict, fetchAppointmentsInRange } from "@/lib/institut/slots";
+import {
+  checkAppointmentConflict,
+  fetchAppointmentsInRange,
+  validateStaffWorkingHours,
+} from "@/lib/institut/slots";
 import { WEEKDAYS } from "./equipe/constants";
 
 export interface ActionResult {
   error?: string;
+  warning?: string;
   ok?: boolean;
 }
 
@@ -179,6 +184,90 @@ export async function createAppointment(
     price_cents: service.price_cents,
     notes: String(formData.get("notes") ?? "").trim() || null,
   });
+  if (error) return { error: error.message };
+  revalidatePath("/institut/rendez-vous");
+  return { ok: true };
+}
+
+export async function updateAppointment(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  const id = String(formData.get("id") ?? "");
+  const serviceId = String(formData.get("service_id") ?? "");
+  const startsAtRaw = String(formData.get("starts_at") ?? "");
+  const endsAtRaw = String(formData.get("ends_at") ?? "");
+
+  if (!id || !serviceId || !startsAtRaw) {
+    return { error: "Champs requis manquants." };
+  }
+
+  const { data: service } = await supabase
+    .from("inst_services")
+    .select("duration_min, price_cents, buffer_before_min, buffer_after_min")
+    .eq("id", serviceId)
+    .maybeSingle();
+  if (!service) return { error: "Prestation introuvable." };
+
+  const startsAt = new Date(startsAtRaw);
+  const endsAt = endsAtRaw
+    ? new Date(endsAtRaw)
+    : new Date(startsAt.getTime() + service.duration_min * 60_000);
+  const staffId = String(formData.get("staff_id") ?? "") || null;
+  const resourceId = String(formData.get("resource_id") ?? "") || null;
+
+  const conflict = await checkAppointmentConflict(supabase, session.tenant.id, {
+    staffId,
+    resourceId,
+    startsAt,
+    endsAt,
+    bufferBeforeMin: service.buffer_before_min ?? 0,
+    bufferAfterMin: service.buffer_after_min ?? 0,
+    excludeId: id,
+  });
+  if (conflict) return { error: conflict };
+
+  const { data: hours } = await supabase
+    .from("inst_working_hours")
+    .select("weekday, start_time, end_time, staff_id")
+    .eq("tenant_id", session.tenant.id);
+
+  const scheduleWarning = validateStaffWorkingHours(hours ?? [], staffId, startsAt, endsAt);
+  const ignoreSchedule = formData.get("ignore_schedule") === "1";
+  if (scheduleWarning && !ignoreSchedule) {
+    return { error: scheduleWarning, warning: scheduleWarning };
+  }
+
+  const { error } = await supabase
+    .from("inst_appointments")
+    .update({
+      client_id: String(formData.get("client_id") ?? "") || null,
+      service_id: serviceId,
+      staff_id: staffId,
+      resource_id: resourceId,
+      starts_at: startsAt.toISOString(),
+      ends_at: endsAt.toISOString(),
+      price_cents: service.price_cents,
+      status: String(formData.get("status") ?? "booked"),
+      notes: String(formData.get("notes") ?? "").trim() || null,
+    })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/institut/rendez-vous");
+  return { ok: true };
+}
+
+export async function cancelAppointment(formData: FormData): Promise<ActionResult> {
+  await requireModule("institut");
+  const supabase = await createClient();
+  const id = String(formData.get("id") ?? "");
+  const { error } = await supabase
+    .from("inst_appointments")
+    .update({ status: "cancelled" })
+    .eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/institut/rendez-vous");
   return { ok: true };

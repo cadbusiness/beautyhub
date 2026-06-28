@@ -80,7 +80,7 @@ export async function fetchAppointmentsInRange(
   const { data, error } = await supabase
     .from("inst_appointments")
     .select(
-      "id, starts_at, ends_at, status, notes, price_cents, staff_id, resource_id, service_id, client_id, service:inst_services(name, color, duration_min), staff:inst_staff(full_name, color), client:clients(full_name, email), resource:inst_resources(name)",
+      "id, starts_at, ends_at, status, notes, price_cents, staff_id, resource_id, service_id, client_id, service:inst_services(name, color, duration_min), staff:inst_staff(full_name, color), client:clients(full_name, email, phone), resource:inst_resources(name)",
     )
     .eq("tenant_id", tenantId)
     .gte("starts_at", rangeStart.toISOString())
@@ -89,4 +89,50 @@ export async function fetchAppointmentsInRange(
 
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+export interface WorkingHourRow {
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  staff_id: string | null;
+}
+
+function parseTimeToMinutes(time: string): number {
+  const [h, m] = time.slice(0, 5).split(":").map(Number);
+  return h * 60 + m;
+}
+
+/** Retourne un message d'avertissement si le créneau est hors horaires d'ouverture. */
+export function validateStaffWorkingHours(
+  hours: WorkingHourRow[],
+  staffId: string | null,
+  startsAt: Date,
+  endsAt: Date,
+): string | null {
+  if (!hours.length) return null;
+
+  const weekday = startsAt.getDay();
+  const staffHours = hours.filter((h) => h.staff_id === staffId);
+  const tenantHours = hours.filter((h) => !h.staff_id);
+  const applicable = staffHours.length > 0 ? staffHours : tenantHours;
+  const dayWindows = applicable.filter((h) => h.weekday === weekday);
+
+  if (dayWindows.length === 0) {
+    return "Aucun horaire d'ouverture ce jour pour ce prestataire.";
+  }
+
+  const startMin = startsAt.getHours() * 60 + startsAt.getMinutes();
+  const endMin = endsAt.getHours() * 60 + endsAt.getMinutes();
+
+  const fits = dayWindows.some((w) => {
+    const wStart = parseTimeToMinutes(w.start_time);
+    const wEnd = parseTimeToMinutes(w.end_time);
+    return startMin >= wStart && endMin <= wEnd;
+  });
+
+  if (!fits) {
+    return "La période sélectionnée ne correspond pas au planning du prestataire.";
+  }
+  return null;
 }

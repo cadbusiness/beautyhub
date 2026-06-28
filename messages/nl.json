@@ -57,6 +57,12 @@
     "extras": "Extras",
     "continue": "Doorgaan",
     "searchArticles": "Zoek een artikel…",
+    "pagination": {
+      "showing": "{from}–{to} van {total}",
+      "pageOf": "{page} / {totalPages}",
+      "prev": "Vorige",
+      "next": "Volgende"
+    },
     "total": "Totaal",
     "woocommerce": "WooCommerce",
     "internal": "Intern",
@@ -796,8 +802,11 @@
           "afterTime": "Na tijdslot",
           "noCandidates": "Maak andere behandelingen aan (catalogus of « alleen extra ») om ze hier aan te bieden.",
           "extraOnlyBadge": "Extra",
-          "minQty": "Min. aantal",
-          "maxQty": "Max. aantal",
+          "minQty": "Min",
+          "maxQty": "Max",
+          "searchPlaceholder": "Zoek een behandeling…",
+          "noSearchResults": "Geen behandeling gevonden.",
+          "selectedCount": "{count, plural, one {# extra geselecteerd} other {# extras geselecteerd}}",
           "saveExtras": "Extras opslaan"
         },
         "image": {

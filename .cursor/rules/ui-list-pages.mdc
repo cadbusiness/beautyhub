@@ -32,3 +32,13 @@ globs:
 - `ListPanel` remplit la hauteur disponible (`flex-1`) ; le footer reste en bas (`mt-auto`).
 - Pages avec plusieurs panneaux (ex. Équipe) : wrapper `space-y-6` + `ListPanel className="flex-none"`.
 - Pas de `space-y-6` entre un titre fantôme et la liste : la liste commence directement sous le header app.
+
+## Pagination et listes longues
+
+Toute liste UI qui peut grandir (prestations, extras, clients, produits, pickers en modale…) **doit prévoir la pagination dès le départ**, pas en afterthought.
+
+- Utilitaires : `paginateItems` + `DEFAULT_PAGE_SIZE` (`src/lib/ui/pagination.ts`, défaut **8** lignes).
+- Composant : `PaginationBar` (`src/components/ui/pagination.tsx`).
+- Lignes **compactes** : une ligne par item (`divide-y`, `py-1.5`), pas de grosses cartes avec `p-3`/`p-4` sauf cas justifié (vignette produit).
+- Recherche/filtre si la source dépasse ~5 items.
+- Réinitialiser la page à 1 quand le filtre change.

@@ -57,6 +57,12 @@
     "extras": "Extras",
     "continue": "Continuer",
     "searchArticles": "Rechercher un article…",
+    "pagination": {
+      "showing": "{from}–{to} sur {total}",
+      "pageOf": "{page} / {totalPages}",
+      "prev": "Préc.",
+      "next": "Suiv."
+    },
     "total": "Total",
     "woocommerce": "WooCommerce",
     "internal": "Interne",
@@ -818,8 +824,11 @@
           "afterTime": "Après le choix du créneau",
           "noCandidates": "Créez d'autres prestations (catalogue ou « extra uniquement ») pour les proposer ici.",
           "extraOnlyBadge": "Extra",
-          "minQty": "Quantité min.",
-          "maxQty": "Quantité max.",
+          "minQty": "Min",
+          "maxQty": "Max",
+          "searchPlaceholder": "Rechercher une prestation…",
+          "noSearchResults": "Aucune prestation ne correspond.",
+          "selectedCount": "{count, plural, one {# extra sélectionné} other {# extras sélectionnés}}",
           "saveExtras": "Enregistrer les extras"
         },
         "image": {

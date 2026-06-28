@@ -16,6 +16,8 @@ export interface ModuleNavItem {
   label: string;
   href: string;
   icon?: string;
+  /** Active uniquement sur l'URL exacte (evite /institut actif sur /institut/parametres). */
+  exact?: boolean;
   /** Roles autorises a voir/utiliser l'entree (vide = tous les roles equipe). */
   roles?: TeamRole[];
 }

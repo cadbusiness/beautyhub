@@ -7,16 +7,7 @@ export const academieModule: ModuleManifest = {
   description: "Formations en ligne, coachs, eleves et inscriptions.",
   category: "core",
   version: "1.0.0",
-  nav: [
-    { label: "Academie", href: "/academie", icon: "graduation-cap" },
-    {
-      label: "Formations",
-      href: "/academie/formations",
-      icon: "book-open",
-      roles: ["platform_admin", "brand_owner", "tenant_owner", "coach"],
-    },
-    { label: "Eleves", href: "/academie/eleves", icon: "user-round" },
-  ],
+  nav: [{ label: "Academie", href: "/academie", icon: "graduation-cap" }],
   aiActions: [
     defineAction({
       name: "academie.list_courses",

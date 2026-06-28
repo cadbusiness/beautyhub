@@ -1,0 +1,28 @@
+---
+description: Toujours versionner les changements de schéma Supabase via migrations
+alwaysApply: true
+---
+
+# Supabase — migrations obligatoires
+
+BeautyHub est au **début du projet**. La base évolue encore : toute modification de schéma doit passer par les migrations versionnées.
+
+## Règle
+
+- **Toujours** créer une migration SQL dans `supabase/migrations/` pour tout changement de schéma (tables, colonnes, index, RLS, fonctions, triggers, seeds structurels).
+- **Ne jamais** modifier le schéma uniquement via le dashboard Supabase ou des requêtes ad hoc sans migration correspondante.
+- **L'agent pousse les migrations lui-même** (`supabase link` si besoin, puis `supabase db push --yes`). Ne jamais dire à l'utilisateur de le faire.
+- Nommer les fichiers de façon séquentielle : `0011_description.sql`, `0012_...`, etc.
+- Mettre à jour `src/lib/db/database.types.ts` quand le schéma change.
+- Vérifier avec `supabase migration list` que local et remote sont alignés.
+
+## Quand créer une migration
+
+- Nouvelle table ou colonne
+- Modification RLS / policies
+- Index, contraintes, fonctions SQL
+- Données de seed structurelles (catalogue, demo) si elles font partie du modèle
+
+## Source de vérité
+
+`supabase/migrations/` est la source de vérité du schéma, portable pour self-hosted et prod.

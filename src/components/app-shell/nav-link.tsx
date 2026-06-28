@@ -7,12 +7,16 @@ import { cn } from "@/lib/utils";
 export function NavLink({
   href,
   label,
+  exact = false,
 }: {
   href: string;
   label: string;
+  exact?: boolean;
 }) {
   const pathname = usePathname();
-  const active = pathname === href || pathname.startsWith(`${href}/`);
+  const active = exact
+    ? pathname === href
+    : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <Link

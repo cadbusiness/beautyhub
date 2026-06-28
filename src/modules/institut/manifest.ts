@@ -9,7 +9,6 @@ export const institutModule: ModuleManifest = {
   category: "core",
   version: "1.0.0",
   nav: [
-    { label: "Tableau de bord", href: "/institut", icon: "layout-dashboard" },
     { label: "Rendez-vous", href: "/institut/rendez-vous", icon: "calendar" },
     { label: "Prestations", href: "/institut/prestations", icon: "sparkles" },
     { label: "Clients", href: "/institut/clients", icon: "users" },
@@ -23,6 +22,7 @@ export const institutModule: ModuleManifest = {
       label: "Caisse",
       href: "/institut/caisse",
       icon: "shopping-cart",
+      exact: true,
       roles: ["platform_admin", "brand_owner", "tenant_owner", "staff"],
     },
     {

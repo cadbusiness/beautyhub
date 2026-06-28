@@ -50,20 +50,7 @@ export default async function CaissePage() {
  return (
  <div className="space-y-6">
  <div className="flex flex-wrap items-center justify-between gap-3">
- <h1 className="text-2xl font-semibold text-slate-900">
- Caisse
- </h1>
- <div className="flex flex-wrap gap-2">
- <Link href="/institut/caisse/historique">
- <Button variant="outline" type="button">
- Historique
- </Button>
- </Link>
- <Link href="/institut/caisse/produits">
- <Button variant="outline" type="button">
- Produits internes
- </Button>
- </Link>
+ <h1 className="text-2xl font-semibold text-slate-900">Caisse</h1>
  {connected ? (
  <form action={syncWooProducts}>
  <Button variant="outline" type="submit">
@@ -71,7 +58,6 @@ export default async function CaissePage() {
  </Button>
  </form>
  ) : null}
- </div>
  </div>
 
  {!connected && catalog.length === 0 ? (

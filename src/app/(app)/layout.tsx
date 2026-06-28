@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAppShellData } from "@/lib/auth/team-session";
 import { ensureDefaultTenant } from "@/lib/tenant/ensure";
-import { getNavFor } from "@/modules";
+import { getAiActionsFor, getNavFor } from "@/modules";
 import { NavLink } from "@/components/app-shell/nav-link";
 import { TenantSwitcher } from "@/components/app-shell/tenant-switcher";
+import { AssistantPanel } from "@/components/app-shell/assistant-panel";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/login/actions";
 
@@ -25,6 +26,9 @@ export default async function AppLayout({
   const { session, accessibleTenants } = shell;
   const nav = getNavFor(session.enabledModuleIds, session.role);
   const platformAdmin = session.role === "platform_admin";
+  const aiActions = getAiActionsFor(session.enabledModuleIds, session.role).map(
+    (a) => ({ name: a.name, description: a.description }),
+  );
 
   return (
     <div className="flex min-h-dvh bg-slate-50">
@@ -42,13 +46,13 @@ export default async function AppLayout({
         </div>
 
         <nav className="flex-1 space-y-0.5 py-3">
-          <NavLink href="/dashboard" label="Accueil" />
-          <NavLink href="/assistant" label="Assistant IA" />
+          <NavLink href="/dashboard" label="Accueil" exact />
           {nav.map((item) => (
             <NavLink
               key={`${item.moduleId}-${item.href}`}
               href={item.href}
               label={item.label}
+              exact={item.exact}
             />
           ))}
         </nav>
@@ -72,9 +76,12 @@ export default async function AppLayout({
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 overflow-auto">
-        <div className="w-full px-4 py-4 lg:px-6 lg:py-5">{children}</div>
-      </main>
+      <div className="flex min-w-0 flex-1">
+        <main className="min-w-0 flex-1 overflow-auto">
+          <div className="w-full px-4 py-4 lg:px-6 lg:py-5">{children}</div>
+        </main>
+        <AssistantPanel actions={aiActions} />
+      </div>
     </div>
   );
 }

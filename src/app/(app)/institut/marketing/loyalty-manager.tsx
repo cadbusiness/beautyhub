@@ -15,16 +15,9 @@ import { Button } from "@/components/ui/button";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Field, Input, Select } from "@/components/ui/input";
-import {
-  deriveProgramStatus,
-  LoyaltyEmptyState,
-  LoyaltyHero,
-  LoyaltyPageShell,
-  LoyaltySectionCard,
-  LoyaltySetupSteps,
-  LoyaltyShareTools,
-  LoyaltyStatCard,
-} from "./loyalty-ui";
+import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
+import { ListToolbar } from "@/components/ui/list-toolbar";
+import { cn, formatPrice } from "@/lib/utils";
 import {
   calcPointsForRule,
   defaultCalcModeForSource,
@@ -36,11 +29,22 @@ import {
   type LoyaltyRewardType,
   type LoyaltySourceType,
 } from "@/lib/institut/loyalty";
-import { formatPrice } from "@/lib/utils";
 
 const initial: ActionResult = {};
 
 type ServiceOption = { id: string; name: string };
+
+type ProgramStatus = "draft" | "ready" | "live";
+
+function deriveProgramStatus(
+  hasRules: boolean,
+  hasRewards: boolean,
+  isActive: boolean,
+): ProgramStatus {
+  if (isActive && hasRules) return "live";
+  if (hasRules && hasRewards) return "ready";
+  return "draft";
+}
 
 function sourceAvailable(
   source: LoyaltySourceType,
@@ -49,6 +53,59 @@ function sourceAvailable(
   if (source === "woocommerce_order") return integrations.woocommerce;
   if (source === "shopify_order") return integrations.shopify;
   return true;
+}
+
+function ProgramStatusBadge({ status, label }: { status: ProgramStatus; label: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
+        status === "live" && "bg-green-100 text-green-700",
+        status === "ready" && "bg-amber-100 text-amber-800",
+        status === "draft" && "bg-slate-100 text-slate-600",
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+function SetupStepsInline({
+  steps,
+}: {
+  steps: { label: string; done: boolean; current: boolean }[];
+}) {
+  return (
+    <ol className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1 text-xs text-slate-500">
+      {steps.map((step, index) => (
+        <li key={step.label} className="flex items-center gap-1">
+          {index > 0 ? <span className="text-slate-300">→</span> : null}
+          <span
+            className={cn(
+              step.done && "text-green-700",
+              step.current && "font-medium text-slate-900",
+              !step.done && !step.current && "text-slate-400",
+            )}
+          >
+            {step.done ? "✓ " : null}
+            {step.label}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function StatCell({ label, value, hint }: { label: string; value: number; hint: string }) {
+  return (
+    <div className="px-4 py-3 lg:px-6">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">
+        {value.toLocaleString()}
+      </p>
+      <p className="mt-0.5 text-xs text-slate-500">{hint}</p>
+    </div>
+  );
 }
 
 export function LoyaltyManager({
@@ -113,250 +170,251 @@ export function LoyaltyManager({
   const programStatus = deriveProgramStatus(hasRules, hasRewards, program.is_active);
 
   const setupSteps = [
-    {
-      label: t("setup.step1"),
-      hint: t("setup.step1Hint"),
-      done: hasRules,
-      current: !hasRules,
-    },
-    {
-      label: t("setup.step2"),
-      hint: t("setup.step2Hint"),
-      done: hasRewards,
-      current: hasRules && !hasRewards,
-    },
+    { label: t("setup.step1"), done: hasRules, current: !hasRules },
+    { label: t("setup.step2"), done: hasRewards, current: hasRules && !hasRewards },
     {
       label: t("setup.step3"),
-      hint: t("setup.step3Hint"),
       done: program.is_active,
       current: hasRules && hasRewards && !program.is_active,
     },
   ];
 
   return (
-    <LoyaltyPageShell>
-      <div className="space-y-6">
-        <LoyaltyHero
-          title={t("title")}
-          description={t("description")}
-          status={programStatus}
-          statusLabel={t(`programStatus.${programStatus}`)}
-        />
-
-        <LoyaltySetupSteps title={t("setup.title")} steps={setupSteps} />
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <LoyaltyStatCard
-            icon="users"
+    <div className="space-y-6">
+      <ListPanel className="flex-none">
+        <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <p className="min-w-0 text-sm text-slate-500">{t("description")}</p>
+            <ProgramStatusBadge
+              status={programStatus}
+              label={t(`programStatus.${programStatus}`)}
+            />
+          </div>
+          <SetupStepsInline steps={setupSteps} />
+        </div>
+        <div className="grid divide-y border-b border-slate-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+          <StatCell
             label={t("stats.clientsWithPoints")}
             value={stats.clientsWithPoints}
             hint={t("stats.clientsHint")}
           />
-          <LoyaltyStatCard
-            icon="points"
+          <StatCell
             label={t("stats.pointsOutstanding", { label: program.points_label })}
             value={stats.totalPointsOutstanding}
             hint={t("stats.pointsHint", { label: program.points_label })}
           />
         </div>
+      </ListPanel>
 
-        <LoyaltySectionCard title={t("program.title")} description={t("program.description")}>
-          <form action={programAction} className="space-y-4 px-5 py-5 lg:px-6">
-            {programState.error ? (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{programState.error}</p>
-            ) : null}
-            {programState.ok ? (
-              <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                {programState.message ?? t("program.saved")}
-              </p>
-            ) : null}
+      <ListPanel className="flex-none">
+        <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
+          <p className="text-sm font-medium text-slate-700">{t("program.title")}</p>
+          <p className="mt-0.5 text-xs text-slate-500">{t("program.description")}</p>
+        </div>
+        <form action={programAction} className="space-y-4 px-4 py-4 lg:px-6">
+          {programState.error ? (
+            <p className="text-sm text-red-600">{programState.error}</p>
+          ) : null}
+          {programState.ok ? (
+            <p className="text-sm text-green-600">{programState.message ?? t("program.saved")}</p>
+          ) : null}
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={t("program.name")} htmlFor="loyalty_name">
-                <Input id="loyalty_name" name="name" defaultValue={program.name} required />
-              </Field>
-              <Field label={t("program.pointsLabel")} htmlFor="loyalty_points_label">
-                <Input
-                  id="loyalty_points_label"
-                  name="points_label"
-                  defaultValue={program.points_label}
-                  required
-                />
-              </Field>
-            </div>
-
-            <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                name="is_active"
-                value="1"
-                defaultChecked={program.is_active}
-                className="rounded border-slate-300"
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t("program.name")} htmlFor="loyalty_name">
+              <Input id="loyalty_name" name="name" defaultValue={program.name} required />
+            </Field>
+            <Field label={t("program.pointsLabel")} htmlFor="loyalty_points_label">
+              <Input
+                id="loyalty_points_label"
+                name="points_label"
+                defaultValue={program.points_label}
+                required
               />
-              {t("program.active")}
-            </label>
+            </Field>
+          </div>
 
-            <Button type="submit" className="h-9" disabled={programPending}>
-              {programPending ? tCommon("saving") : tCommon("save")}
-            </Button>
-          </form>
-        </LoyaltySectionCard>
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              name="is_active"
+              value="1"
+              defaultChecked={program.is_active}
+              className="rounded border-slate-300"
+            />
+            {t("program.active")}
+          </label>
 
-        <LoyaltySectionCard
-          title={t("rules.title")}
-          description={t("rules.sectionDescription")}
+          <Button type="submit" className="h-9" disabled={programPending}>
+            {programPending ? tCommon("saving") : tCommon("save")}
+          </Button>
+        </form>
+      </ListPanel>
+
+      <ListPanel className="flex-none">
+        <ListToolbar
           action={
             <Button onClick={openCreateRule} className="h-9 w-full sm:w-auto">
               + {t("rules.add")}
             </Button>
           }
-          footer={rules.length > 0 ? t("rules.footer", { count: rules.length }) : undefined}
         >
-          {rules.length === 0 ? (
-            <LoyaltyEmptyState
-              title={t("emptyRules.title")}
-              description={t("emptyRules.description")}
-              action={
-                <Button onClick={openCreateRule} className="h-9">
-                  + {t("rules.add")}
-                </Button>
-              }
-            />
-          ) : (
-            <DataTable>
-              <table className="w-full min-w-[640px] text-sm">
-                <thead>
-                  <tr className={dataTableRow}>
-                    <th className={dataTableHead}>{t("rules.columns.name")}</th>
-                    <th className={dataTableHead}>{t("rules.columns.source")}</th>
-                    <th className={dataTableHead}>{t("rules.columns.earning")}</th>
-                    <th className={dataTableHead}>{t("rules.columns.status")}</th>
-                    <th className={dataTableHead}>{tCommon("actions")}</th>
+          <div>
+            <p className="text-sm font-medium text-slate-700">{t("rules.title")}</p>
+            <p className="text-xs text-slate-500">{t("rules.sectionDescription")}</p>
+          </div>
+        </ListToolbar>
+        <DataTable>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className={dataTableRow}>
+                <th className={dataTableHead}>{t("rules.columns.name")}</th>
+                <th className={dataTableHead}>{t("rules.columns.source")}</th>
+                <th className={dataTableHead}>{t("rules.columns.earning")}</th>
+                <th className={dataTableHead}>{t("rules.columns.status")}</th>
+                <th className={dataTableHead}>{tCommon("actions")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rules.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className={`${dataTableCell} text-slate-500`}>
+                    {t("rules.empty")}
+                  </td>
+                </tr>
+              ) : (
+                rules.map((rule) => (
+                  <tr key={rule.id} className={dataTableRow}>
+                    <td className={`${dataTableCell} font-medium text-slate-900`}>{rule.name}</td>
+                    <td className={dataTableCell}>{t(`sources.${rule.source_type}`)}</td>
+                    <td className={dataTableCell}>{formatRuleEarning(rule, t)}</td>
+                    <td className={dataTableCell}>
+                      {rule.is_active ? t("status.active") : t("status.inactive")}
+                    </td>
+                    <td className={dataTableCell}>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openEditRule(rule)}
+                          className="text-sm text-slate-600 hover:text-slate-900"
+                        >
+                          {tCommon("edit")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRule(rule.id)}
+                          disabled={pendingDelete}
+                          className="text-sm text-red-600 hover:text-red-700"
+                        >
+                          {tCommon("delete")}
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {rules.map((rule) => (
-                    <tr key={rule.id} className={dataTableRow}>
-                      <td className={`${dataTableCell} font-medium text-slate-900`}>{rule.name}</td>
-                      <td className={dataTableCell}>{t(`sources.${rule.source_type}`)}</td>
-                      <td className={dataTableCell}>{formatRuleEarning(rule, t)}</td>
-                      <td className={dataTableCell}>
-                        <StatusBadge active={rule.is_active} label={t(`status.${rule.is_active ? "active" : "inactive"}`)} />
-                      </td>
-                      <td className={dataTableCell}>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openEditRule(rule)}
-                            className="text-sm text-slate-600 hover:text-slate-900"
-                          >
-                            {tCommon("edit")}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteRule(rule.id)}
-                            disabled={pendingDelete}
-                            className="text-sm text-red-600 hover:text-red-700"
-                          >
-                            {tCommon("delete")}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </DataTable>
-          )}
-        </LoyaltySectionCard>
+                ))
+              )}
+            </tbody>
+          </table>
+        </DataTable>
+        <ListPanelFooter>{t("rules.footer", { count: rules.length })}</ListPanelFooter>
+      </ListPanel>
 
-        <LoyaltySectionCard
-          title={t("rewards.title")}
-          description={t("rewards.sectionDescription")}
+      <ListPanel className="flex-none">
+        <ListToolbar
           action={
             <Button onClick={openCreateReward} className="h-9 w-full sm:w-auto">
               + {t("rewards.add")}
             </Button>
           }
-          footer={
-            rewards.length > 0 ? (
-              <div className="space-y-1">
-                <p>{t("rewards.footer", { count: rewards.length })}</p>
-                <p className="text-slate-500">{t("rewards.redeemHint")}</p>
-              </div>
-            ) : undefined
-          }
         >
-          {rewards.length === 0 ? (
-            <LoyaltyEmptyState
-              title={t("emptyRewards.title")}
-              description={t("emptyRewards.description")}
-              action={
-                <Button onClick={openCreateReward} className="h-9">
-                  + {t("rewards.add")}
-                </Button>
-              }
-            />
-          ) : (
-            <DataTable>
-              <table className="w-full min-w-[640px] text-sm">
-                <thead>
-                  <tr className={dataTableRow}>
-                    <th className={dataTableHead}>{t("rewards.columns.name")}</th>
-                    <th className={dataTableHead}>{t("rewards.columns.type")}</th>
-                    <th className={dataTableHead}>{t("rewards.columns.cost")}</th>
-                    <th className={dataTableHead}>{t("rewards.columns.status")}</th>
-                    <th className={dataTableHead}>{tCommon("actions")}</th>
+          <div>
+            <p className="text-sm font-medium text-slate-700">{t("rewards.title")}</p>
+            <p className="text-xs text-slate-500">{t("rewards.sectionDescription")}</p>
+          </div>
+        </ListToolbar>
+        <DataTable>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className={dataTableRow}>
+                <th className={dataTableHead}>{t("rewards.columns.name")}</th>
+                <th className={dataTableHead}>{t("rewards.columns.type")}</th>
+                <th className={dataTableHead}>{t("rewards.columns.cost")}</th>
+                <th className={dataTableHead}>{t("rewards.columns.status")}</th>
+                <th className={dataTableHead}>{tCommon("actions")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rewards.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className={`${dataTableCell} text-slate-500`}>
+                    {t("rewards.empty")}
+                  </td>
+                </tr>
+              ) : (
+                rewards.map((reward) => (
+                  <tr key={reward.id} className={dataTableRow}>
+                    <td className={`${dataTableCell} font-medium text-slate-900`}>
+                      {reward.name}
+                    </td>
+                    <td className={dataTableCell}>{formatRewardType(reward, services, t)}</td>
+                    <td className={dataTableCell}>
+                      {reward.points_cost} {program.points_label}
+                    </td>
+                    <td className={dataTableCell}>
+                      {reward.is_active ? t("status.active") : t("status.inactive")}
+                    </td>
+                    <td className={dataTableCell}>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openEditReward(reward)}
+                          className="text-sm text-slate-600 hover:text-slate-900"
+                        >
+                          {tCommon("edit")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReward(reward.id)}
+                          disabled={pendingDelete}
+                          className="text-sm text-red-600 hover:text-red-700"
+                        >
+                          {tCommon("delete")}
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {rewards.map((reward) => (
-                    <tr key={reward.id} className={dataTableRow}>
-                      <td className={`${dataTableCell} font-medium text-slate-900`}>{reward.name}</td>
-                      <td className={dataTableCell}>{formatRewardType(reward, services, t)}</td>
-                      <td className={dataTableCell}>
-                        {reward.points_cost} {program.points_label}
-                      </td>
-                      <td className={dataTableCell}>
-                        <StatusBadge active={reward.is_active} label={t(`status.${reward.is_active ? "active" : "inactive"}`)} />
-                      </td>
-                      <td className={dataTableCell}>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openEditReward(reward)}
-                            className="text-sm text-slate-600 hover:text-slate-900"
-                          >
-                            {tCommon("edit")}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteReward(reward.id)}
-                            disabled={pendingDelete}
-                            className="text-sm text-red-600 hover:text-red-700"
-                          >
-                            {tCommon("delete")}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </DataTable>
-          )}
-        </LoyaltySectionCard>
+                ))
+              )}
+            </tbody>
+          </table>
+        </DataTable>
+        <ListPanelFooter>{t("rewards.footer", { count: rewards.length })}</ListPanelFooter>
+        <p className="border-t border-slate-200 px-4 py-2.5 text-xs text-slate-500 lg:px-6">
+          {t("rewards.redeemHint")}
+        </p>
+      </ListPanel>
 
-        <LoyaltyShareTools
-          title={t("share.title")}
-          description={t("share.description")}
-          qrTitle={t("share.qrTitle")}
-          qrDescription={t("share.qrDescription")}
-          walletTitle={t("share.walletTitle")}
-          walletDescription={t("share.walletDescription")}
-          comingSoon={t("share.comingSoon")}
-        />
-      </div>
+      <ListPanel className="flex-none">
+        <div className="border-b border-slate-200 px-4 py-2.5 lg:px-6">
+          <p className="text-sm font-medium text-slate-700">{t("share.title")}</p>
+          <p className="text-xs text-slate-500">{t("share.description")}</p>
+        </div>
+        <ul className="divide-y divide-slate-100 text-sm">
+          <li className="flex items-center justify-between gap-3 px-4 py-2.5 lg:px-6">
+            <div className="min-w-0">
+              <p className="font-medium text-slate-900">{t("share.qrTitle")}</p>
+              <p className="text-xs text-slate-500">{t("share.qrDescription")}</p>
+            </div>
+            <span className="shrink-0 text-xs text-slate-400">{t("share.comingSoon")}</span>
+          </li>
+          <li className="flex items-center justify-between gap-3 px-4 py-2.5 lg:px-6">
+            <div className="min-w-0">
+              <p className="font-medium text-slate-900">{t("share.walletTitle")}</p>
+              <p className="text-xs text-slate-500">{t("share.walletDescription")}</p>
+            </div>
+            <span className="shrink-0 text-xs text-slate-400">{t("share.comingSoon")}</span>
+          </li>
+        </ul>
+      </ListPanel>
 
       <EarnRuleDialog
         open={ruleDialogOpen}
@@ -373,21 +431,7 @@ export function LoyaltyManager({
         services={services}
         pointsLabel={program.points_label}
       />
-    </LoyaltyPageShell>
-  );
-}
-
-function StatusBadge({ active, label }: { active: boolean; label: string }) {
-  return (
-    <span
-      className={
-        active
-          ? "inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200"
-          : "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200"
-      }
-    >
-      {label}
-    </span>
+    </div>
   );
 }
 

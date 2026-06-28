@@ -143,11 +143,14 @@
   },
   "account": {
     "title": "Mijn account",
-    "subtitle": "Beheer uw profiel en de beveiliging van uw toegang.",
+    "subtitle": "Profiel, beveiliging en instituutinstellingen.",
     "nav": {
       "ariaLabel": "Accountsecties",
       "profile": "Profiel",
-      "security": "Beveiliging"
+      "security": "Beveiliging",
+      "institut": "Instituut",
+      "woocommerce": "WooCommerce",
+      "stripe": "Stripe Connect"
     },
     "profile": {
       "sectionTitle": "Profiel",

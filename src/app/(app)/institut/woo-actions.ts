@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutSettingsModule, COMPTE_INSTITUT_WOO } from "@/lib/auth/institut-settings";
 import {
   disconnectTenantConnection,
   saveTenantConnection,
@@ -26,7 +27,7 @@ export async function saveWooConnection(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutSettingsModule();
 
   const url = String(formData.get("url") ?? "").trim();
   const consumerKey = String(formData.get("consumer_key") ?? "").trim();
@@ -54,15 +55,15 @@ export async function saveWooConnection(
     return { error: (e as Error).message };
   }
 
-  revalidatePath("/institut/parametres");
+  revalidatePath(COMPTE_INSTITUT_WOO);
   revalidatePath("/institut/caisse");
   return { ok: true, message: t("wooConnected") };
 }
 
 export async function disconnectWoo(): Promise<void> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutSettingsModule();
   await disconnectTenantConnection(session.tenant.id, WOO_PROVIDER);
-  revalidatePath("/institut/parametres");
+  revalidatePath(COMPTE_INSTITUT_WOO);
   revalidatePath("/institut/caisse");
 }
 

@@ -2,23 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
-export type AccountNavItem = {
+export type SectionNavItem = {
   href: string;
   label: string;
   exact?: boolean;
 };
 
-export function AccountNav({ items }: { items: AccountNavItem[] }) {
+export function SectionNav({
+  items,
+  ariaLabel,
+}: {
+  items: SectionNavItem[];
+  ariaLabel: string;
+}) {
   const pathname = usePathname();
-  const t = useTranslations("account.nav");
 
   return (
     <nav
       className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-0.5 lg:overflow-visible"
-      aria-label={t("ariaLabel")}
+      aria-label={ariaLabel}
     >
       {items.map((item) => {
         const active = item.exact

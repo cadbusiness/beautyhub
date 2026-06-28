@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutSettingsModule, COMPTE_INSTITUT_STRIPE } from "@/lib/auth/institut-settings";
 import {
   disconnectTenantConnection,
   getTenantConnectionStatus,
@@ -90,7 +91,8 @@ export async function syncStripeConnectStatus(tenantId: string): Promise<{
     chargesEnabled ? "connected" : "disconnected",
   );
 
-  revalidatePath("/institut/parametres");
+  revalidatePath(COMPTE_INSTITUT_STRIPE);
+  revalidatePath("/compte/institut/woocommerce");
   revalidatePath("/institut/caisse");
   revalidatePath("/institut/caisse/historique");
   return { connected: chargesEnabled, chargesEnabled };
@@ -98,9 +100,9 @@ export async function syncStripeConnectStatus(tenantId: string): Promise<{
 
 /** Demarre ou reprend l'onboarding Stripe Connect Express. */
 export async function startStripeConnect(): Promise<void> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutSettingsModule();
   if (!isStripeConfigured()) {
-    redirect("/institut/parametres?stripe=missing_key");
+    redirect(`${COMPTE_INSTITUT_STRIPE}?stripe=missing_key`);
   }
 
   const accountId = await getOrCreateAccountId(session.tenant.id);
@@ -109,8 +111,8 @@ export async function startStripeConnect(): Promise<void> {
 
   const link = await stripe.accountLinks.create({
     account: accountId,
-    refresh_url: `${origin}/institut/parametres?stripe=refresh`,
-    return_url: `${origin}/institut/parametres?stripe=return`,
+    refresh_url: `${origin}${COMPTE_INSTITUT_STRIPE}?stripe=refresh`,
+    return_url: `${origin}${COMPTE_INSTITUT_STRIPE}?stripe=return`,
     type: "account_onboarding",
   });
 
@@ -118,9 +120,10 @@ export async function startStripeConnect(): Promise<void> {
 }
 
 export async function disconnectStripe(): Promise<void> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutSettingsModule();
   await disconnectTenantConnection(session.tenant.id, STRIPE_CONNECT_PROVIDER);
-  revalidatePath("/institut/parametres");
+  revalidatePath(COMPTE_INSTITUT_STRIPE);
+  revalidatePath("/compte/institut/woocommerce");
   revalidatePath("/institut/caisse");
   revalidatePath("/institut/caisse/historique");
 }

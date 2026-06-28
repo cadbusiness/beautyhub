@@ -1,9 +1,15 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getTeamSession } from "@/lib/auth/team-session";
+import { canManageInstitutSettings } from "@/lib/auth/institut-settings";
 import { ListPanel } from "@/components/ui/list-panel";
-import { AccountNav } from "./account-nav";
+import { PageTabLinks, type PageTabLinkItem } from "@/components/ui/page-tabs";
+
+function TabLinksFallback() {
+  return <div className="h-[45px] border-b border-slate-200" aria-hidden />;
+}
 
 export default async function CompteLayout({
   children,
@@ -31,10 +37,18 @@ export default async function CompteLayout({
       ? tRoles(session.role as (typeof knownRoles)[number])
       : (session?.role ?? "");
 
-  const navItems = [
-    { href: "/compte", label: t("nav.profile"), exact: true as const },
-    { href: "/compte/securite", label: t("nav.security") },
+  const showInstitut =
+    session &&
+    canManageInstitutSettings(session.role, session.enabledModuleIds);
+
+  const tabs: PageTabLinkItem[] = [
+    { href: "/compte", label: t("nav.profile"), exact: true },
+    { href: "/compte/securite", label: t("nav.security"), exact: true },
   ];
+
+  if (showInstitut) {
+    tabs.push({ href: "/compte/institut", label: t("nav.institut") });
+  }
 
   return (
     <ListPanel className="min-h-0 flex-1">
@@ -54,15 +68,11 @@ export default async function CompteLayout({
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)]">
-        <aside className="border-b border-slate-200 lg:border-b-0 lg:border-r">
-          <div className="px-6 py-5 lg:sticky lg:top-14 lg:px-5 lg:py-8">
-            <AccountNav items={navItems} />
-          </div>
-        </aside>
+      <Suspense fallback={<TabLinksFallback />}>
+        <PageTabLinks items={tabs} />
+      </Suspense>
 
-        <main className="min-w-0 px-6 py-6 lg:px-8 lg:py-8">{children}</main>
-      </div>
+      <div className="min-w-0 px-6 py-6 lg:px-8 lg:py-8">{children}</div>
     </ListPanel>
   );
 }

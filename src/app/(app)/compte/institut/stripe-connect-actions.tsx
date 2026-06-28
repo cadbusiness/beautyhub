@@ -1,6 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
-import { startStripeConnect, disconnectStripe } from "../stripe-actions";
+import {
+  disconnectStripe,
+  startStripeConnect,
+} from "@/app/(app)/institut/stripe-actions";
 
 export async function StripeConnectActions({
   connected,
@@ -14,7 +17,7 @@ export async function StripeConnectActions({
   const t = await getTranslations("institut.stripe");
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {accountId ? (
         <p className="text-sm text-slate-600">
           {t("account")} <code className="text-xs">{accountId}</code>

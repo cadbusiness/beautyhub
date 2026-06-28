@@ -71,7 +71,7 @@ export default async function CaissePage() {
             <Link href="/institut/caisse/produits">
               <Button variant="outline">{t("linkProducts")}</Button>
             </Link>
-            <Link href="/institut/parametres">
+            <Link href="/compte/institut/woocommerce">
               <Button>{t("linkSettings")}</Button>
             </Link>
           </div>
@@ -81,7 +81,7 @@ export default async function CaissePage() {
           {!connected ? (
             <p className="text-sm text-slate-500">
               {t("wooNotConnected")}{" "}
-              <Link href="/institut/parametres" className="underline">
+              <Link href="/compte/institut/woocommerce" className="underline">
                 {t("connectShop")}
               </Link>
             </p>

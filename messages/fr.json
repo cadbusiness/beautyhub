@@ -143,11 +143,14 @@
   },
   "account": {
     "title": "Mon compte",
-    "subtitle": "Gérez votre profil et la sécurité de votre accès.",
+    "subtitle": "Profil, sécurité et paramètres de l'institut.",
     "nav": {
       "ariaLabel": "Sections du compte",
       "profile": "Profil",
-      "security": "Sécurité"
+      "security": "Sécurité",
+      "institut": "Institut",
+      "woocommerce": "WooCommerce",
+      "stripe": "Stripe Connect"
     },
     "profile": {
       "sectionTitle": "Profil",

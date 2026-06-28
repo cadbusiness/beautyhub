@@ -32,7 +32,7 @@ export function LoginForm({ setupRequired }: { setupRequired?: boolean }) {
     <div className="w-full max-w-sm">
       <Link
         href="/"
-        className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-violet-700"
+        className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900"
       >
         ← BeautyHub
       </Link>
@@ -96,7 +96,7 @@ export function LoginForm({ setupRequired }: { setupRequired?: boolean }) {
                   <button
                     type="button"
                     onClick={() => fillAccount(a.email)}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left transition-colors hover:border-violet-300 hover:bg-violet-50"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left transition-colors hover:border-slate-300 hover:bg-slate-100"
                   >
                     <p className="font-mono text-xs text-slate-800">{a.email}</p>
                     <p className="text-xs text-slate-500">{a.role}</p>

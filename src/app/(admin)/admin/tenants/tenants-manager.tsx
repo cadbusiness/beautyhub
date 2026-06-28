@@ -74,7 +74,7 @@ export function TenantsManager({
                   <td className={dataTableCell}>
                     <Link
                       href={`/admin/tenants/${t.id}`}
-                      className="font-medium text-slate-900 hover:text-violet-700"
+                      className="font-medium text-slate-900 hover:text-slate-600"
                     >
                       {t.name}
                     </Link>

@@ -73,7 +73,7 @@ export function PlansManager({
                   <td className={dataTableCell}>
                     <Link
                       href={`/admin/plans/${p.id}`}
-                      className="font-medium text-slate-900 hover:text-violet-700"
+                      className="font-medium text-slate-900 hover:text-slate-600"
                     >
                       {p.name}
                     </Link>

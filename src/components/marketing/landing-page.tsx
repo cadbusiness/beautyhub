@@ -47,7 +47,7 @@ export function LandingPage() {
       <header className="border-b border-slate-200 bg-white/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-sm font-bold text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
               B
             </span>
             <span className="text-lg font-semibold tracking-tight text-slate-900">BeautyHub</span>
@@ -68,16 +68,16 @@ export function LandingPage() {
           className="pointer-events-none absolute inset-0 opacity-60"
           style={{
             background:
-              "radial-gradient(ellipse 80% 50% at 50% -20%, rgb(124 58 237 / 0.12), transparent)",
+              "radial-gradient(ellipse 80% 50% at 50% -20%, rgb(15 23 42 / 0.06), transparent)",
           }}
         />
         <div className="relative mx-auto max-w-4xl text-center">
-          <p className="mb-4 inline-flex rounded-full border border-violet-200 bg-violet-50 px-4 py-1 text-sm text-violet-700">
+          <p className="mb-4 inline-flex rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-sm text-slate-600">
             SaaS multi-tenant · Instituts &amp; academies
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-5xl md:text-6xl">
             Gere ton institut
-            <span className="block text-violet-600">comme une plateforme pro</span>
+            <span className="block text-slate-600">comme une plateforme pro</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600">
             Rendez-vous, caisse WooCommerce, clients, equipe et formations — un seul
@@ -120,7 +120,7 @@ export function LandingPage() {
             {modules.map((m) => (
               <Card
                 key={m.title}
-                className="transition-colors hover:border-violet-300 hover:shadow-md"
+                className="transition-colors hover:border-slate-300 hover:shadow-md"
               >
                 <span className="text-2xl">{m.icon}</span>
                 <h3 className="mt-3 font-semibold text-slate-900">{m.title}</h3>
@@ -137,7 +137,7 @@ export function LandingPage() {
           <div className="mt-12 grid gap-8 md:grid-cols-3">
             {steps.map((s) => (
               <div key={s.n} className="text-center">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-violet-600 text-sm font-bold text-white">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                   {s.n}
                 </span>
                 <h3 className="mt-4 font-medium text-slate-900">{s.title}</h3>
@@ -149,7 +149,7 @@ export function LandingPage() {
       </section>
 
       <section className="border-t border-slate-200 px-6 py-16">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-10 text-center shadow-sm">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-10 text-center shadow-sm">
           <h2 className="text-2xl font-semibold text-slate-900">Pret a piloter ton institut ?</h2>
           <p className="mt-2 text-sm text-slate-600">
             Connecte-toi avec ton compte equipe ou reserve un creneau en ligne.

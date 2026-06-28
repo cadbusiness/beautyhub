@@ -99,7 +99,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
                   <td className={dataTableCell}>
                     <span
                       className="inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: s.color ?? "#be185d" }}
+                      style={{ backgroundColor: s.color ?? "#64748b" }}
                       title={s.is_active ? "Visible" : "Masquee"}
                     />
                   </td>
@@ -110,7 +110,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
                       className="group w-full text-left"
                     >
                       <span className="flex items-center gap-2">
-                        <span className="truncate font-medium text-slate-900 group-hover:text-violet-700">
+                        <span className="truncate font-medium text-slate-900 group-hover:text-slate-600">
                           {s.name}
                         </span>
                         {!s.is_active ? (

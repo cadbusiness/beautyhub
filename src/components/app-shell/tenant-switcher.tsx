@@ -33,7 +33,7 @@ export function TenantSwitcher({
         name="slug"
         defaultValue={currentSlug}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="h-9 max-w-[220px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
+        className="h-9 max-w-[220px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
       >
         {tenants.map((t) => (
           <option key={t.slug} value={t.slug}>

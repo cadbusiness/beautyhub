@@ -109,7 +109,7 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-violet-600 px-4 text-sm font-medium text-white shadow-lg transition hover:bg-violet-700"
+          className="fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-lg transition hover:bg-primary-hover"
           aria-label="Ouvrir l'assistant IA"
         >
           <span className="text-base">✦</span>
@@ -154,7 +154,7 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
               className={cn(
                 "max-w-[92%] rounded-xl px-3 py-2 text-sm",
                 msg.role === "user"
-                  ? "ml-auto bg-violet-600 text-white"
+                  ? "ml-auto bg-primary text-primary-foreground"
                   : msg.role === "result"
                     ? "border border-slate-200 bg-slate-50 text-slate-700"
                     : "bg-slate-100 text-slate-700",
@@ -190,7 +190,7 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
                       type="button"
                       disabled={pending}
                       onClick={() => runAction(action.name)}
-                      className="flex w-full flex-col rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-violet-300 hover:bg-violet-50 disabled:opacity-50"
+                      className="flex w-full flex-col rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
                     >
                       <span className="text-sm font-medium text-slate-900">
                         {actionLabel(action)}
@@ -210,7 +210,7 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Votre message..."
-              className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
+              className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
             />
             <Button type="submit" disabled={pending} className="shrink-0">
               {pending ? "..." : "Envoyer"}

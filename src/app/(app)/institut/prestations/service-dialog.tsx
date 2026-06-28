@@ -116,7 +116,7 @@ export function ServiceDialog({
                 className={cn(
                   "border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
                   tab === t.id
-                    ? "border-violet-600 text-violet-700"
+                    ? "border-slate-900 text-slate-900"
                     : "border-transparent text-slate-500 hover:text-slate-800",
                 )}
               >
@@ -145,7 +145,7 @@ export function ServiceDialog({
                   name="color"
                   type="color"
                   className="h-10 cursor-pointer p-1"
-                  defaultValue={service?.color ?? "#be185d"}
+                  defaultValue={service?.color ?? "#64748b"}
                 />
               </Field>
               <Field label="Prix (EUR)" htmlFor="price">

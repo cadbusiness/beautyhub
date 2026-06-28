@@ -27,7 +27,7 @@ export function StaffForm({ onSuccess }: { onSuccess?: () => void }) {
         <Input id="email" name="email" type="email" placeholder="sophie@institut.fr" />
       </Field>
       <Field label="Couleur (optionnel)" htmlFor="color">
-        <Input id="color" name="color" type="color" defaultValue="#be185d" className="h-10 w-16 p-1" />
+        <Input id="color" name="color" type="color" defaultValue="#64748b" className="h-10 w-16 p-1" />
       </Field>
       {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
       <Button type="submit" disabled={pending}>

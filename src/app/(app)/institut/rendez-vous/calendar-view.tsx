@@ -223,7 +223,7 @@ export function CalendarView({
  ))}
  {apptsForColumn(col.id).map((a) => {
  const { top, height } = apptStyle(a.starts_at, a.ends_at);
- const bg = a.service?.color ?? a.staff?.color ?? "#be185d";
+ const bg = a.service?.color ?? a.staff?.color ?? "#64748b";
  return (
  <button
  key={a.id}

@@ -25,8 +25,8 @@ export function NavLink({
       className={cn(
         "block rounded-lg px-3 py-2 text-sm transition-colors",
         active
-          ? "bg-violet-600 text-white"
-          : "text-slate-700 hover:bg-slate-100",
+          ? "bg-slate-100 font-medium text-slate-900"
+          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
       )}
     >
       {label}

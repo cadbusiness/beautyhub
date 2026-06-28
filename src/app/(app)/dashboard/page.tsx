@@ -68,7 +68,7 @@ export default async function DashboardPage() {
               </ul>
               <a
                 href="/assistant"
-                className="mt-4 inline-flex text-sm font-medium text-violet-700 hover:underline"
+                className="mt-4 inline-flex text-sm font-medium text-slate-900 hover:underline"
               >
                 Ouvrir l&apos;assistant →
               </a>

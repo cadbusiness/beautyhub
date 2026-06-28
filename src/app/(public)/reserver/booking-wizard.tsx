@@ -131,7 +131,7 @@ export function BookingWizard() {
  <span>
  <span
  className="mr-2 inline-block h-2 w-2 rounded-full"
- style={{ backgroundColor: s.color ?? "#be185d" }}
+ style={{ backgroundColor: s.color ?? "#64748b" }}
  />
  {s.name} · {s.duration_min} min
  </span>

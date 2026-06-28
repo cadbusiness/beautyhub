@@ -23,10 +23,10 @@ export default async function PublicLayout({
             <p className="text-xs text-slate-500">Reservation en ligne</p>
           </div>
           <div className="flex gap-3 text-sm">
-            <Link href="/reserver" className="text-slate-600 hover:text-violet-700 hover:underline">
+            <Link href="/reserver" className="text-slate-600 hover:text-slate-900 hover:underline">
               Reserver
             </Link>
-            <Link href="/client/login" className="text-slate-600 hover:text-violet-700 hover:underline">
+            <Link href="/client/login" className="text-slate-600 hover:text-slate-900 hover:underline">
               Mon compte
             </Link>
           </div>

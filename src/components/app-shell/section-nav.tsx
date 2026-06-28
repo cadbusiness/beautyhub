@@ -29,7 +29,7 @@ export function SectionNav({ items }: { items: SectionNavItem[] }) {
           className={cn(
             "-mb-px shrink-0 border-b-2 px-4 py-2.5 text-sm transition-colors",
             isActive(item)
-              ? "border-violet-600 font-medium text-violet-700"
+              ? "border-slate-900 font-medium text-slate-900"
               : "border-transparent text-slate-600 hover:text-slate-900",
           )}
         >

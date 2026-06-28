@@ -38,7 +38,7 @@ export function AppHeader({
           <Link
             href="/admin"
             prefetch
-            className="hidden text-sm text-slate-600 hover:text-violet-700 sm:inline"
+            className="hidden text-sm text-slate-600 hover:text-slate-900 sm:inline"
           >
             Administration
           </Link>

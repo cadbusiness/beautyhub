@@ -1640,7 +1640,7 @@
         "service": "1. Behandeling",
         "staff": "2. Behandelaar",
         "extras": "3. Extras",
-        "date": "4. Datum",
+        "availability": "4. Beschikbaarheid",
         "slots": "5. Tijdslot"
       },
       "confirmed": {
@@ -1661,15 +1661,36 @@
         "title": "Kies een behandelaar"
       },
       "step3": {
-        "title": "Kies een datum",
-        "seeSlots": "Tijdslots bekijken"
+        "title": "Geef uw beschikbaarheid door",
+        "seeSlots": "Mogelijke tijdslots bekijken"
       },
       "step4": {
         "title": "Kies een tijdslot",
-        "noSlots": "Geen tijdslots beschikbaar op deze dag.",
+        "noSlots": "Geen tijdslot komt overeen met uw beschikbaarheid.",
+        "noSlotsHint": "Breid uw dagen of tijdsvenster uit, of kies een andere behandeling.",
+        "extrasHint": "Extra opties kunnen in de volgende stap worden toegevoegd.",
         "fullName": "Volledige naam",
         "confirm": "Afspraak bevestigen",
         "confirming": "Bevestigen…"
+      },
+      "availability": {
+        "title": "Wanneer bent u beschikbaar?",
+        "hint": "We zoeken tijdslots die bij uw voorkeuren passen.",
+        "fromDate": "Vanaf",
+        "weekdays": "Dagen van de week",
+        "timeFrom": "Vanaf",
+        "timeTo": "Tot",
+        "timeInvalid": "De eindtijd moet na de starttijd liggen.",
+        "weekdaysRequired": "Selecteer minstens één dag.",
+        "dayShort": {
+          "0": "zo",
+          "1": "ma",
+          "2": "di",
+          "3": "wo",
+          "4": "do",
+          "5": "vr",
+          "6": "za"
+        }
       },
       "extras": {
         "title": "Extra opties",

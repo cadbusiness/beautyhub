@@ -5,6 +5,10 @@ import { useFormatter, useTranslations } from "next-intl";
 import { bookPublicAppointment } from "./actions";
 import type { PublicService, PublicSlot, PublicStaff } from "@/lib/public/booking-load";
 import { ExtrasPicker } from "@/components/institut/extras-picker";
+import {
+  AvailabilityPreferencesForm,
+  defaultAvailability,
+} from "@/components/booking/availability-preferences";
 import { QuoteRequestForm } from "./quote-request-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,8 +16,12 @@ import { Field, Input } from "@/components/ui/input";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { BookingExtraLine, ServiceExtraConfig } from "@/lib/institut/service-extras";
 import { totalDurationMin, totalPriceCents } from "@/lib/institut/service-extras";
+import {
+  groupSlotsByDate,
+  type AvailabilityPreferences,
+} from "@/lib/public/booking-availability";
 
-type WizardStep = "service" | "quote" | "staff" | "extras" | "date" | "slots" | "done";
+type WizardStep = "service" | "quote" | "staff" | "extras" | "availability" | "slots" | "done";
 
 async function fetchBookingStaff(serviceId: string): Promise<PublicStaff[]> {
   const res = await fetch(`/api/public/booking?serviceId=${encodeURIComponent(serviceId)}`);
@@ -29,13 +37,20 @@ async function fetchBookingExtras(serviceId: string): Promise<ServiceExtraConfig
   return res.json();
 }
 
-async function fetchBookingSlots(
+async function fetchBookingSlotsByAvailability(
   serviceId: string,
-  date: string,
   staffId: string,
   extras: BookingExtraLine[],
+  availability: AvailabilityPreferences,
 ): Promise<PublicSlot[]> {
-  const params = new URLSearchParams({ serviceId, date, staffId });
+  const params = new URLSearchParams({
+    serviceId,
+    staffId,
+    fromDate: availability.fromDate,
+    weekdays: availability.weekdays.join(","),
+    timeFrom: availability.timeFrom,
+    timeTo: availability.timeTo,
+  });
   if (extras.length > 0) params.set("extras", JSON.stringify(extras));
   const res = await fetch(`/api/public/booking?${params}`);
   if (!res.ok) throw new Error("load_failed");
@@ -58,7 +73,7 @@ export function BookingWizard({
   const [slots, setSlots] = useState<PublicSlot[]>([]);
   const [serviceId, setServiceId] = useState(initialServiceId);
   const [staffId, setStaffId] = useState("");
-  const [date, setDate] = useState("");
+  const [availability, setAvailability] = useState<AvailabilityPreferences>(defaultAvailability);
   const [slot, setSlot] = useState<PublicSlot | null>(null);
   const [extras, setExtras] = useState<BookingExtraLine[]>([]);
   const [email, setEmail] = useState("");
@@ -83,14 +98,14 @@ export function BookingWizard({
   const stepLabels = useMemo(() => {
     const labels = [t("steps.service"), t("steps.staff")];
     if (hasExtras) labels.push(t("steps.extras"));
-    labels.push(t("steps.date"), t("steps.slots"));
+    labels.push(t("steps.availability"), t("steps.slots"));
     return labels;
   }, [hasExtras, t]);
 
   const stepIndex = useMemo(() => {
     const order: WizardStep[] = ["service", "staff"];
     if (hasExtras) order.push("extras");
-    order.push("date", "slots");
+    order.push("availability", "slots");
     const idx = order.indexOf(step === "done" ? "slots" : step);
     return idx >= 0 ? idx + 1 : 1;
   }, [hasExtras, step]);
@@ -123,16 +138,22 @@ export function BookingWizard({
   function pickStaff(id: string) {
     setStaffId(id);
     if (hasExtras && extrasBeforeTime) setStep("extras");
-    else setStep("date");
+    else setStep("availability");
   }
 
   function loadSlots() {
-    if (!serviceId || !date || !staffId) return;
+    if (!serviceId || !staffId) return;
     const slotExtras = extrasBeforeTime ? extras : [];
     startTransition(async () => {
       try {
-        const list = await fetchBookingSlots(serviceId, date, staffId, slotExtras);
+        const list = await fetchBookingSlotsByAvailability(
+          serviceId,
+          staffId,
+          slotExtras,
+          availability,
+        );
         setSlots(list);
+        setSlot(null);
         setStep("slots");
       } catch {
         setError(t("loadError"));
@@ -171,6 +192,11 @@ export function BookingWizard({
   const totalPrice = selectedService
     ? totalPriceCents(selectedService.price_cents, extras, extraCatalog)
     : 0;
+  const slotsByDate = useMemo(() => groupSlotsByDate(slots), [slots]);
+  const availabilityValid =
+    availability.fromDate &&
+    availability.weekdays.length > 0 &&
+    availability.timeFrom < availability.timeTo;
 
   if (step === "done") {
     return (
@@ -284,7 +310,7 @@ export function BookingWizard({
             </Button>
             <Button
               onClick={() => {
-                if (extrasBeforeTime) setStep("date");
+                if (extrasBeforeTime) setStep("availability");
                 else if (email && fullName) confirmBooking();
               }}
               disabled={extrasBeforeTime ? false : !email || !fullName || pending}
@@ -319,7 +345,7 @@ export function BookingWizard({
         </Card>
       ) : null}
 
-      {step === "date" ? (
+      {step === "availability" ? (
         <Card className="space-y-4">
           <h2 className="font-medium text-slate-900">{t("step3.title")}</h2>
           {hasExtras && extrasBeforeTime ? (
@@ -327,15 +353,7 @@ export function BookingWizard({
               {t("extras.durationHint", { min: totalMin, price: formatPrice(totalPrice) })}
             </p>
           ) : null}
-          <Field label={tCommon("date")} htmlFor="date">
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              min={new Date().toISOString().slice(0, 10)}
-            />
-          </Field>
+          <AvailabilityPreferencesForm value={availability} onChange={setAvailability} />
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -343,7 +361,7 @@ export function BookingWizard({
             >
               {tCommon("back")}
             </Button>
-            <Button disabled={!date || pending} onClick={loadSlots}>
+            <Button disabled={!availabilityValid || pending} onClick={loadSlots}>
               {t("step3.seeSlots")}
             </Button>
           </div>
@@ -353,26 +371,45 @@ export function BookingWizard({
       {step === "slots" ? (
         <Card className="space-y-4">
           <h2 className="font-medium text-slate-900">{t("step4.title")}</h2>
+          {hasExtras && !extrasBeforeTime ? (
+            <p className="text-sm text-slate-500">{t("step4.extrasHint")}</p>
+          ) : null}
           {slots.length === 0 ? (
-            <p className="text-sm text-slate-500">{t("step4.noSlots")}</p>
+            <div className="space-y-2">
+              <p className="text-sm text-slate-500">{t("step4.noSlots")}</p>
+              <p className="text-xs text-slate-400">{t("step4.noSlotsHint")}</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {slots.map((sl) => (
-                <button
-                  key={sl.starts_at}
-                  type="button"
-                  onClick={() => pickSlot(sl)}
-                  className={`rounded-lg border px-2 py-2 text-sm ${
-                    slot?.starts_at === sl.starts_at
-                      ? "border-slate-900 bg-slate-100 text-slate-900"
-                      : "border-slate-200 hover:border-slate-400"
-                  }`}
-                >
-                  {format.dateTime(new Date(sl.starts_at), {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </button>
+            <div className="space-y-5">
+              {slotsByDate.map(([dateKey, daySlots]) => (
+                <div key={dateKey} className="space-y-2">
+                  <p className="text-sm font-medium text-slate-700">
+                    {format.dateTime(new Date(`${dateKey}T12:00:00`), {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    })}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {daySlots.map((sl) => (
+                      <button
+                        key={sl.starts_at}
+                        type="button"
+                        onClick={() => pickSlot(sl)}
+                        className={`rounded-lg border px-2 py-2 text-sm ${
+                          slot?.starts_at === sl.starts_at
+                            ? "border-slate-900 bg-slate-100 text-slate-900"
+                            : "border-slate-200 hover:border-slate-400"
+                        }`}
+                      >
+                        {format.dateTime(new Date(sl.starts_at), {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -407,7 +444,7 @@ export function BookingWizard({
               </Button>
             </div>
           ) : null}
-          <Button variant="outline" onClick={() => setStep("date")}>
+          <Button variant="outline" onClick={() => setStep("availability")}>
             {tCommon("back")}
           </Button>
         </Card>

@@ -1657,7 +1657,7 @@
         "service": "1. Prestation",
         "staff": "2. Praticien",
         "extras": "3. Extras",
-        "date": "4. Date",
+        "availability": "4. Disponibilités",
         "slots": "5. Créneau"
       },
       "confirmed": {
@@ -1678,15 +1678,36 @@
         "title": "Choisir un praticien"
       },
       "step3": {
-        "title": "Choisir une date",
-        "seeSlots": "Voir les créneaux"
+        "title": "Indiquez vos disponibilités",
+        "seeSlots": "Voir les créneaux possibles"
       },
       "step4": {
-        "title": "Choisir un créneau",
-        "noSlots": "Aucun créneau disponible ce jour.",
+        "title": "Choisissez un créneau",
+        "noSlots": "Aucun créneau ne correspond à vos disponibilités.",
+        "noSlotsHint": "Élargissez vos jours ou votre plage horaire, ou choisissez une autre prestation.",
+        "extrasHint": "Des options complémentaires pourront être ajoutées à l'étape suivante.",
         "fullName": "Nom complet",
         "confirm": "Confirmer le rendez-vous",
         "confirming": "Confirmation…"
+      },
+      "availability": {
+        "title": "Quand êtes-vous disponible ?",
+        "hint": "Nous chercherons les créneaux qui correspondent à vos préférences.",
+        "fromDate": "À partir du",
+        "weekdays": "Jours de la semaine",
+        "timeFrom": "À partir de",
+        "timeTo": "Jusqu'à",
+        "timeInvalid": "L'heure de fin doit être après l'heure de début.",
+        "weekdaysRequired": "Sélectionnez au moins un jour.",
+        "dayShort": {
+          "0": "dim",
+          "1": "lun",
+          "2": "mar",
+          "3": "mer",
+          "4": "jeu",
+          "5": "ven",
+          "6": "sam"
+        }
       },
       "extras": {
         "title": "Options complémentaires",

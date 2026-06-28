@@ -28,5 +28,7 @@ globs:
 
 ## Densité
 
-- Contenu principal : padding vertical réduit (`py-3`).
+- Contenu principal : pas de padding vertical sur le shell (`layout`) — la liste commence sous le header app.
+- `ListPanel` remplit la hauteur disponible (`flex-1`) ; le footer reste en bas (`mt-auto`).
+- Pages avec plusieurs panneaux (ex. Équipe) : wrapper `space-y-6` + `ListPanel className="flex-none"`.
 - Pas de `space-y-6` entre un titre fantôme et la liste : la liste commence directement sous le header app.

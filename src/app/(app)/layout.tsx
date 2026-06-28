@@ -59,8 +59,10 @@ export default async function AppLayout({
         </aside>
 
         <div className="flex min-w-0 flex-1">
-          <main className="min-w-0 flex-1 overflow-auto">
-            <div className="w-full px-4 py-3 lg:px-6">{children}</div>
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto">
+            <div className="flex min-h-0 w-full flex-1 flex-col px-4 lg:px-6">
+              {children}
+            </div>
           </main>
           <AssistantPanel actions={aiActions} />
         </div>

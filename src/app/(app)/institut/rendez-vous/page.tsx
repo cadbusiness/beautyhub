@@ -139,7 +139,7 @@ export default async function RendezVousPage({
         </div>
       ) : (
         <AppointmentsList
-          panelClassName="border-t-0"
+          panelClassName="flex-1 border-t-0"
           appointments={appointments}
           clients={clients}
           services={services}

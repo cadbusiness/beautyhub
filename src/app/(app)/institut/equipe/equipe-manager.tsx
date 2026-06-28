@@ -44,8 +44,8 @@ export function EquipeManager({
   }, [staff, staffQuery]);
 
   return (
-    <>
-      <ListPanel>
+    <div className="space-y-6">
+      <ListPanel className="flex-none">
         <ListToolbar
           action={
             <Button
@@ -113,7 +113,7 @@ export function EquipeManager({
         </DataTable>
       </ListPanel>
 
-      <ListPanel className="mt-6">
+      <ListPanel className="flex-none">
         <ListToolbar
           action={
             <Button
@@ -173,6 +173,6 @@ export function EquipeManager({
       >
         <ResourceForm onSuccess={() => setResourceDialogOpen(false)} />
       </FormDialog>
-    </>
+    </div>
   );
 }

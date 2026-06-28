@@ -1,11 +1,9 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUser, getAccessibleTenants } from "@/lib/auth/session";
 import { getTenantContext } from "@/lib/tenant/context";
-import { TENANT_SLUG_COOKIE } from "@/lib/tenant/cookie";
 import { resolveDefaultTenantSlug } from "@/lib/tenant/defaults";
 
-/** Selectionne l'institut par defaut si aucun tenant n'est resolu (domaine racine). */
+/** Redirige vers la route qui pose le cookie tenant (impossible dans un layout RSC). */
 export async function ensureDefaultTenant(): Promise<void> {
   if (await getTenantContext()) return;
 
@@ -16,13 +14,5 @@ export async function ensureDefaultTenant(): Promise<void> {
   const slug = resolveDefaultTenantSlug(accessible);
   if (!slug) return;
 
-  const jar = await cookies();
-  jar.set(TENANT_SLUG_COOKIE, slug, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-  });
-
-  redirect("/dashboard");
+  redirect(`/auth/set-tenant?slug=${encodeURIComponent(slug)}&next=/dashboard`);
 }

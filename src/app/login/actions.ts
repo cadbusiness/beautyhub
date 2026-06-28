@@ -1,11 +1,10 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { getAccessibleTenants, isPlatformAdmin } from "@/lib/auth/session";
-import { TENANT_SLUG_COOKIE } from "@/lib/tenant/cookie";
+import { setTenantSlug } from "@/lib/tenant/actions";
 import { resolveDefaultTenantSlug } from "@/lib/tenant/defaults";
 
 export interface AuthState {
@@ -16,14 +15,7 @@ async function applyDefaultTenant(): Promise<void> {
   const accessible = await getAccessibleTenants();
   const slug = resolveDefaultTenantSlug(accessible);
   if (!slug) return;
-
-  const jar = await cookies();
-  jar.set(TENANT_SLUG_COOKIE, slug, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-  });
+  await setTenantSlug(slug);
 }
 
 export async function signIn(

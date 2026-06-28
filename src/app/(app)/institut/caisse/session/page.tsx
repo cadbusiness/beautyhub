@@ -7,7 +7,6 @@ import {
   computeSessionSnapshot,
   getOpenCashSession,
 } from "@/lib/institut/pos-session";
-import { PosSessionBanner } from "@/components/app-shell/pos-session-status";
 import { formatPrice } from "@/lib/utils";
 import { OpenSessionForm } from "./open-session-form";
 import { MovementForm } from "./movement-form";
@@ -99,69 +98,118 @@ export default async function CaisseSessionPage() {
     );
   }
 
-  const bannerSession = snapshot
+  const breakdown = snapshot
     ? {
-        opened_at: cashSession.opened_at,
-        sales_count: snapshot.sales_count,
-        total_cents: snapshot.total_cents,
-        expected_cash_cents: snapshot.expected_cash_cents,
+        openingFloatCents: cashSession.opening_float_cents,
+        cashSalesCents: snapshot.by_payment_method.cash ?? 0,
+        movementsInCents: snapshot.movements_in_cents,
+        movementsOutCents: snapshot.movements_out_cents,
+        movementsExpenseCents: snapshot.movements_expense_cents,
+        expectedCashCents: snapshot.expected_cash_cents,
       }
-    : undefined;
+    : null;
+
+  const workflowSteps = [
+    { n: 1, title: t("workflow.journal"), done: true },
+    { n: 2, title: t("workflow.xReport"), done: reports.some((r) => r.report_type === "x") },
+    { n: 3, title: t("workflow.zClose"), done: false },
+  ];
 
   return (
-    <div className="space-y-0">
-      {bannerSession ? <PosSessionBanner session={bannerSession} variant="open" /> : null}
-
-      <div className="space-y-5 px-4 py-4 lg:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-slate-500">
-            {format.dateTime(new Date(cashSession.opened_at), {
-              dateStyle: "medium",
-              timeStyle: "short",
-            })}
-            {" · "}
-            {t("openingFloat")} {formatPrice(cashSession.opening_float_cents)}
-            {snapshot ? (
-              <>
-                {" · "}
-                {t("stats.partial")}: {snapshot.partial_count}
-              </>
-            ) : null}
-          </p>
-          <XReportButton />
-        </div>
-
-        {snapshot && Object.keys(snapshot.by_payment_method).length > 0 ? (
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <h3 className="mb-2 text-sm font-medium text-slate-900">{t("byPayment")}</h3>
-            <ul className="grid gap-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(snapshot.by_payment_method).map(([method, cents]) => (
-                <li key={method} className="flex justify-between gap-4 text-slate-600">
-                  <span>{t(`methods.${method as "cash"}`, { defaultValue: method })}</span>
-                  <span className="tabular-nums">{formatPrice(cents)}</span>
-                </li>
-              ))}
-            </ul>
+    <div className="space-y-5 px-4 py-4 lg:px-6">
+      <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-900">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden />
+              {t("sessionOpen")}
+            </span>
+            <span className="text-xs text-slate-500">
+              {format.dateTime(new Date(cashSession.opened_at), {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
+            </span>
           </div>
-        ) : null}
+          <p className="mt-1 text-sm text-slate-600">{t("workflowIntro")}</p>
+        </div>
+        <Link href="/institut/caisse">
+          <span className="inline-flex h-9 items-center rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800">
+            {t("goToPos")}
+          </span>
+        </Link>
+      </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-            <div>
-              <h3 className="text-sm font-medium text-slate-900">{t("movements")}</h3>
-              <p className="mt-0.5 text-xs text-slate-500">{t("movementsHint")}</p>
-            </div>
+      <nav aria-label={t("workflowAria")} className="grid gap-2 sm:grid-cols-3">
+        {workflowSteps.map((step) => (
+          <div
+            key={step.n}
+            className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5"
+          >
+            <span
+              className={
+                step.done
+                  ? "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-600 text-xs font-semibold text-white"
+                  : "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600"
+              }
+            >
+              {step.n}
+            </span>
+            <span className="text-sm font-medium text-slate-800">{step.title}</span>
+          </div>
+        ))}
+      </nav>
+
+      {snapshot && Object.keys(snapshot.by_payment_method).length > 0 ? (
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <h3 className="mb-2 text-sm font-medium text-slate-900">{t("byPayment")}</h3>
+          <ul className="grid gap-1 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            {Object.entries(snapshot.by_payment_method).map(([method, cents]) => (
+              <li key={method} className="flex justify-between gap-4 text-slate-600">
+                <span>{t(`methods.${method as "cash"}`, { defaultValue: method })}</span>
+                <span className="tabular-nums font-medium text-slate-900">
+                  {formatPrice(cents)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <div className="grid gap-5 xl:grid-cols-5">
+        <section className="space-y-4 xl:col-span-2">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">
+              {t("workflow.journal")}
+            </h3>
+            <p className="mt-0.5 text-xs text-slate-500">{t("movementsHint")}</p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
             <MovementForm />
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+              {t("journalTitle")}
+            </h4>
             {movements.length === 0 ? (
               <p className="text-sm text-slate-500">{t("noMovements")}</p>
             ) : (
-              <ul className="max-h-48 space-y-2 overflow-y-auto text-sm">
+              <ul className="divide-y divide-slate-100 text-sm">
                 {movements.map((m) => (
-                  <li key={m.id} className="flex justify-between gap-2">
-                    <span className="text-slate-600">
-                      {t(`movementTypes.${m.movement_type as "in"}`)} · {m.reason}
-                    </span>
-                    <span className="shrink-0 tabular-nums text-slate-900">
+                  <li key={m.id} className="flex justify-between gap-3 py-2 first:pt-0 last:pb-0">
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-900">
+                        {t(`movementTypes.${m.movement_type as "in"}`)}
+                      </p>
+                      <p className="truncate text-xs text-slate-500">{m.reason}</p>
+                      <p className="text-xs text-slate-400">
+                        {format.dateTime(new Date(m.created_at), {
+                          timeStyle: "short",
+                          dateStyle: "short",
+                        })}
+                      </p>
+                    </div>
+                    <span className="shrink-0 tabular-nums font-medium text-slate-900">
                       {m.movement_type === "in" ? "+" : "−"}
                       {formatPrice(m.amount_cents)}
                     </span>
@@ -170,41 +218,45 @@ export default async function CaisseSessionPage() {
               </ul>
             )}
           </div>
+        </section>
 
-          <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-            <div>
-              <h3 className="text-sm font-medium text-slate-900">{t("closeTitle")}</h3>
+        <section className="space-y-4 xl:col-span-3">
+          <XReportButton />
+
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-slate-900">{t("closeTitle")}</h3>
               <p className="mt-0.5 text-xs text-slate-500">{t("closeDescription")}</p>
             </div>
-            <CloseSessionForm expectedCash={snapshot?.expected_cash_cents ?? 0} />
+            {breakdown ? <CloseSessionForm breakdown={breakdown} /> : null}
           </div>
-        </div>
-
-        {reports.length > 0 ? (
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <h3 className="mb-2 text-sm font-medium text-slate-900">{t("reports")}</h3>
-            <ul className="grid gap-1 text-sm sm:grid-cols-2">
-              {reports.map((r) => (
-                <li key={r.id} className="flex justify-between py-1 text-slate-600">
-                  <span>
-                    {r.report_type.toUpperCase()} · {r.report_number}
-                  </span>
-                  <span>
-                    {format.dateTime(new Date(r.created_at), {
-                      timeStyle: "short",
-                      dateStyle: "short",
-                    })}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
-        <Link href="/institut/caisse" className="inline-block text-sm text-slate-500 hover:text-slate-700">
-          ← {t("backToPos")}
-        </Link>
+        </section>
       </div>
+
+      {reports.length > 0 ? (
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <h3 className="mb-2 text-sm font-medium text-slate-900">{t("reports")}</h3>
+          <ul className="grid gap-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
+            {reports.map((r) => (
+              <li key={r.id} className="flex justify-between gap-2 py-1 text-slate-600">
+                <span>
+                  {r.report_type.toUpperCase()} · {r.report_number}
+                </span>
+                <span className="shrink-0 tabular-nums">
+                  {format.dateTime(new Date(r.created_at), {
+                    timeStyle: "short",
+                    dateStyle: "short",
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <Link href="/institut/caisse" className="inline-block text-sm text-slate-500 hover:text-slate-700">
+        ← {t("backToPos")}
+      </Link>
     </div>
   );
 }

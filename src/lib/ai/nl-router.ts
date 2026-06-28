@@ -1,9 +1,19 @@
 import type { AIAction } from "@/modules/types";
+import type { SupportCategory } from "@/lib/platform/support";
 import type { ExecuteActionContext } from "./types";
 import { getAiActionsFor } from "@/modules";
 import { createClient } from "@/lib/supabase/server";
 import { fetchTenantContext } from "@/modules/institut/ai-helpers";
 import { fetchPosContext } from "@/modules/institut/ai-pos-helpers";
+import { fetchPlatformAiConfig } from "@/lib/platform/settings";
+import {
+  buildKnowledgeCatalog,
+  findHelpArticle,
+  formatHelpArticle,
+  looksLikeHelpQuestion,
+  looksLikeSupportIssue,
+  type HelpArticle,
+} from "./knowledge";
 
 export type InterpretResult =
   | {
@@ -12,6 +22,14 @@ export type InterpretResult =
       params: Record<string, unknown>;
       summary: string;
       needsConfirm: boolean;
+    }
+  | { type: "help"; message: string; links: { label: string; href: string }[] }
+  | {
+      type: "support_offer";
+      summary: string;
+      category: SupportCategory;
+      subject: string;
+      body: string;
     }
   | { type: "clarify"; message: string }
   | { type: "unknown"; message: string };
@@ -103,6 +121,49 @@ function parseFrenchDate(token: string, refYear = new Date().getFullYear()): Dat
   return null;
 }
 
+function helpFromArticle(article: HelpArticle): InterpretResult {
+  return {
+    type: "help",
+    message: formatHelpArticle(article),
+    links: [{ label: article.title, href: article.href }],
+  };
+}
+
+function heuristicHelpOrSupport(message: string, pos: Awaited<ReturnType<typeof fetchPosContext>>): InterpretResult | null {
+  if (looksLikeSupportIssue(message)) {
+    const norm = normalizeText(message);
+    const category: SupportCategory =
+      norm.includes("bug") || norm.includes("erreur") ? "bug" : "config";
+
+    if (norm.includes("caisse") && !pos.openSession && (norm.includes("ouvr") || norm.includes("encaiss"))) {
+      return {
+        type: "help",
+        message:
+          "La caisse semble fermée — c'est souvent la cause du problème.\n\n1. Allez dans Caisse → Session.\n2. Ouvrez une session avec le fond de caisse initial.\n3. Réessayez votre opération.",
+        links: [{ label: "Ouvrir la session caisse", href: "/institut/caisse/session" }],
+      };
+    }
+
+    return {
+      type: "support_offer",
+      summary:
+        category === "bug"
+          ? "Ce problème ressemble à un dysfonctionnement. Je peux transmettre votre demande au support BeautyHub."
+          : "Je n'ai pas trouvé la cause exacte. Je peux transmettre votre demande au support pour qu'on vous aide.",
+      category,
+      subject: message.slice(0, 120),
+      body: message,
+    };
+  }
+
+  if (looksLikeHelpQuestion(message)) {
+    const article = findHelpArticle(message);
+    if (article) return helpFromArticle(article);
+  }
+
+  return null;
+}
+
 function heuristicRoute(
   message: string,
   catalog: ActionCatalogEntry[],
@@ -113,6 +174,9 @@ function heuristicRoute(
   const staffNames = context.staff.map((s) => s.full_name);
 
   const has = (...words: string[]) => words.some((w) => norm.includes(normalizeText(w)));
+
+  const helpOrSupport = heuristicHelpOrSupport(message, pos);
+  if (helpOrSupport) return helpOrSupport;
 
   if (has("conge", "vacance", "absence", "fermeture", "indisponible")) {
     const staffName = findStaffInMessage(message, staffNames);
@@ -221,18 +285,10 @@ function heuristicRoute(
   }
 
   if (has("rapport x", "ticket x") || (has("rapport") && has("intermediaire"))) {
-    return matchList(
-      catalog,
-      "institut.pos_generate_x_report",
-      {},
-      "Générer un rapport X",
-    );
+    return matchList(catalog, "institut.pos_generate_x_report", {}, "Générer un rapport X");
   }
 
-  if (
-    has("clotur", "ferme") &&
-    has("caisse", "session", "rapport z", "z")
-  ) {
+  if (has("clotur", "ferme") && has("caisse", "session", "rapport z", "z")) {
     const cashMatch = message.match(/(\d+(?:[.,]\d+)?)\s*€/);
     if (cashMatch) {
       return {
@@ -266,10 +322,7 @@ function heuristicRoute(
     return { type: "clarify", message: "Quel montant pour le bon cadeau ? (ex. « bon cadeau 50 € »)" };
   }
 
-  if (
-    has("caisse", "session") &&
-    (has("etat", "état", "status", "ouverte", "resume", "résumé"))
-  ) {
+  if (has("caisse", "session") && (has("etat", "état", "status", "ouverte", "resume", "résumé"))) {
     return matchList(
       catalog,
       "institut.pos_session_status",
@@ -280,7 +333,24 @@ function heuristicRoute(
 
   if (has("cree", "creer", "ajoute", "ajouter", "nouveau", "nouvelle")) {
     if (has("client")) {
-      return { type: "clarify", message: "Pour créer un client, précisez le nom complet et l'email." };
+      return {
+        type: "help",
+        message: formatHelpArticle(
+          findHelpArticle("ajouter client") ?? {
+            id: "add_client",
+            title: "Ajouter un client",
+            summary: "Créez un client depuis la liste Clients.",
+            steps: ["Ouvrez Clients.", "Cliquez sur « + Nouveau client ».", "Renseignez les informations."],
+            href: "/institut/clients",
+            keywords: [],
+          },
+        ),
+        links: [{ label: "Ajouter un client", href: "/institut/clients" }],
+      };
+    }
+    if (has("prestation", "service")) {
+      const article = findHelpArticle("ajouter prestation");
+      if (article) return helpFromArticle(article);
     }
   }
 
@@ -319,65 +389,35 @@ function matchList(
   };
 }
 
-async function openAiRoute(
-  message: string,
-  catalog: ActionCatalogEntry[],
-  context: Awaited<ReturnType<typeof fetchTenantContext>>,
-  pos: Awaited<ReturnType<typeof fetchPosContext>>,
-): Promise<InterpretResult | null> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return null;
-
-  const system = `Tu es l'assistant IA de BeautyHub, un SaaS pour instituts de beauté.
-Tu dois choisir UNE action parmi la liste et produire les paramètres JSON.
-Réponds UNIQUEMENT en JSON valide avec l'un de ces formats:
-{"action":"nom.action","params":{...},"summary":"phrase courte en français"}
-{"clarify":"question en français si info manquante"}
-{"unknown":"message si impossible"}
-
-Contexte tenant:
-- Personnel: ${context.staff.map((s) => s.full_name).join(", ") || "aucun"}
-- Cabines: ${context.resources.map((r) => r.name).join(", ") || "aucune"}
-- Grilles horaires: ${context.schedules.map((s) => s.name).join(", ") || "aucune"}
-- Prestations: ${context.services.map((s) => s.name).join(", ") || "aucune"}
-
-Caisse:
-- Session: ${pos.openSession ? `ouverte depuis ${pos.openSession.opened_at}` : "fermée"}
-- Dernières ventes: ${pos.recentSales.map((s) => s.ticket_number ?? s.id.slice(0, 8)).join(", ") || "aucune"}
-- Bons cadeaux actifs: ${pos.giftCards.map((g) => g.code).join(", ") || "aucun"}
-
-Date du jour: ${new Date().toISOString().slice(0, 10)}
-
-Actions disponibles:
-${catalog.map((a) => `- ${a.name}: ${a.description}. Paramètres: ${a.parametersHint}${a.needsConfirm ? " [confirmation requise]" : ""}`).join("\n")}`;
-
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-      temperature: 0.1,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: message },
-      ],
-    }),
-  });
-
-  if (!res.ok) return null;
-
-  const body = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = body.choices?.[0]?.message?.content;
-  if (!content) return null;
-
+function parseLlmResult(content: string, catalog: ActionCatalogEntry[]): InterpretResult | null {
   try {
     const parsed = JSON.parse(content) as Record<string, unknown>;
+
+    if (typeof parsed.help === "string") {
+      const links = Array.isArray(parsed.links)
+        ? (parsed.links as { label?: string; href?: string }[])
+            .filter((l) => l.label && l.href)
+            .map((l) => ({ label: String(l.label), href: String(l.href) }))
+        : [];
+      return { type: "help", message: parsed.help, links };
+    }
+
+    if (typeof parsed.support === "string") {
+      const category = String(parsed.category ?? "config") as SupportCategory;
+      const safeCategory: SupportCategory = ["help", "bug", "config", "feature_request"].includes(
+        category,
+      )
+        ? category
+        : "config";
+      return {
+        type: "support_offer",
+        summary: String(parsed.support),
+        category: safeCategory,
+        subject: String(parsed.subject ?? parsed.support).slice(0, 120),
+        body: String(parsed.body ?? parsed.support),
+      };
+    }
+
     if (typeof parsed.clarify === "string") {
       return { type: "clarify", message: parsed.clarify };
     }
@@ -402,6 +442,79 @@ ${catalog.map((a) => `- ${a.name}: ${a.description}. Paramètres: ${a.parameters
   return null;
 }
 
+async function openAiRoute(
+  message: string,
+  catalog: ActionCatalogEntry[],
+  context: Awaited<ReturnType<typeof fetchTenantContext>>,
+  pos: Awaited<ReturnType<typeof fetchPosContext>>,
+): Promise<InterpretResult | null> {
+  const aiConfig = await fetchPlatformAiConfig();
+  if (!aiConfig.enabled || !aiConfig.apiKey) return null;
+
+  const system = `Tu es l'assistant IA de BeautyHub, un SaaS pour instituts de beauté.
+Tu aides les utilisateurs à:
+1) COMPRENDRE comment utiliser le logiciel (mode guide)
+2) EXÉCUTER des actions métier (mode action)
+3) DIAGNOSTIQUER un problème: erreur de configuration vs bug potentiel (mode support)
+
+Réponds UNIQUEMENT en JSON valide avec l'un de ces formats:
+{"help":"explication pas-à-pas en français","links":[{"label":"...","href":"/chemin"}]}
+{"support":"résumé pour l'utilisateur","category":"bug|config|feature_request|help","subject":"...","body":"..."}
+{"action":"nom.action","params":{...},"summary":"phrase courte en français"}
+{"clarify":"question en français si info manquante"}
+{"unknown":"message si impossible"}
+
+Règles support:
+- Si c'est probablement une mauvaise manip (ex. caisse fermée, module non activé), réponds en {"help":...} avec les étapes.
+- Si ça ressemble à un bug ou tu n'es pas sûr, propose {"support":...} avec category appropriée.
+- Ne crée jamais un ticket automatiquement: propose seulement l'escalade.
+
+Guides disponibles:
+${buildKnowledgeCatalog()}
+
+Contexte tenant:
+- Personnel: ${context.staff.map((s) => s.full_name).join(", ") || "aucun"}
+- Cabines: ${context.resources.map((r) => r.name).join(", ") || "aucune"}
+- Grilles horaires: ${context.schedules.map((s) => s.name).join(", ") || "aucune"}
+- Prestations: ${context.services.map((s) => s.name).join(", ") || "aucune"}
+
+Caisse:
+- Session: ${pos.openSession ? `ouverte depuis ${pos.openSession.opened_at}` : "fermée"}
+- Dernières ventes: ${pos.recentSales.map((s) => s.ticket_number ?? s.id.slice(0, 8)).join(", ") || "aucune"}
+
+Date du jour: ${new Date().toISOString().slice(0, 10)}
+
+Actions disponibles:
+${catalog.map((a) => `- ${a.name}: ${a.description}. Paramètres: ${a.parametersHint}${a.needsConfirm ? " [confirmation requise]" : ""}`).join("\n")}`;
+
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${aiConfig.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: aiConfig.model,
+      temperature: 0.1,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: message },
+      ],
+    }),
+  });
+
+  if (!res.ok) return null;
+
+  const body = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  const content = body.choices?.[0]?.message?.content;
+  if (!content) return null;
+
+  return parseLlmResult(content, catalog);
+}
+
 export async function interpretUserMessage(
   message: string,
   ctx: ExecuteActionContext,
@@ -423,11 +536,12 @@ export async function interpretUserMessage(
   const heuristic = heuristicRoute(trimmed, catalog, tenantContext, posContext);
   if (heuristic) return heuristic;
 
+  const aiConfig = await fetchPlatformAiConfig();
   return {
     type: "unknown",
-    message: process.env.OPENAI_API_KEY
-      ? "Je n'ai pas compris. Reformulez ou choisissez une action rapide."
-      : "Je n'ai pas compris. Ajoutez OPENAI_API_KEY pour le langage naturel avancé, ou choisissez une action rapide.",
+    message: aiConfig.apiKey
+      ? "Je n'ai pas reconnu cette demande. Reformulez, choisissez une action rapide, ou décrivez un problème pour contacter le support."
+      : "Je n'ai pas reconnu cette demande. Configurez la clé OpenAI dans Admin → Réglages, ou choisissez une action rapide.",
   };
 }
 

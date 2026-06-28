@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -7,15 +8,26 @@ import { Button } from "@/components/ui/button";
 import {
   interpretMessage,
   runAiAction,
+  submitSupportTicket,
   type InterpretMessageResult,
   type RunAiActionResult,
 } from "@/app/(app)/assistant/actions";
+import type { SupportCategory } from "@/lib/platform/support";
 
 type Action = { name: string; description: string };
 
 type Message =
   | { role: "assistant"; text: string }
   | { role: "user"; text: string }
+  | { role: "help"; text: string; links: { label: string; href: string }[] }
+  | {
+      role: "support";
+      summary: string;
+      category: SupportCategory;
+      subject: string;
+      body: string;
+      conversationExcerpt: string;
+    }
   | { role: "result"; result: RunAiActionResult }
   | {
       role: "confirm";
@@ -64,15 +76,6 @@ const MODULE_KEYS: Record<string, "institut" | "academie"> = {
   institut: "institut",
   academie: "academie",
 };
-
-const FEATURED_ACTION_NAMES = [
-  "institut.create_client",
-  "institut.list_clients",
-  "institut.list_appointments",
-  "institut.create_time_off",
-  "academie.list_courses",
-  "institut.pos_open_session",
-] as const;
 
 function SendIcon({ className }: { className?: string }) {
   return (
@@ -141,14 +144,6 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
     return groups;
   }, [actions, tModules]);
 
-  const featuredActions = useMemo(
-    () =>
-      FEATURED_ACTION_NAMES.map((name) => actions.find((a) => a.name === name)).filter(
-        (action): action is Action => action != null,
-      ),
-    [actions],
-  );
-
   const filteredGroups = useMemo(() => {
     const q = actionSearch.trim().toLowerCase();
     if (!q) return grouped;
@@ -215,7 +210,43 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
       return;
     }
 
-    if (result.needsConfirm) {
+    if (result.type === "help") {
+      setMessages((prev) => [
+        ...prev,
+        { role: "help", text: result.message, links: result.links },
+      ]);
+      return;
+    }
+
+    if (result.type === "support_offer") {
+      setMessages((prev) => {
+        const conversationExcerpt = prev
+          .slice(-6)
+          .map((m) => {
+            if (m.role === "user") return `Utilisateur: ${m.text}`;
+            if (m.role === "assistant") return `Assistant: ${m.text}`;
+            if (m.role === "help") return `Guide: ${m.text}`;
+            return "";
+          })
+          .filter(Boolean)
+          .join("\n");
+
+        return [
+          ...prev,
+          {
+            role: "support" as const,
+            summary: result.summary,
+            category: result.category,
+            subject: result.subject,
+            body: result.body,
+            conversationExcerpt,
+          },
+        ];
+      });
+      return;
+    }
+
+    if (result.type === "action" && result.needsConfirm) {
       setMessages((prev) => [
         ...prev,
         {
@@ -228,7 +259,36 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
       return;
     }
 
-    executeAction(result.actionName, result.params, true);
+    if (result.type === "action") {
+      executeAction(result.actionName, result.params, true);
+    }
+  }
+
+  function submitSupport(msg: Extract<Message, { role: "support" }>) {
+    startTransition(async () => {
+      const result = await submitSupportTicket({
+        subject: msg.subject,
+        body: msg.body,
+        category: msg.category,
+        aiSummary: msg.summary,
+        conversationExcerpt: msg.conversationExcerpt,
+        pageUrl: typeof window !== "undefined" ? window.location.pathname : undefined,
+      });
+
+      setMessages((prev) => prev.filter((m) => m !== msg));
+
+      if (result.ok) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: t("support.submitted") },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: result.error ?? t("support.submitError") },
+        ]);
+      }
+    });
   }
 
   function submitMessage() {
@@ -314,7 +374,11 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
                     ? "border border-slate-200 bg-slate-50 text-slate-700"
                     : msg.role === "confirm"
                       ? "border border-amber-200 bg-amber-50 text-slate-800"
-                      : "bg-slate-100 text-slate-700",
+                      : msg.role === "support"
+                        ? "border border-sky-200 bg-sky-50 text-slate-800"
+                        : msg.role === "help"
+                          ? "border border-emerald-200 bg-emerald-50 text-slate-800"
+                          : "bg-slate-100 text-slate-700",
               )}
             >
               {msg.role === "result" ? (
@@ -351,6 +415,49 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
                     </Button>
                   </div>
                 </div>
+              ) : msg.role === "help" ? (
+                <div className="space-y-2">
+                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  {msg.links.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {msg.links.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className="inline-flex rounded-lg border border-emerald-300 bg-white px-2.5 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+                        >
+                          {link.label} →
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : msg.role === "support" ? (
+                <div className="space-y-2">
+                  <p>{msg.summary}</p>
+                  <p className="text-xs text-slate-600">{t("support.prompt")}</p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      className="h-8"
+                      disabled={pending}
+                      onClick={() => submitSupport(msg)}
+                    >
+                      {t("support.confirm")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-8"
+                      disabled={pending}
+                      onClick={() =>
+                        setMessages((prev) => prev.filter((_, idx) => idx !== i))
+                      }
+                    >
+                      {t("support.cancel")}
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 msg.text
               )}
@@ -363,27 +470,6 @@ export function AssistantPanel({ actions }: { actions: Action[] }) {
 
         <div className="space-y-3 border-t border-slate-100 p-4">
           <div className="space-y-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
-              {t("quickActions")}
-            </p>
-
-            {featuredActions.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {featuredActions.map((action) => (
-                  <button
-                    key={action.name}
-                    type="button"
-                    disabled={pending}
-                    onClick={() => runQuickAction(action.name)}
-                    title={action.description}
-                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white disabled:opacity-50"
-                  >
-                    {actionLabel(action)}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-
             <button
               type="button"
               disabled={pending}

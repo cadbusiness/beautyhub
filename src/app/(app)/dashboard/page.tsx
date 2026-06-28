@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   getRoleForTenant,
@@ -9,6 +9,8 @@ import { getEnabledModuleIds, getTenantContext } from "@/lib/tenant/context";
 import { getAiActionsFor, getNavFor } from "@/modules";
 import { getAppShellData } from "@/lib/auth/team-session";
 import { PosSessionBanner } from "@/components/app-shell/pos-session-status";
+import { DashboardAnalytics } from "@/components/institut/dashboard-analytics";
+import { fetchDashboardSnapshot } from "@/lib/institut/dashboard-stats";
 import { Button } from "@/components/ui/button";
 import { ListPanel } from "@/components/ui/list-panel";
 
@@ -105,45 +107,17 @@ export default async function DashboardPage() {
   const posSession = shell?.posSession ?? null;
 
   const hasInstitut = enabledModuleIds.includes("institut");
-  let kpis: { label: string; value: number; href: string }[] = [];
+  let dashboardSnapshot = null;
 
   if (tenant && hasInstitut) {
     const supabase = await createClient();
-    const [clients, upcoming, services] = await Promise.all([
-      supabase
-        .from("clients")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", tenant.id),
-      supabase
-        .from("inst_appointments")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", tenant.id)
-        .gte("starts_at", new Date().toISOString())
-        .neq("status", "cancelled"),
-      supabase
-        .from("inst_services")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", tenant.id)
-        .eq("is_active", true),
-    ]);
-
-    kpis = [
-      {
-        label: t("kpis.upcomingAppointments"),
-        value: upcoming.count ?? 0,
-        href: "/institut/rendez-vous",
-      },
-      {
-        label: t("kpis.clients"),
-        value: clients.count ?? 0,
-        href: "/institut/clients",
-      },
-      {
-        label: t("kpis.services"),
-        value: services.count ?? 0,
-        href: "/institut/prestations",
-      },
-    ];
+    const locale = await getLocale();
+    dashboardSnapshot = await fetchDashboardSnapshot(
+      supabase,
+      tenant.id,
+      "week",
+      locale,
+    );
   }
 
   return (
@@ -163,27 +137,12 @@ export default async function DashboardPage() {
         <p className="mt-1 text-sm text-slate-500">{t("subtitle")}</p>
       </div>
 
-      {kpis.length > 0 ? (
+      {dashboardSnapshot ? (
         <DashboardSection
-          title={t("kpis.title")}
-          description={t("kpis.description")}
+          title={t("analytics.title")}
+          description={t("analytics.description")}
         >
-          <div className="grid gap-3 sm:grid-cols-3">
-            {kpis.map((kpi) => (
-              <Link
-                key={kpi.href}
-                href={kpi.href}
-                className="rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300 hover:bg-slate-50/50"
-              >
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  {kpi.label}
-                </p>
-                <p className="mt-3 text-3xl font-semibold tabular-nums text-slate-800">
-                  {kpi.value}
-                </p>
-              </Link>
-            ))}
-          </div>
+          <DashboardAnalytics initialSnapshot={dashboardSnapshot} />
         </DashboardSection>
       ) : null}
 

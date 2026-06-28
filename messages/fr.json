@@ -146,7 +146,9 @@
     "academieStudents": "Élèves",
     "adminOverview": "Administration",
     "adminTenants": "Instituts",
-    "adminPlans": "Formules"
+    "adminPlans": "Formules",
+    "adminSupport": "Support",
+    "adminSettings": "Réglages"
   },
   "weekdays": {
     "mon": "Lundi",
@@ -205,6 +207,55 @@
       "upcomingAppointments": "RDV à venir",
       "clients": "Clients",
       "services": "Prestations"
+    },
+    "analytics": {
+      "title": "Statistiques",
+      "description": "Votre activité en un coup d'œil — chiffres du jour et tendances.",
+      "healthTitle": "Santé du business aujourd'hui",
+      "healthHint": "Basé sur votre CA, vos RDV et le taux d'annulation.",
+      "todayRevenue": "Généré aujourd'hui",
+      "todaySales": "{count, plural, =0 {Aucune vente} one {# vente} other {# ventes}}",
+      "todayAppointments": "RDV du jour",
+      "todayCompleted": "Terminés",
+      "todayCancelled": "Annulations",
+      "todayNewClients": "Nouveaux clients",
+      "periodOverview": "Vue sur la période",
+      "periodHint": {
+        "today": "Détail heure par heure de votre journée.",
+        "week": "Les 7 derniers jours.",
+        "month": "Les 30 derniers jours.",
+        "year": "Les 12 derniers mois."
+      },
+      "periods": {
+        "today": "Aujourd'hui",
+        "week": "Semaine",
+        "month": "Mois",
+        "year": "Année"
+      },
+      "revenue": "Chiffre d'affaires",
+      "sales": "Ventes",
+      "appointments": "Rendez-vous",
+      "newClients": "Nouveaux clients",
+      "cancellationRate": "{rate} % d'annulations",
+      "noShowCount": "{count, plural, =0 {Aucune absence} one {# absence} other {# absences}}",
+      "noComparison": "Pas de comparaison",
+      "revenueChart": "CA généré",
+      "appointmentsChart": "Prises de RDV",
+      "appointmentMix": "Répartition des RDV",
+      "emptyChart": "Pas encore de données sur cette période.",
+      "emptyAppointments": "Aucun rendez-vous sur cette période.",
+      "mood": {
+        "great": "Super journée !",
+        "good": "Belle dynamique",
+        "ok": "On garde le cap",
+        "low": "Journée calme — place à demain"
+      },
+      "status": {
+        "completed": "Terminés",
+        "cancelled": "Annulés",
+        "noShow": "Absents",
+        "scheduled": "À venir"
+      }
     },
     "quickActions": {
       "title": "Actions rapides",
@@ -411,6 +462,7 @@
       "movementRecorded": "Mouvement enregistré.",
       "reportFailed": "Impossible de générer le rapport.",
       "sessionClosed": "Clôture Z effectuée",
+      "varianceNotesRequired": "Un écart de caisse nécessite une note explicative.",
       "giftCardIssued": "Bon-cadeau émis",
       "creditNoteCreated": "Avoir créé",
       "creditAmountInvalid": "Montant d'avoir invalide.",
@@ -1252,6 +1304,59 @@
         "editSubmit": "Enregistrer",
         "submitting": "Enregistrement…"
       }
+    },
+    "settings": {
+      "title": "Réglages plateforme",
+      "description": "Configuration de l'assistant IA et du support client.",
+      "aiTitle": "Assistant IA",
+      "aiDescription": "La clé OpenAI est chiffrée en base. Si absente, le fallback utilise OPENAI_API_KEY du déploiement.",
+      "aiEnabled": "Assistant IA activé",
+      "aiModel": "Modèle OpenAI",
+      "openAiKey": "Clé API OpenAI",
+      "openAiKeyPlaceholder": "sk-…",
+      "openAiKeyPlaceholderSet": "Laisser vide pour conserver la clé actuelle",
+      "openAiKeyConfigured": "Une clé est déjà configurée.",
+      "openAiKeyHint": "Requis pour le langage naturel avancé et le diagnostic intelligent.",
+      "clearOpenAiKey": "Supprimer la clé enregistrée",
+      "supportTitle": "Support client",
+      "supportDescription": "Les demandes escaladées depuis l'assistant apparaissent dans Support.",
+      "supportNotifyEmail": "Email de notification (optionnel)",
+      "supportNotifyEmailPlaceholder": "support@votredomaine.fr",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Réglages enregistrés."
+    },
+    "support": {
+      "title": "Support client",
+      "description": "Demandes transmises par les instituts via l'assistant IA.",
+      "filterAll": "Toutes",
+      "empty": "Aucune demande pour le moment.",
+      "columns": {
+        "subject": "Sujet",
+        "tenant": "Institut",
+        "status": "Statut"
+      },
+      "category": {
+        "help": "Aide",
+        "bug": "Bug",
+        "config": "Configuration",
+        "feature_request": "Évolution"
+      },
+      "status": {
+        "open": "Ouverte",
+        "in_progress": "En cours",
+        "resolved": "Résolue",
+        "closed": "Fermée"
+      },
+      "detail": {
+        "message": "Message",
+        "conversation": "Historique assistant",
+        "page": "Page",
+        "status": "Statut",
+        "notes": "Notes internes",
+        "save": "Mettre à jour",
+        "saving": "Mise à jour…"
+      }
     }
   },
   "auth": {
@@ -1422,6 +1527,13 @@
       "modules": {
         "institut": "Institut",
         "academie": "Académie"
+      },
+      "support": {
+        "prompt": "Souhaitez-vous envoyer cette demande au support BeautyHub ?",
+        "confirm": "Envoyer au support",
+        "cancel": "Non merci",
+        "submitted": "Votre demande a été transmise au support. Nous reviendrons vers vous rapidement.",
+        "submitError": "Impossible d'envoyer la demande pour le moment."
       }
     },
     "page": {
@@ -1614,10 +1726,29 @@
       "goToPos": "Encaisser une vente",
       "goToPosAfterOpen": "Aller encaisser",
       "settingsLink": "Réglages caisse",
-      "generateX": "Rapport X",
+      "generateX": "Générer le X",
+      "xReportTitle": "Contrôle intermédiaire (rapport X)",
+      "xReportHint": "Point de contrôle sans clôturer la journée — utile en milieu de journée ou avant un changement de caissier.",
+      "xReportGenerated": "Rapport {number} enregistré.",
+      "workflowIntro": "Journal des mouvements → contrôle X (optionnel) → comptage et clôture Z.",
+      "workflowAria": "Étapes de la session caisse",
+      "workflow": {
+        "journal": "Journal espèces",
+        "xReport": "Rapport X",
+        "zClose": "Clôture Z"
+      },
+      "journalTitle": "Historique des mouvements",
+      "breakdown": {
+        "openingFloat": "Fond de caisse initial",
+        "cashSales": "Ventes en espèces",
+        "movementsIn": "Entrées caisse",
+        "movementsOut": "Sorties caisse",
+        "movementsExpense": "Dépenses espèces",
+        "expectedCash": "Espèces attendues"
+      },
       "byPayment": "Par moyen de paiement",
       "movements": "Mouvements espèces",
-      "movementsHint": "Retraits ou dépôts de liquide hors ventes (courses, retrait banque…).",
+      "movementsHint": "Hors ventes : approvisionnement monnaie, remise en banque, petites dépenses payées en liquide.",
       "noMovements": "Aucun mouvement pour l'instant.",
       "closeTitle": "Clôture de fin de journée",
       "closeDescription": "Comptez les espèces réellement dans le tiroir, comparez au montant attendu, puis clôturez.",
@@ -1643,9 +1774,9 @@
         "credit_note": "Avoir"
       },
       "movementTypes": {
-        "in": "Entrée",
-        "out": "Sortie",
-        "expense": "Note de frais"
+        "in": "Entrée caisse",
+        "out": "Sortie caisse",
+        "expense": "Dépense espèces"
       },
       "openForm": {
         "float": "Fond de caisse (€)",
@@ -1654,15 +1785,49 @@
         "defaultHint": "Valeur par défaut configurée : {amount}"
       },
       "movementForm": {
-        "types": { "in": "Entrée", "out": "Sortie", "expense": "Dépense" },
-        "reasonPlaceholder": "Motif (courses, retrait…)",
-        "submit": "Enregistrer"
+        "typeLabel": "Type de mouvement",
+        "amountLabel": "Montant (€)",
+        "reasonLabel": "Motif",
+        "types": {
+          "in": "Entrée",
+          "out": "Sortie",
+          "expense": "Dépense"
+        },
+        "typeHints": {
+          "in": "Ajouter du liquide (monnaie, apport)",
+          "out": "Retirer du liquide (banque, coffre)",
+          "expense": "Achat payé en espèces depuis le tiroir"
+        },
+        "presets": {
+          "changeFund": "Approvisionnement monnaie",
+          "ownerDeposit": "Apport en caisse",
+          "bankDeposit": "Remise en banque",
+          "safeTransfer": "Mise en coffre",
+          "supplies": "Fournitures / consommables",
+          "pettyPurchase": "Petit achat",
+          "otherExpense": "Autre dépense"
+        },
+        "reasonPlaceholder": "Décrivez le mouvement (obligatoire pour la traçabilité)",
+        "submit": "Enregistrer le mouvement"
       },
       "closeForm": {
+        "theoreticalTitle": "Solde théorique en espèces",
         "expected": "Espèces attendues",
         "counted": "Espèces comptées (€)",
-        "notesPlaceholder": "Notes de clôture (optionnel)",
-        "submit": "Clôturer (Z)"
+        "countedHelp": "Comptez pièces et billets réellement présents dans le tiroir.",
+        "balancedTitle": "Caisse équilibrée",
+        "balancedHint": "Le montant compté correspond au solde théorique.",
+        "varianceTitle": "Écart de caisse",
+        "varianceSurplus": "Excédent de",
+        "varianceShortage": "Manquant de",
+        "varianceExplain": "Notez la cause de l'écart dans les notes — ne modifiez pas les ventes enregistrées.",
+        "notesLabel": "Notes de clôture",
+        "notesPlaceholder": "Observations (optionnel si caisse équilibrée)",
+        "notesRequiredPlaceholder": "Expliquez l'écart de caisse (obligatoire)",
+        "confirmCheckbox": "J'ai compté physiquement les espèces dans le tiroir-caisse",
+        "zWarningTitle": "Clôture définitive (Z)",
+        "zWarningBody": "Le rapport Z clôt la session et fige les totaux du jour. En cas d'erreur sur une vente, corrigez-la avant de clôturer.",
+        "submit": "Clôturer et éditer le Z"
       }
     },
     "vouchers": {

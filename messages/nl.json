@@ -146,7 +146,9 @@
     "academieStudents": "Cursisten",
     "adminOverview": "Administratie",
     "adminTenants": "Instituten",
-    "adminPlans": "Formules"
+    "adminPlans": "Formules",
+    "adminSupport": "Support",
+    "adminSettings": "Instellingen"
   },
   "weekdays": {
     "mon": "Maandag",
@@ -205,6 +207,55 @@
       "upcomingAppointments": "Komende afspraken",
       "clients": "Klanten",
       "services": "Behandelingen"
+    },
+    "analytics": {
+      "title": "Statistieken",
+      "description": "Uw activiteit in één oogopslag — cijfers van vandaag en trends.",
+      "healthTitle": "Businessgezondheid vandaag",
+      "healthHint": "Gebaseerd op omzet, afspraken en annuleringspercentage.",
+      "todayRevenue": "Vandaag gegenereerd",
+      "todaySales": "{count, plural, =0 {Geen verkopen} one {# verkoop} other {# verkopen}}",
+      "todayAppointments": "Afspraken vandaag",
+      "todayCompleted": "Afgerond",
+      "todayCancelled": "Annuleringen",
+      "todayNewClients": "Nieuwe klanten",
+      "periodOverview": "Overzicht periode",
+      "periodHint": {
+        "today": "Uur per uur van uw dag.",
+        "week": "De laatste 7 dagen.",
+        "month": "De laatste 30 dagen.",
+        "year": "De laatste 12 maanden."
+      },
+      "periods": {
+        "today": "Vandaag",
+        "week": "Week",
+        "month": "Maand",
+        "year": "Jaar"
+      },
+      "revenue": "Omzet",
+      "sales": "Verkopen",
+      "appointments": "Afspraken",
+      "newClients": "Nieuwe klanten",
+      "cancellationRate": "{rate} % annuleringen",
+      "noShowCount": "{count, plural, =0 {Geen no-shows} one {# no-show} other {# no-shows}}",
+      "noComparison": "Geen vergelijking",
+      "revenueChart": "Gegenereerde omzet",
+      "appointmentsChart": "Afspraken",
+      "appointmentMix": "Verdeling afspraken",
+      "emptyChart": "Nog geen gegevens voor deze periode.",
+      "emptyAppointments": "Geen afspraken in deze periode.",
+      "mood": {
+        "great": "Topdag!",
+        "good": "Mooie dynamiek",
+        "ok": "We houden koers",
+        "low": "Rustige dag — morgen is een nieuwe kans"
+      },
+      "status": {
+        "completed": "Afgerond",
+        "cancelled": "Geannuleerd",
+        "noShow": "No-show",
+        "scheduled": "Gepland"
+      }
     },
     "quickActions": {
       "title": "Snelle acties",
@@ -402,7 +453,16 @@
       "noPayments": "Voeg minstens één betaling toe.",
       "overpaid": "Het totaal van de betalingen overschrijdt het verschuldigde bedrag.",
       "invalidPayments": "Ongeldige betalingen.",
-      "paymentMethodDisabled": "Betaalmethode uitgeschakeld: {method}"
+      "paymentMethodDisabled": "Betaalmethode uitgeschakeld: {method}",
+      "sessionAlreadyOpen": "Er is al een sessie geopend.",
+      "sessionOpened": "Kassasessie geopend.",
+      "noOpenSession": "Geen open sessie — open eerst de kassa.",
+      "reasonRequired": "Reden verplicht.",
+      "invalidMovementType": "Ongeldig bewegingstype.",
+      "movementRecorded": "Beweging geregistreerd.",
+      "reportFailed": "Rapport kon niet worden gegenereerd.",
+      "sessionClosed": "Z-afsluiting voltooid",
+      "varianceNotesRequired": "Een kassaverschil vereist een toelichting."
     },
     "scheduling": {
       "conflict": {
@@ -1227,6 +1287,59 @@
         "editSubmit": "Opslaan",
         "submitting": "Opslaan…"
       }
+    },
+    "settings": {
+      "title": "Platforminstellingen",
+      "description": "Configuratie van de AI-assistent en klantensupport.",
+      "aiTitle": "AI-assistent",
+      "aiDescription": "De OpenAI-sleutel wordt versleuteld opgeslagen. Ontbreekt ze, dan wordt OPENAI_API_KEY van de deployment gebruikt.",
+      "aiEnabled": "AI-assistent ingeschakeld",
+      "aiModel": "OpenAI-model",
+      "openAiKey": "OpenAI API-sleutel",
+      "openAiKeyPlaceholder": "sk-…",
+      "openAiKeyPlaceholderSet": "Leeg laten om de huidige sleutel te behouden",
+      "openAiKeyConfigured": "Er is al een sleutel geconfigureerd.",
+      "openAiKeyHint": "Vereist voor geavanceerd natuurlijk taalgebruik en slimme diagnose.",
+      "clearOpenAiKey": "Opgeslagen sleutel verwijderen",
+      "supportTitle": "Klantensupport",
+      "supportDescription": "Verzoeken vanuit de assistent verschijnen in Support.",
+      "supportNotifyEmail": "Notificatie-e-mail (optioneel)",
+      "supportNotifyEmailPlaceholder": "support@uwdomein.nl",
+      "save": "Opslaan",
+      "saving": "Opslaan…",
+      "saved": "Instellingen opgeslagen."
+    },
+    "support": {
+      "title": "Klantensupport",
+      "description": "Verzoeken doorgestuurd door instituten via de AI-assistent.",
+      "filterAll": "Alle",
+      "empty": "Nog geen verzoeken.",
+      "columns": {
+        "subject": "Onderwerp",
+        "tenant": "Instituut",
+        "status": "Status"
+      },
+      "category": {
+        "help": "Hulp",
+        "bug": "Bug",
+        "config": "Configuratie",
+        "feature_request": "Feature"
+      },
+      "status": {
+        "open": "Open",
+        "in_progress": "In behandeling",
+        "resolved": "Opgelost",
+        "closed": "Gesloten"
+      },
+      "detail": {
+        "message": "Bericht",
+        "conversation": "Assistentgeschiedenis",
+        "page": "Pagina",
+        "status": "Status",
+        "notes": "Interne notities",
+        "save": "Bijwerken",
+        "saving": "Bijwerken…"
+      }
     }
   },
   "auth": {
@@ -1397,6 +1510,13 @@
       "modules": {
         "institut": "Instituut",
         "academie": "Academie"
+      },
+      "support": {
+        "prompt": "Wilt u dit verzoek naar BeautyHub-support sturen?",
+        "confirm": "Naar support sturen",
+        "cancel": "Nee bedankt",
+        "submitted": "Uw verzoek is doorgestuurd naar support. We nemen snel contact op.",
+        "submitError": "Het verzoek kon nu niet worden verzonden."
       }
     },
     "page": {
@@ -1580,10 +1700,29 @@
       "goToPos": "Verkoop afrekenen",
       "goToPosAfterOpen": "Naar de kassa",
       "settingsLink": "Kassa-instellingen",
-      "generateX": "X-rapport",
+      "generateX": "X genereren",
+      "xReportTitle": "Tussentijdse controle (X-rapport)",
+      "xReportHint": "Controlepunt zonder de dag af te sluiten — handig halverwege of bij wissel van kassamedewerker.",
+      "xReportGenerated": "Rapport {number} opgeslagen.",
+      "workflowIntro": "Bewegingsjournaal → X-controle (optioneel) → telling en Z-afsluiting.",
+      "workflowAria": "Stappen kassasessie",
+      "workflow": {
+        "journal": "Contant journaal",
+        "xReport": "X-rapport",
+        "zClose": "Z-afsluiting"
+      },
+      "journalTitle": "Bewegingshistoriek",
+      "breakdown": {
+        "openingFloat": "Initieel kassafonds",
+        "cashSales": "Contante verkopen",
+        "movementsIn": "Stortingen",
+        "movementsOut": "Opnames",
+        "movementsExpense": "Contante uitgaven",
+        "expectedCash": "Verwacht contant"
+      },
       "byPayment": "Per betaalmethode",
       "movements": "Contante bewegingen",
-      "movementsHint": "Stortingen of opnames buiten verkopen (boodschappen, bank…).",
+      "movementsHint": "Buiten verkopen: muntgeld, bankstorting, kleine contante aankopen.",
       "noMovements": "Nog geen bewegingen.",
       "closeTitle": "Dagafsluiting",
       "closeDescription": "Tel het contante geld in de lade, vergelijk met het verwachte bedrag en sluit af.",
@@ -1620,15 +1759,49 @@
         "defaultHint": "Standaardwaarde: {amount}"
       },
       "movementForm": {
-        "types": { "in": "Storting", "out": "Opname", "expense": "Uitgave" },
-        "reasonPlaceholder": "Reden (boodschappen, opname…)",
-        "submit": "Opslaan"
+        "typeLabel": "Type beweging",
+        "amountLabel": "Bedrag (€)",
+        "reasonLabel": "Reden",
+        "types": {
+          "in": "Storting",
+          "out": "Opname",
+          "expense": "Uitgave"
+        },
+        "typeHints": {
+          "in": "Contant toevoegen (muntgeld, storting)",
+          "out": "Contant verwijderen (bank, kluis)",
+          "expense": "Aankoop betaald uit de lade"
+        },
+        "presets": {
+          "changeFund": "Muntgeld aanvullen",
+          "ownerDeposit": "Storting in kassa",
+          "bankDeposit": "Bankstorting",
+          "safeTransfer": "Naar kluis",
+          "supplies": "Benodigdheden",
+          "pettyPurchase": "Kleine aankoop",
+          "otherExpense": "Andere uitgave"
+        },
+        "reasonPlaceholder": "Beschrijf de beweging (verplicht voor traceerbaarheid)",
+        "submit": "Beweging registreren"
       },
       "closeForm": {
+        "theoreticalTitle": "Theoretisch contant saldo",
         "expected": "Verwacht contant",
         "counted": "Geteld contant (€)",
-        "notesPlaceholder": "Notities bij afsluiting (optioneel)",
-        "submit": "Afsluiten (Z)"
+        "countedHelp": "Tel munten en biljetten in de lade.",
+        "balancedTitle": "Kassa in evenwicht",
+        "balancedHint": "Geteld bedrag komt overeen met het theoretische saldo.",
+        "varianceTitle": "Kassaverschil",
+        "varianceSurplus": "Overschot van",
+        "varianceShortage": "Tekort van",
+        "varianceExplain": "Noteer de oorzaak — wijzig geregistreerde verkopen niet.",
+        "notesLabel": "Afsluitnotities",
+        "notesPlaceholder": "Opmerkingen (optioneel bij evenwicht)",
+        "notesRequiredPlaceholder": "Leg het kassaverschil uit (verplicht)",
+        "confirmCheckbox": "Ik heb het contante geld fysiek geteld in de lade",
+        "zWarningTitle": "Definitieve afsluiting (Z)",
+        "zWarningBody": "Het Z-rapport sluit de sessie en bevriest de dagtotalen. Corrigeer verkoopfouten vóór afsluiting.",
+        "submit": "Afsluiten en Z genereren"
       }
     }
   },

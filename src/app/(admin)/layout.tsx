@@ -37,6 +37,8 @@ export default async function AdminLayout({
           <NavLink href="/admin" label={tNav("adminOverview")} />
           <NavLink href="/admin/tenants" label={tNav("adminTenants")} />
           <NavLink href="/admin/plans" label={tNav("adminPlans")} />
+          <NavLink href="/admin/support" label={tNav("adminSupport")} />
+          <NavLink href="/admin/settings" label={tNav("adminSettings")} />
         </nav>
         <div className="space-y-3 border-t border-slate-200 pt-4">
           <LocaleSwitcher />

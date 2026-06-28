@@ -149,6 +149,10 @@ export async function closeCashSession(
 
   const variance = countedCash - snapshot.expected_cash_cents;
 
+  if (variance !== 0 && !notes) {
+    return { error: t("varianceNotesRequired") };
+  }
+
   const { data: report, error: reportErr } = await supabase
     .from("inst_cash_reports")
     .insert({

@@ -22,12 +22,22 @@ export function XReportButton() {
   }
 
   return (
-    <div className="space-y-1">
-      <Button type="button" variant="outline" disabled={pending} onClick={handleClick}>
-        {pending ? "…" : t("generateX")}
-      </Button>
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
-      {message ? <p className="text-xs text-green-600">{message}</p> : null}
+    <div className="rounded-lg border border-slate-200 bg-white p-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-slate-900">{t("xReportTitle")}</p>
+          <p className="mt-0.5 text-xs text-slate-500">{t("xReportHint")}</p>
+        </div>
+        <Button type="button" variant="outline" disabled={pending} onClick={handleClick} className="h-9 shrink-0">
+          {pending ? "…" : t("generateX")}
+        </Button>
+      </div>
+      {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
+      {message ? (
+        <p className="mt-2 text-xs text-green-700">
+          {t("xReportGenerated", { number: message })}
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -1,0 +1,1 @@
+-- Migration placeholder (CLI-generated). Schema applied in 0028_platform_assistant_support.sql.

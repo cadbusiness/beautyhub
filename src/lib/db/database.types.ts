@@ -1870,6 +1870,36 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          ai_enabled: boolean
+          ai_model: string
+          created_at: string
+          id: string
+          openai_api_key_enc: string | null
+          support_notify_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_enabled?: boolean
+          ai_model?: string
+          created_at?: string
+          id?: string
+          openai_api_key_enc?: string | null
+          support_notify_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_enabled?: boolean
+          ai_model?: string
+          created_at?: string
+          id?: string
+          openai_api_key_enc?: string | null
+          support_notify_email?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -1913,6 +1943,62 @@ export type Database = {
             foreignKeyName: "subscriptions_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          admin_notes: string | null
+          ai_summary: string | null
+          body: string
+          category: string
+          conversation_excerpt: string | null
+          created_at: string
+          id: string
+          page_url: string | null
+          status: string
+          subject: string
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          ai_summary?: string | null
+          body: string
+          category: string
+          conversation_excerpt?: string | null
+          created_at?: string
+          id?: string
+          page_url?: string | null
+          status?: string
+          subject: string
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          ai_summary?: string | null
+          body?: string
+          category?: string
+          conversation_excerpt?: string | null
+          created_at?: string
+          id?: string
+          page_url?: string | null
+          status?: string
+          subject?: string
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },

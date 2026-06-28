@@ -9,22 +9,25 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { PageTabs } from "@/components/ui/page-tabs";
+import type {
+  StaffWithAccess,
+  TeamInvitation,
+  TeamMember,
+  TenantRole,
+} from "@/lib/institut/team-access";
 import { StaffForm } from "./staff-form";
+import { StaffInviteDialog } from "./staff-invite-dialog";
+import { TeamAccessPanel } from "./team-access-panel";
+import { TeamRolesPanel } from "./team-roles-panel";
 import { ResourceForm } from "./resource-form";
 import { SchedulesPanel } from "./schedules-panel";
 import { ScheduleAssignmentsPanel } from "./schedule-assignments";
 import { TimeOffPanel } from "./time-off-panel";
 
-type Tab = "personnel" | "cabines" | "horaires";
+type Tab = "personnel" | "acces" | "roles" | "cabines" | "horaires";
 type HorairesTab = "grilles" | "assignations" | "absences";
 
-type StaffRow = {
-  id: string;
-  full_name: string;
-  email: string | null;
-  color: string | null;
-  schedule_id: string | null;
-};
+type StaffRow = StaffWithAccess;
 
 type ResourceRow = {
   id: string;
@@ -58,11 +61,17 @@ type TimeOffRow = {
 
 export function EquipeManager({
   staff,
+  roles,
+  members,
+  invitations,
   resources,
   schedules,
   timeOffs,
 }: {
   staff: StaffRow[];
+  roles: TenantRole[];
+  members: TeamMember[];
+  invitations: TeamInvitation[];
   resources: ResourceRow[];
   schedules: ScheduleRow[];
   timeOffs: TimeOffRow[];
@@ -73,7 +82,11 @@ export function EquipeManager({
   const [horairesTab, setHorairesTab] = useState<HorairesTab>("grilles");
   const [staffQuery, setStaffQuery] = useState("");
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<StaffRow | null>(null);
+  const [inviteStaff, setInviteStaff] = useState<StaffRow | null>(null);
   const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
+
+  const pendingCount = invitations.filter((i) => i.status === "pending").length;
 
   const filteredStaff = useMemo(() => {
     const q = staffQuery.trim().toLowerCase();
@@ -91,6 +104,8 @@ export function EquipeManager({
         <PageTabs
           tabs={[
             { id: "personnel", label: t("tabs.personnel"), count: staff.length },
+            { id: "acces", label: t("tabs.acces"), count: pendingCount || undefined },
+            { id: "roles", label: t("tabs.roles"), count: roles.length },
             { id: "cabines", label: t("tabs.cabines"), count: resources.length },
             { id: "horaires", label: t("tabs.horaires") },
           ]}
@@ -103,7 +118,10 @@ export function EquipeManager({
             <ListToolbar
               action={
                 <Button
-                  onClick={() => setStaffDialogOpen(true)}
+                  onClick={() => {
+                    setEditingStaff(null);
+                    setStaffDialogOpen(true);
+                  }}
                   className="h-9 w-full sm:w-auto"
                 >
                   + {t("personnel.add")}
@@ -135,7 +153,8 @@ export function EquipeManager({
                       <th className={`w-10 ${dataTableHead}`} aria-label={t("personnel.columns.color")} />
                       <th className={dataTableHead}>{t("personnel.columns.name")}</th>
                       <th className={dataTableHead}>{t("personnel.columns.email")}</th>
-                      <th className={`w-28 text-right ${dataTableHead}`}>
+                      <th className={dataTableHead}>{t("personnel.columns.access")}</th>
+                      <th className={`w-36 text-right ${dataTableHead}`}>
                         {t("personnel.columns.actions")}
                       </th>
                     </tr>
@@ -155,13 +174,56 @@ export function EquipeManager({
                         <td className={`text-slate-600 ${dataTableCell}`}>
                           {s.email ?? tCommon("dash")}
                         </td>
+                        <td className={dataTableCell}>
+                          <span
+                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                              s.access_status === "active"
+                                ? "bg-emerald-50 text-emerald-700"
+                                : s.access_status === "pending"
+                                  ? "bg-amber-50 text-amber-700"
+                                  : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {s.access_status === "active"
+                              ? t("personnel.accessActive")
+                              : s.access_status === "pending"
+                                ? t("personnel.accessPending")
+                                : t("personnel.accessNone")}
+                          </span>
+                          {s.tenant_role_name ? (
+                            <span className="ml-1.5 text-xs text-slate-500">{s.tenant_role_name}</span>
+                          ) : null}
+                        </td>
                         <td className={`text-right ${dataTableCell}`}>
-                          <form action={deleteStaffMember}>
-                            <input type="hidden" name="id" value={s.id} />
-                            <Button variant="ghost" type="submit" className="h-8 text-red-600">
-                              {t("personnel.delete")}
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              type="button"
+                              className="h-8"
+                              onClick={() => {
+                                setEditingStaff(s);
+                                setStaffDialogOpen(true);
+                              }}
+                            >
+                              {t("personnel.edit")}
                             </Button>
-                          </form>
+                            {s.access_status !== "active" ? (
+                              <Button
+                                variant="ghost"
+                                type="button"
+                                className="h-8"
+                                onClick={() => setInviteStaff(s)}
+                              >
+                                {t("personnel.invite")}
+                              </Button>
+                            ) : null}
+                            <form action={deleteStaffMember}>
+                              <input type="hidden" name="id" value={s.id} />
+                              <Button variant="ghost" type="submit" className="h-8 text-red-600">
+                                {t("personnel.delete")}
+                              </Button>
+                            </form>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -180,6 +242,12 @@ export function EquipeManager({
             ) : null}
           </>
         ) : null}
+
+        {tab === "acces" ? (
+          <TeamAccessPanel members={members} invitations={invitations} />
+        ) : null}
+
+        {tab === "roles" ? <TeamRolesPanel roles={roles} /> : null}
 
         {tab === "cabines" ? (
           <>
@@ -289,10 +357,33 @@ export function EquipeManager({
 
       <FormDialog
         open={staffDialogOpen}
-        onClose={() => setStaffDialogOpen(false)}
-        title={t("personnel.dialogTitle")}
+        onClose={() => {
+          setStaffDialogOpen(false);
+          setEditingStaff(null);
+        }}
+        title={editingStaff ? t("personnel.dialogEditTitle") : t("personnel.dialogTitle")}
       >
-        <StaffForm onSuccess={() => setStaffDialogOpen(false)} />
+        <StaffForm
+          staff={editingStaff}
+          onSuccess={() => {
+            setStaffDialogOpen(false);
+            setEditingStaff(null);
+          }}
+        />
+      </FormDialog>
+
+      <FormDialog
+        open={Boolean(inviteStaff)}
+        onClose={() => setInviteStaff(null)}
+        title={t("access.inviteTitle")}
+      >
+        {inviteStaff ? (
+          <StaffInviteDialog
+            staff={inviteStaff}
+            roles={roles}
+            onSuccess={() => setInviteStaff(null)}
+          />
+        ) : null}
       </FormDialog>
 
       <FormDialog

@@ -626,6 +626,190 @@ export async function createStaffMember(
   return { ok: true };
 }
 
+export async function updateStaffMember(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const id = String(formData.get("id") ?? "").trim();
+  const fullName = String(formData.get("full_name") ?? "").trim();
+  if (!id || !fullName) return { error: t("missingFields") };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("inst_staff")
+    .update({
+      full_name: fullName,
+      email: String(formData.get("email") ?? "").trim() || null,
+      color: String(formData.get("color") ?? "").trim() || null,
+    })
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/institut/equipe");
+  revalidatePath("/institut/rendez-vous");
+  return { ok: true };
+}
+
+export async function inviteTeamMember(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+    return { error: t("teamInviteForbidden") };
+  }
+
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const staffId = String(formData.get("staff_id") ?? "").trim() || null;
+  const tenantRoleId = String(formData.get("tenant_role_id") ?? "").trim() || null;
+  if (!email) return { error: t("missingFields") };
+
+  const supabase = await createClient();
+
+  const { data: existingPending } = await supabase
+    .from("team_invitations")
+    .select("id")
+    .eq("tenant_id", session.tenant.id)
+    .eq("email", email)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  if (existingPending) {
+    return { error: t("teamInviteAlreadyPending") };
+  }
+
+  const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+
+  const { error } = await supabase.from("team_invitations").insert({
+    tenant_id: session.tenant.id,
+    email,
+    staff_id: staffId,
+    tenant_role_id: tenantRoleId,
+    membership_role: "staff",
+    invited_by: session.userId,
+    token,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/institut/equipe");
+  return { ok: true };
+}
+
+export async function resendTeamInvitation(formData: FormData): Promise<void> {
+  const session = await requireModule("institut");
+  const id = String(formData.get("invitation_id") ?? "").trim();
+  if (!id) return;
+
+  const supabase = await createClient();
+  const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+  await supabase
+    .from("team_invitations")
+    .update({
+      token,
+      status: "pending",
+      expires_at: new Date(Date.now() + 14 * 86_400_000).toISOString(),
+    })
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", id);
+  revalidatePath("/institut/equipe");
+}
+
+export async function revokeTeamInvitation(formData: FormData): Promise<void> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  await supabase
+    .from("team_invitations")
+    .update({ status: "revoked" })
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", String(formData.get("invitation_id")));
+  revalidatePath("/institut/equipe");
+}
+
+export async function createTenantRole(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+    return { error: t("teamRoleForbidden") };
+  }
+
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: t("nameRequired") };
+
+  const { permissionsFromForm, slugifyRoleName } = await import("@/lib/institut/team-access");
+  const supabase = await createClient();
+  const { error } = await supabase.from("tenant_roles").insert({
+    tenant_id: session.tenant.id,
+    name,
+    slug: slugifyRoleName(name),
+    description: String(formData.get("description") ?? "").trim() || null,
+    permissions: permissionsFromForm(formData),
+    is_system: false,
+  });
+  if (error) {
+    return { error: error.code === "23505" ? t("teamRoleSlugTaken") : error.message };
+  }
+  revalidatePath("/institut/equipe");
+  return { ok: true };
+}
+
+export async function updateTenantRole(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+    return { error: t("teamRoleForbidden") };
+  }
+
+  const id = String(formData.get("role_id") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!id || !name) return { error: t("missingFields") };
+
+  const { permissionsFromForm } = await import("@/lib/institut/team-access");
+  const supabase = await createClient();
+
+  const { data: role } = await supabase
+    .from("tenant_roles")
+    .select("is_system")
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!role) return { error: t("teamRoleNotFound") };
+
+  const { error } = await supabase
+    .from("tenant_roles")
+    .update({
+      name,
+      description: String(formData.get("description") ?? "").trim() || null,
+      permissions: permissionsFromForm(formData),
+    })
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/institut/equipe");
+  return { ok: true };
+}
+
+export async function deleteTenantRole(formData: FormData): Promise<void> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  await supabase
+    .from("tenant_roles")
+    .delete()
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", String(formData.get("role_id")))
+    .eq("is_system", false);
+  revalidatePath("/institut/equipe");
+}
+
 export async function deleteStaffMember(formData: FormData): Promise<void> {
   await requireModule("institut");
   const supabase = await createClient();

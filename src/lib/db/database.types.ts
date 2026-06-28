@@ -1962,6 +1962,120 @@ export type Database = {
           },
         ]
       }
+      team_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          membership_role: string
+          staff_id: string | null
+          status: string
+          tenant_id: string
+          tenant_role_id: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          membership_role?: string
+          staff_id?: string | null
+          status?: string
+          tenant_id: string
+          tenant_role_id?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          membership_role?: string
+          staff_id?: string | null
+          status?: string
+          tenant_id?: string
+          tenant_role_id?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "inst_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_invitations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_invitations_tenant_role_id_fkey"
+            columns: ["tenant_role_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_system: boolean
+          name: string
+          permissions: Json
+          slug: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          name: string
+          permissions?: Json
+          slug: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system?: boolean
+          name?: string
+          permissions?: Json
+          slug?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           brand_id: string | null
@@ -1969,6 +2083,7 @@ export type Database = {
           id: string
           role: string
           tenant_id: string | null
+          tenant_role_id: string | null
           user_id: string
         }
         Insert: {
@@ -1977,6 +2092,7 @@ export type Database = {
           id?: string
           role: string
           tenant_id?: string | null
+          tenant_role_id?: string | null
           user_id: string
         }
         Update: {
@@ -1985,6 +2101,7 @@ export type Database = {
           id?: string
           role?: string
           tenant_id?: string | null
+          tenant_role_id?: string | null
           user_id?: string
         }
         Relationships: [

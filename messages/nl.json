@@ -462,6 +462,13 @@
       "invalidCredentials": "Onjuiste inloggegevens.",
       "clientPinRegenerateFailed": "Pincode kon niet opnieuw worden gegenereerd.",
       "clientSelfRegisterDisabled": "Uw account wordt aangemaakt door het instituut. Vraag uw klant-ID en pincode aan.",
+      "teamInviteForbidden": "Alleen de eigenaar kan teamleden uitnodigen.",
+      "teamInviteAlreadyPending": "Er staat al een uitnodiging open voor dit e-mailadres.",
+      "teamInviteInvalid": "Uitnodiging ongeldig of al gebruikt.",
+      "teamInviteExpired": "Deze uitnodiging is verlopen.",
+      "teamRoleForbidden": "Alleen de eigenaar kan rollen beheren.",
+      "teamRoleSlugTaken": "Er bestaat al een rol met deze identificatie.",
+      "teamRoleNotFound": "Rol niet gevonden.",
       "allFieldsRequired": "Alle velden zijn verplicht.",
       "passwordMinLength": "Wachtwoord: minimaal 8 tekens.",
       "accountAlreadyExists": "Er bestaat al een account voor dit e-mailadres.",
@@ -1184,6 +1191,8 @@
     "team": {
       "tabs": {
         "personnel": "Personeel",
+        "acces": "Toegang & uitnodigingen",
+        "roles": "Rollen",
         "cabines": "Cabines",
         "horaires": "Openingstijden"
       },
@@ -1196,11 +1205,18 @@
           "color": "Kleur",
           "name": "Naam",
           "email": "E-mail",
+          "access": "App-toegang",
           "actions": "Acties"
         },
+        "accessActive": "Actief",
+        "accessPending": "Uitnodiging open",
+        "accessNone": "Niet uitgenodigd",
+        "edit": "Bewerken",
+        "invite": "Uitnodigen",
         "delete": "Verwijderen",
         "footer": "{count, plural, one {# lid} other {# leden}}",
         "dialogTitle": "Personeel toevoegen",
+        "dialogEditTitle": "Personeel bewerken",
         "form": {
           "fullName": "Volledige naam",
           "fullNamePlaceholder": "Sophie Peeters",
@@ -1208,7 +1224,63 @@
           "emailPlaceholder": "sophie@instituut.be",
           "colorOptional": "Kleur (optioneel)",
           "submit": "Toevoegen",
-          "submitting": "Toevoegen…"
+          "submitting": "Toevoegen…",
+          "submitEdit": "Opslaan",
+          "submittingEdit": "Opslaan…"
+        }
+      },
+      "access": {
+        "membersTitle": "Actieve accounts",
+        "invitationsTitle": "Openstaande uitnodigingen",
+        "noMembers": "Nog geen teamaccounts.",
+        "noInvitations": "Geen openstaande uitnodigingen.",
+        "inviteTitle": "Uitnodigen voor het team",
+        "inviteDescription": "Stuur een uitnodiging naar {name} voor toegang tot het instituut.",
+        "inviteHint": "Kopieer de uitnodigingslink of vernieuw hem. E-mailverzending volgt binnenkort.",
+        "inviteSubmit": "Uitnodiging aanmaken",
+        "inviteSubmitting": "Aanmaken…",
+        "email": "E-mail",
+        "emailPlaceholder": "sophie@instituut.be",
+        "role": "Rol",
+        "copyLink": "Link kopiëren",
+        "resend": "Vernieuwen",
+        "revoke": "Annuleren",
+        "statusActive": "Geaccepteerd",
+        "emailComingSoon": "Automatische e-mailverzending volgt binnenkort.",
+        "columns": {
+          "name": "Naam",
+          "email": "E-mail",
+          "role": "Rol",
+          "status": "Status",
+          "expires": "Verloopt op",
+          "actions": "Acties"
+        }
+      },
+      "roles": {
+        "description": "Bepaal wat elke rol mag zien en wijzigen in het instituut.",
+        "create": "Nieuwe rol",
+        "createTitle": "Rol aanmaken",
+        "editTitle": "Rol bewerken",
+        "edit": "Bewerken",
+        "delete": "Verwijderen",
+        "systemBadge": "Systeem",
+        "name": "Rolnaam",
+        "roleDescription": "Beschrijving",
+        "permissions": "Rechten",
+        "fullAccess": "Volledige toegang",
+        "read": "Lezen",
+        "write": "Schrijven",
+        "submitCreate": "Rol aanmaken",
+        "submitEdit": "Opslaan",
+        "submitting": "Opslaan…",
+        "sections": {
+          "dashboard": "Home",
+          "appointments": "Afspraken",
+          "clients": "Klanten",
+          "services": "Behandelingen",
+          "team": "Team",
+          "pos": "Kassa",
+          "marketing": "Marketing"
         }
       },
       "cabines": {
@@ -1634,6 +1706,14 @@
         "demoCoach": "Demo-academie coach"
       }
     }
+  },
+  "invite": {
+    "title": "Team deelnemen",
+    "subtitle": "U bent uitgenodigd om {institute} te joinen als {role}.",
+    "defaultRole": "teamlid",
+    "fullName": "Volledige naam",
+    "submit": "Mijn toegang aanmaken",
+    "submitting": "Aanmaken…"
   },
   "public": {
     "site": {

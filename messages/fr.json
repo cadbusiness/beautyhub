@@ -462,6 +462,13 @@
       "invalidCredentials": "Identifiants incorrects.",
       "clientPinRegenerateFailed": "Impossible de régénérer le code PIN.",
       "clientSelfRegisterDisabled": "La création de compte se fait via votre institut. Demandez votre identifiant et votre code PIN.",
+      "teamInviteForbidden": "Seul le propriétaire peut inviter des membres.",
+      "teamInviteAlreadyPending": "Une invitation est déjà en attente pour cet email.",
+      "teamInviteInvalid": "Invitation invalide ou déjà utilisée.",
+      "teamInviteExpired": "Cette invitation a expiré.",
+      "teamRoleForbidden": "Seul le propriétaire peut gérer les rôles.",
+      "teamRoleSlugTaken": "Un rôle avec cet identifiant existe déjà.",
+      "teamRoleNotFound": "Rôle introuvable.",
       "allFieldsRequired": "Tous les champs sont requis.",
       "passwordMinLength": "Mot de passe : 8 caractères minimum.",
       "accountAlreadyExists": "Un compte existe déjà pour cet email.",
@@ -1198,6 +1205,8 @@
     "team": {
       "tabs": {
         "personnel": "Personnel",
+        "acces": "Accès & invitations",
+        "roles": "Rôles",
         "cabines": "Cabines",
         "horaires": "Horaires"
       },
@@ -1210,11 +1219,18 @@
           "color": "Couleur",
           "name": "Nom",
           "email": "Email",
+          "access": "Accès app",
           "actions": "Actions"
         },
+        "accessActive": "Actif",
+        "accessPending": "Invitation en attente",
+        "accessNone": "Non invité",
+        "edit": "Modifier",
+        "invite": "Inviter",
         "delete": "Supprimer",
         "footer": "{count, plural, one {# membre} other {# membres}}",
         "dialogTitle": "Ajouter du personnel",
+        "dialogEditTitle": "Modifier le personnel",
         "form": {
           "fullName": "Nom complet",
           "fullNamePlaceholder": "Sophie Martin",
@@ -1222,7 +1238,63 @@
           "emailPlaceholder": "sophie@institut.fr",
           "colorOptional": "Couleur (optionnel)",
           "submit": "Ajouter",
-          "submitting": "Ajout…"
+          "submitting": "Ajout…",
+          "submitEdit": "Enregistrer",
+          "submittingEdit": "Enregistrement…"
+        }
+      },
+      "access": {
+        "membersTitle": "Comptes actifs",
+        "invitationsTitle": "Invitations en attente",
+        "noMembers": "Aucun compte équipe pour le moment.",
+        "noInvitations": "Aucune invitation en attente.",
+        "inviteTitle": "Inviter dans l'équipe",
+        "inviteDescription": "Envoyer une invitation à {name} pour accéder à l'espace institut.",
+        "inviteHint": "Copiez le lien d'invitation ou renvoyez-le. L'envoi par email arrive bientôt.",
+        "inviteSubmit": "Créer l'invitation",
+        "inviteSubmitting": "Création…",
+        "email": "Email",
+        "emailPlaceholder": "sophie@institut.fr",
+        "role": "Rôle",
+        "copyLink": "Copier le lien",
+        "resend": "Renouveler",
+        "revoke": "Annuler",
+        "statusActive": "Accepté",
+        "emailComingSoon": "L'envoi automatique par email sera disponible prochainement.",
+        "columns": {
+          "name": "Nom",
+          "email": "Email",
+          "role": "Rôle",
+          "status": "Statut",
+          "expires": "Expire le",
+          "actions": "Actions"
+        }
+      },
+      "roles": {
+        "description": "Définissez ce que chaque rôle peut voir et modifier dans l'espace institut.",
+        "create": "Nouveau rôle",
+        "createTitle": "Créer un rôle",
+        "editTitle": "Modifier le rôle",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "systemBadge": "Système",
+        "name": "Nom du rôle",
+        "roleDescription": "Description",
+        "permissions": "Permissions",
+        "fullAccess": "Accès complet",
+        "read": "Lecture",
+        "write": "Écriture",
+        "submitCreate": "Créer le rôle",
+        "submitEdit": "Enregistrer",
+        "submitting": "Enregistrement…",
+        "sections": {
+          "dashboard": "Accueil",
+          "appointments": "Rendez-vous",
+          "clients": "Clients",
+          "services": "Prestations",
+          "team": "Équipe",
+          "pos": "Caisse",
+          "marketing": "Marketing"
         }
       },
       "cabines": {
@@ -1651,6 +1723,14 @@
         "demoCoach": "Coach académie demo"
       }
     }
+  },
+  "invite": {
+    "title": "Rejoindre l'équipe",
+    "subtitle": "Vous êtes invité(e) à rejoindre {institute} en tant que {role}.",
+    "defaultRole": "membre de l'équipe",
+    "fullName": "Nom complet",
+    "submit": "Créer mon accès",
+    "submitting": "Création…"
   },
   "public": {
     "site": {

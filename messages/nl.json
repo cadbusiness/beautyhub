@@ -143,15 +143,13 @@
   },
   "account": {
     "title": "Mijn account",
-    "subtitle": "Profiel, taal en beveiliging",
+    "subtitle": "Profiel en beveiliging",
     "profile": {
       "sectionTitle": "Profiel",
       "sectionDescription": "Uw persoonlijke gegevens zichtbaar voor het team.",
       "fullName": "Volledige naam",
       "fullNamePlaceholder": "Marie Durand",
-      "phonePlaceholder": "06 12 34 56 78",
-      "language": "Interface-taal",
-      "languageHint": "Wordt toegepast na opslaan."
+      "phonePlaceholder": "06 12 34 56 78"
     },
     "password": {
       "sectionTitle": "Wachtwoord",

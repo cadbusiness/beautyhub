@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "BeautyHub",
   description:
     "Plateforme SaaS tout-en-un pour instituts et academies, en marque blanche.",
+  other: {
+    google: "notranslate",
+  },
 };
 
 export default async function RootLayout({
@@ -31,6 +34,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
+      translate="no"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

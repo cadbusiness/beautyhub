@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { signOut } from "@/app/login/actions";
-import { Button } from "@/components/ui/button";
-import { LocaleSwitcher } from "@/components/app-shell/locale-switcher";
 import { cn } from "@/lib/utils";
 
 export function UserMenu({
@@ -13,11 +11,15 @@ export function UserMenu({
   roleText,
   displayName,
   initial,
+  align = "right",
+  variant = "header",
 }: {
   email: string | null;
   roleText: string;
   displayName: string;
   initial: string;
+  align?: "left" | "right";
+  variant?: "header" | "sidebar";
 }) {
   const t = useTranslations("shell");
   const [open, setOpen] = useState(false);
@@ -44,62 +46,72 @@ export function UserMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white py-1 pl-1 pr-2.5 text-left transition-colors hover:border-slate-300 hover:bg-slate-50"
+        className={cn(
+          "flex items-center gap-2 rounded-lg border border-slate-200 bg-white py-1 pl-1 pr-2.5 text-left transition-colors hover:border-slate-300 hover:bg-slate-50",
+          variant === "sidebar" && "w-full",
+        )}
         aria-expanded={open}
         aria-haspopup="menu"
       >
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-900 text-sm font-semibold text-white">
           {initial}
         </span>
-        <span className="hidden min-w-0 sm:block">
-          <span className="block max-w-[9rem] truncate text-sm font-medium text-slate-900">
+        <span
+          className={cn(
+            "min-w-0",
+            variant === "header" ? "hidden sm:block" : "flex-1",
+          )}
+        >
+          <span
+            className={cn(
+              "block truncate text-sm font-medium text-slate-900",
+              variant === "header" && "max-w-[9rem]",
+            )}
+          >
             {displayName}
           </span>
-          <span className="block max-w-[9rem] truncate text-xs text-slate-500">{roleText}</span>
+          <span
+            className={cn(
+              "block truncate text-xs text-slate-500",
+              variant === "header" && "max-w-[9rem]",
+            )}
+          >
+            {roleText}
+          </span>
         </span>
       </button>
 
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,18rem)] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+          className={cn(
+            "absolute z-50 mt-2 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg",
+            align === "right" ? "right-0" : "left-0",
+          )}
         >
-          <div className="border-b border-slate-100 px-4 py-3">
+          <div className="border-b border-slate-100 px-3 py-2.5">
             <p className="truncate text-sm font-medium text-slate-900">{displayName}</p>
             {email ? <p className="truncate text-xs text-slate-500">{email}</p> : null}
-            <p className="mt-1 text-xs text-slate-400">{roleText}</p>
           </div>
 
-          <div className="px-2 py-2">
+          <div className="py-1">
             <Link
               href="/compte"
               onClick={() => setOpen(false)}
-              className={cn(
-                "flex w-full rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900",
-              )}
+              className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
               role="menuitem"
             >
               {t("myAccount")}
             </Link>
-          </div>
-
-          <div className="border-t border-slate-100 px-4 py-3">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-              {t("language")}
-            </p>
-            <LocaleSwitcher variant="segmented" />
-          </div>
-
-          <div className="border-t border-slate-100 p-2">
             <form action={signOut}>
-              <Button
+              <button
                 type="submit"
-                variant="outline"
-                className="h-9 w-full justify-center text-sm"
+                className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                role="menuitem"
                 onClick={() => setOpen(false)}
               >
                 {t("signOut")}
-              </Button>
+              </button>
             </form>
           </div>
         </div>

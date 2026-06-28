@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { AppLogo } from "@/components/app-shell/app-logo";
+import { LocaleSwitcher } from "@/components/app-shell/locale-switcher";
 import { TenantSwitcher } from "@/components/app-shell/tenant-switcher";
 import { UserMenu } from "@/components/app-shell/user-menu";
 import type { TenantOption } from "@/lib/tenant/defaults";
@@ -59,6 +60,8 @@ export async function AppHeader({
             {t("administration")}
           </Link>
         ) : null}
+
+        <LocaleSwitcher className="hidden sm:inline-flex" />
 
         <UserMenu
           email={email}

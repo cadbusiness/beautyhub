@@ -5,8 +5,6 @@ import { useTranslations } from "next-intl";
 import { updateTeamProfile, type AccountActionResult } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
-import { LocaleSwitcher } from "@/components/app-shell/locale-switcher";
-import type { Locale } from "@/i18n/config";
 
 const initial: AccountActionResult = {};
 
@@ -14,12 +12,10 @@ export function AccountProfileForm({
   email,
   fullName,
   phone,
-  preferredLocale,
 }: {
   email: string;
   fullName: string;
   phone: string;
-  preferredLocale: Locale | "";
 }) {
   const t = useTranslations("account.profile");
   const tCommon = useTranslations("common");
@@ -32,7 +28,7 @@ export function AccountProfileForm({
   }, [state.ok]);
 
   return (
-    <form action={action} className="space-y-5">
+    <form action={action} className="space-y-4">
       <Field label={tCommon("email")} htmlFor="email">
         <Input id="email" name="email" value={email} disabled className="bg-slate-50" />
       </Field>
@@ -57,16 +53,6 @@ export function AccountProfileForm({
           autoComplete="tel"
         />
       </Field>
-
-      <div className="space-y-2">
-        <span className="text-sm font-medium text-slate-700">{t("language")}</span>
-        <p className="text-xs text-slate-500">{t("languageHint")}</p>
-        <LocaleSwitcher
-          variant="segmented"
-          name="preferred_locale"
-          defaultValue={preferredLocale || undefined}
-        />
-      </div>
 
       {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
       {state.ok && state.message ? (

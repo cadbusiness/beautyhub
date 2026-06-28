@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/profile";
 import { NavLink } from "@/components/app-shell/nav-link";
 import { AppFooter } from "@/components/app-shell/app-footer";
+import { LocaleSwitcher } from "@/components/app-shell/locale-switcher";
 import { UserMenu } from "@/components/app-shell/user-menu";
 
 export default async function AdminLayout({
@@ -37,12 +38,15 @@ export default async function AdminLayout({
           <NavLink href="/admin/tenants" label={tNav("adminTenants")} />
           <NavLink href="/admin/plans" label={tNav("adminPlans")} />
         </nav>
-        <div className="border-t border-slate-200 pt-4">
+        <div className="space-y-3 border-t border-slate-200 pt-4">
+          <LocaleSwitcher />
           <UserMenu
             email={session.email}
             roleText={tRoles("platform_admin")}
             displayName={displayName}
             initial={initial}
+            align="left"
+            variant="sidebar"
           />
         </div>
       </aside>

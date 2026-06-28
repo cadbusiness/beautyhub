@@ -143,15 +143,13 @@
   },
   "account": {
     "title": "Mon compte",
-    "subtitle": "Profil, langue et sécurité",
+    "subtitle": "Profil et sécurité",
     "profile": {
       "sectionTitle": "Profil",
       "sectionDescription": "Vos informations personnelles visibles dans l'équipe.",
       "fullName": "Nom complet",
       "fullNamePlaceholder": "Marie Durand",
-      "phonePlaceholder": "06 12 34 56 78",
-      "language": "Langue de l'interface",
-      "languageHint": "Appliquée immédiatement après enregistrement."
+      "phonePlaceholder": "06 12 34 56 78"
     },
     "password": {
       "sectionTitle": "Mot de passe",

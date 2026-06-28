@@ -4,8 +4,6 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/session";
-import { isLocale, type Locale } from "@/i18n/config";
-import { setLocale } from "@/i18n/actions";
 
 export interface AccountActionResult {
   error?: string;
@@ -23,8 +21,6 @@ export async function updateTeamProfile(
 
   const fullName = String(formData.get("full_name") ?? "").trim() || null;
   const phone = String(formData.get("phone") ?? "").trim() || null;
-  const localeRaw = String(formData.get("preferred_locale") ?? "");
-  const preferredLocale = isLocale(localeRaw) ? localeRaw : null;
 
   const supabase = await createClient();
   const { error } = await supabase.from("team_profiles").upsert(
@@ -32,16 +28,11 @@ export async function updateTeamProfile(
       user_id: user.id,
       full_name: fullName,
       phone,
-      preferred_locale: preferredLocale,
     },
     { onConflict: "user_id" },
   );
 
   if (error) return { error: error.message };
-
-  if (preferredLocale) {
-    await setLocale(preferredLocale as Locale);
-  }
 
   revalidatePath("/compte");
   revalidatePath("/", "layout");

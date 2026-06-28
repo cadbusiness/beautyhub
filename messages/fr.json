@@ -310,6 +310,13 @@
       "missingFields": "Champs requis manquants.",
       "clientEmailExists": "Un client avec cet e-mail existe déjà.",
       "workingHoursEndBeforeStart": "{day} : l'heure de fin doit être après le début.",
+      "scheduleNameRequired": "Nom de la grille requis.",
+      "scheduleNotFound": "Grille horaire introuvable.",
+      "scheduleBlocksInvalid": "Format des plages horaires invalide.",
+      "timeOffDatesRequired": "Dates de début et fin requises.",
+      "timeOffEndBeforeStart": "La fin doit être après le début.",
+      "timeOffStaffRequired": "Sélectionnez un membre du personnel.",
+      "timeOffResourceRequired": "Sélectionnez une cabine.",
       "invalidCart": "Panier invalide.",
       "emptyCart": "Panier vide.",
       "invalidAmount": "Montant invalide.",
@@ -511,17 +518,79 @@
           "submitting": "Ajout…"
         }
       },
-      "horaires": {
-        "description": "Horaires d'ouverture par défaut de l'institut (utilisés pour les disponibilités en ligne).",
+      "horairesTabs": {
+        "grilles": "Grilles horaires",
+        "assignations": "Assignations",
+        "absences": "Absences & fermetures"
+      },
+      "schedules": {
+        "description": "Créez des grilles horaires réutilisables avec plusieurs plages par jour (ex. matin + après-midi avec pause déjeuner).",
+        "listTitle": "Grilles",
+        "empty": "Aucune grille horaire. Créez-en une pour commencer.",
+        "nameLabel": "Nom de la grille",
+        "defaultBadge": "Grille par défaut de l'institut",
+        "defaultShort": "défaut",
+        "blocksHint": "Ajoutez plusieurs plages par jour pour gérer les pauses.",
         "columns": {
           "day": "Jour",
           "open": "Ouvert",
-          "hours": "Horaires"
+          "hours": "Plages"
         },
         "closed": "Fermé",
-        "saved": "Horaires enregistrés.",
-        "submit": "Enregistrer les horaires",
-        "submitting": "Enregistrement…"
+        "addBlock": "Plage",
+        "saved": "Grille enregistrée.",
+        "submit": "Enregistrer la grille",
+        "submitting": "Enregistrement…",
+        "createTitle": "Nouvelle grille",
+        "createPlaceholder": "Ex. Horaires été",
+        "create": "Créer",
+        "creating": "Création…",
+        "delete": "Supprimer"
+      },
+      "assignments": {
+        "description": "Sans grille assignée, le personnel et les cabines utilisent la grille par défaut ({defaultName}).",
+        "noneDefault": "aucune grille par défaut",
+        "staffTitle": "Personnel",
+        "resourcesTitle": "Cabines",
+        "useDefault": "Grille par défaut",
+        "defaultShort": "défaut",
+        "noStaff": "Aucun membre du personnel.",
+        "noResources": "Aucune cabine.",
+        "columns": {
+          "name": "Nom",
+          "schedule": "Grille horaire"
+        },
+        "save": "Appliquer",
+        "saving": "…",
+        "saved": "Assignation enregistrée."
+      },
+      "absences": {
+        "formTitle": "Planifier une absence",
+        "formDescription": "Fermeture de l'institut, congés d'un praticien ou indisponibilité d'une cabine.",
+        "scope": "Portée",
+        "scopeInstitute": "Institut (fermeture)",
+        "scopeStaff": "Personnel",
+        "scopeResource": "Cabine",
+        "staff": "Membre",
+        "resource": "Cabine",
+        "chooseStaff": "Choisir…",
+        "chooseResource": "Choisir…",
+        "startsAt": "Début",
+        "endsAt": "Fin",
+        "reason": "Motif (optionnel)",
+        "reasonPlaceholder": "Vacances, formation, travaux…",
+        "submit": "Ajouter l'absence",
+        "submitting": "Ajout…",
+        "saved": "Absence enregistrée.",
+        "listTitle": "Absences planifiées",
+        "empty": "Aucune absence sur cette période.",
+        "delete": "Supprimer",
+        "columns": {
+          "scope": "Qui / quoi",
+          "period": "Période",
+          "reason": "Motif",
+          "actions": "Actions"
+        }
       }
     },
     "pos": {

@@ -10,7 +10,7 @@ import { weekdayMessageKey } from "@/lib/i18n/nav";
 import {
   checkAppointmentConflict,
   fetchAppointmentsInRange,
-  validateStaffWorkingHours,
+  validateStaffSchedule,
 } from "@/lib/institut/slots";
 import { WEEKDAYS } from "./equipe/constants";
 
@@ -243,12 +243,13 @@ export async function updateAppointment(
   });
   if (conflict) return { error: scheduling(`conflict.${conflict}`) };
 
-  const { data: hours } = await supabase
-    .from("inst_working_hours")
-    .select("weekday, start_time, end_time, staff_id")
-    .eq("tenant_id", session.tenant.id);
-
-  const scheduleWarning = validateStaffWorkingHours(hours ?? [], staffId, startsAt, endsAt);
+  const scheduleWarning = await validateStaffSchedule(
+    supabase,
+    session.tenant.id,
+    staffId,
+    startsAt,
+    endsAt,
+  );
   const ignoreSchedule = formData.get("ignore_schedule") === "1";
   if (scheduleWarning && !ignoreSchedule) {
     const warning = scheduling(`schedule.${scheduleWarning}`);

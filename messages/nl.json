@@ -310,6 +310,13 @@
       "missingFields": "Verplichte velden ontbreken.",
       "clientEmailExists": "Er bestaat al een klant met dit e-mailadres.",
       "workingHoursEndBeforeStart": "{day}: eindtijd moet na starttijd liggen.",
+      "scheduleNameRequired": "Naam van het rooster is verplicht.",
+      "scheduleNotFound": "Rooster niet gevonden.",
+      "scheduleBlocksInvalid": "Ongeldig formaat voor tijdvakken.",
+      "timeOffDatesRequired": "Start- en einddatum zijn verplicht.",
+      "timeOffEndBeforeStart": "Einde moet na start liggen.",
+      "timeOffStaffRequired": "Selecteer een teamlid.",
+      "timeOffResourceRequired": "Selecteer een cabine.",
       "invalidCart": "Ongeldige winkelwagen.",
       "emptyCart": "Lege winkelwagen.",
       "invalidAmount": "Ongeldig bedrag.",
@@ -489,17 +496,79 @@
           "submitting": "Toevoegen…"
         }
       },
-      "horaires": {
-        "description": "Standaard openingstijden van het instituut (gebruikt voor online beschikbaarheid).",
+      "horairesTabs": {
+        "grilles": "Rooster sjablonen",
+        "assignations": "Toewijzingen",
+        "absences": "Afwezigheden"
+      },
+      "schedules": {
+        "description": "Maak herbruikbare roosters met meerdere tijdvakken per dag (bv. ochtend + namiddag met lunchpauze).",
+        "listTitle": "Roosters",
+        "empty": "Geen rooster. Maak er een aan om te beginnen.",
+        "nameLabel": "Naam van het rooster",
+        "defaultBadge": "Standaardrooster van het instituut",
+        "defaultShort": "standaard",
+        "blocksHint": "Voeg meerdere tijdvakken per dag toe voor pauzes.",
         "columns": {
           "day": "Dag",
           "open": "Open",
-          "hours": "Uren"
+          "hours": "Tijdvakken"
         },
         "closed": "Gesloten",
-        "saved": "Openingstijden opgeslagen.",
-        "submit": "Openingstijden opslaan",
-        "submitting": "Opslaan…"
+        "addBlock": "Tijdvak",
+        "saved": "Rooster opgeslagen.",
+        "submit": "Rooster opslaan",
+        "submitting": "Opslaan…",
+        "createTitle": "Nieuw rooster",
+        "createPlaceholder": "Bv. Zomerrooster",
+        "create": "Aanmaken",
+        "creating": "Aanmaken…",
+        "delete": "Verwijderen"
+      },
+      "assignments": {
+        "description": "Zonder toegewezen rooster gebruiken personeel en cabines het standaardrooster ({defaultName}).",
+        "noneDefault": "geen standaardrooster",
+        "staffTitle": "Personeel",
+        "resourcesTitle": "Cabines",
+        "useDefault": "Standaardrooster",
+        "defaultShort": "standaard",
+        "noStaff": "Geen personeelsleden.",
+        "noResources": "Geen cabines.",
+        "columns": {
+          "name": "Naam",
+          "schedule": "Rooster"
+        },
+        "save": "Toepassen",
+        "saving": "…",
+        "saved": "Toewijzing opgeslagen."
+      },
+      "absences": {
+        "formTitle": "Afwezigheid plannen",
+        "formDescription": "Sluiting van het instituut, verlof van een behandelaar of cabine-onbeschikbaarheid.",
+        "scope": "Bereik",
+        "scopeInstitute": "Instituut (sluiting)",
+        "scopeStaff": "Personeel",
+        "scopeResource": "Cabine",
+        "staff": "Lid",
+        "resource": "Cabine",
+        "chooseStaff": "Kiezen…",
+        "chooseResource": "Kiezen…",
+        "startsAt": "Start",
+        "endsAt": "Einde",
+        "reason": "Reden (optioneel)",
+        "reasonPlaceholder": "Vakantie, opleiding, werken…",
+        "submit": "Afwezigheid toevoegen",
+        "submitting": "Toevoegen…",
+        "saved": "Afwezigheid opgeslagen.",
+        "listTitle": "Geplande afwezigheden",
+        "empty": "Geen afwezigheden in deze periode.",
+        "delete": "Verwijderen",
+        "columns": {
+          "scope": "Wie / wat",
+          "period": "Periode",
+          "reason": "Reden",
+          "actions": "Acties"
+        }
       }
     },
     "pos": {

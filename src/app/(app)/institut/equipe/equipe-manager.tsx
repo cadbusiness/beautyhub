@@ -11,20 +11,25 @@ import { ListToolbar } from "@/components/ui/list-toolbar";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { StaffForm } from "./staff-form";
 import { ResourceForm } from "./resource-form";
-import { WorkingHoursForm } from "./working-hours-form";
+import { SchedulesPanel } from "./schedules-panel";
+import { ScheduleAssignmentsPanel } from "./schedule-assignments";
+import { TimeOffPanel } from "./time-off-panel";
 
 type Tab = "personnel" | "cabines" | "horaires";
+type HorairesTab = "grilles" | "assignations" | "absences";
 
 type StaffRow = {
   id: string;
   full_name: string;
   email: string | null;
   color: string | null;
+  schedule_id: string | null;
 };
 
 type ResourceRow = {
   id: string;
   name: string;
+  schedule_id: string | null;
 };
 
 type HourRow = {
@@ -33,18 +38,39 @@ type HourRow = {
   end_time: string;
 };
 
+type ScheduleRow = {
+  id: string;
+  name: string;
+  is_default: boolean;
+  blocks: HourRow[];
+};
+
+type TimeOffRow = {
+  id: string;
+  starts_at: string;
+  ends_at: string;
+  reason: string | null;
+  staff_id: string | null;
+  resource_id: string | null;
+  staff: { full_name: string } | null;
+  resource: { name: string } | null;
+};
+
 export function EquipeManager({
   staff,
   resources,
-  hours,
+  schedules,
+  timeOffs,
 }: {
   staff: StaffRow[];
   resources: ResourceRow[];
-  hours: HourRow[];
+  schedules: ScheduleRow[];
+  timeOffs: TimeOffRow[];
 }) {
   const t = useTranslations("institut.team");
   const tCommon = useTranslations("common");
   const [tab, setTab] = useState<Tab>("personnel");
+  const [horairesTab, setHorairesTab] = useState<HorairesTab>("grilles");
   const [staffQuery, setStaffQuery] = useState("");
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
@@ -212,8 +238,51 @@ export function EquipeManager({
 
         {tab === "horaires" ? (
           <div className="px-4 py-4 lg:px-6">
-            <p className="mb-4 text-sm text-slate-600">{t("horaires.description")}</p>
-            <WorkingHoursForm hours={hours} />
+            <div className="mb-4 flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+              {(
+                [
+                  { id: "grilles", label: t("horairesTabs.grilles") },
+                  { id: "assignations", label: t("horairesTabs.assignations") },
+                  { id: "absences", label: t("horairesTabs.absences") },
+                ] as const
+              ).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setHorairesTab(item.id)}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                    horairesTab === item.id
+                      ? "bg-slate-900 text-white"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {horairesTab === "grilles" ? (
+              <div className="space-y-4">
+                <p className="text-sm text-slate-600">{t("schedules.description")}</p>
+                <SchedulesPanel schedules={schedules} />
+              </div>
+            ) : null}
+
+            {horairesTab === "assignations" ? (
+              <ScheduleAssignmentsPanel
+                staff={staff}
+                resources={resources}
+                schedules={schedules}
+              />
+            ) : null}
+
+            {horairesTab === "absences" ? (
+              <TimeOffPanel
+                timeOffs={timeOffs}
+                staff={staff.map((s) => ({ id: s.id, full_name: s.full_name }))}
+                resources={resources}
+              />
+            ) : null}
           </div>
         ) : null}
       </ListPanel>

@@ -683,6 +683,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          schedule_id: string | null
           tenant_id: string
           updated_at: string
         }
@@ -691,6 +692,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          schedule_id?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -699,12 +701,90 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          schedule_id?: string | null
           tenant_id?: string
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "inst_resources_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "inst_schedules"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inst_resources_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_schedule_blocks: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          schedule_id: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          schedule_id: string
+          start_time: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          schedule_id?: string
+          start_time?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_schedule_blocks_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "inst_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_schedules: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_schedules_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1006,6 +1086,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          schedule_id: string | null
           tenant_id: string
           updated_at: string
           user_id: string | null
@@ -1017,6 +1098,7 @@ export type Database = {
           full_name: string
           id?: string
           is_active?: boolean
+          schedule_id?: string | null
           tenant_id: string
           updated_at?: string
           user_id?: string | null
@@ -1028,13 +1110,76 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
+          schedule_id?: string | null
           tenant_id?: string
           updated_at?: string
           user_id?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "inst_staff_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "inst_schedules"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inst_staff_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_time_off: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          reason: string | null
+          resource_id: string | null
+          staff_id: string | null
+          starts_at: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          reason?: string | null
+          resource_id?: string | null
+          staff_id?: string | null
+          starts_at: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          reason?: string | null
+          resource_id?: string | null
+          staff_id?: string | null
+          starts_at?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_time_off_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "inst_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_time_off_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "inst_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_time_off_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

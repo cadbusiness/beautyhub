@@ -107,6 +107,30 @@ function parseTimeToMinutes(time: string): number {
 }
 
 /** Retourne un message d'avertissement si le créneau est hors horaires d'ouverture. */
+export async function validateStaffSchedule(
+  supabase: Db,
+  tenantId: string,
+  staffId: string | null,
+  startsAt: Date,
+  endsAt: Date,
+): Promise<ScheduleWarningKey | null> {
+  const { fetchStaffScheduleBlocks, validateAgainstBlocks } = await import(
+    "@/lib/institut/schedules"
+  );
+  const weekday = startsAt.getDay();
+  const blocks = await fetchStaffScheduleBlocks(supabase, tenantId, staffId, weekday);
+
+  if (blocks.length === 0) {
+    return "noHoursToday";
+  }
+
+  if (!validateAgainstBlocks(blocks, weekday, startsAt, endsAt)) {
+    return "outsideSchedule";
+  }
+  return null;
+}
+
+/** @deprecated Utiliser validateStaffSchedule */
 export function validateStaffWorkingHours(
   hours: WorkingHourRow[],
   staffId: string | null,

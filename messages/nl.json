@@ -1415,6 +1415,9 @@
       "searchArticles": "Zoek een artikel…",
       "searchAria": "Zoeken",
       "emptyCategory": "Geen artikelen in deze categorie. Voeg behandelingen toe, synchroniseer WooCommerce of maak interne producten aan.",
+      "sessionRequired": "Open de kassa om deze verkoop te registreren.",
+      "openSession": "Kassa openen →",
+      "noSessionHint": "Kassa gesloten — openen voor contant follow-up",
       "cart": {
         "title": "Winkelwagen",
         "clear": "Legen",
@@ -1543,6 +1546,67 @@
         "transfer": "Overschrijving",
         "gift_card": "Cadeaubon",
         "other": "Anders"
+      }
+    },
+    "session": {
+      "closedBadge": "Kassa gesloten",
+      "closedIntro": "Open een sessie om verkopen te registreren, contant geld te volgen en uw dag netjes af te sluiten.",
+      "openTitle": "Dag starten",
+      "openDescription": "Start een sessie met het initiële kassafonds.",
+      "sessionOpen": "Kassa open",
+      "openingFloat": "Kassafonds",
+      "goToPos": "Verkoop afrekenen",
+      "goToPosAfterOpen": "Naar de kassa",
+      "settingsLink": "Kassa-instellingen",
+      "generateX": "X-rapport",
+      "byPayment": "Per betaalmethode",
+      "movements": "Contante bewegingen",
+      "movementsHint": "Stortingen of opnames buiten verkopen (boodschappen, bank…).",
+      "noMovements": "Nog geen bewegingen.",
+      "closeTitle": "Dagafsluiting",
+      "closeDescription": "Tel het contante geld in de lade, vergelijk met het verwachte bedrag en sluit af.",
+      "reports": "Gegenereerde rapporten",
+      "backToPos": "Terug naar kassa",
+      "steps": {
+        "count": "Tel het contante geld in de kassalade",
+        "declare": "Voer dit bedrag in als kassafonds",
+        "sell": "Reken verkopen af via het tabblad Kassa"
+      },
+      "stats": {
+        "sales": "Verkopen",
+        "total": "Omzet incl. BTW",
+        "expectedCash": "Verwacht contant",
+        "partial": "Voorschotten"
+      },
+      "methods": {
+        "cash": "Contant",
+        "card": "Kaart",
+        "stripe": "Stripe",
+        "transfer": "Overschrijving",
+        "gift_card": "Cadeaubon",
+        "credit_note": "Tegoed"
+      },
+      "movementTypes": {
+        "in": "Storting",
+        "out": "Opname",
+        "expense": "Onkosten"
+      },
+      "openForm": {
+        "float": "Kassafonds (€)",
+        "floatHelp": "Contant in de lade bij opening. Zet 0 als de lade leeg is.",
+        "submit": "Kassa openen",
+        "defaultHint": "Standaardwaarde: {amount}"
+      },
+      "movementForm": {
+        "types": { "in": "Storting", "out": "Opname", "expense": "Uitgave" },
+        "reasonPlaceholder": "Reden (boodschappen, opname…)",
+        "submit": "Opslaan"
+      },
+      "closeForm": {
+        "expected": "Verwacht contant",
+        "counted": "Geteld contant (€)",
+        "notesPlaceholder": "Notities bij afsluiting (optioneel)",
+        "submit": "Afsluiten (Z)"
       }
     }
   },

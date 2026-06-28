@@ -1457,9 +1457,9 @@
         "addToCheckout": "Ajoute des articles pour encaisser.",
         "settingsLink": "Paramètres caisse →"
       },
-      "sessionRequired": "Session caisse requise.",
-      "openSession": "Ouvrir la caisse",
-      "noSessionHint": "Ouvrir une session pour le suivi espèces",
+      "sessionRequired": "Ouvrez la caisse pour enregistrer cette vente.",
+      "openSession": "Ouvrir la caisse →",
+      "noSessionHint": "Session fermée — ouvrir pour le suivi espèces",
       "checkout": {
         "cashPending": "Encaissement…",
         "cash": "Espèces · {total}",
@@ -1583,18 +1583,29 @@
       }
     },
     "session": {
-      "openTitle": "Ouvrir la caisse",
+      "closedBadge": "Caisse fermée",
+      "closedIntro": "Ouvrez une session pour enregistrer vos ventes, suivre les espèces en caisse et clôturer votre journée proprement.",
+      "openTitle": "Démarrer la journée",
       "openDescription": "Démarrez une session avec le fond de caisse initial.",
-      "sessionOpen": "Session en cours",
+      "sessionOpen": "Caisse ouverte",
       "openingFloat": "Fond de caisse",
+      "goToPos": "Encaisser une vente",
+      "goToPosAfterOpen": "Aller encaisser",
+      "settingsLink": "Réglages caisse",
       "generateX": "Rapport X",
       "byPayment": "Par moyen de paiement",
       "movements": "Mouvements espèces",
-      "noMovements": "Aucun mouvement.",
-      "closeTitle": "Clôture Z",
-      "closeDescription": "Comptez les espèces en caisse et clôturez la journée.",
+      "movementsHint": "Retraits ou dépôts de liquide hors ventes (courses, retrait banque…).",
+      "noMovements": "Aucun mouvement pour l'instant.",
+      "closeTitle": "Clôture de fin de journée",
+      "closeDescription": "Comptez les espèces réellement dans le tiroir, comparez au montant attendu, puis clôturez.",
       "reports": "Rapports générés",
-      "backToPos": "Retour caisse",
+      "backToPos": "Retour à la caisse",
+      "steps": {
+        "count": "Comptez les espèces déjà dans le tiroir-caisse",
+        "declare": "Saisissez ce montant comme fond de caisse",
+        "sell": "Encaissez vos ventes depuis l'onglet Caisse"
+      },
       "stats": {
         "sales": "Ventes",
         "total": "CA TTC",
@@ -1616,8 +1627,9 @@
       },
       "openForm": {
         "float": "Fond de caisse (€)",
-        "submit": "Ouvrir la session",
-        "defaultHint": "Valeur par défaut : {amount}"
+        "floatHelp": "Liquide présent dans le tiroir au moment de l'ouverture (pièces et billets). Mettez 0 si le tiroir est vide.",
+        "submit": "Ouvrir la caisse",
+        "defaultHint": "Valeur par défaut configurée : {amount}"
       },
       "movementForm": {
         "types": { "in": "Entrée", "out": "Sortie", "expense": "Dépense" },

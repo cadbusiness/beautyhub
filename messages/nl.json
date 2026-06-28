@@ -325,7 +325,8 @@
   "appointments": {
     "tabs": {
       "calendar": "Kalender",
-      "list": "Lijst"
+      "list": "Lijst",
+      "bookingPublic": "Online reserveren"
     },
     "status": {
       "booked": "Geboekt",
@@ -374,7 +375,7 @@
       "editTitle": "Afspraak bewerken",
       "allServices": "Alle behandelingen",
       "allStaff": "Heel team",
-      "publicPage": "Online reserveren",
+      "publicPage": "Reserveringsinstellingen",
       "views": {
         "month": "Maand",
         "week": "Week",

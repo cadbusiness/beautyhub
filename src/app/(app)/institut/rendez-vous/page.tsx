@@ -1,19 +1,13 @@
 import { Suspense } from "react";
-import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { todayDateString } from "@/lib/date";
 import { fetchAppointmentsInRange, serializeCalendarAppointments } from "@/lib/institut/slots";
 import { ListPanel } from "@/components/ui/list-panel";
-import { PageTabLinks } from "@/components/ui/page-tabs";
 import { formatPrice } from "@/lib/utils";
 import { CalendarView } from "./calendar-view";
 import { AppointmentsList } from "./appointments-list";
-
-const RDV_TAB_HREFS = [
-  { href: "/institut/rendez-vous", exact: true as const },
-  { href: "/institut/rendez-vous?view=liste" },
-];
+import { RdvTabLinks } from "./rdv-tab-links";
 
 function TabLinksFallback() {
   return <div className="h-[45px] border-b border-slate-200" aria-hidden />;
@@ -24,11 +18,6 @@ export default async function RendezVousPage({
 }: {
   searchParams: Promise<{ view?: string }>;
 }) {
-  const t = await getTranslations("appointments.tabs");
-  const RDV_TABS = [
-    { label: t("calendar"), ...RDV_TAB_HREFS[0] },
-    { label: t("list"), ...RDV_TAB_HREFS[1] },
-  ];
   const session = await requireModule("institut");
   const params = await searchParams;
   const view = params.view === "liste" ? "liste" : "calendrier";
@@ -144,7 +133,7 @@ export default async function RendezVousPage({
   return (
     <ListPanel>
       <Suspense fallback={<TabLinksFallback />}>
-        <PageTabLinks items={RDV_TABS} />
+        <RdvTabLinks />
       </Suspense>
 
       {view === "calendrier" ? (

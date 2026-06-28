@@ -1,14 +1,18 @@
-import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
 import { ListPanel } from "@/components/ui/list-panel";
 import { loadBookingFlowsAdmin } from "./actions";
 import { BookingFlowsManager } from "./booking-flows-manager";
+import { RdvTabLinks } from "../rdv-tab-links";
+
+function TabLinksFallback() {
+  return <div className="h-[45px] border-b border-slate-200" aria-hidden />;
+}
 
 export default async function ReservationPubliquePage() {
   const session = await requireModule("institut");
-  const t = await getTranslations("appointments.bookingPublic");
   const supabase = await createClient();
   const [{ flows, publicBaseUrl }, servicesRes] = await Promise.all([
     loadBookingFlowsAdmin(),
@@ -29,9 +33,9 @@ export default async function ReservationPubliquePage() {
 
   return (
     <ListPanel>
-      <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
-        <h1 className="text-lg font-semibold text-slate-900">{t("title")}</h1>
-      </div>
+      <Suspense fallback={<TabLinksFallback />}>
+        <RdvTabLinks />
+      </Suspense>
       <BookingFlowsManager flows={flows} services={services} publicBaseUrl={publicBaseUrl} />
     </ListPanel>
   );

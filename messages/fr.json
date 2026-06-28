@@ -325,7 +325,8 @@
   "appointments": {
     "tabs": {
       "calendar": "Calendrier",
-      "list": "Liste"
+      "list": "Liste",
+      "bookingPublic": "Réservation publique"
     },
     "status": {
       "booked": "Réservé",
@@ -374,7 +375,7 @@
       "editTitle": "Modifier le rendez-vous",
       "allServices": "Toutes les prestations",
       "allStaff": "Toute l'équipe",
-      "publicPage": "Réservation publique",
+      "publicPage": "Réglages réservation",
       "views": {
         "month": "Mois",
         "week": "Semaine",

@@ -109,16 +109,14 @@ export function UserMenu({
             >
               {t("myAccount")}
             </Link>
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                role="menuitem"
-                onClick={() => setOpen(false)}
-              >
-                {t("signOut")}
-              </button>
-            </form>
+            <button
+              type="button"
+              className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+              role="menuitem"
+              onClick={() => void signOut()}
+            >
+              {t("signOut")}
+            </button>
           </div>
         </div>
       ) : null}

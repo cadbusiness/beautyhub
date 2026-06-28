@@ -534,10 +534,26 @@
       },
       "loyalty": {
         "title": "Programme de fidélité",
-        "description": "Configurez comment vos clientes gagnent des points et ce qu'elles peuvent en obtenir.",
+        "description": "Récompensez vos clientes régulières : elles cumulent des points à chaque visite ou achat, puis les échangent contre des avantages.",
+        "programStatus": {
+          "draft": "Brouillon",
+          "ready": "Prêt à activer",
+          "live": "En ligne"
+        },
+        "setup": {
+          "title": "Mise en place en 3 étapes",
+          "step1": "Définir comment gagner des points",
+          "step1Hint": "RDV terminé, achat en caisse, boutique en ligne…",
+          "step2": "Proposer des récompenses",
+          "step2Hint": "Réductions ou prestations offertes",
+          "step3": "Activer le programme",
+          "step3Hint": "Les points seront attribués automatiquement"
+        },
         "stats": {
-          "clientsWithPoints": "Clientes avec points",
-          "pointsOutstanding": "{label} en circulation"
+          "clientsWithPoints": "Clientes participantes",
+          "pointsOutstanding": "{label} en circulation",
+          "clientsHint": "Clientes qui ont déjà cumulé des points dans votre institut.",
+          "pointsHint": "Total de {label} cumulés par vos clientes, pas encore utilisés."
         },
         "program": {
           "title": "Programme",
@@ -568,6 +584,7 @@
         },
         "rules": {
           "title": "Règles de gain",
+          "sectionDescription": "Choisissez quand et combien de points vos clientes gagnent.",
           "add": "Nouvelle règle",
           "empty": "Aucune règle. Ajoutez une source pour commencer à attribuer des points.",
           "footer": "{count, plural, one {# règle} other {# règles}}",
@@ -596,6 +613,7 @@
         },
         "rewards": {
           "title": "Récompenses",
+          "sectionDescription": "Définissez ce que vos clientes obtiennent en échange de leurs points.",
           "add": "Nouvelle récompense",
           "empty": "Aucune récompense configurée.",
           "footer": "{count, plural, one {# récompense} other {# récompenses}}",
@@ -627,6 +645,23 @@
             "service": "Prestation offerte",
             "active": "Récompense active"
           }
+        },
+        "emptyRules": {
+          "title": "Commencez par une règle de gain",
+          "description": "Exemple : 10 points par RDV terminé, ou 1 point par euro dépensé en caisse."
+        },
+        "emptyRewards": {
+          "title": "Proposez une première récompense",
+          "description": "Exemple : −10 % après 100 points, ou une manucure offerte."
+        },
+        "share": {
+          "title": "Partager avec vos clientes",
+          "description": "Des outils pour faire connaître votre programme directement en institut.",
+          "qrTitle": "QR code fidélité",
+          "qrDescription": "Affichez un QR en accueil : vos clientes scannent et accèdent au programme.",
+          "walletTitle": "Carte wallet",
+          "walletDescription": "Permettez d'ajouter le programme au téléphone (Apple / Google Wallet).",
+          "comingSoon": "Bientôt"
         }
       },
       "website": {
@@ -904,6 +939,7 @@
           "overview": "Vue d'ensemble",
           "appointments": "Rendez-vous",
           "sales": "Factures & achats",
+          "quotes": "Devis",
           "access": "Accès & emails"
         },
         "stats": {
@@ -956,6 +992,62 @@
           "source": "Source",
           "total": "Total"
         }
+      }
+    },
+    "quotes": {
+      "hint": "Propositions et devis pour prestations sur mesure.",
+      "newQuote": "Nouveau devis",
+      "empty": "Aucun devis pour le moment.",
+      "pendingRequests": "Demandes en attente",
+      "createFromRequest": "Créer un devis",
+      "eventDate": "Date souhaitée :",
+      "send": "Envoyer",
+      "copyLink": "Copier le lien",
+      "copied": "Copié",
+      "typeRequest": "Demande",
+      "typeQuote": "Devis",
+      "columns": {
+        "date": "Date",
+        "number": "N°",
+        "type": "Type",
+        "status": "Statut",
+        "total": "Total",
+        "actions": "Actions"
+      },
+      "status": {
+        "pending": "En attente",
+        "draft": "Brouillon",
+        "sent": "Envoyé",
+        "accepted": "Accepté",
+        "declined": "Refusé",
+        "expired": "Expiré",
+        "cancelled": "Annulé",
+        "converted": "Converti"
+      },
+      "form": {
+        "title": "Nouveau devis",
+        "clientMessage": "Message de la cliente",
+        "lines": "Lignes",
+        "lineLabel": "Description",
+        "addLine": "Ajouter une ligne",
+        "validUntil": "Valide jusqu'au",
+        "template": "Modèle",
+        "internalNotes": "Notes internes",
+        "submit": "Créer le devis",
+        "submitting": "Création…",
+        "templates": {
+          "elegant": "Élégant",
+          "minimal": "Minimal",
+          "wedding": "Mariage",
+          "artist": "Artiste pro"
+        }
+      },
+      "actions": {
+        "clientRequired": "Client requis.",
+        "linesRequired": "Ajoutez au moins une ligne.",
+        "numberError": "Impossible de générer le numéro de devis.",
+        "createError": "Erreur lors de la création du devis.",
+        "quoteNotFound": "Devis introuvable."
       }
     },
     "services": {
@@ -1016,6 +1108,11 @@
         "minAdvanceHours": "Délai minimum (h)",
         "maxAdvanceDays": "Résa max (jours)",
         "bookingWindowHint": "Contrôle la fenêtre de réservation en ligne pour cette prestation.",
+        "bookingMode": "Mode de réservation",
+        "bookingModeInstant": "Réservation en ligne (calendrier)",
+        "bookingModeQuote": "Demande de devis",
+        "bookingModeManual": "Contact / sur mesure",
+        "bookingModeHint": "Make-up mariage, événements : choisissez « Demande de devis » pour remplacer le calendrier public.",
         "createSubmit": "Créer la prestation",
         "editSubmit": "Enregistrer",
         "submitting": "Enregistrement…",
@@ -1544,7 +1641,10 @@
       "step1": {
         "title": "Choisir une prestation",
         "empty": "Aucune prestation disponible.",
-        "durationMin": "{min} min"
+        "durationMin": "{min} min",
+        "quoteBadge": "Devis",
+        "manualBadge": "Sur mesure",
+        "onRequest": "Sur devis"
       },
       "loadError": "Impossible de charger les données. Réessayez.",
       "step2": {
@@ -1564,7 +1664,43 @@
       "extras": {
         "title": "Options complémentaires",
         "durationHint": "Durée totale estimée : {min} min · {price}"
+      },
+      "quoteRequest": {
+        "fullName": "Nom complet",
+        "eventDate": "Date de l'événement (optionnel)",
+        "message": "Votre projet",
+        "messagePlaceholder": "Lieu, nombre de personnes, style souhaité…",
+        "fromPrice": "À partir de {price}",
+        "submit": "Envoyer ma demande",
+        "submitting": "Envoi…",
+        "successTitle": "Demande envoyée",
+        "successHint": "Nous vous recontacterons rapidement avec une proposition personnalisée.",
+        "backToServices": "Choisir une autre prestation"
       }
+    },
+    "quote": {
+      "title": "Devis",
+      "quoteNumber": "N°",
+      "validUntil": "Valide jusqu'au",
+      "eventDate": "Date de l'événement",
+      "client": "Cliente",
+      "service": "Prestation",
+      "description": "Description",
+      "quantity": "Qté",
+      "unitPrice": "P.U.",
+      "subtotal": "Sous-total",
+      "discount": "Remise",
+      "total": "Total TTC",
+      "message": "Votre message",
+      "footer": "{name} — merci pour votre confiance.",
+      "accept": "Accepter le devis",
+      "decline": "Refuser",
+      "responding": "Envoi…",
+      "respondError": "Impossible d'enregistrer votre réponse.",
+      "statusAccepted": "Merci ! Votre acceptation a été enregistrée. Nous vous recontacterons pour fixer la date.",
+      "statusDeclined": "Votre refus a été enregistré.",
+      "statusExpired": "Ce devis a expiré. Contactez-nous pour une nouvelle proposition.",
+      "printPdf": "Imprimer / PDF"
     },
     "client": {
       "login": {

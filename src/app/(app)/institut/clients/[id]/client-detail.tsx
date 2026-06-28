@@ -18,10 +18,12 @@ import type {
   ClientOverview,
   ClientSalesPayload,
 } from "@/lib/institut/clients";
+import type { ClientQuotesPayload } from "@/lib/institut/commercial-documents";
+import { ClientQuotesTab } from "./client-quotes-tab";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { ClientForm } from "../client-form";
 
-type Tab = "overview" | "appointments" | "sales" | "access";
+type Tab = "overview" | "appointments" | "sales" | "quotes" | "access";
 
 function StatCell({ label, value }: { label: string; value: string }) {
   return (
@@ -69,6 +71,7 @@ export function ClientDetail({ overview }: { overview: ClientOverview }) {
     null,
   );
   const [sales, setSales] = useState<ClientSalesPayload | null>(null);
+  const [quotes, setQuotes] = useState<ClientQuotesPayload | null>(null);
   const [loadingTab, setLoadingTab] = useState<Tab | null>(null);
 
   const { client, stats } = overview;
@@ -93,6 +96,10 @@ export function ClientDetail({ overview }: { overview: ClientOverview }) {
       label: t("tabs.sales"),
       count: stats.sale_count,
     },
+    {
+      id: "quotes" as const,
+      label: t("tabs.quotes"),
+    },
     { id: "access" as const, label: t("tabs.access") },
   ];
 
@@ -116,12 +123,21 @@ export function ClientDetail({ overview }: { overview: ClientOverview }) {
           setLoadingTab(null);
         }
       }
+      if (nextTab === "quotes" && !quotes) {
+        setLoadingTab("quotes");
+        try {
+          const res = await fetch(`/api/institut/clients/${client.id}/quotes`);
+          if (res.ok) setQuotes(await res.json());
+        } finally {
+          setLoadingTab(null);
+        }
+      }
     },
-    [appointments, sales, client.id],
+    [appointments, sales, quotes, client.id],
   );
 
   useEffect(() => {
-    if (tab === "appointments" || tab === "sales") {
+    if (tab === "appointments" || tab === "sales" || tab === "quotes") {
       void loadTabData(tab);
     }
   }, [tab, loadTabData]);
@@ -438,6 +454,21 @@ export function ClientDetail({ overview }: { overview: ClientOverview }) {
                 ) : null}
               </DataTable>
             </div>
+          )
+        ) : null}
+
+        {tab === "quotes" ? (
+          loadingTab === "quotes" || !quotes ? (
+            <TabLoading />
+          ) : (
+            <ClientQuotesTab
+              clientId={client.id}
+              quotes={quotes.quotes}
+              onRefresh={async () => {
+                const res = await fetch(`/api/institut/clients/${client.id}/quotes`);
+                if (res.ok) setQuotes(await res.json());
+              }}
+            />
           )
         ) : null}
 

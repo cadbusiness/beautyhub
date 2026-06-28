@@ -5,6 +5,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { bookPublicAppointment } from "./actions";
 import type { PublicService, PublicSlot, PublicStaff } from "@/lib/public/booking-load";
 import { ExtrasPicker } from "@/components/institut/extras-picker";
+import { QuoteRequestForm } from "./quote-request-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { BookingExtraLine, ServiceExtraConfig } from "@/lib/institut/service-extras";
 import { totalDurationMin, totalPriceCents } from "@/lib/institut/service-extras";
 
-type WizardStep = "service" | "staff" | "extras" | "date" | "slots" | "done";
+type WizardStep = "service" | "quote" | "staff" | "extras" | "date" | "slots" | "done";
 
 async function fetchBookingStaff(serviceId: string): Promise<PublicStaff[]> {
   const res = await fetch(`/api/public/booking?serviceId=${encodeURIComponent(serviceId)}`);
@@ -99,6 +100,11 @@ export function BookingWizard({
     setStaffId("");
     setSlot(null);
     setExtras([]);
+    const service = services.find((s) => s.id === id);
+    if (service && (service.booking_mode === "quote" || service.booking_mode === "manual")) {
+      setStep("quote");
+      return;
+    }
     startTransition(async () => {
       try {
         const [staffList, catalog] = await Promise.all([
@@ -212,12 +218,30 @@ export function BookingWizard({
                     style={{ backgroundColor: s.color ?? "#64748b" }}
                   />
                   {s.name} · {t("step1.durationMin", { min: s.duration_min })}
+                  {s.booking_mode === "quote" ? (
+                    <span className="ml-2 text-xs text-violet-600">{t("step1.quoteBadge")}</span>
+                  ) : null}
+                  {s.booking_mode === "manual" ? (
+                    <span className="ml-2 text-xs text-slate-500">{t("step1.manualBadge")}</span>
+                  ) : null}
                 </span>
-                <span className="text-sm text-slate-500">{formatPrice(s.price_cents)}</span>
+                <span className="text-sm text-slate-500">
+                  {s.booking_mode === "instant" ? formatPrice(s.price_cents) : t("step1.onRequest")}
+                </span>
               </button>
             ))
           )}
         </Card>
+      ) : null}
+
+      {step === "quote" && selectedService ? (
+        <QuoteRequestForm
+          service={selectedService}
+          onBack={() => {
+            setServiceId("");
+            setStep("service");
+          }}
+        />
       ) : null}
 
       {step === "staff" ? (

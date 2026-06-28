@@ -591,6 +591,181 @@ export type Database = {
         }
         Relationships: []
       }
+      inst_commercial_document_lines: {
+        Row: {
+          description: string | null
+          document_id: string
+          id: string
+          label: string
+          quantity: number
+          service_id: string | null
+          sort_order: number
+          tenant_id: string
+          unit_price_cents: number
+        }
+        Insert: {
+          description?: string | null
+          document_id: string
+          id?: string
+          label: string
+          quantity?: number
+          service_id?: string | null
+          sort_order?: number
+          tenant_id: string
+          unit_price_cents?: number
+        }
+        Update: {
+          description?: string | null
+          document_id?: string
+          id?: string
+          label?: string
+          quantity?: number
+          service_id?: string | null
+          sort_order?: number
+          tenant_id?: string
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_commercial_document_lines_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "inst_commercial_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_commercial_document_lines_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "inst_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_commercial_document_lines_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_commercial_documents: {
+        Row: {
+          accepted_at: string | null
+          appointment_id: string | null
+          client_id: string | null
+          client_message: string | null
+          created_at: string
+          currency: string
+          declined_at: string | null
+          discount_cents: number
+          doc_number: string | null
+          doc_type: string
+          event_date: string | null
+          id: string
+          internal_notes: string | null
+          public_token: string
+          sent_at: string | null
+          service_id: string | null
+          source_document_id: string | null
+          status: string
+          subtotal_cents: number
+          template_id: string
+          tenant_id: string
+          total_cents: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          appointment_id?: string | null
+          client_id?: string | null
+          client_message?: string | null
+          created_at?: string
+          currency?: string
+          declined_at?: string | null
+          discount_cents?: number
+          doc_number?: string | null
+          doc_type: string
+          event_date?: string | null
+          id?: string
+          internal_notes?: string | null
+          public_token?: string
+          sent_at?: string | null
+          service_id?: string | null
+          source_document_id?: string | null
+          status?: string
+          subtotal_cents?: number
+          template_id?: string
+          tenant_id: string
+          total_cents?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          appointment_id?: string | null
+          client_id?: string | null
+          client_message?: string | null
+          created_at?: string
+          currency?: string
+          declined_at?: string | null
+          discount_cents?: number
+          doc_number?: string | null
+          doc_type?: string
+          event_date?: string | null
+          id?: string
+          internal_notes?: string | null
+          public_token?: string
+          sent_at?: string | null
+          service_id?: string | null
+          source_document_id?: string | null
+          status?: string
+          subtotal_cents?: number
+          template_id?: string
+          tenant_id?: string
+          total_cents?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_commercial_documents_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "inst_appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_commercial_documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_commercial_documents_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "inst_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_commercial_documents_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "inst_commercial_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_commercial_documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_document_sequences: {
         Row: {
           doc_type: string
@@ -1552,6 +1727,7 @@ export type Database = {
       }
       inst_services: {
         Row: {
+          booking_mode: string
           buffer_after_min: number
           buffer_before_min: number
           color: string | null
@@ -1572,6 +1748,7 @@ export type Database = {
           visibility: string
         }
         Insert: {
+          booking_mode?: string
           buffer_after_min?: number
           buffer_before_min?: number
           color?: string | null
@@ -1592,6 +1769,7 @@ export type Database = {
           visibility?: string
         }
         Update: {
+          booking_mode?: string
           buffer_after_min?: number
           buffer_before_min?: number
           color?: string | null
@@ -2177,7 +2355,28 @@ export type Database = {
           color: string | null
           extras_step_position: string
           image_url: string | null
+          booking_mode: string
         }[]
+      }
+      get_public_quote_by_token: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      respond_public_quote: {
+        Args: { p_action: string; p_token: string }
+        Returns: boolean
+      }
+      submit_public_quote_request: {
+        Args: {
+          p_email: string
+          p_event_date?: string
+          p_full_name: string
+          p_message?: string
+          p_phone?: string
+          p_service_id: string
+          p_tenant_id: string
+        }
+        Returns: string
       }
       get_public_service_extras: {
         Args: { p_tenant_id: string; p_service_id: string }

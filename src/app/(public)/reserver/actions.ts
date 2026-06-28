@@ -54,6 +54,38 @@ export interface BookResult {
   appointmentId?: string;
 }
 
+export interface QuoteRequestResult {
+  error?: string;
+  ok?: boolean;
+}
+
+export async function submitPublicQuoteRequest(input: {
+  serviceId: string;
+  email: string;
+  fullName: string;
+  phone?: string;
+  message?: string;
+  eventDate?: string;
+}): Promise<QuoteRequestResult> {
+  const actions = await getTranslations("institut.actions");
+  const tenant = await getTenantContext();
+  if (!tenant) return { error: actions("tenantNotFound") };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("submit_public_quote_request", {
+    p_tenant_id: tenant.id,
+    p_service_id: input.serviceId,
+    p_email: input.email,
+    p_full_name: input.fullName,
+    p_phone: input.phone ?? undefined,
+    p_message: input.message ?? undefined,
+    p_event_date: input.eventDate ?? undefined,
+  });
+
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function bookPublicAppointment(input: {
   serviceId: string;
   staffId: string;

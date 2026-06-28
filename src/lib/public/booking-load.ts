@@ -13,6 +13,7 @@ export interface PublicService {
   color: string | null;
   extras_step_position: string;
   image_url: string | null;
+  booking_mode: string;
 }
 
 export interface PublicStaff {

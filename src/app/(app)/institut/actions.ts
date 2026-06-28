@@ -70,6 +70,11 @@ async function parseServiceForm(formData: FormData) {
         Number.parseInt(String(formData.get("min_advance_hours") ?? "0"), 10) || 0,
       max_advance_days:
         Number.parseInt(String(formData.get("max_advance_days") ?? "60"), 10) || 60,
+      booking_mode: (() => {
+        const mode = String(formData.get("booking_mode") ?? "instant");
+        if (mode === "quote" || mode === "manual") return mode;
+        return "instant";
+      })(),
     },
   };
 }

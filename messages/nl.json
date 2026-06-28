@@ -520,10 +520,26 @@
       },
       "loyalty": {
         "title": "Loyaliteitsprogramma",
-        "description": "Stel in hoe klanten punten verdienen en waarvoor ze die kunnen inwisselen.",
+        "description": "Beloon vaste klanten: ze sparen punten bij elk bezoek of aankoop en wisselen die in voor voordelen.",
+        "programStatus": {
+          "draft": "Concept",
+          "ready": "Klaar om te activeren",
+          "live": "Actief"
+        },
+        "setup": {
+          "title": "In 3 stappen opzetten",
+          "step1": "Bepalen hoe punten worden verdiend",
+          "step1Hint": "Afspraak, kassa, webshop…",
+          "step2": "Beloningen aanbieden",
+          "step2Hint": "Kortingen of gratis behandelingen",
+          "step3": "Programma activeren",
+          "step3Hint": "Punten worden automatisch toegekend"
+        },
         "stats": {
-          "clientsWithPoints": "Klanten met punten",
-          "pointsOutstanding": "{label} in omloop"
+          "clientsWithPoints": "Deelnemende klanten",
+          "pointsOutstanding": "{label} in omloop",
+          "clientsHint": "Klanten die al punten hebben gespaard in uw instituut.",
+          "pointsHint": "Totaal aan {label} gespaard door uw klanten, nog niet ingewisseld."
         },
         "program": {
           "title": "Programma",
@@ -554,6 +570,7 @@
         },
         "rules": {
           "title": "Verdiensregels",
+          "sectionDescription": "Kies wanneer en hoeveel punten uw klanten verdienen.",
           "add": "Nieuwe regel",
           "empty": "Geen regels. Voeg een bron toe om punten toe te kennen.",
           "footer": "{count, plural, one {# regel} other {# regels}}",
@@ -582,6 +599,7 @@
         },
         "rewards": {
           "title": "Beloningen",
+          "sectionDescription": "Bepaal wat klanten krijgen in ruil voor hun punten.",
           "add": "Nieuwe beloning",
           "empty": "Geen beloningen geconfigureerd.",
           "footer": "{count, plural, one {# beloning} other {# beloningen}}",
@@ -613,6 +631,23 @@
             "service": "Gratis behandeling",
             "active": "Beloning actief"
           }
+        },
+        "emptyRules": {
+          "title": "Begin met een verdiensregel",
+          "description": "Voorbeeld: 10 punten per afspraak, of 1 punt per uitgegeven euro aan de kassa."
+        },
+        "emptyRewards": {
+          "title": "Bied een eerste beloning aan",
+          "description": "Voorbeeld: −10 % na 100 punten, of een gratis manicure."
+        },
+        "share": {
+          "title": "Delen met uw klanten",
+          "description": "Tools om uw programma bekend te maken in het instituut.",
+          "qrTitle": "Loyaliteits-QR-code",
+          "qrDescription": "Hang een QR bij de ingang: klanten scannen en zien het programma.",
+          "walletTitle": "Wallet-kaart",
+          "walletDescription": "Laat klanten het programma toevoegen aan hun telefoon (Apple / Google Wallet).",
+          "comingSoon": "Binnenkort"
         }
       },
       "website": {
@@ -890,6 +925,7 @@
           "overview": "Overzicht",
           "appointments": "Afspraken",
           "sales": "Facturen & aankopen",
+          "quotes": "Offertes",
           "access": "Toegang & e-mails"
         },
         "stats": {
@@ -942,6 +978,62 @@
           "source": "Bron",
           "total": "Totaal"
         }
+      }
+    },
+    "quotes": {
+      "hint": "Voorstellen en offertes voor maatwerk.",
+      "newQuote": "Nieuwe offerte",
+      "empty": "Nog geen offertes.",
+      "pendingRequests": "Openstaande aanvragen",
+      "createFromRequest": "Offerte opstellen",
+      "eventDate": "Gewenste datum:",
+      "send": "Versturen",
+      "copyLink": "Link kopiëren",
+      "copied": "Gekopieerd",
+      "typeRequest": "Aanvraag",
+      "typeQuote": "Offerte",
+      "columns": {
+        "date": "Datum",
+        "number": "Nr.",
+        "type": "Type",
+        "status": "Status",
+        "total": "Totaal",
+        "actions": "Acties"
+      },
+      "status": {
+        "pending": "In afwachting",
+        "draft": "Concept",
+        "sent": "Verzonden",
+        "accepted": "Geaccepteerd",
+        "declined": "Geweigerd",
+        "expired": "Verlopen",
+        "cancelled": "Geannuleerd",
+        "converted": "Omgezet"
+      },
+      "form": {
+        "title": "Nieuwe offerte",
+        "clientMessage": "Bericht van de klant",
+        "lines": "Regels",
+        "lineLabel": "Omschrijving",
+        "addLine": "Regel toevoegen",
+        "validUntil": "Geldig tot",
+        "template": "Sjabloon",
+        "internalNotes": "Interne notities",
+        "submit": "Offerte aanmaken",
+        "submitting": "Aanmaken…",
+        "templates": {
+          "elegant": "Elegant",
+          "minimal": "Minimal",
+          "wedding": "Bruiloft",
+          "artist": "Pro artiest"
+        }
+      },
+      "actions": {
+        "clientRequired": "Klant verplicht.",
+        "linesRequired": "Voeg minstens één regel toe.",
+        "numberError": "Kan offertenummer niet genereren.",
+        "createError": "Fout bij het aanmaken van de offerte.",
+        "quoteNotFound": "Offerte niet gevonden."
       }
     },
     "services": {
@@ -1002,6 +1094,11 @@
         "minAdvanceHours": "Minimumtermijn (u)",
         "maxAdvanceDays": "Max. reservering (dagen)",
         "bookingWindowHint": "Bepaalt het online reserveringsvenster voor deze behandeling.",
+        "bookingMode": "Reserveringsmodus",
+        "bookingModeInstant": "Online reserveren (agenda)",
+        "bookingModeQuote": "Offerteaanvraag",
+        "bookingModeManual": "Contact / maatwerk",
+        "bookingModeHint": "Bruiloft make-up, events: kies « Offerteaanvraag » in plaats van de publieke agenda.",
         "createSubmit": "Behandeling aanmaken",
         "editSubmit": "Opslaan",
         "submitting": "Opslaan…",
@@ -1527,7 +1624,10 @@
       "step1": {
         "title": "Kies een behandeling",
         "empty": "Geen behandelingen beschikbaar.",
-        "durationMin": "{min} min"
+        "durationMin": "{min} min",
+        "quoteBadge": "Offerte",
+        "manualBadge": "Maatwerk",
+        "onRequest": "Op aanvraag"
       },
       "loadError": "Gegevens konden niet worden geladen. Probeer opnieuw.",
       "step2": {
@@ -1547,7 +1647,43 @@
       "extras": {
         "title": "Extra opties",
         "durationHint": "Geschatte totale duur: {min} min · {price}"
+      },
+      "quoteRequest": {
+        "fullName": "Volledige naam",
+        "eventDate": "Datum van het evenement (optioneel)",
+        "message": "Uw project",
+        "messagePlaceholder": "Locatie, aantal personen, gewenste stijl…",
+        "fromPrice": "Vanaf {price}",
+        "submit": "Aanvraag versturen",
+        "submitting": "Verzenden…",
+        "successTitle": "Aanvraag verzonden",
+        "successHint": "We nemen snel contact met u op met een persoonlijk voorstel.",
+        "backToServices": "Andere behandeling kiezen"
       }
+    },
+    "quote": {
+      "title": "Offerte",
+      "quoteNumber": "Nr.",
+      "validUntil": "Geldig tot",
+      "eventDate": "Datum evenement",
+      "client": "Klant",
+      "service": "Behandeling",
+      "description": "Omschrijving",
+      "quantity": "Aantal",
+      "unitPrice": "Stuk",
+      "subtotal": "Subtotaal",
+      "discount": "Korting",
+      "total": "Totaal incl. btw",
+      "message": "Uw bericht",
+      "footer": "{name} — bedankt voor uw vertrouwen.",
+      "accept": "Offerte accepteren",
+      "decline": "Weigeren",
+      "responding": "Verzenden…",
+      "respondError": "Kan uw antwoord niet registreren.",
+      "statusAccepted": "Bedankt! Uw acceptatie is geregistreerd. We nemen contact op om een datum te plannen.",
+      "statusDeclined": "Uw weigering is geregistreerd.",
+      "statusExpired": "Deze offerte is verlopen. Neem contact met ons op voor een nieuw voorstel.",
+      "printPdf": "Afdrukken / PDF"
     },
     "client": {
       "login": {

@@ -30,6 +30,7 @@ export type ServiceRow = {
   buffer_after_min: number;
   min_advance_hours: number;
   max_advance_days: number;
+  booking_mode: string;
 };
 
 type Tab = "general" | "time" | "advanced" | "extras";
@@ -413,6 +414,19 @@ export function ServiceDialog({
               </Field>
             </div>
             <p className="text-xs text-slate-500">{t("bookingWindowHint")}</p>
+            <Field label={t("bookingMode")} htmlFor="booking_mode">
+              <select
+                id="booking_mode"
+                name="booking_mode"
+                defaultValue={service?.booking_mode ?? "instant"}
+                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
+              >
+                <option value="instant">{t("bookingModeInstant")}</option>
+                <option value="quote">{t("bookingModeQuote")}</option>
+                <option value="manual">{t("bookingModeManual")}</option>
+              </select>
+            </Field>
+            <p className="text-xs text-slate-500">{t("bookingModeHint")}</p>
           </TabPanel>
 
           <TabPanel active={tab === "extras"}>

@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import { deleteCourse } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DataTable, dataTableCell, dataTableHead } from "@/components/ui/data-table";
+import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatPrice } from "@/lib/utils";
 import { CourseForm } from "./course-form";
@@ -40,7 +41,7 @@ export function CoursesManager({ courses }: { courses: CourseRow[] }) {
 
   return (
     <>
-      <div className="space-y-4">
+      <ListPanel>
         <ListToolbar
           action={
             <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
@@ -59,7 +60,7 @@ export function CoursesManager({ courses }: { courses: CourseRow[] }) {
 
         <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+            <thead className="border-b border-slate-200">
               <tr>
                 <th className={dataTableHead}>Titre</th>
                 <th className={`w-28 ${dataTableHead}`}>Statut</th>
@@ -69,7 +70,7 @@ export function CoursesManager({ courses }: { courses: CourseRow[] }) {
             </thead>
             <tbody>
               {filtered.map((c) => (
-                <tr key={c.id} className="border-b border-slate-100">
+                <tr key={c.id} className={dataTableRow}>
                   <td className={`max-w-0 ${dataTableCell}`}>
                     <p className="truncate font-medium text-slate-900">{c.title}</p>
                     {c.description ? (
@@ -105,12 +106,12 @@ export function CoursesManager({ courses }: { courses: CourseRow[] }) {
         </DataTable>
 
         {filtered.length > 0 ? (
-          <p className="text-xs text-slate-400">
+          <ListPanelFooter>
             {filtered.length} formation{filtered.length > 1 ? "s" : ""}
             {query ? ` sur ${courses.length}` : ""}
-          </p>
+          </ListPanelFooter>
         ) : null}
-      </div>
+      </ListPanel>
 
       <FormDialog
         open={dialogOpen}

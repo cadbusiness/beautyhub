@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { deleteService } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DataTable, dataTableCell, dataTableHead } from "@/components/ui/data-table";
+import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
+import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatPrice } from "@/lib/utils";
 import { ServiceDialog, type ServiceRow } from "./service-dialog";
@@ -52,7 +53,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
 
   return (
     <>
-      <div className="space-y-4">
+      <ListPanel>
         <ListToolbar
           action={
             <Button onClick={openCreate} className="h-9 w-full sm:w-auto">
@@ -80,7 +81,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
 
         <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+            <thead className="border-b border-slate-200">
               <tr>
                 <th className={`w-10 ${dataTableHead}`} aria-label="Statut" />
                 <th className={dataTableHead}>Titre</th>
@@ -93,7 +94,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
               {filtered.map((s) => (
                 <tr
                   key={s.id}
-                  className="border-b border-slate-100 transition-colors hover:bg-slate-50/80"
+                  className={dataTableRow}
                 >
                   <td className={dataTableCell}>
                     <span
@@ -162,12 +163,12 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
         </DataTable>
 
         {filtered.length > 0 ? (
-          <p className="text-xs text-slate-400">
+          <ListPanelFooter>
             {filtered.length} prestation{filtered.length > 1 ? "s" : ""}
             {filter !== "all" || query ? ` sur ${services.length}` : ""}
-          </p>
+          </ListPanelFooter>
         ) : null}
-      </div>
+      </ListPanel>
 
       <ServiceDialog open={dialogOpen} service={editing} onClose={closeDialog} />
     </>

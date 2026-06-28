@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { deleteStaffMember, deleteResource } from "../actions";
 import { Button } from "@/components/ui/button";
-import { DataTable, dataTableCell, dataTableHead } from "@/components/ui/data-table";
+import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { SectionTitle } from "@/components/ui/section-title";
 import { StaffForm } from "./staff-form";
@@ -45,8 +46,9 @@ export function EquipeManager({
 
   return (
     <>
-      <section className="space-y-4">
+      <section className="space-y-3">
         <SectionTitle>Personnel</SectionTitle>
+        <ListPanel>
         <ListToolbar
           action={
             <Button
@@ -77,7 +79,7 @@ export function EquipeManager({
         >
           {filteredStaff.length > 0 ? (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+              <thead className="border-b border-slate-200">
                 <tr>
                   <th className={`w-10 ${dataTableHead}`} aria-label="Couleur" />
                   <th className={dataTableHead}>Nom</th>
@@ -87,7 +89,7 @@ export function EquipeManager({
               </thead>
               <tbody>
                 {filteredStaff.map((s) => (
-                  <tr key={s.id} className="border-b border-slate-100">
+                  <tr key={s.id} className={dataTableRow}>
                     <td className={dataTableCell}>
                       <span
                         className="inline-block h-2.5 w-2.5 rounded-full"
@@ -112,10 +114,12 @@ export function EquipeManager({
             </table>
           ) : null}
         </DataTable>
+        </ListPanel>
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-3">
         <SectionTitle>Cabines / ressources</SectionTitle>
+        <ListPanel>
         <ListToolbar
           action={
             <Button
@@ -134,7 +138,7 @@ export function EquipeManager({
         <DataTable empty={resources.length === 0 ? "Aucune cabine configuree." : undefined}>
           {resources.length > 0 ? (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+              <thead className="border-b border-slate-200">
                 <tr>
                   <th className={dataTableHead}>Nom</th>
                   <th className={`w-28 text-right ${dataTableHead}`}>Actions</th>
@@ -142,7 +146,7 @@ export function EquipeManager({
               </thead>
               <tbody>
                 {resources.map((r) => (
-                  <tr key={r.id} className="border-b border-slate-100">
+                  <tr key={r.id} className={dataTableRow}>
                     <td className={`font-medium text-slate-900 ${dataTableCell}`}>{r.name}</td>
                     <td className={`text-right ${dataTableCell}`}>
                       <form action={deleteResource}>
@@ -158,6 +162,7 @@ export function EquipeManager({
             </table>
           ) : null}
         </DataTable>
+        </ListPanel>
       </section>
 
       <FormDialog

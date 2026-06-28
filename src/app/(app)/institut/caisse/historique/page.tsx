@@ -3,7 +3,8 @@ import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { DataTable, dataTableCell, dataTableHead } from "@/components/ui/data-table";
+import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
+import { ListPanel } from "@/components/ui/list-panel";
 import { formatPrice } from "@/lib/utils";
 
 const PAYMENT_LABEL: Record<string, string> = {
@@ -46,9 +47,10 @@ export default async function CaisseHistoriquePage() {
         </Link>
       </div>
 
-      <DataTable empty={(sales ?? []).length === 0 ? "Aucune vente enregistree." : undefined}>
+      <ListPanel>
+        <DataTable empty={(sales ?? []).length === 0 ? "Aucune vente enregistree." : undefined}>
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+          <thead className="border-b border-slate-200">
             <tr>
               <th className={dataTableHead}>Date</th>
               <th className={dataTableHead}>Client</th>
@@ -80,7 +82,7 @@ export default async function CaisseHistoriquePage() {
                 .join(", ");
 
               return (
-                <tr key={sale.id} className="border-b border-slate-100">
+                <tr key={sale.id} className={dataTableRow}>
                   <td className={`whitespace-nowrap text-slate-900 ${dataTableCell}`}>
                     {date}
                   </td>
@@ -115,7 +117,8 @@ export default async function CaisseHistoriquePage() {
             })}
           </tbody>
         </table>
-      </DataTable>
+        </DataTable>
+      </ListPanel>
     </div>
   );
 }

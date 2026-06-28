@@ -4,7 +4,8 @@ import { getClientSession } from "@/lib/client-auth/session";
 import { createServiceClient } from "@/lib/supabase/service";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { DataTable, dataTableCell, dataTableHead } from "@/components/ui/data-table";
+import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
+import { ListPanel } from "@/components/ui/list-panel";
 import { formatDateTime } from "@/lib/utils";
 import { cancelClientAppointment, clientLogout } from "../actions";
 
@@ -56,13 +57,14 @@ export default async function ClientComptePage() {
         </form>
       </div>
 
-      <DataTable
+      <ListPanel>
+        <DataTable
         empty={
           appointments.length === 0 ? "Aucun rendez-vous a venir." : undefined
         }
       >
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+          <thead className="border-b border-slate-200">
             <tr>
               <th className={dataTableHead}>Prestation</th>
               <th className={dataTableHead}>Date</th>
@@ -72,7 +74,7 @@ export default async function ClientComptePage() {
           </thead>
           <tbody>
             {appointments.map((a) => (
-              <tr key={a.id} className="border-b border-slate-100">
+              <tr key={a.id} className={dataTableRow}>
                 <td className={`font-medium text-slate-900 ${dataTableCell}`}>
                   {a.inst_services?.name ?? "Rendez-vous"}
                 </td>
@@ -96,7 +98,8 @@ export default async function ClientComptePage() {
             ))}
           </tbody>
         </table>
-      </DataTable>
+        </DataTable>
+      </ListPanel>
     </div>
   );
 }

@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DataTable, dataTableCell, dataTableHead } from "@/components/ui/data-table";
+import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { ListPanel } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatPrice } from "@/lib/utils";
 import { PlanForm } from "./plan-form";
@@ -39,7 +40,7 @@ export function PlansManager({
 
   return (
     <>
-      <div className="space-y-4">
+      <ListPanel>
         <ListToolbar
           action={
             <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
@@ -58,7 +59,7 @@ export function PlansManager({
 
         <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+            <thead className="border-b border-slate-200">
               <tr>
                 <th className={dataTableHead}>Formule</th>
                 <th className={`w-32 ${dataTableHead}`}>Prix</th>
@@ -68,7 +69,7 @@ export function PlansManager({
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id} className="border-b border-slate-100">
+                <tr key={p.id} className={dataTableRow}>
                   <td className={dataTableCell}>
                     <Link
                       href={`/admin/plans/${p.id}`}
@@ -99,7 +100,7 @@ export function PlansManager({
             </tbody>
           </table>
         </DataTable>
-      </div>
+      </ListPanel>
 
       <FormDialog
         open={dialogOpen}

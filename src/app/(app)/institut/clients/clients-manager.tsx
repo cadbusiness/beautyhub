@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DataTable, dataTableCell, dataTableHead } from "@/components/ui/data-table";
+import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { ClientForm } from "./client-form";
 
@@ -14,6 +15,8 @@ type ClientRow = {
   email: string;
   phone: string | null;
 };
+
+const rowClass = dataTableRow;
 
 export function ClientsManager({ clients }: { clients: ClientRow[] }) {
   const [query, setQuery] = useState("");
@@ -32,7 +35,7 @@ export function ClientsManager({ clients }: { clients: ClientRow[] }) {
 
   return (
     <>
-      <div className="space-y-4">
+      <ListPanel>
         <ListToolbar
           action={
             <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
@@ -60,7 +63,7 @@ export function ClientsManager({ clients }: { clients: ClientRow[] }) {
         >
           {filtered.length > 0 ? (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+              <thead className="border-b border-slate-200">
                 <tr>
                   <th className={dataTableHead}>Nom</th>
                   <th className={dataTableHead}>Email</th>
@@ -69,7 +72,7 @@ export function ClientsManager({ clients }: { clients: ClientRow[] }) {
               </thead>
               <tbody>
                 {filtered.map((c) => (
-                  <tr key={c.id} className="border-b border-slate-100">
+                  <tr key={c.id} className={rowClass}>
                     <td className={`text-slate-900 ${dataTableCell}`}>
                       {c.full_name ?? "-"}
                     </td>
@@ -85,12 +88,12 @@ export function ClientsManager({ clients }: { clients: ClientRow[] }) {
         </DataTable>
 
         {filtered.length > 0 ? (
-          <p className="text-xs text-slate-400">
+          <ListPanelFooter>
             {filtered.length} client{filtered.length > 1 ? "s" : ""}
             {query ? ` sur ${clients.length}` : ""}
-          </p>
+          </ListPanelFooter>
         ) : null}
-      </div>
+      </ListPanel>
 
       <FormDialog
         open={dialogOpen}

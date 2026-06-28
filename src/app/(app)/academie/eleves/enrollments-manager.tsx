@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DataTable, dataTableCell, dataTableHead } from "@/components/ui/data-table";
+import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { EnrollmentForm } from "./enrollment-form";
 
@@ -55,7 +56,7 @@ export function EnrollmentsManager({
 
   return (
     <>
-      <div className="space-y-4">
+      <ListPanel>
         <ListToolbar
           action={
             <Button
@@ -78,7 +79,7 @@ export function EnrollmentsManager({
 
         <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+            <thead className="border-b border-slate-200">
               <tr>
                 <th className={dataTableHead}>Eleve</th>
                 <th className={dataTableHead}>Formation</th>
@@ -87,7 +88,7 @@ export function EnrollmentsManager({
             </thead>
             <tbody>
               {filtered.map((e) => (
-                <tr key={e.id} className="border-b border-slate-100">
+                <tr key={e.id} className={dataTableRow}>
                   <td className={dataTableCell}>
                     <p className="text-slate-900">{e.student_name}</p>
                     <p className="text-xs text-slate-500">{e.student_email}</p>
@@ -105,12 +106,12 @@ export function EnrollmentsManager({
         </DataTable>
 
         {filtered.length > 0 ? (
-          <p className="text-xs text-slate-400">
+          <ListPanelFooter>
             {filtered.length} inscription{filtered.length > 1 ? "s" : ""}
             {query ? ` sur ${enrollments.length}` : ""}
-          </p>
+          </ListPanelFooter>
         ) : null}
-      </div>
+      </ListPanel>
 
       <FormDialog
         open={dialogOpen}

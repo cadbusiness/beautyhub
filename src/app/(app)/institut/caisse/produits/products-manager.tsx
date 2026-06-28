@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import { deleteInternalProduct } from "../../caisse-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DataTable, dataTableCell, dataTableHead } from "@/components/ui/data-table";
+import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatPrice } from "@/lib/utils";
 import { InternalProductForm } from "./internal-product-form";
@@ -38,7 +39,7 @@ export function ProductsManager({ products }: { products: ProductRow[] }) {
 
   return (
     <>
-      <div className="space-y-4">
+      <ListPanel>
         <ListToolbar
           action={
             <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
@@ -57,7 +58,7 @@ export function ProductsManager({ products }: { products: ProductRow[] }) {
 
         <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+            <thead className="border-b border-slate-200">
               <tr>
                 <th className={dataTableHead}>Nom</th>
                 <th className={`hidden w-28 sm:table-cell ${dataTableHead}`}>SKU</th>
@@ -68,7 +69,7 @@ export function ProductsManager({ products }: { products: ProductRow[] }) {
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id} className="border-b border-slate-100">
+                <tr key={p.id} className={dataTableRow}>
                   <td className={`font-medium text-slate-900 ${dataTableCell}`}>{p.name}</td>
                   <td className={`hidden text-slate-600 sm:table-cell ${dataTableCell}`}>
                     {p.sku ?? "—"}
@@ -94,12 +95,12 @@ export function ProductsManager({ products }: { products: ProductRow[] }) {
         </DataTable>
 
         {filtered.length > 0 ? (
-          <p className="text-xs text-slate-400">
+          <ListPanelFooter>
             {filtered.length} produit{filtered.length > 1 ? "s" : ""}
             {query ? ` sur ${products.length}` : ""}
-          </p>
+          </ListPanelFooter>
         ) : null}
-      </div>
+      </ListPanel>
 
       <FormDialog
         open={dialogOpen}

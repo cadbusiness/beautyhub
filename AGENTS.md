@@ -13,3 +13,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Lazy-mount** forms with `useActionState` only when dialogs are open.
 - **Supabase** → no fragile PostgREST embeds; separate queries + join in JS.
 - Shared logic lives in `src/lib/`; actions and API routes delegate there.
+
+## Toujours pousser le code
+
+Après **toute** livraison (feature, fix, refactor, migration), committer et `git push` **sans attendre** que l'utilisateur le demande. Si migration Supabase → `supabase db push --yes`. Ne jamais terminer une tâche avec du code local non poussé. Exception : l'utilisateur demande explicitement de ne pas committer/pousser.

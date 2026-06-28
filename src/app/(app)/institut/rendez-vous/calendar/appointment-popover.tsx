@@ -102,6 +102,21 @@ export function AppointmentPopover({
               <dd className="text-slate-900">{appt.resource.name}</dd>
             </div>
           ) : null}
+          {appt.extras && appt.extras.length > 0 ? (
+            <div>
+              <dt className="text-xs text-slate-400">{t("extras")}</dt>
+              <dd className="text-slate-900">
+                <ul className="mt-1 space-y-0.5">
+                  {appt.extras.map((ex) => (
+                    <li key={ex.service_id} className="text-sm">
+                      {ex.quantity > 1 ? `${ex.quantity}× ` : ""}
+                      {ex.name}
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          ) : null}
           <div className="flex items-center justify-between gap-2">
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
               {statusLabel}

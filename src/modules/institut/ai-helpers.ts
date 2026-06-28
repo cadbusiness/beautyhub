@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import type { BookingExtraLine } from "@/lib/institut/service-extras";
 
 type Db = SupabaseClient<Database>;
 
@@ -166,6 +167,63 @@ export async function resolveClient(
     );
   }
   return data[0];
+}
+
+export async function resolveAppointmentExtras(
+  supabase: Db,
+  tenantId: string,
+  parentServiceId: string,
+  input: {
+    extras?: Array<{
+      service_id?: string;
+      extra_name?: string;
+      quantity: number;
+    }>;
+  },
+): Promise<BookingExtraLine[]> {
+  const lines: BookingExtraLine[] = [];
+  if (!input.extras?.length) return lines;
+
+  for (const row of input.extras) {
+    const qty = Math.max(1, Math.floor(row.quantity));
+    if (row.service_id) {
+      const { data: link } = await supabase
+        .from("inst_service_extras")
+        .select("extra_service_id")
+        .eq("tenant_id", tenantId)
+        .eq("service_id", parentServiceId)
+        .eq("extra_service_id", row.service_id)
+        .maybeSingle();
+      if (!link) {
+        throw new Error(`Extra non autorise pour cette prestation : ${row.service_id}`);
+      }
+      lines.push({ service_id: row.service_id, quantity: qty });
+      continue;
+    }
+    const name = row.extra_name?.trim();
+    if (!name) continue;
+    const { data: candidates } = await supabase
+      .from("inst_service_extras")
+      .select("extra_service_id, extra:inst_services!inst_service_extras_extra_service_id_fkey(name)")
+      .eq("tenant_id", tenantId)
+      .eq("service_id", parentServiceId);
+    const matches = (candidates ?? []).filter((c) => {
+      const extra = Array.isArray(c.extra) ? c.extra[0] : c.extra;
+      return extra?.name.toLowerCase().includes(name.toLowerCase());
+    });
+    if (matches.length === 0) {
+      throw new Error(`Extra introuvable : ${name}`);
+    }
+    if (matches.length > 1) {
+      const names = matches.map((m) => {
+        const extra = Array.isArray(m.extra) ? m.extra[0] : m.extra;
+        return extra?.name ?? "";
+      });
+      throw new Error(`Plusieurs extras correspondent à « ${name} » : ${names.join(", ")}`);
+    }
+    lines.push({ service_id: matches[0]!.extra_service_id, quantity: qty });
+  }
+  return lines;
 }
 
 export async function fetchTenantContext(supabase: Db, tenantId: string) {

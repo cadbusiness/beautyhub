@@ -12,6 +12,15 @@ import {
   fetchAppointmentsInRange,
   validateStaffSchedule,
 } from "@/lib/institut/slots";
+import {
+  parseExtrasJson,
+  type BookingExtraLine,
+} from "@/lib/institut/service-extras";
+import {
+  resolveBookingTotals,
+  syncAppointmentExtras,
+} from "@/lib/institut/appointment-extras";
+import { processLoyaltyForCompletedAppointment } from "@/lib/institut/loyalty";
 import { WEEKDAYS } from "./equipe/constants";
 
 export interface ActionResult {
@@ -45,6 +54,13 @@ async function parseServiceForm(formData: FormData) {
       price_cents: eurosToCents(formData.get("price")),
       color: String(formData.get("color") ?? "").trim() || null,
       is_active: formData.get("is_active") === "on",
+      visibility:
+        String(formData.get("visibility") ?? "") === "extra_only" ? "extra_only" : "catalog",
+      image_url: String(formData.get("image_url") ?? "").trim() || null,
+      extras_step_position:
+        String(formData.get("extras_step_position") ?? "") === "before_time"
+          ? "before_time"
+          : "after_time",
       buffer_before_min: Number.parseInt(String(formData.get("buffer_before_min") ?? "0"), 10) || 0,
       buffer_after_min: Number.parseInt(String(formData.get("buffer_after_min") ?? "0"), 10) || 0,
       min_advance_hours:
@@ -171,8 +187,16 @@ export async function createAppointment(
     .maybeSingle();
   if (!service) return { error: actions("serviceNotFound") };
 
+  const extras = parseExtrasJson(String(formData.get("extras_json") ?? ""));
+  const totals = await resolveBookingTotals(supabase, serviceId, extras);
+  if ("error" in totals) {
+    return {
+      error: totals.error === "service_not_found" ? actions("serviceNotFound") : totals.error,
+    };
+  }
+
   const startsAt = new Date(startsAtRaw);
-  const endsAt = new Date(startsAt.getTime() + service.duration_min * 60_000);
+  const endsAt = new Date(startsAt.getTime() + totals.durationMin! * 60_000);
   const staffId = String(formData.get("staff_id") ?? "") || null;
   const resourceId = String(formData.get("resource_id") ?? "") || null;
 
@@ -186,18 +210,31 @@ export async function createAppointment(
   });
   if (conflict) return { error: scheduling(`conflict.${conflict}`) };
 
-  const { error } = await supabase.from("inst_appointments").insert({
-    tenant_id: session.tenant.id,
-    client_id: String(formData.get("client_id") ?? "") || null,
-    service_id: serviceId,
-    staff_id: staffId,
-    resource_id: resourceId,
-    starts_at: startsAt.toISOString(),
-    ends_at: endsAt.toISOString(),
-    price_cents: service.price_cents,
-    notes: String(formData.get("notes") ?? "").trim() || null,
-  });
+  const { data: appt, error } = await supabase
+    .from("inst_appointments")
+    .insert({
+      tenant_id: session.tenant.id,
+      client_id: String(formData.get("client_id") ?? "") || null,
+      service_id: serviceId,
+      staff_id: staffId,
+      resource_id: resourceId,
+      starts_at: startsAt.toISOString(),
+      ends_at: endsAt.toISOString(),
+      price_cents: totals.priceCents,
+      notes: String(formData.get("notes") ?? "").trim() || null,
+    })
+    .select("id")
+    .single();
   if (error) return { error: error.message };
+
+  const extraErr = await syncAppointmentExtras(
+    supabase,
+    session.tenant.id,
+    appt.id,
+    serviceId,
+    extras,
+  );
+  if (extraErr) return { error: extraErr };
   revalidatePath("/institut/rendez-vous");
   return { ok: true };
 }
@@ -225,10 +262,18 @@ export async function updateAppointment(
     .maybeSingle();
   if (!service) return { error: actions("serviceNotFound") };
 
+  const extras = parseExtrasJson(String(formData.get("extras_json") ?? ""));
+  const totals = await resolveBookingTotals(supabase, serviceId, extras);
+  if ("error" in totals) {
+    return {
+      error: totals.error === "service_not_found" ? actions("serviceNotFound") : totals.error,
+    };
+  }
+
   const startsAt = new Date(startsAtRaw);
   const endsAt = endsAtRaw
     ? new Date(endsAtRaw)
-    : new Date(startsAt.getTime() + service.duration_min * 60_000);
+    : new Date(startsAt.getTime() + totals.durationMin! * 60_000);
   const staffId = String(formData.get("staff_id") ?? "") || null;
   const resourceId = String(formData.get("resource_id") ?? "") || null;
 
@@ -256,6 +301,15 @@ export async function updateAppointment(
     return { error: warning, warning };
   }
 
+  const { data: previousAppt } = await supabase
+    .from("inst_appointments")
+    .select("status")
+    .eq("id", id)
+    .eq("tenant_id", session.tenant.id)
+    .maybeSingle();
+
+  const newStatus = String(formData.get("status") ?? "booked");
+
   const { error } = await supabase
     .from("inst_appointments")
     .update({
@@ -265,13 +319,31 @@ export async function updateAppointment(
       resource_id: resourceId,
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
-      price_cents: service.price_cents,
-      status: String(formData.get("status") ?? "booked"),
+      price_cents: totals.priceCents,
+      status: newStatus,
       notes: String(formData.get("notes") ?? "").trim() || null,
     })
     .eq("id", id);
 
   if (error) return { error: error.message };
+
+  if (newStatus === "completed") {
+    await processLoyaltyForCompletedAppointment(
+      supabase,
+      session.tenant.id,
+      id,
+      previousAppt?.status,
+    );
+  }
+
+  const extraErr = await syncAppointmentExtras(
+    supabase,
+    session.tenant.id,
+    id,
+    serviceId,
+    extras,
+  );
+  if (extraErr) return { error: extraErr };
   revalidatePath("/institut/rendez-vous");
   return { ok: true };
 }
@@ -290,17 +362,36 @@ export async function cancelAppointment(formData: FormData): Promise<ActionResul
 }
 
 export async function updateAppointmentDetails(formData: FormData): Promise<ActionResult> {
-  await requireModule("institut");
+  const session = await requireModule("institut");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
+  const newStatus = String(formData.get("status"));
+
+  const { data: previousAppt } = await supabase
+    .from("inst_appointments")
+    .select("status")
+    .eq("id", id)
+    .eq("tenant_id", session.tenant.id)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("inst_appointments")
     .update({
-      status: String(formData.get("status")),
+      status: newStatus,
       notes: String(formData.get("notes") ?? "").trim() || null,
     })
     .eq("id", id);
   if (error) return { error: error.message };
+
+  if (newStatus === "completed") {
+    await processLoyaltyForCompletedAppointment(
+      supabase,
+      session.tenant.id,
+      id,
+      previousAppt?.status,
+    );
+  }
+
   revalidatePath("/institut/rendez-vous");
   return { ok: true };
 }

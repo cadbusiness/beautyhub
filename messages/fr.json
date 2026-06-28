@@ -54,6 +54,8 @@
     "cash": "Espèces",
     "card": "Carte",
     "note": "Note",
+    "extras": "Extras",
+    "continue": "Continuer",
     "searchArticles": "Rechercher un article…",
     "total": "Total",
     "woocommerce": "WooCommerce",
@@ -121,6 +123,10 @@
     "institutPosVouchers": "Bons & avoirs",
     "institutPosHistory": "Historique caisse",
     "institutPosProducts": "Produits internes",
+    "institutMarketing": "Marketing",
+    "institutMarketingLoyalty": "Fidélité",
+    "institutMarketingWebsite": "Page web",
+    "institutMarketingPromos": "Promos",
     "institutSettings": "Paramètres",
     "academieOverview": "Académie",
     "academieCourses": "Formations",
@@ -252,6 +258,8 @@
       "endsAt": "Date et heure de fin",
       "status": "Statut",
       "notes": "Notes",
+      "extras": "Options / extras",
+      "endsAtExtrasHint": "Laissez vide pour recalculer automatiquement selon les extras.",
       "create": "Créer le rendez-vous",
       "scheduleWarningConfirm": "Confirmer malgré l'horaire hors planning"
     },
@@ -402,6 +410,148 @@
       "clients": "Clients",
       "services": "Prestations"
     },
+    "marketing": {
+      "overview": {
+        "description": "Fidélisez vos clientes, mettez en avant votre institut en ligne et lancez des offres ciblées.",
+        "available": "Disponible",
+        "comingSoon": "Bientôt",
+        "tools": {
+          "loyalty": {
+            "title": "Fidélité",
+            "description": "Points configurables : RDV, caisse, WooCommerce et récompenses."
+          },
+          "website": {
+            "title": "Page web",
+            "description": "Votre vitrine en ligne : réservation, présentation et branding."
+          },
+          "promos": {
+            "title": "Promos",
+            "description": "Codes promo, offres limitées et réductions sur les prestations."
+          },
+          "referral": {
+            "title": "Parrainage",
+            "description": "Récompensez les clientes qui amènent de nouvelles clientes."
+          },
+          "reviews": {
+            "title": "Avis",
+            "description": "Collecte et mise en avant des avis Google et internes."
+          },
+          "campaigns": {
+            "title": "Campagnes",
+            "description": "Emails et SMS pour relancer, informer ou remplir votre agenda."
+          }
+        }
+      },
+      "loyalty": {
+        "title": "Programme de fidélité",
+        "description": "Configurez comment vos clientes gagnent des points et ce qu'elles peuvent en obtenir.",
+        "stats": {
+          "clientsWithPoints": "Clientes avec points",
+          "pointsOutstanding": "{label} en circulation"
+        },
+        "program": {
+          "title": "Programme",
+          "description": "Activez le programme une fois vos règles et récompenses définies.",
+          "name": "Nom du programme",
+          "pointsLabel": "Libellé des points",
+          "active": "Programme actif",
+          "saved": "Programme enregistré."
+        },
+        "status": {
+          "active": "Actif",
+          "inactive": "Inactif"
+        },
+        "sources": {
+          "appointment_completed": "RDV terminé",
+          "pos_sale": "Achat en institut (caisse)",
+          "woocommerce_order": "Commande WooCommerce",
+          "shopify_order": "Commande Shopify"
+        },
+        "calcModes": {
+          "fixed_per_event": "Points fixes par événement",
+          "per_euro_spent": "Points par euro dépensé"
+        },
+        "integrations": {
+          "wooDisconnected": "non connecté",
+          "comingSoon": "bientôt",
+          "connectHint": "Connectez votre boutique pour activer cette source :"
+        },
+        "rules": {
+          "title": "Règles de gain",
+          "add": "Nouvelle règle",
+          "empty": "Aucune règle. Ajoutez une source pour commencer à attribuer des points.",
+          "footer": "{count, plural, one {# règle} other {# règles}}",
+          "createTitle": "Nouvelle règle de gain",
+          "editTitle": "Modifier la règle",
+          "deleteConfirm": "Supprimer cette règle de gain ?",
+          "earningFixed": "{points} pts / événement",
+          "earningPerEuro": "{points} pt / € (ex. 50 € → {example} pts)",
+          "columns": {
+            "name": "Nom",
+            "source": "Source",
+            "earning": "Gain",
+            "status": "Statut"
+          },
+          "form": {
+            "name": "Nom de la règle",
+            "namePlaceholder": "Ex. Points par visite",
+            "source": "Basé sur",
+            "calcMode": "Mode de calcul",
+            "pointsFixed": "Points ({label})",
+            "pointsPerEuro": "Points par euro ({label})",
+            "minAmount": "Montant minimum (€)",
+            "preview": "Exemple : 50 € de dépense → {points} {label}",
+            "active": "Règle active"
+          }
+        },
+        "rewards": {
+          "title": "Récompenses",
+          "add": "Nouvelle récompense",
+          "empty": "Aucune récompense configurée.",
+          "footer": "{count, plural, one {# récompense} other {# récompenses}}",
+          "redeemHint": "L'échange des points en caisse et à la réservation arrive prochainement.",
+          "createTitle": "Nouvelle récompense",
+          "editTitle": "Modifier la récompense",
+          "deleteConfirm": "Supprimer cette récompense ?",
+          "columns": {
+            "name": "Nom",
+            "type": "Type",
+            "cost": "Coût",
+            "status": "Statut"
+          },
+          "types": {
+            "discountPercentLabel": "Réduction en %",
+            "discountFixedLabel": "Réduction fixe",
+            "freeServiceLabel": "Prestation offerte",
+            "discountPercent": "−{percent} %",
+            "discountFixed": "−{amount}",
+            "freeService": "Offert : {service}"
+          },
+          "form": {
+            "name": "Nom",
+            "description": "Description",
+            "type": "Type de récompense",
+            "pointsCost": "Coût en {label}",
+            "discountPercent": "Pourcentage de réduction",
+            "discountEur": "Montant de la réduction (€)",
+            "service": "Prestation offerte",
+            "active": "Récompense active"
+          }
+        }
+      },
+      "website": {
+        "title": "Page web de l'institut",
+        "description": "La page publique où vos clientes découvrent l'institut et prennent rendez-vous.",
+        "publicUrlLabel": "Lien de réservation",
+        "preview": "Voir la page",
+        "hint": "Personnalisation du contenu, des photos et du domaine custom — à venir."
+      },
+      "promos": {
+        "title": "Promotions",
+        "description": "Créez des codes promo et des offres limitées dans le temps.",
+        "hint": "Cette fonctionnalité arrive prochainement. Les promos s'appliqueront à la réservation en ligne et à la caisse."
+      }
+    },
     "clients": {
       "new": "Nouveau client",
       "searchPlaceholder": "Recherche nom, email, téléphone…",
@@ -451,13 +601,19 @@
         "tabs": {
           "general": "Général",
           "time": "Horaires",
-          "advanced": "Avancé"
+          "advanced": "Avancé",
+          "extras": "Extras"
         },
         "namePlaceholder": "Soin du visage",
         "priceEur": "Prix (EUR)",
         "descriptionPlaceholder": "Optionnel — visible en interne",
         "visibleLabel": "Visible",
         "visibleHint": "Désactivé pour masquer aux clients et à la caisse.",
+        "visibility": "Visibilité catalogue",
+        "visibilityCatalog": "Catalogue client (prestation principale)",
+        "visibilityExtraOnly": "Extra uniquement (masquée du catalogue)",
+        "imageLabel": "Image",
+        "imageAfterCreate": "Enregistrez la prestation, puis ajoutez une image en la modifiant.",
         "durationMin": "Durée (min)",
         "bufferBefore": "Tampon avant (min)",
         "bufferAfter": "Tampon après (min)",
@@ -467,8 +623,36 @@
         "bookingWindowHint": "Contrôle la fenêtre de réservation en ligne pour cette prestation.",
         "createSubmit": "Créer la prestation",
         "editSubmit": "Enregistrer",
-        "submitting": "Enregistrement…"
+        "submitting": "Enregistrement…",
+        "extras": {
+          "hint": "Choisissez d'autres prestations à proposer en upsell avec celle-ci. Chaque extra conserve sa durée et son prix.",
+          "stepPosition": "Étape extras dans la réservation",
+          "beforeTime": "Avant le choix du créneau",
+          "afterTime": "Après le choix du créneau",
+          "noCandidates": "Créez d'autres prestations (catalogue ou « extra uniquement ») pour les proposer ici.",
+          "extraOnlyBadge": "Extra",
+          "minQty": "Quantité min.",
+          "maxQty": "Quantité max.",
+          "saveExtras": "Enregistrer les extras"
+        },
+        "image": {
+          "noImage": "Aucune image",
+          "upload": "Téléverser une image",
+          "replace": "Remplacer",
+          "remove": "Supprimer",
+          "uploading": "Envoi…",
+          "hint": "JPEG, PNG, WebP ou GIF — max 5 Mo. Visible en réservation et caisse."
+        }
       }
+    },
+    "extras": {
+      "noImage": "—",
+      "lineMeta": "{min} min · {price}",
+      "decrease": "Diminuer",
+      "increase": "Augmenter",
+      "requiredMin": "Obligatoire : {min} à {max}",
+      "optionalMax": "Optionnel, max. {max}",
+      "total": "Total : {min} min · {price}"
     },
     "team": {
       "tabs": {
@@ -878,9 +1062,16 @@
     "booking": {
       "title": "Prendre rendez-vous",
       "subtitle": "{name} — réservation en ligne",
-      "steps": "Étape {n}",
+      "steps": {
+        "service": "1. Prestation",
+        "staff": "2. Praticien",
+        "extras": "3. Extras",
+        "date": "4. Date",
+        "slots": "5. Créneau"
+      },
       "confirmed": {
         "title": "Rendez-vous confirmé",
+        "withExtras": "Vos options complémentaires sont incluses.",
         "emailHint": "Un email de confirmation vous sera envoyé prochainement."
       },
       "step1": {
@@ -901,6 +1092,10 @@
         "fullName": "Nom complet",
         "confirm": "Confirmer le rendez-vous",
         "confirming": "Confirmation…"
+      },
+      "extras": {
+        "title": "Options complémentaires",
+        "durationHint": "Durée totale estimée : {min} min · {price}"
       }
     },
     "client": {
@@ -1031,7 +1226,8 @@
       "categories": {
         "service": "Prestation",
         "woocommerce": "Woo",
-        "internal": "Interne"
+        "internal": "Interne",
+        "extra": "Extra"
       },
       "searchArticles": "Rechercher un article…",
       "searchAria": "Rechercher",
@@ -1049,6 +1245,7 @@
         "noStaff": "— Sans praticien —",
         "appointmentAria": "Rendez-vous",
         "noAppointment": "— Sans RDV —",
+        "extraBadge": "extra",
         "addToCheckout": "Ajoute des articles pour encaisser.",
         "settingsLink": "Paramètres caisse →"
       },

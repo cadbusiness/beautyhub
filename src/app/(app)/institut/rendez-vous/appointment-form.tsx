@@ -1,14 +1,21 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import {
   createAppointment,
   updateAppointment,
   type ActionResult,
 } from "../actions";
+import { loadInstServiceExtras } from "../prestations/extras-actions";
+import { ExtrasPicker } from "@/components/institut/extras-picker";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
+import {
+  extrasToJson,
+  type BookingExtraLine,
+  type ServiceExtraConfig,
+} from "@/lib/institut/service-extras";
 import type { CalendarAppointment } from "./calendar/types";
 
 const initial: ActionResult = {};
@@ -20,6 +27,13 @@ const STATUS_KEYS = [
   "cancelled",
   "no_show",
 ] as const;
+
+interface ServiceOption {
+  id: string;
+  label: string;
+  duration_min?: number;
+  price_cents?: number;
+}
 
 interface Option {
   id: string;
@@ -44,7 +58,7 @@ export function AppointmentForm({
   mode?: "create" | "edit";
   appointment?: CalendarAppointment;
   clients: Option[];
-  services: Option[];
+  services: ServiceOption[];
   staff: Option[];
   resources?: Option[];
   onSuccess?: () => void;
@@ -55,12 +69,41 @@ export function AppointmentForm({
   const actionFn = mode === "edit" ? updateAppointment : createAppointment;
   const [state, action, pending] = useActionState(actionFn, initial);
   const [ignoreSchedule, setIgnoreSchedule] = useState(false);
+  const [serviceId, setServiceId] = useState(appointment?.service_id ?? "");
+  const [extraCatalog, setExtraCatalog] = useState<ServiceExtraConfig[]>([]);
+  const [extras, setExtras] = useState<BookingExtraLine[]>([]);
+  const [, startLoadExtras] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+
+  const selectedService = services.find((s) => s.id === serviceId);
+
+  useEffect(() => {
+    if (!serviceId) {
+      setExtraCatalog([]);
+      setExtras([]);
+      return;
+    }
+    startLoadExtras(async () => {
+      const catalog = await loadInstServiceExtras(serviceId);
+      setExtraCatalog(catalog);
+      if (mode === "edit" && appointment?.extras?.length) {
+        setExtras(
+          appointment.extras.map((e) => ({
+            service_id: e.service_id,
+            quantity: e.quantity,
+          })),
+        );
+      } else {
+        setExtras([]);
+      }
+    });
+  }, [serviceId, mode, appointment?.extras]);
 
   useEffect(() => {
     if (state.ok) {
       if (mode === "create") formRef.current?.reset();
       setIgnoreSchedule(false);
+      setExtras([]);
       onSuccess?.();
     }
   }, [state.ok, onSuccess, mode]);
@@ -79,6 +122,7 @@ export function AppointmentForm({
         <input type="hidden" name="id" value={appointment.id} />
       ) : null}
       <input type="hidden" name="ignore_schedule" value={ignoreSchedule ? "1" : "0"} />
+      <input type="hidden" name="extras_json" value={extrasToJson(extras)} />
 
       <Field label={t("client")} htmlFor="client_id">
         <Select
@@ -99,7 +143,8 @@ export function AppointmentForm({
           id="service_id"
           name="service_id"
           required
-          defaultValue={appointment?.service_id ?? ""}
+          value={serviceId}
+          onChange={(e) => setServiceId(e.target.value)}
         >
           <option value="" disabled>
             {t("chooseService")}
@@ -111,6 +156,20 @@ export function AppointmentForm({
           ))}
         </Select>
       </Field>
+
+      {selectedService && extraCatalog.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-slate-900">{t("extras")}</p>
+          <ExtrasPicker
+            catalog={extraCatalog}
+            baseDurationMin={selectedService.duration_min ?? 30}
+            basePriceCents={selectedService.price_cents ?? 0}
+            value={extras}
+            onChange={setExtras}
+          />
+        </div>
+      ) : null}
+
       <Field label={t("staff")} htmlFor="staff_id">
         <Select
           id="staff_id"
@@ -162,6 +221,7 @@ export function AppointmentForm({
               appointment ? toDatetimeLocal(appointment.ends_at) : undefined
             }
           />
+          <p className="mt-1 text-xs text-slate-500">{t("endsAtExtrasHint")}</p>
         </Field>
       ) : null}
       {mode === "edit" && appointment ? (

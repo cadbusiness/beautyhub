@@ -16,6 +16,7 @@ import {
   redeemCreditNote,
   redeemGiftCard,
 } from "./pos-vouchers";
+import { processLoyaltyForPaidSale } from "./loyalty";
 
 type Db = SupabaseClient<Database>;
 
@@ -271,6 +272,10 @@ export async function executePosCheckout(
   );
   if (payErr) throw new Error(payErr.message);
 
+  if (status === "paid") {
+    await processLoyaltyForPaidSale(supabase, tenantId, sale.id);
+  }
+
   return {
     saleId: sale.id,
     ticketNumber,
@@ -345,6 +350,10 @@ export async function executeBalancePayment(
     .eq("id", saleId)
     .eq("tenant_id", tenantId);
   if (updErr) throw new Error(updErr.message);
+
+  if (newStatus === "paid") {
+    await processLoyaltyForPaidSale(supabase, tenantId, saleId);
+  }
 
   return {
     saleId,

@@ -17,6 +17,8 @@ export interface PosCatalogItem {
   category: "service" | "woocommerce" | "internal";
   duration_min?: number;
   sku?: string | null;
+  visibility?: string;
+  is_appointment_extra?: boolean;
 }
 
 export interface ResolvedCartLine {
@@ -136,6 +138,8 @@ export function buildCatalog(
     price_cents: number;
     color: string | null;
     duration_min: number;
+    image_url?: string | null;
+    visibility?: string;
   }>,
   products: Array<{
     id: string;
@@ -154,10 +158,11 @@ export function buildCatalog(
     id: s.id,
     name: s.name,
     price_cents: s.price_cents,
-    image_url: null,
+    image_url: s.image_url ?? null,
     color: s.color,
     category: "service",
     duration_min: s.duration_min,
+    visibility: s.visibility,
   }));
 
   for (const p of products) {

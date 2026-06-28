@@ -26,7 +26,7 @@ export default async function CaissePage() {
     getStripeAccountForTenant(tenantId),
     supabase
       .from("inst_services")
-      .select("id, name, price_cents, color, duration_min")
+      .select("id, name, price_cents, color, duration_min, image_url, visibility")
       .eq("tenant_id", tenantId)
       .eq("is_active", true)
       .order("name"),
@@ -49,7 +49,9 @@ export default async function CaissePage() {
       .order("full_name"),
     supabase
       .from("inst_appointments")
-      .select("id, client_id, starts_at, clients(full_name, email), inst_services(name)")
+      .select(
+        "id, client_id, service_id, starts_at, clients(full_name, email), inst_services(name), extras:inst_appointment_extras(service_id, quantity, name)",
+      )
       .eq("tenant_id", tenantId)
       .gte("starts_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
       .lte("starts_at", new Date(new Date().setHours(23, 59, 59, 999)).toISOString())
@@ -71,14 +73,28 @@ export default async function CaissePage() {
   const appointments = (apptsRes.data ?? []).map((a) => {
     const client = a.clients as { full_name: string | null; email: string } | null;
     const service = a.inst_services as { name: string } | null;
+    const extras = (a.extras ?? []) as { service_id: string; quantity: number; name: string }[];
     const time = new Date(a.starts_at).toLocaleTimeString("fr-FR", {
       hour: "2-digit",
       minute: "2-digit",
     });
+    const extrasLabel =
+      extras.length > 0
+        ? ` (+ ${extras.map((e) => (e.quantity > 1 ? `${e.quantity}× ` : "") + e.name).join(", ")})`
+        : "";
+    const prefillCart: Record<string, number> = {};
+    if (a.service_id) prefillCart[`service:${a.service_id}`] = 1;
+    for (const ex of extras) {
+      const key = `service:${ex.service_id}`;
+      prefillCart[key] = (prefillCart[key] ?? 0) + ex.quantity;
+    }
     return {
       id: a.id,
       clientId: a.client_id ?? undefined,
-      label: `${time} · ${service?.name ?? "?"} · ${client?.full_name ?? client?.email ?? "—"}`,
+      serviceId: a.service_id ?? undefined,
+      extras,
+      prefillCart,
+      label: `${time} · ${service?.name ?? "?"}${extrasLabel} · ${client?.full_name ?? client?.email ?? "—"}`,
     };
   });
 

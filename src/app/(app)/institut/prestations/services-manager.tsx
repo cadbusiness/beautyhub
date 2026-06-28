@@ -171,7 +171,12 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
         ) : null}
       </ListPanel>
 
-      <ServiceDialog open={dialogOpen} service={editing} onClose={closeDialog} />
+      <ServiceDialog
+        open={dialogOpen}
+        service={editing}
+        allServices={services}
+        onClose={closeDialog}
+      />
     </>
   );
 }

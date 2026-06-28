@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+import { ServiceExtrasTab } from "./service-extras-tab";
+import { ServiceImageUpload } from "@/components/institut/service-image-upload";
+
 export type ServiceRow = {
   id: string;
   name: string;
@@ -16,13 +19,16 @@ export type ServiceRow = {
   currency: string;
   color: string | null;
   is_active: boolean;
+  visibility: string;
+  image_url: string | null;
+  extras_step_position: string;
   buffer_before_min: number;
   buffer_after_min: number;
   min_advance_hours: number;
   max_advance_days: number;
 };
 
-type Tab = "general" | "time" | "advanced";
+type Tab = "general" | "time" | "advanced" | "extras";
 
 const initial: ActionResult = {};
 
@@ -47,10 +53,12 @@ function TabPanel({
 export function ServiceDialog({
   open,
   service,
+  allServices,
   onClose,
 }: {
   open: boolean;
   service: ServiceRow | null;
+  allServices: ServiceRow[];
   onClose: () => void;
 }) {
   const t = useTranslations("institut.services.dialog");
@@ -63,6 +71,7 @@ export function ServiceDialog({
     { id: "general", label: t("tabs.general") },
     { id: "time", label: t("tabs.time") },
     { id: "advanced", label: t("tabs.advanced") },
+    ...(isEdit ? [{ id: "extras" as Tab, label: t("tabs.extras") }] : []),
   ];
 
   const action = isEdit ? updateService : createService;
@@ -184,6 +193,30 @@ export function ServiceDialog({
                 <span className="text-xs text-slate-500">{t("visibleHint")}</span>
               </span>
             </label>
+
+            <Field label={t("visibility")} htmlFor="visibility">
+              <select
+                id="visibility"
+                name="visibility"
+                defaultValue={service?.visibility ?? "catalog"}
+                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
+              >
+                <option value="catalog">{t("visibilityCatalog")}</option>
+                <option value="extra_only">{t("visibilityExtraOnly")}</option>
+              </select>
+            </Field>
+
+            <Field label={t("imageLabel")} htmlFor="service_image">
+              {isEdit && service ? (
+                <ServiceImageUpload
+                  serviceId={service.id}
+                  initialUrl={service.image_url}
+                  onUrlChange={() => {}}
+                />
+              ) : (
+                <p className="text-sm text-slate-500">{t("imageAfterCreate")}</p>
+              )}
+            </Field>
           </TabPanel>
 
           <TabPanel active={!isEdit || tab === "time"}>
@@ -243,6 +276,12 @@ export function ServiceDialog({
             </div>
             <p className="text-xs text-slate-500">{t("bookingWindowHint")}</p>
           </TabPanel>
+
+          {isEdit && service ? (
+            <TabPanel active={tab === "extras"}>
+              <ServiceExtrasTab service={service} candidateServices={allServices} />
+            </TabPanel>
+          ) : null}
 
           {state.error ? <p className="mt-4 text-sm text-red-600">{state.error}</p> : null}
         </div>

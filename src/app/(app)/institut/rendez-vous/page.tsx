@@ -47,6 +47,7 @@ export default async function RendezVousPage({
         .select("id, name, duration_min, price_cents")
         .eq("tenant_id", tenantId)
         .eq("is_active", true)
+        .neq("visibility", "extra_only")
         .order("name"),
       supabase
         .from("inst_staff")
@@ -79,6 +80,8 @@ export default async function RendezVousPage({
   const services = (servicesRes.data ?? []).map((s) => ({
     id: s.id,
     label: `${s.name} (${s.duration_min} min · ${formatPrice(s.price_cents)})`,
+    duration_min: s.duration_min,
+    price_cents: s.price_cents,
   }));
   const staff = (staffRes.data ?? []).map((s) => ({ id: s.id, label: s.full_name }));
   const resources = (resourcesRes.data ?? []).map((r) => ({ id: r.id, label: r.name }));

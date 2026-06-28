@@ -83,7 +83,7 @@ export async function fetchAppointmentsInRange(
   const { data, error } = await supabase
     .from("inst_appointments")
     .select(
-      "id, starts_at, ends_at, status, notes, price_cents, staff_id, resource_id, service_id, client_id, service:inst_services(name, color, duration_min), staff:inst_staff(full_name, color), client:clients(full_name, email, phone), resource:inst_resources(name)",
+      "id, starts_at, ends_at, status, notes, price_cents, staff_id, resource_id, service_id, client_id, service:inst_services(name, color, duration_min), staff:inst_staff(full_name, color), client:clients(full_name, email, phone), resource:inst_resources(name), extras:inst_appointment_extras(service_id, quantity, name, price_cents, duration_min)",
     )
     .eq("tenant_id", tenantId)
     .gte("starts_at", rangeStart.toISOString())

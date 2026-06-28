@@ -19,6 +19,15 @@ import {
 } from "@/lib/institut/pos-settings";
 import { CheckoutPanel } from "./checkout-panel";
 
+interface PosAppointmentOption {
+  id: string;
+  label: string;
+  clientId?: string;
+  serviceId?: string;
+  extras: { service_id: string; quantity: number; name: string }[];
+  prefillCart: Record<string, number>;
+}
+
 interface Option {
   id: string;
   label: string;
@@ -42,7 +51,7 @@ export function PosTerminal({
   catalog: PosCatalogItem[];
   clients: Option[];
   staff: Option[];
-  appointments: Option[];
+  appointments: PosAppointmentOption[];
   settings: PosSettings;
   sessionOpen: boolean;
   requireSession: boolean;
@@ -246,7 +255,7 @@ export function PosTerminal({
                   </div>
                 )}
                 <span className="mb-1 inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                  {categoryLabel[item.category]}
+                  {item.visibility === "extra_only" ? t("categories.extra") : categoryLabel[item.category]}
                 </span>
                 <p className="line-clamp-2 text-sm font-medium text-slate-900">
                   {item.name}
@@ -316,6 +325,11 @@ export function PosTerminal({
                 <li key={key} className="flex items-center justify-between gap-2 text-sm">
                   <span className="min-w-0 flex-1 truncate text-slate-700">
                     {item.name}
+                    {item.visibility === "extra_only" ? (
+                      <span className="ml-1 text-[10px] font-medium uppercase text-violet-600">
+                        {t("cart.extraBadge")}
+                      </span>
+                    ) : null}
                   </span>
                   <div className="flex shrink-0 items-center gap-1">
                     <button
@@ -373,9 +387,14 @@ export function PosTerminal({
         <Select
           value={appointmentId}
           onChange={(e) => {
-            setAppointmentId(e.target.value);
-            const appt = appointments.find((a) => a.id === e.target.value);
+            const id = e.target.value;
+            setAppointmentId(id);
+            const appt = appointments.find((a) => a.id === id);
             if (appt?.clientId) setClientId(appt.clientId);
+            if (appt?.prefillCart && Object.keys(appt.prefillCart).length > 0) {
+              setCart(appt.prefillCart);
+              setLastSale(null);
+            }
           }}
           aria-label={t("cart.appointmentAria")}
         >

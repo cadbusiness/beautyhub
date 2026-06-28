@@ -227,6 +227,64 @@ export type Database = {
         }
         Relationships: []
       }
+      inst_appointment_extras: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          duration_min: number
+          id: string
+          name: string
+          price_cents: number
+          quantity: number
+          service_id: string
+          tenant_id: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          duration_min: number
+          id?: string
+          name: string
+          price_cents: number
+          quantity?: number
+          service_id: string
+          tenant_id: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          duration_min?: number
+          id?: string
+          name?: string
+          price_cents?: number
+          quantity?: number
+          service_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_appointment_extras_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "inst_appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_appointment_extras_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "inst_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_appointment_extras_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_appointments: {
         Row: {
           client_id: string | null
@@ -1016,6 +1074,355 @@ export type Database = {
           },
         ]
       }
+      inst_service_extras: {
+        Row: {
+          extra_service_id: string
+          max_qty: number
+          min_qty: number
+          service_id: string
+          sort_order: number
+          tenant_id: string
+        }
+        Insert: {
+          extra_service_id: string
+          max_qty?: number
+          min_qty?: number
+          service_id: string
+          sort_order?: number
+          tenant_id: string
+        }
+        Update: {
+          extra_service_id?: string
+          max_qty?: number
+          min_qty?: number
+          service_id?: string
+          sort_order?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_service_extras_extra_service_id_fkey"
+            columns: ["extra_service_id"]
+            isOneToOne: false
+            referencedRelation: "inst_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_service_extras_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "inst_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_service_extras_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_loyalty_balances: {
+        Row: {
+          client_id: string
+          lifetime_earned: number
+          lifetime_redeemed: number
+          points_balance: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          lifetime_earned?: number
+          lifetime_redeemed?: number
+          points_balance?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          lifetime_earned?: number
+          lifetime_redeemed?: number
+          points_balance?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_loyalty_balances_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_balances_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_loyalty_earn_rules: {
+        Row: {
+          calc_mode: string
+          created_at: string
+          id: string
+          is_active: boolean
+          min_amount_cents: number
+          name: string
+          points_value: number
+          program_id: string
+          sort_order: number
+          source_type: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          calc_mode: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          min_amount_cents?: number
+          name: string
+          points_value: number
+          program_id: string
+          sort_order?: number
+          source_type: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          calc_mode?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          min_amount_cents?: number
+          name?: string
+          points_value?: number
+          program_id?: string
+          sort_order?: number
+          source_type?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_loyalty_earn_rules_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "inst_loyalty_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_earn_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_loyalty_programs: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          points_label: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          points_label?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          points_label?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_loyalty_programs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_loyalty_rewards: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_cents: number | null
+          discount_percent: number | null
+          id: string
+          is_active: boolean
+          name: string
+          points_cost: number
+          program_id: string
+          reward_type: string
+          service_id: string | null
+          sort_order: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_cents?: number | null
+          discount_percent?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          points_cost: number
+          program_id: string
+          reward_type: string
+          service_id?: string | null
+          sort_order?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_cents?: number | null
+          discount_percent?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          points_cost?: number
+          program_id?: string
+          reward_type?: string
+          service_id?: string | null
+          sort_order?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_loyalty_rewards_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "inst_loyalty_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_rewards_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "inst_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_rewards_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_loyalty_transactions: {
+        Row: {
+          balance_after: number
+          client_id: string
+          created_at: string
+          id: string
+          idempotency_key: string
+          notes: string | null
+          points_delta: number
+          program_id: string | null
+          reward_id: string | null
+          rule_id: string | null
+          source_id: string | null
+          source_type: string | null
+          tenant_id: string
+          type: string
+        }
+        Insert: {
+          balance_after: number
+          client_id: string
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          notes?: string | null
+          points_delta: number
+          program_id?: string | null
+          reward_id?: string | null
+          rule_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          tenant_id: string
+          type: string
+        }
+        Update: {
+          balance_after?: number
+          client_id?: string
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          notes?: string | null
+          points_delta?: number
+          program_id?: string | null
+          reward_id?: string | null
+          rule_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          tenant_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_loyalty_transactions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_transactions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "inst_loyalty_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_transactions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "inst_loyalty_rewards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_transactions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "inst_loyalty_earn_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_services: {
         Row: {
           buffer_after_min: number
@@ -1025,7 +1432,9 @@ export type Database = {
           currency: string
           description: string | null
           duration_min: number
+          extras_step_position: string
           id: string
+          image_url: string | null
           is_active: boolean
           max_advance_days: number
           min_advance_hours: number
@@ -1033,6 +1442,7 @@ export type Database = {
           price_cents: number
           tenant_id: string
           updated_at: string
+          visibility: string
         }
         Insert: {
           buffer_after_min?: number
@@ -1042,7 +1452,9 @@ export type Database = {
           currency?: string
           description?: string | null
           duration_min?: number
+          extras_step_position?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean
           max_advance_days?: number
           min_advance_hours?: number
@@ -1050,6 +1462,7 @@ export type Database = {
           price_cents?: number
           tenant_id: string
           updated_at?: string
+          visibility?: string
         }
         Update: {
           buffer_after_min?: number
@@ -1059,7 +1472,9 @@ export type Database = {
           currency?: string
           description?: string | null
           duration_min?: number
+          extras_step_position?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean
           max_advance_days?: number
           min_advance_hours?: number
@@ -1067,6 +1482,7 @@ export type Database = {
           price_cents?: number
           tenant_id?: string
           updated_at?: string
+          visibility?: string
         }
         Relationships: [
           {
@@ -1546,6 +1962,21 @@ export type Database = {
           duration_min: number
           price_cents: number
           color: string | null
+          extras_step_position: string
+        }[]
+      }
+      get_public_service_extras: {
+        Args: { p_tenant_id: string; p_service_id: string }
+        Returns: {
+          extra_service_id: string
+          name: string
+          description: string | null
+          duration_min: number
+          price_cents: number
+          image_url: string | null
+          min_qty: number
+          max_qty: number
+          sort_order: number
         }[]
       }
       get_public_staff_for_service: {
@@ -1558,6 +1989,7 @@ export type Database = {
           p_service_id: string
           p_date: string
           p_staff_id?: string
+          p_extras?: Json
         }
         Returns: { starts_at: string; ends_at: string; staff_id: string }[]
       }
@@ -1570,8 +2002,31 @@ export type Database = {
           p_email: string
           p_full_name: string
           p_phone?: string
+          p_extras?: Json
         }
         Returns: string
+      }
+      inst_booking_duration_min: {
+        Args: { p_service_id: string; p_extras?: Json }
+        Returns: number
+      }
+      inst_booking_price_cents: {
+        Args: { p_service_id: string; p_extras?: Json }
+        Returns: number
+      }
+      inst_loyalty_credit: {
+        Args: {
+          p_client_id: string
+          p_idempotency_key: string
+          p_notes?: string
+          p_points: number
+          p_program_id: string
+          p_rule_id: string
+          p_source_id: string
+          p_source_type: string
+          p_tenant_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

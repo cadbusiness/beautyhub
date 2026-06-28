@@ -3,12 +3,17 @@ import { defineAction } from "../types";
 import { checkAppointmentConflict } from "@/lib/institut/slots";
 import {
   fetchTenantContext,
+  resolveAppointmentExtras,
   resolveClient,
   resolveResource,
   resolveSchedule,
   resolveService,
   resolveStaff,
 } from "./ai-helpers";
+import {
+  resolveBookingTotals,
+  syncAppointmentExtras,
+} from "@/lib/institut/appointment-extras";
 
 const scheduleBlockSchema = z.object({
   weekday: z.number().int().min(0).max(6).describe("0=dimanche, 1=lundi … 6=samedi"),
@@ -78,7 +83,7 @@ export const institutAiActions = [
     handler: async (ctx, params) => {
       const { data, error } = await ctx.supabase
         .from("inst_services")
-        .select("id, name, duration_min, price_cents, is_active")
+        .select("id, name, duration_min, price_cents, is_active, visibility")
         .eq("tenant_id", ctx.tenantId)
         .eq("is_active", true)
         .order("name")
@@ -123,6 +128,32 @@ export const institutAiActions = [
   }),
 
   defineAction({
+    name: "institut.list_service_extras",
+    description:
+      "Liste les extras (upsell) configurés pour une prestation — ce sont d'autres prestations liées.",
+    parameters: z.object({
+      service_id: z.string().uuid().optional(),
+      service_name: z.string().optional(),
+    }),
+    requiredRole: "staff",
+    handler: async (ctx, params) => {
+      const service = await resolveService(ctx.supabase, ctx.tenantId, params);
+      if (!service) throw new Error("Prestation introuvable.");
+
+      const { data, error } = await ctx.supabase
+        .from("inst_service_extras")
+        .select(
+          "min_qty, max_qty, extra:inst_services!inst_service_extras_extra_service_id_fkey(id, name, duration_min, price_cents, image_url, visibility)",
+        )
+        .eq("tenant_id", ctx.tenantId)
+        .eq("service_id", service.id)
+        .order("sort_order");
+      if (error) throw new Error(error.message);
+      return data;
+    },
+  }),
+
+  defineAction({
     name: "institut.list_appointments",
     description: "Liste les rendez-vous sur une période.",
     parameters: z.object({
@@ -144,7 +175,7 @@ export const institutAiActions = [
       let q = ctx.supabase
         .from("inst_appointments")
         .select(
-          "id, starts_at, ends_at, status, staff:inst_staff(full_name), client:clients(full_name), service:inst_services(name)",
+          "id, starts_at, ends_at, status, price_cents, staff:inst_staff(full_name), client:clients(full_name), service:inst_services(name), extras:inst_appointment_extras(name, quantity, price_cents, duration_min)",
         )
         .eq("tenant_id", ctx.tenantId)
         .gte("starts_at", from.toISOString())
@@ -168,7 +199,8 @@ export const institutAiActions = [
 
   defineAction({
     name: "institut.create_appointment",
-    description: "Crée un rendez-vous pour un client.",
+    description:
+      "Crée un rendez-vous pour un client. Les extras sont d'autres prestations liées (upsell) — utiliser list_service_extras pour voir les options.",
     parameters: z.object({
       service_id: z.string().uuid().optional(),
       service_name: z.string().optional().describe("Nom de la prestation"),
@@ -181,6 +213,16 @@ export const institutAiActions = [
       resource_name: z.string().optional(),
       starts_at: z.string().describe("Date/heure de début ISO 8601"),
       notes: z.string().optional(),
+      extras: z
+        .array(
+          z.object({
+            service_id: z.string().uuid().optional(),
+            extra_name: z.string().optional().describe("Nom de l'extra si ID inconnu"),
+            quantity: z.number().int().positive().default(1),
+          }),
+        )
+        .optional()
+        .describe("Prestations extras à ajouter au rendez-vous"),
     }),
     requiredRole: "staff",
     quotaKey: "appointments_per_month",
@@ -189,10 +231,24 @@ export const institutAiActions = [
       const service = await resolveService(ctx.supabase, ctx.tenantId, params);
       if (!service) throw new Error("Prestation introuvable.");
 
+      const extras = await resolveAppointmentExtras(ctx.supabase, ctx.tenantId, service.id, params);
+      const totals = await resolveBookingTotals(ctx.supabase, service.id, extras);
+      if ("error" in totals) {
+        throw new Error(
+          totals.error === "service_not_found" ? "Prestation introuvable." : totals.error,
+        );
+      }
+
       const startsAt = new Date(params.starts_at);
       if (Number.isNaN(startsAt.getTime())) throw new Error("Date/heure invalide.");
 
-      const endsAt = new Date(startsAt.getTime() + service.duration_min * 60_000);
+      const { data: svcBuffers } = await ctx.supabase
+        .from("inst_services")
+        .select("buffer_before_min, buffer_after_min")
+        .eq("id", service.id)
+        .maybeSingle();
+
+      const endsAt = new Date(startsAt.getTime() + totals.durationMin * 60_000);
       const staff = params.staff_id || params.staff_name
         ? await resolveStaff(ctx.supabase, ctx.tenantId, params)
         : null;
@@ -208,6 +264,8 @@ export const institutAiActions = [
         resourceId: resource?.id ?? null,
         startsAt,
         endsAt,
+        bufferBeforeMin: svcBuffers?.buffer_before_min ?? 0,
+        bufferAfterMin: svcBuffers?.buffer_after_min ?? 0,
       });
       if (conflict) throw new Error(`Conflit : ${conflict}`);
 
@@ -221,12 +279,29 @@ export const institutAiActions = [
           resource_id: resource?.id ?? null,
           starts_at: startsAt.toISOString(),
           ends_at: endsAt.toISOString(),
-          price_cents: service.price_cents,
+          price_cents: totals.priceCents,
           notes: params.notes ?? null,
         })
-        .select("id, starts_at, ends_at, status")
+        .select("id, starts_at, ends_at, status, price_cents")
         .single();
       if (error) throw new Error(error.message);
+
+      const extraErr = await syncAppointmentExtras(
+        ctx.supabase,
+        ctx.tenantId,
+        data.id,
+        service.id,
+        extras,
+      );
+      if (extraErr) throw new Error(extraErr);
+
+      if (extras.length > 0) {
+        const { data: savedExtras } = await ctx.supabase
+          .from("inst_appointment_extras")
+          .select("name, quantity, price_cents")
+          .eq("appointment_id", data.id);
+        return { ...data, extras: savedExtras ?? [] };
+      }
       return data;
     },
   }),

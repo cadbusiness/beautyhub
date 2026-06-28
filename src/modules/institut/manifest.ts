@@ -26,6 +26,13 @@ export const institutModule: ModuleManifest = {
       exact: true,
       roles: ["platform_admin", "brand_owner", "tenant_owner", "staff"],
     },
+    {
+      label: "Marketing",
+      href: "/institut/marketing",
+      icon: "megaphone",
+      exact: true,
+      roles: ["platform_admin", "brand_owner", "tenant_owner"],
+    },
   ],
   aiActions: [...institutAiActions, ...institutPosAiActions],
 };

@@ -20,6 +20,13 @@ export interface CalendarAppointment {
   staff: { full_name?: string; color?: string | null } | null;
   client: { full_name?: string | null; email?: string; phone?: string | null } | null;
   resource: { name?: string } | null;
+  extras?: {
+    service_id: string;
+    quantity: number;
+    name: string;
+    price_cents: number;
+    duration_min: number;
+  }[];
 }
 
 export interface CalendarColumn {

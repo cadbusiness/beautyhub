@@ -1,40 +1,45 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import {
   bookPublicAppointment,
   loadPublicServices,
+  loadPublicServiceExtras,
   loadPublicSlots,
   loadPublicStaff,
   type PublicService,
   type PublicSlot,
   type PublicStaff,
 } from "./actions";
+import { ExtrasPicker } from "@/components/institut/extras-picker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/input";
 import { formatDateTime, formatPrice } from "@/lib/utils";
+import type { BookingExtraLine, ServiceExtraConfig } from "@/lib/institut/service-extras";
+import { totalDurationMin, totalPriceCents } from "@/lib/institut/service-extras";
 
-type Step = 1 | 2 | 3 | 4 | 5;
+type WizardStep = "service" | "staff" | "extras" | "date" | "slots" | "done";
 
 export function BookingWizard() {
   const t = useTranslations("public.booking");
   const tCommon = useTranslations("common");
   const format = useFormatter();
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<WizardStep>("service");
   const [services, setServices] = useState<PublicService[]>([]);
   const [staff, setStaff] = useState<PublicStaff[]>([]);
+  const [extraCatalog, setExtraCatalog] = useState<ServiceExtraConfig[]>([]);
   const [slots, setSlots] = useState<PublicSlot[]>([]);
   const [serviceId, setServiceId] = useState("");
   const [staffId, setStaffId] = useState("");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState<PublicSlot | null>(null);
+  const [extras, setExtras] = useState<BookingExtraLine[]>([]);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -42,30 +47,59 @@ export function BookingWizard() {
   }, []);
 
   const selectedService = services.find((s) => s.id === serviceId);
+  const extrasBeforeTime = selectedService?.extras_step_position === "before_time";
+  const hasExtras = extraCatalog.length > 0;
+
+  const stepLabels = useMemo(() => {
+    const labels = [t("steps.service"), t("steps.staff")];
+    if (hasExtras) labels.push(t("steps.extras"));
+    labels.push(t("steps.date"), t("steps.slots"));
+    return labels;
+  }, [hasExtras, t]);
+
+  const stepIndex = useMemo(() => {
+    const order: WizardStep[] = ["service", "staff"];
+    if (hasExtras) order.push("extras");
+    order.push("date", "slots");
+    const idx = order.indexOf(step === "done" ? "slots" : step);
+    return idx >= 0 ? idx + 1 : 1;
+  }, [hasExtras, step]);
 
   function pickService(id: string) {
     setServiceId(id);
     setStaffId("");
     setSlot(null);
+    setExtras([]);
     startTransition(async () => {
-      const list = await loadPublicStaff(id);
-      setStaff(list);
-      setStep(2);
+      const [staffList, catalog] = await Promise.all([
+        loadPublicStaff(id),
+        loadPublicServiceExtras(id),
+      ]);
+      setStaff(staffList);
+      setExtraCatalog(catalog);
+      setStep("staff");
     });
   }
 
   function pickStaff(id: string) {
     setStaffId(id);
-    setStep(3);
+    if (hasExtras && extrasBeforeTime) setStep("extras");
+    else setStep("date");
   }
 
   function loadSlots() {
     if (!serviceId || !date || !staffId) return;
+    const slotExtras = extrasBeforeTime ? extras : [];
     startTransition(async () => {
-      const list = await loadPublicSlots(serviceId, date, staffId);
+      const list = await loadPublicSlots(serviceId, date, staffId, slotExtras);
       setSlots(list);
-      setStep(4);
+      setStep("slots");
     });
+  }
+
+  function pickSlot(sl: PublicSlot) {
+    setSlot(sl);
+    if (hasExtras && !extrasBeforeTime) setStep("extras");
   }
 
   function confirmBooking() {
@@ -78,23 +112,33 @@ export function BookingWizard() {
         email,
         fullName,
         phone: phone || undefined,
+        extras,
       });
       if (res.error) setError(res.error);
       else {
         setError(null);
-        setDone(true);
-        setStep(5);
+        setStep("done");
       }
     });
   }
 
-  if (done) {
+  const totalMin = selectedService
+    ? totalDurationMin(selectedService.duration_min, extras, extraCatalog)
+    : 0;
+  const totalPrice = selectedService
+    ? totalPriceCents(selectedService.price_cents, extras, extraCatalog)
+    : 0;
+
+  if (step === "done") {
     return (
       <Card className="space-y-3 text-center">
         <h2 className="text-xl font-semibold text-slate-900">{t("confirmed.title")}</h2>
         <p className="text-sm text-slate-600">
           {selectedService?.name} · {slot ? formatDateTime(slot.starts_at) : ""}
         </p>
+        {extras.length > 0 ? (
+          <p className="text-sm text-slate-500">{t("confirmed.withExtras")}</p>
+        ) : null}
         <p className="text-sm text-slate-500">{t("confirmed.emailHint")}</p>
       </Card>
     );
@@ -102,17 +146,17 @@ export function BookingWizard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 text-xs text-slate-400">
-        {[1, 2, 3, 4].map((s) => (
-          <span key={s} className={step >= s ? "font-medium text-slate-900" : ""}>
-            {t("steps", { n: s })}
+      <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+        {stepLabels.map((label, i) => (
+          <span key={label} className={stepIndex > i ? "font-medium text-slate-900" : ""}>
+            {label}
           </span>
         ))}
       </div>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-      {step === 1 ? (
+      {step === "service" ? (
         <Card className="space-y-3">
           <h2 className="font-medium text-slate-900">{t("step1.title")}</h2>
           {services.length === 0 ? (
@@ -139,7 +183,7 @@ export function BookingWizard() {
         </Card>
       ) : null}
 
-      {step === 2 ? (
+      {step === "staff" ? (
         <Card className="space-y-3">
           <h2 className="font-medium text-slate-900">{t("step2.title")}</h2>
           {staff.map((s) => (
@@ -152,15 +196,76 @@ export function BookingWizard() {
               {s.full_name}
             </button>
           ))}
-          <Button variant="outline" onClick={() => setStep(1)}>
+          <Button variant="outline" onClick={() => setStep("service")}>
             {tCommon("back")}
           </Button>
         </Card>
       ) : null}
 
-      {step === 3 ? (
+      {step === "extras" && selectedService ? (
+        <Card className="space-y-4">
+          <h2 className="font-medium text-slate-900">{t("extras.title")}</h2>
+          <ExtrasPicker
+            catalog={extraCatalog}
+            baseDurationMin={selectedService.duration_min}
+            basePriceCents={selectedService.price_cents}
+            value={extras}
+            onChange={setExtras}
+          />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() =>
+                setStep(extrasBeforeTime ? "staff" : "slots")
+              }
+            >
+              {tCommon("back")}
+            </Button>
+            <Button
+              onClick={() => {
+                if (extrasBeforeTime) setStep("date");
+                else if (email && fullName) confirmBooking();
+              }}
+              disabled={extrasBeforeTime ? false : !email || !fullName || pending}
+            >
+              {extrasBeforeTime ? tCommon("continue") : t("step4.confirm")}
+            </Button>
+          </div>
+          {!extrasBeforeTime && slot ? (
+            <div className="space-y-3 border-t border-slate-200 pt-4">
+              <Field label={t("step4.fullName")} htmlFor="full_name">
+                <Input
+                  id="full_name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </Field>
+              <Field label={tCommon("email")} htmlFor="email">
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </Field>
+              <Field label={tCommon("phone")} htmlFor="phone">
+                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </Field>
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
+
+      {step === "date" ? (
         <Card className="space-y-4">
           <h2 className="font-medium text-slate-900">{t("step3.title")}</h2>
+          {hasExtras && extrasBeforeTime ? (
+            <p className="text-sm text-slate-500">
+              {t("extras.durationHint", { min: totalMin, price: formatPrice(totalPrice) })}
+            </p>
+          ) : null}
           <Field label={tCommon("date")} htmlFor="date">
             <Input
               id="date"
@@ -171,7 +276,10 @@ export function BookingWizard() {
             />
           </Field>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep(2)}>
+            <Button
+              variant="outline"
+              onClick={() => setStep(hasExtras && extrasBeforeTime ? "extras" : "staff")}
+            >
               {tCommon("back")}
             </Button>
             <Button disabled={!date || pending} onClick={loadSlots}>
@@ -181,7 +289,7 @@ export function BookingWizard() {
         </Card>
       ) : null}
 
-      {step === 4 ? (
+      {step === "slots" ? (
         <Card className="space-y-4">
           <h2 className="font-medium text-slate-900">{t("step4.title")}</h2>
           {slots.length === 0 ? (
@@ -192,10 +300,7 @@ export function BookingWizard() {
                 <button
                   key={sl.starts_at}
                   type="button"
-                  onClick={() => {
-                    setSlot(sl);
-                    setStep(4);
-                  }}
+                  onClick={() => pickSlot(sl)}
                   className={`rounded-lg border px-2 py-2 text-sm ${
                     slot?.starts_at === sl.starts_at
                       ? "border-slate-900 bg-slate-100 text-slate-900"
@@ -210,7 +315,7 @@ export function BookingWizard() {
               ))}
             </div>
           )}
-          {slot ? (
+          {slot && (!hasExtras || extrasBeforeTime) ? (
             <div className="space-y-3 border-t border-slate-200 pt-4">
               <Field label={t("step4.fullName")} htmlFor="full_name">
                 <Input
@@ -241,7 +346,7 @@ export function BookingWizard() {
               </Button>
             </div>
           ) : null}
-          <Button variant="outline" onClick={() => setStep(3)}>
+          <Button variant="outline" onClick={() => setStep("date")}>
             {tCommon("back")}
           </Button>
         </Card>

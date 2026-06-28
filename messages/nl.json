@@ -54,6 +54,8 @@
     "cash": "Contant",
     "card": "Kaart",
     "note": "Notitie",
+    "extras": "Extras",
+    "continue": "Doorgaan",
     "searchArticles": "Zoek een artikel…",
     "total": "Totaal",
     "woocommerce": "WooCommerce",
@@ -121,6 +123,10 @@
     "institutPosVouchers": "Bons & tegoeden",
     "institutPosHistory": "Kassageschiedenis",
     "institutPosProducts": "Interne producten",
+    "institutMarketing": "Marketing",
+    "institutMarketingLoyalty": "Loyaliteit",
+    "institutMarketingWebsite": "Webpagina",
+    "institutMarketingPromos": "Promo's",
     "institutSettings": "Instellingen",
     "academieOverview": "Academie",
     "academieCourses": "Opleidingen",
@@ -252,6 +258,8 @@
       "endsAt": "Einddatum en -tijd",
       "status": "Status",
       "notes": "Notities",
+      "extras": "Opties / extras",
+      "endsAtExtrasHint": "Leeg laten om automatisch te herberekenen op basis van extras.",
       "create": "Afspraak aanmaken",
       "scheduleWarningConfirm": "Bevestigen ondanks planning buiten openingstijden"
     },
@@ -380,6 +388,148 @@
       "clients": "Klanten",
       "services": "Behandelingen"
     },
+    "marketing": {
+      "overview": {
+        "description": "Bind klanten, zet uw instituut online in de kijker en lanceer gerichte aanbiedingen.",
+        "available": "Beschikbaar",
+        "comingSoon": "Binnenkort",
+        "tools": {
+          "loyalty": {
+            "title": "Loyaliteit",
+            "description": "Punten, niveaus en beloningen voor vaste klanten."
+          },
+          "website": {
+            "title": "Webpagina",
+            "description": "Uw online vitrine: reserveren, presentatie en branding."
+          },
+          "promos": {
+            "title": "Promo's",
+            "description": "Promocodes, tijdelijke aanbiedingen en kortingen op behandelingen."
+          },
+          "referral": {
+            "title": "Verwijzing",
+            "description": "Beloon klanten die nieuwe klanten aanbrengen."
+          },
+          "reviews": {
+            "title": "Beoordelingen",
+            "description": "Verzamel en toon Google- en interne beoordelingen."
+          },
+          "campaigns": {
+            "title": "Campagnes",
+            "description": "E-mails en sms voor opvolging, info of het vullen van uw agenda."
+          }
+        }
+      },
+      "loyalty": {
+        "title": "Loyaliteitsprogramma",
+        "description": "Stel in hoe klanten punten verdienen en waarvoor ze die kunnen inwisselen.",
+        "stats": {
+          "clientsWithPoints": "Klanten met punten",
+          "pointsOutstanding": "{label} in omloop"
+        },
+        "program": {
+          "title": "Programma",
+          "description": "Activeer het programma zodra regels en beloningen zijn ingesteld.",
+          "name": "Naam van het programma",
+          "pointsLabel": "Label van de punten",
+          "active": "Programma actief",
+          "saved": "Programma opgeslagen."
+        },
+        "status": {
+          "active": "Actief",
+          "inactive": "Inactief"
+        },
+        "sources": {
+          "appointment_completed": "Afspraak voltooid",
+          "pos_sale": "Aankoop in instituut (kassa)",
+          "woocommerce_order": "WooCommerce-bestelling",
+          "shopify_order": "Shopify-bestelling"
+        },
+        "calcModes": {
+          "fixed_per_event": "Vaste punten per gebeurtenis",
+          "per_euro_spent": "Punten per uitgegeven euro"
+        },
+        "integrations": {
+          "wooDisconnected": "niet gekoppeld",
+          "comingSoon": "binnenkort",
+          "connectHint": "Koppel uw winkel om deze bron te activeren:"
+        },
+        "rules": {
+          "title": "Verdiensregels",
+          "add": "Nieuwe regel",
+          "empty": "Geen regels. Voeg een bron toe om punten toe te kennen.",
+          "footer": "{count, plural, one {# regel} other {# regels}}",
+          "createTitle": "Nieuwe verdiensregel",
+          "editTitle": "Regel bewerken",
+          "deleteConfirm": "Deze verdiensregel verwijderen?",
+          "earningFixed": "{points} pt / gebeurtenis",
+          "earningPerEuro": "{points} pt / € (vb. 50 € → {example} pt)",
+          "columns": {
+            "name": "Naam",
+            "source": "Bron",
+            "earning": "Verdienste",
+            "status": "Status"
+          },
+          "form": {
+            "name": "Naam van de regel",
+            "namePlaceholder": "Bv. Punten per bezoek",
+            "source": "Gebaseerd op",
+            "calcMode": "Berekeningsmodus",
+            "pointsFixed": "Punten ({label})",
+            "pointsPerEuro": "Punten per euro ({label})",
+            "minAmount": "Minimumbedrag (€)",
+            "preview": "Voorbeeld: 50 € besteding → {points} {label}",
+            "active": "Regel actief"
+          }
+        },
+        "rewards": {
+          "title": "Beloningen",
+          "add": "Nieuwe beloning",
+          "empty": "Geen beloningen geconfigureerd.",
+          "footer": "{count, plural, one {# beloning} other {# beloningen}}",
+          "redeemHint": "Punten inwisselen aan kassa en reservering komt binnenkort.",
+          "createTitle": "Nieuwe beloning",
+          "editTitle": "Beloning bewerken",
+          "deleteConfirm": "Deze beloning verwijderen?",
+          "columns": {
+            "name": "Naam",
+            "type": "Type",
+            "cost": "Kosten",
+            "status": "Status"
+          },
+          "types": {
+            "discountPercentLabel": "Korting in %",
+            "discountFixedLabel": "Vaste korting",
+            "freeServiceLabel": "Gratis behandeling",
+            "discountPercent": "−{percent} %",
+            "discountFixed": "−{amount}",
+            "freeService": "Gratis: {service}"
+          },
+          "form": {
+            "name": "Naam",
+            "description": "Beschrijving",
+            "type": "Type beloning",
+            "pointsCost": "Kosten in {label}",
+            "discountPercent": "Kortingspercentage",
+            "discountEur": "Kortingsbedrag (€)",
+            "service": "Gratis behandeling",
+            "active": "Beloning actief"
+          }
+        }
+      },
+      "website": {
+        "title": "Webpagina van het instituut",
+        "description": "De openbare pagina waar klanten het instituut ontdekken en reserveren.",
+        "publicUrlLabel": "Reserveringslink",
+        "preview": "Pagina bekijken",
+        "hint": "Aanpassing van inhoud, foto's en custom domein — binnenkort."
+      },
+      "promos": {
+        "title": "Promoties",
+        "description": "Maak promocodes en tijdelijke aanbiedingen.",
+        "hint": "Deze functie komt binnenkort. Promo's gelden voor online reservering en kassa."
+      }
+    },
     "clients": {
       "new": "Nieuwe klant",
       "searchPlaceholder": "Zoek naam, e-mail, telefoon…",
@@ -429,13 +579,19 @@
         "tabs": {
           "general": "Algemeen",
           "time": "Tijden",
-          "advanced": "Geavanceerd"
+          "advanced": "Geavanceerd",
+          "extras": "Extras"
         },
         "namePlaceholder": "Gezichtsverzorging",
         "priceEur": "Prijs (EUR)",
         "descriptionPlaceholder": "Optioneel — alleen intern zichtbaar",
         "visibleLabel": "Zichtbaar",
         "visibleHint": "Uitschakelen om te verbergen voor klanten en aan de kassa.",
+        "visibility": "Cataloguszichtbaarheid",
+        "visibilityCatalog": "Klantencatalogus (hoofdbehandeling)",
+        "visibilityExtraOnly": "Alleen extra (verborgen in catalogus)",
+        "imageLabel": "Afbeelding",
+        "imageAfterCreate": "Sla de behandeling op en voeg daarna een afbeelding toe via bewerken.",
         "durationMin": "Duur (min)",
         "bufferBefore": "Buffer ervoor (min)",
         "bufferAfter": "Buffer erna (min)",
@@ -445,8 +601,36 @@
         "bookingWindowHint": "Bepaalt het online reserveringsvenster voor deze behandeling.",
         "createSubmit": "Behandeling aanmaken",
         "editSubmit": "Opslaan",
-        "submitting": "Opslaan…"
+        "submitting": "Opslaan…",
+        "extras": {
+          "hint": "Kies andere behandelingen als upsell bij deze behandeling. Elke extra behoudt duur en prijs.",
+          "stepPosition": "Extras-stap in reservering",
+          "beforeTime": "Vóór tijdslot",
+          "afterTime": "Na tijdslot",
+          "noCandidates": "Maak andere behandelingen aan (catalogus of « alleen extra ») om ze hier aan te bieden.",
+          "extraOnlyBadge": "Extra",
+          "minQty": "Min. aantal",
+          "maxQty": "Max. aantal",
+          "saveExtras": "Extras opslaan"
+        },
+        "image": {
+          "noImage": "Geen afbeelding",
+          "upload": "Afbeelding uploaden",
+          "replace": "Vervangen",
+          "remove": "Verwijderen",
+          "uploading": "Uploaden…",
+          "hint": "JPEG, PNG, WebP of GIF — max 5 MB. Zichtbaar bij reservering en kassa."
+        }
       }
+    },
+    "extras": {
+      "noImage": "—",
+      "lineMeta": "{min} min · {price}",
+      "decrease": "Minder",
+      "increase": "Meer",
+      "requiredMin": "Verplicht: {min} tot {max}",
+      "optionalMax": "Optioneel, max. {max}",
+      "total": "Totaal: {min} min · {price}"
     },
     "team": {
       "tabs": {
@@ -853,9 +1037,16 @@
     "booking": {
       "title": "Afspraak maken",
       "subtitle": "{name} — online reservering",
-      "steps": "Stap {n}",
+      "steps": {
+        "service": "1. Behandeling",
+        "staff": "2. Behandelaar",
+        "extras": "3. Extras",
+        "date": "4. Datum",
+        "slots": "5. Tijdslot"
+      },
       "confirmed": {
         "title": "Afspraak bevestigd",
+        "withExtras": "Uw extra opties zijn inbegrepen.",
         "emailHint": "U ontvangt binnenkort een bevestigingsmail."
       },
       "step1": {
@@ -876,6 +1067,10 @@
         "fullName": "Volledige naam",
         "confirm": "Afspraak bevestigen",
         "confirming": "Bevestigen…"
+      },
+      "extras": {
+        "title": "Extra opties",
+        "durationHint": "Geschatte totale duur: {min} min · {price}"
       }
     },
     "client": {
@@ -1006,7 +1201,8 @@
       "categories": {
         "service": "Behandeling",
         "woocommerce": "Woo",
-        "internal": "Intern"
+        "internal": "Intern",
+        "extra": "Extra"
       },
       "searchArticles": "Zoek een artikel…",
       "searchAria": "Zoeken",
@@ -1020,6 +1216,7 @@
         "noClient": "— Geen klant —",
         "notePlaceholder": "Interne notitie (optioneel)",
         "clientAria": "Klant",
+        "extraBadge": "extra",
         "addToCheckout": "Voeg artikelen toe om af te rekenen.",
         "settingsLink": "Kassa-instellingen →"
       },

@@ -16,17 +16,22 @@ export async function setLocale(locale: Locale) {
     sameSite: "lax",
   });
 
+  revalidatePath("/", "layout");
+
   const user = await getCurrentUser();
   if (user) {
     const supabase = await createClient();
-    await supabase.from("team_profiles").upsert(
-      {
-        user_id: user.id,
-        preferred_locale: locale,
-      },
-      { onConflict: "user_id" },
-    );
+    void supabase
+      .from("team_profiles")
+      .upsert(
+        {
+          user_id: user.id,
+          preferred_locale: locale,
+        },
+        { onConflict: "user_id" },
+      )
+      .then(({ error }) => {
+        if (error) console.error("[setLocale] profile upsert failed:", error.message);
+      });
   }
-
-  revalidatePath("/", "layout");
 }

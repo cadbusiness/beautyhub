@@ -126,13 +126,8 @@ export default async function DashboardPage() {
         </p>
 
         {quickActions.length > 0 ? (
-          <div className="mt-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-              {t("shortcuts.title")}
-            </p>
-            <p className="mt-0.5 text-sm text-slate-500">{t("shortcuts.description")}</p>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {quickActions.map((action) => (
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {quickActions.map((action) => (
                 <Link
                   key={action.href}
                   href={action.href}
@@ -144,7 +139,6 @@ export default async function DashboardPage() {
                   </span>
                 </Link>
               ))}
-            </div>
           </div>
         ) : null}
       </div>

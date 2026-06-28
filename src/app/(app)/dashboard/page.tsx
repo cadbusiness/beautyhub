@@ -1,11 +1,50 @@
-import { Card } from "@/components/ui/card";
-import { PageHeader } from "@/components/ui/page-header";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import {
   getRoleForTenant,
   isPlatformAdmin,
 } from "@/lib/auth/session";
 import { getEnabledModuleIds, getTenantContext } from "@/lib/tenant/context";
 import { getAiActionsFor, getNavFor } from "@/modules";
+import { Button } from "@/components/ui/button";
+import {
+  DataTable,
+  dataTableCell,
+  dataTableHead,
+  dataTableRow,
+} from "@/components/ui/data-table";
+import { ListPanel } from "@/components/ui/list-panel";
+
+const MODULE_LABELS: Record<string, string> = {
+  institut: "Institut",
+  academie: "Académie",
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  tenant_owner: "Propriétaire",
+  staff: "Équipe",
+  coach: "Coach",
+  brand_owner: "Marque",
+  platform_admin: "Admin plateforme",
+};
+
+function actionLabel(action: { name: string; description: string }) {
+  const labels: Record<string, string> = {
+    "institut.create_client": "Créer un client",
+    "institut.list_clients": "Lister les clients",
+    "academie.list_courses": "Voir les formations",
+    "academie.create_course": "Nouvelle formation",
+  };
+  return labels[action.name] ?? action.description.replace(/\.$/, "");
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="border-b border-slate-200 px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-slate-500 lg:px-6">
+      {children}
+    </div>
+  );
+}
 
 export default async function DashboardPage() {
   const tenant = await getTenantContext();
@@ -21,61 +60,139 @@ export default async function DashboardPage() {
   const nav = role ? getNavFor(enabledModuleIds, role) : [];
   const aiActions = role ? getAiActionsFor(enabledModuleIds, role) : [];
 
+  const hasInstitut = enabledModuleIds.includes("institut");
+  let kpis: { label: string; value: number; href: string }[] = [];
+
+  if (tenant && hasInstitut) {
+    const supabase = await createClient();
+    const [clients, upcoming, services] = await Promise.all([
+      supabase
+        .from("clients")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenant.id),
+      supabase
+        .from("inst_appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenant.id)
+        .gte("starts_at", new Date().toISOString())
+        .neq("status", "cancelled"),
+      supabase
+        .from("inst_services")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenant.id)
+        .eq("is_active", true),
+    ]);
+
+    kpis = [
+      {
+        label: "RDV à venir",
+        value: upcoming.count ?? 0,
+        href: "/institut/rendez-vous",
+      },
+      {
+        label: "Clients",
+        value: clients.count ?? 0,
+        href: "/institut/clients",
+      },
+      {
+        label: "Prestations actives",
+        value: services.count ?? 0,
+        href: "/institut/prestations",
+      },
+    ];
+  }
+
   return (
-    <div className="space-y-6">
-      <PageHeader title="Accueil" description={tenant?.name} />
+    <ListPanel>
+      {kpis.length > 0 ? (
+        <div className="grid divide-y divide-slate-200 border-b border-slate-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          {kpis.map((kpi) => (
+            <Link
+              key={kpi.label}
+              href={kpi.href}
+              className="px-4 py-5 transition-colors hover:bg-slate-50 lg:px-6"
+            >
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                {kpi.label}
+              </p>
+              <p className="mt-1 text-3xl font-semibold tabular-nums text-slate-900">
+                {kpi.value}
+              </p>
+            </Link>
+          ))}
+        </div>
+      ) : null}
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Modules actives
-          </h2>
-          {nav.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">Aucun module actif.</p>
-          ) : (
-            <ul className="mt-3 space-y-1">
+      <SectionTitle>Raccourcis</SectionTitle>
+      <DataTable empty={nav.length === 0 ? "Aucun module actif." : undefined}>
+        {nav.length > 0 ? (
+          <table className="w-full text-sm">
+            <thead className="border-b border-slate-200">
+              <tr>
+                <th className={dataTableHead}>Page</th>
+                <th className={`hidden w-32 sm:table-cell ${dataTableHead}`}>Module</th>
+                <th className={`w-12 ${dataTableHead}`} aria-hidden />
+              </tr>
+            </thead>
+            <tbody>
               {nav.map((item) => (
-                <li key={`${item.moduleId}-${item.href}`}>
-                  <a
-                    href={item.href}
-                    className="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                  >
-                    <span>{item.label}</span>
-                    <span className="text-xs text-slate-400">{item.moduleId}</span>
-                  </a>
-                </li>
+                <tr key={`${item.moduleId}-${item.href}`} className={dataTableRow}>
+                  <td className={dataTableCell}>
+                    <Link
+                      href={item.href}
+                      className="font-medium text-slate-900 hover:text-slate-600"
+                    >
+                      {item.label}
+                    </Link>
+                  </td>
+                  <td className={`hidden text-slate-500 sm:table-cell ${dataTableCell}`}>
+                    {MODULE_LABELS[item.moduleId] ?? item.moduleId}
+                  </td>
+                  <td className={`text-right text-slate-400 ${dataTableCell}`}>
+                    <Link href={item.href} className="hover:text-slate-700" aria-label={item.label}>
+                      →
+                    </Link>
+                  </td>
+                </tr>
               ))}
-            </ul>
-          )}
-        </Card>
+            </tbody>
+          </table>
+        ) : null}
+      </DataTable>
 
-        <Card>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Actions IA
-          </h2>
-          {aiActions.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">Aucune action IA.</p>
-          ) : (
-            <>
-              <ul className="mt-3 space-y-2">
-                {aiActions.slice(0, 5).map((action) => (
-                  <li key={action.name} className="text-sm text-slate-600">
-                    <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-800">
-                      {action.name}
-                    </code>
-                  </li>
+      {aiActions.length > 0 ? (
+        <>
+          <SectionTitle>Assistant</SectionTitle>
+          <DataTable>
+            <table className="w-full text-sm">
+              <tbody>
+                {aiActions.slice(0, 6).map((action) => (
+                  <tr key={action.name} className={dataTableRow}>
+                    <td className={dataTableCell}>
+                      <p className="text-slate-900">{actionLabel(action)}</p>
+                      <p className="text-xs text-slate-400">{action.description}</p>
+                    </td>
+                  </tr>
                 ))}
-              </ul>
-              <a
-                href="/assistant"
-                className="mt-4 inline-flex text-sm font-medium text-slate-900 hover:underline"
-              >
-                Ouvrir l&apos;assistant →
-              </a>
-            </>
-          )}
-        </Card>
-      </section>
-    </div>
+              </tbody>
+            </table>
+          </DataTable>
+          <div className="border-t border-slate-100 px-4 py-4 lg:px-6">
+            <Link href="/assistant">
+              <Button variant="outline" className="h-9">
+                Ouvrir l&apos;assistant
+              </Button>
+            </Link>
+          </div>
+        </>
+      ) : null}
+
+      {tenant && role ? (
+        <div className="mt-auto border-t border-slate-100 px-4 py-2.5 text-xs text-slate-400 lg:px-6">
+          {tenant.name}
+          {ROLE_LABELS[role] ? ` · ${ROLE_LABELS[role]}` : null}
+        </div>
+      ) : null}
+    </ListPanel>
   );
 }

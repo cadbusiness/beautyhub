@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Field, Input, Select } from "@/components/ui/input";
-import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
+import { ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { cn, formatPrice } from "@/lib/utils";
 import {
@@ -180,241 +180,233 @@ export function LoyaltyManager({
   ];
 
   return (
-    <div className="space-y-6">
-      <ListPanel className="flex-none">
-        <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <p className="min-w-0 text-sm text-slate-500">{t("description")}</p>
-            <ProgramStatusBadge
-              status={programStatus}
-              label={t(`programStatus.${programStatus}`)}
-            />
-          </div>
-          <SetupStepsInline steps={setupSteps} />
-        </div>
-        <div className="grid divide-y border-b border-slate-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-          <StatCell
-            label={t("stats.clientsWithPoints")}
-            value={stats.clientsWithPoints}
-            hint={t("stats.clientsHint")}
-          />
-          <StatCell
-            label={t("stats.pointsOutstanding", { label: program.points_label })}
-            value={stats.totalPointsOutstanding}
-            hint={t("stats.pointsHint", { label: program.points_label })}
+    <>
+      <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <p className="min-w-0 text-sm text-slate-500">{t("description")}</p>
+          <ProgramStatusBadge
+            status={programStatus}
+            label={t(`programStatus.${programStatus}`)}
           />
         </div>
-      </ListPanel>
+        <SetupStepsInline steps={setupSteps} />
+      </div>
 
-      <ListPanel className="flex-none">
-        <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
-          <p className="text-sm font-medium text-slate-700">{t("program.title")}</p>
-          <p className="mt-0.5 text-xs text-slate-500">{t("program.description")}</p>
-        </div>
-        <form action={programAction} className="space-y-4 px-4 py-4 lg:px-6">
-          {programState.error ? (
-            <p className="text-sm text-red-600">{programState.error}</p>
-          ) : null}
-          {programState.ok ? (
-            <p className="text-sm text-green-600">{programState.message ?? t("program.saved")}</p>
-          ) : null}
+      <div className="grid divide-y border-b border-slate-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+        <StatCell
+          label={t("stats.clientsWithPoints")}
+          value={stats.clientsWithPoints}
+          hint={t("stats.clientsHint")}
+        />
+        <StatCell
+          label={t("stats.pointsOutstanding", { label: program.points_label })}
+          value={stats.totalPointsOutstanding}
+          hint={t("stats.pointsHint", { label: program.points_label })}
+        />
+      </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("program.name")} htmlFor="loyalty_name">
-              <Input id="loyalty_name" name="name" defaultValue={program.name} required />
-            </Field>
-            <Field label={t("program.pointsLabel")} htmlFor="loyalty_points_label">
-              <Input
-                id="loyalty_points_label"
-                name="points_label"
-                defaultValue={program.points_label}
-                required
-              />
-            </Field>
-          </div>
+      <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
+        <p className="text-sm font-medium text-slate-700">{t("program.title")}</p>
+        <p className="mt-0.5 text-xs text-slate-500">{t("program.description")}</p>
+      </div>
+      <form
+        action={programAction}
+        className="space-y-4 border-b border-slate-200 px-4 py-4 lg:px-6"
+      >
+        {programState.error ? (
+          <p className="text-sm text-red-600">{programState.error}</p>
+        ) : null}
+        {programState.ok ? (
+          <p className="text-sm text-green-600">{programState.message ?? t("program.saved")}</p>
+        ) : null}
 
-          <label className="flex items-center gap-2 text-sm text-slate-700">
-            <input
-              type="checkbox"
-              name="is_active"
-              value="1"
-              defaultChecked={program.is_active}
-              className="rounded border-slate-300"
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label={t("program.name")} htmlFor="loyalty_name">
+            <Input id="loyalty_name" name="name" defaultValue={program.name} required />
+          </Field>
+          <Field label={t("program.pointsLabel")} htmlFor="loyalty_points_label">
+            <Input
+              id="loyalty_points_label"
+              name="points_label"
+              defaultValue={program.points_label}
+              required
             />
-            {t("program.active")}
-          </label>
+          </Field>
+        </div>
 
-          <Button type="submit" className="h-9" disabled={programPending}>
-            {programPending ? tCommon("saving") : tCommon("save")}
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            name="is_active"
+            value="1"
+            defaultChecked={program.is_active}
+            className="rounded border-slate-300"
+          />
+          {t("program.active")}
+        </label>
+
+        <Button type="submit" className="h-9" disabled={programPending}>
+          {programPending ? tCommon("saving") : tCommon("save")}
+        </Button>
+      </form>
+
+      <ListToolbar
+        action={
+          <Button onClick={openCreateRule} className="h-9 w-full sm:w-auto">
+            + {t("rules.add")}
           </Button>
-        </form>
-      </ListPanel>
-
-      <ListPanel className="flex-none">
-        <ListToolbar
-          action={
-            <Button onClick={openCreateRule} className="h-9 w-full sm:w-auto">
-              + {t("rules.add")}
-            </Button>
-          }
-        >
-          <div>
-            <p className="text-sm font-medium text-slate-700">{t("rules.title")}</p>
-            <p className="text-xs text-slate-500">{t("rules.sectionDescription")}</p>
-          </div>
-        </ListToolbar>
-        <DataTable>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className={dataTableRow}>
-                <th className={dataTableHead}>{t("rules.columns.name")}</th>
-                <th className={dataTableHead}>{t("rules.columns.source")}</th>
-                <th className={dataTableHead}>{t("rules.columns.earning")}</th>
-                <th className={dataTableHead}>{t("rules.columns.status")}</th>
-                <th className={dataTableHead}>{tCommon("actions")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rules.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className={`${dataTableCell} text-slate-500`}>
-                    {t("rules.empty")}
-                  </td>
-                </tr>
-              ) : (
-                rules.map((rule) => (
-                  <tr key={rule.id} className={dataTableRow}>
-                    <td className={`${dataTableCell} font-medium text-slate-900`}>{rule.name}</td>
-                    <td className={dataTableCell}>{t(`sources.${rule.source_type}`)}</td>
-                    <td className={dataTableCell}>{formatRuleEarning(rule, t)}</td>
-                    <td className={dataTableCell}>
-                      {rule.is_active ? t("status.active") : t("status.inactive")}
-                    </td>
-                    <td className={dataTableCell}>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEditRule(rule)}
-                          className="text-sm text-slate-600 hover:text-slate-900"
-                        >
-                          {tCommon("edit")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteRule(rule.id)}
-                          disabled={pendingDelete}
-                          className="text-sm text-red-600 hover:text-red-700"
-                        >
-                          {tCommon("delete")}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </DataTable>
-        <ListPanelFooter>{t("rules.footer", { count: rules.length })}</ListPanelFooter>
-      </ListPanel>
-
-      <ListPanel className="flex-none">
-        <ListToolbar
-          action={
-            <Button onClick={openCreateReward} className="h-9 w-full sm:w-auto">
-              + {t("rewards.add")}
-            </Button>
-          }
-        >
-          <div>
-            <p className="text-sm font-medium text-slate-700">{t("rewards.title")}</p>
-            <p className="text-xs text-slate-500">{t("rewards.sectionDescription")}</p>
-          </div>
-        </ListToolbar>
-        <DataTable>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className={dataTableRow}>
-                <th className={dataTableHead}>{t("rewards.columns.name")}</th>
-                <th className={dataTableHead}>{t("rewards.columns.type")}</th>
-                <th className={dataTableHead}>{t("rewards.columns.cost")}</th>
-                <th className={dataTableHead}>{t("rewards.columns.status")}</th>
-                <th className={dataTableHead}>{tCommon("actions")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rewards.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className={`${dataTableCell} text-slate-500`}>
-                    {t("rewards.empty")}
-                  </td>
-                </tr>
-              ) : (
-                rewards.map((reward) => (
-                  <tr key={reward.id} className={dataTableRow}>
-                    <td className={`${dataTableCell} font-medium text-slate-900`}>
-                      {reward.name}
-                    </td>
-                    <td className={dataTableCell}>{formatRewardType(reward, services, t)}</td>
-                    <td className={dataTableCell}>
-                      {reward.points_cost} {program.points_label}
-                    </td>
-                    <td className={dataTableCell}>
-                      {reward.is_active ? t("status.active") : t("status.inactive")}
-                    </td>
-                    <td className={dataTableCell}>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEditReward(reward)}
-                          className="text-sm text-slate-600 hover:text-slate-900"
-                        >
-                          {tCommon("edit")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteReward(reward.id)}
-                          disabled={pendingDelete}
-                          className="text-sm text-red-600 hover:text-red-700"
-                        >
-                          {tCommon("delete")}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </DataTable>
-        <ListPanelFooter>{t("rewards.footer", { count: rewards.length })}</ListPanelFooter>
-        <p className="border-t border-slate-200 px-4 py-2.5 text-xs text-slate-500 lg:px-6">
-          {t("rewards.redeemHint")}
-        </p>
-      </ListPanel>
-
-      <ListPanel className="flex-none">
-        <div className="border-b border-slate-200 px-4 py-2.5 lg:px-6">
-          <p className="text-sm font-medium text-slate-700">{t("share.title")}</p>
-          <p className="text-xs text-slate-500">{t("share.description")}</p>
+        }
+      >
+        <div>
+          <p className="text-sm font-medium text-slate-700">{t("rules.title")}</p>
+          <p className="text-xs text-slate-500">{t("rules.sectionDescription")}</p>
         </div>
-        <ul className="divide-y divide-slate-100 text-sm">
-          <li className="flex items-center justify-between gap-3 px-4 py-2.5 lg:px-6">
-            <div className="min-w-0">
-              <p className="font-medium text-slate-900">{t("share.qrTitle")}</p>
-              <p className="text-xs text-slate-500">{t("share.qrDescription")}</p>
-            </div>
-            <span className="shrink-0 text-xs text-slate-400">{t("share.comingSoon")}</span>
-          </li>
-          <li className="flex items-center justify-between gap-3 px-4 py-2.5 lg:px-6">
-            <div className="min-w-0">
-              <p className="font-medium text-slate-900">{t("share.walletTitle")}</p>
-              <p className="text-xs text-slate-500">{t("share.walletDescription")}</p>
-            </div>
-            <span className="shrink-0 text-xs text-slate-400">{t("share.comingSoon")}</span>
-          </li>
-        </ul>
-      </ListPanel>
+      </ListToolbar>
+      <DataTable>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className={dataTableRow}>
+              <th className={dataTableHead}>{t("rules.columns.name")}</th>
+              <th className={dataTableHead}>{t("rules.columns.source")}</th>
+              <th className={dataTableHead}>{t("rules.columns.earning")}</th>
+              <th className={dataTableHead}>{t("rules.columns.status")}</th>
+              <th className={dataTableHead}>{tCommon("actions")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rules.length === 0 ? (
+              <tr>
+                <td colSpan={5} className={`${dataTableCell} text-slate-500`}>
+                  {t("rules.empty")}
+                </td>
+              </tr>
+            ) : (
+              rules.map((rule) => (
+                <tr key={rule.id} className={dataTableRow}>
+                  <td className={`${dataTableCell} font-medium text-slate-900`}>{rule.name}</td>
+                  <td className={dataTableCell}>{t(`sources.${rule.source_type}`)}</td>
+                  <td className={dataTableCell}>{formatRuleEarning(rule, t)}</td>
+                  <td className={dataTableCell}>
+                    {rule.is_active ? t("status.active") : t("status.inactive")}
+                  </td>
+                  <td className={dataTableCell}>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEditRule(rule)}
+                        className="text-sm text-slate-600 hover:text-slate-900"
+                      >
+                        {tCommon("edit")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRule(rule.id)}
+                        disabled={pendingDelete}
+                        className="text-sm text-red-600 hover:text-red-700"
+                      >
+                        {tCommon("delete")}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </DataTable>
+      <ListPanelFooter>{t("rules.footer", { count: rules.length })}</ListPanelFooter>
+
+      <ListToolbar
+        action={
+          <Button onClick={openCreateReward} className="h-9 w-full sm:w-auto">
+            + {t("rewards.add")}
+          </Button>
+        }
+      >
+        <div>
+          <p className="text-sm font-medium text-slate-700">{t("rewards.title")}</p>
+          <p className="text-xs text-slate-500">{t("rewards.sectionDescription")}</p>
+        </div>
+      </ListToolbar>
+      <DataTable>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className={dataTableRow}>
+              <th className={dataTableHead}>{t("rewards.columns.name")}</th>
+              <th className={dataTableHead}>{t("rewards.columns.type")}</th>
+              <th className={dataTableHead}>{t("rewards.columns.cost")}</th>
+              <th className={dataTableHead}>{t("rewards.columns.status")}</th>
+              <th className={dataTableHead}>{tCommon("actions")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rewards.length === 0 ? (
+              <tr>
+                <td colSpan={5} className={`${dataTableCell} text-slate-500`}>
+                  {t("rewards.empty")}
+                </td>
+              </tr>
+            ) : (
+              rewards.map((reward) => (
+                <tr key={reward.id} className={dataTableRow}>
+                  <td className={`${dataTableCell} font-medium text-slate-900`}>{reward.name}</td>
+                  <td className={dataTableCell}>{formatRewardType(reward, services, t)}</td>
+                  <td className={dataTableCell}>
+                    {reward.points_cost} {program.points_label}
+                  </td>
+                  <td className={dataTableCell}>
+                    {reward.is_active ? t("status.active") : t("status.inactive")}
+                  </td>
+                  <td className={dataTableCell}>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEditReward(reward)}
+                        className="text-sm text-slate-600 hover:text-slate-900"
+                      >
+                        {tCommon("edit")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteReward(reward.id)}
+                        disabled={pendingDelete}
+                        className="text-sm text-red-600 hover:text-red-700"
+                      >
+                        {tCommon("delete")}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </DataTable>
+      <ListPanelFooter>{t("rewards.footer", { count: rewards.length })}</ListPanelFooter>
+      <p className="border-t border-slate-200 px-4 py-2.5 text-xs text-slate-500 lg:px-6">
+        {t("rewards.redeemHint")}
+      </p>
+
+      <div className="border-t border-slate-200 px-4 py-2.5 lg:px-6">
+        <p className="text-sm font-medium text-slate-700">{t("share.title")}</p>
+        <p className="text-xs text-slate-500">{t("share.description")}</p>
+      </div>
+      <ul className="divide-y divide-slate-100 border-t border-slate-200 text-sm">
+        <li className="flex items-center justify-between gap-3 px-4 py-2.5 lg:px-6">
+          <div className="min-w-0">
+            <p className="font-medium text-slate-900">{t("share.qrTitle")}</p>
+            <p className="text-xs text-slate-500">{t("share.qrDescription")}</p>
+          </div>
+          <span className="shrink-0 text-xs text-slate-400">{t("share.comingSoon")}</span>
+        </li>
+        <li className="flex items-center justify-between gap-3 px-4 py-2.5 lg:px-6">
+          <div className="min-w-0">
+            <p className="font-medium text-slate-900">{t("share.walletTitle")}</p>
+            <p className="text-xs text-slate-500">{t("share.walletDescription")}</p>
+          </div>
+          <span className="shrink-0 text-xs text-slate-400">{t("share.comingSoon")}</span>
+        </li>
+      </ul>
 
       <EarnRuleDialog
         open={ruleDialogOpen}
@@ -431,7 +423,7 @@ export function LoyaltyManager({
         services={services}
         pointsLabel={program.points_label}
       />
-    </div>
+    </>
   );
 }
 

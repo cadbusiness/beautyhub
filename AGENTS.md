@@ -20,9 +20,8 @@ Après **toute** livraison (feature, fix, refactor, migration), committer et `gi
 
 ## Shell UI — design system BeautyHub
 
-Pages dans `src/app/(app)/` : **jamais** `max-w-*`, héros gradient, ou cartes SaaS génériques.
+Pages dans `src/app/(app)/` : réutiliser `ListPanel`, `ListToolbar`, `DataTable`, `FormDialog`.
 
-- Réutiliser `ListPanel`, `ListToolbar`, `DataTable`, `FormDialog` (voir clients, équipe, prestations).
+- **Sous `SectionPanel`** (tabs marketing/caisse) : ne **pas** imbriquer `ListPanel` (double `-mx` → contenu qui touche les bords). Voir `products-manager.tsx`, `loyalty-manager.tsx`.
 - Stats compactes (label xs + chiffre), pas de grosses tuiles KPI.
-- Guide setup : une ligne `→`, pas 3 cartes.
-- Référence détaillée : `.cursor/rules/ui-list-pages.mdc` et `.cursor/rules/ui-shell-design.mdc`.
+- Référence : `.cursor/rules/ui-list-pages.mdc` et `.cursor/rules/ui-shell-design.mdc`.

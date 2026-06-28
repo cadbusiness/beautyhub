@@ -16,7 +16,8 @@ globs:
 ## Layout liste standard
 
 1. **`ListPanel`** — pleine largeur (`-mx-4 lg:-mx-6`), fond blanc, bordure bas uniquement (le header app a déjà `border-b`). Pas de `Card` inset.
-2. **`ListToolbar`** — recherche + action « + … » dans le panneau, sans titre au-dessus.
+2. **Dans `SectionPanel`** (tabs) : le parent est déjà `ListPanel` — **pas** de second `ListPanel` enfant (sinon double `-mx`, contenu qui déborde). Voir `caisse/produits/products-manager.tsx`.
+3. **`ListToolbar`** — recherche + action « + … » dans le panneau, sans titre au-dessus.
 3. **Grille de lignes** — colonnes alignées via `DataTable` / `dataTableRow`, pas de grosses cartes.
 4. **`FormDialog`** — création / édition en modale, jamais de colonne latérale 360px.
 5. **`ListPanelFooter`** — compteur discret en bas du panneau si besoin.

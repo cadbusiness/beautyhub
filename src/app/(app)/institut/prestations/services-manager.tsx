@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/data-table";
 import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
-import { PaginationBar } from "@/components/ui/pagination";
 import { ServiceThumbnail } from "@/components/institut/service-thumbnail";
 import { paginateItems } from "@/lib/ui/pagination";
 import { formatPrice } from "@/lib/utils";
@@ -176,8 +175,8 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
 
         <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200">
-              <tr>
+            <thead>
+              <tr className="border-b border-slate-100">
                 <th className={`w-12 ${dataTableHeadCompact}`} aria-hidden />
                 <th className={dataTableHeadCompact}>{t("columns.title")}</th>
                 <th className={`hidden w-24 sm:table-cell ${dataTableHeadCompact}`}>
@@ -245,23 +244,18 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
         </DataTable>
 
         {filtered.length > 0 ? (
-          <>
-            <PaginationBar
-              page={slice.page}
-              totalPages={slice.totalPages}
-              from={slice.from}
-              to={slice.to}
-              total={slice.total}
-              onPageChange={setPage}
-              className="border-t border-slate-200 px-4 lg:px-6"
-            />
-            <ListPanelFooter>
-              {t("footer", { count: filtered.length })}
-              {filter !== "all" || query
-                ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: services.length })}`
-                : ""}
-            </ListPanelFooter>
-          </>
+          <ListPanelFooter
+            pagination={{
+              page: slice.page,
+              totalPages: slice.totalPages,
+              onPageChange: setPage,
+            }}
+          >
+            {t("footer", { count: filtered.length })}
+            {filter !== "all" || query
+              ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: services.length })}`
+              : ""}
+          </ListPanelFooter>
         ) : null}
       </ListPanel>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -163,10 +164,16 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
                 <tr
                   key={c.id}
                   className={`${dataTableRow} cursor-pointer`}
+                  onMouseEnter={() => router.prefetch(`/institut/clients/${c.id}`)}
                   onClick={() => router.push(`/institut/clients/${c.id}`)}
                 >
                   <td className={`text-slate-900 ${dataTableCellCompact}`}>
-                    <div className="flex min-w-0 flex-col gap-0.5">
+                    <Link
+                      href={`/institut/clients/${c.id}`}
+                      prefetch
+                      className="flex min-w-0 flex-col gap-0.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <span className="truncate font-medium">
                         {c.full_name ?? tCommon("dash")}
                       </span>
@@ -185,7 +192,7 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
                         ))}
                       </div>
                       <span className="truncate text-xs text-slate-500 md:hidden">{c.email}</span>
-                    </div>
+                    </Link>
                   </td>
                   <td className={`hidden text-slate-600 md:table-cell ${dataTableCellCompact}`}>
                     {c.email}

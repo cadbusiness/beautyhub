@@ -65,7 +65,7 @@ export type ClientEnrollment = {
   enrolled_at: string;
 };
 
-export type ClientProfile = {
+export type ClientOverview = {
   client: ClientRow;
   stats: {
     appointment_count: number;
@@ -81,11 +81,24 @@ export type ClientProfile = {
     ecommerce_order_count: number;
     loyalty_points: number;
   };
+  top_services: ClientTopService[];
+  enrollments: ClientEnrollment[];
+};
+
+export type ClientAppointmentsPayload = {
+  upcoming: ClientAppointment[];
+  past: ClientAppointment[];
+};
+
+export type ClientSalesPayload = {
+  sales: ClientSale[];
+};
+
+/** @deprecated Use fetchClientOverview + tab API routes */
+export type ClientProfile = ClientOverview & {
   upcoming_appointments: ClientAppointment[];
   past_appointments: ClientAppointment[];
   sales: ClientSale[];
-  top_services: ClientTopService[];
-  enrollments: ClientEnrollment[];
 };
 
 const CLIENT_SELECT =
@@ -191,11 +204,11 @@ export async function fetchClientsWithSummary(
   });
 }
 
-export async function fetchClientProfile(
+export async function fetchClientOverview(
   supabase: Db,
   tenantId: string,
   clientId: string,
-): Promise<ClientProfile | null> {
+): Promise<ClientOverview | null> {
   const now = new Date().toISOString();
 
   const { data: clientRow } = await supabase
@@ -210,21 +223,14 @@ export async function fetchClientProfile(
   const [apptsRes, salesRes, loyaltyRes, enrollRes] = await Promise.all([
     supabase
       .from("inst_appointments")
-      .select(
-        "id, starts_at, ends_at, status, price_cents, notes, service_id, staff_id",
-      )
+      .select("status, starts_at, service_id")
       .eq("tenant_id", tenantId)
-      .eq("client_id", clientId)
-      .order("starts_at", { ascending: false }),
+      .eq("client_id", clientId),
     supabase
       .from("inst_sales")
-      .select(
-        "id, ticket_number, total_cents, status, payment_method, woo_order_id, created_at, inst_sale_items(name, quantity, unit_price_cents)",
-      )
+      .select("total_cents, status, woo_order_id")
       .eq("tenant_id", tenantId)
-      .eq("client_id", clientId)
-      .order("created_at", { ascending: false })
-      .limit(50),
+      .eq("client_id", clientId),
     supabase
       .from("inst_loyalty_balances")
       .select("points_balance")
@@ -233,24 +239,144 @@ export async function fetchClientProfile(
       .maybeSingle(),
     supabase
       .from("acad_enrollments")
-      .select("id, status, created_at, acad_courses(title)")
+      .select("id, status, created_at, course_id")
       .eq("tenant_id", tenantId)
       .eq("client_id", clientId)
       .order("created_at", { ascending: false }),
   ]);
 
+  let completed = 0;
+  let cancelled = 0;
+  let noShow = 0;
+  let upcoming = 0;
+  const serviceCounts = new Map<string, number>();
+
+  for (const a of apptsRes.data ?? []) {
+    if (a.status === "completed") completed += 1;
+    else if (a.status === "cancelled") cancelled += 1;
+    else if (a.status === "no_show") noShow += 1;
+
+    if (
+      a.starts_at >= now &&
+      a.status !== "cancelled" &&
+      a.status !== "no_show"
+    ) {
+      upcoming += 1;
+    }
+
+    if (a.service_id) {
+      serviceCounts.set(a.service_id, (serviceCounts.get(a.service_id) ?? 0) + 1);
+    }
+  }
+
+  const decided = completed + cancelled + noShow;
+  const bookingRate = decided > 0 ? Math.round((completed / decided) * 100) : null;
+
+  let totalSpent = 0;
+  let posSpent = 0;
+  let ecommerceSpent = 0;
+  let ecommerceOrders = 0;
+  let saleCount = 0;
+
+  for (const s of salesRes.data ?? []) {
+    if (s.status !== "completed" && s.status !== "paid") continue;
+    saleCount += 1;
+    totalSpent += s.total_cents ?? 0;
+    if (s.woo_order_id) {
+      ecommerceSpent += s.total_cents ?? 0;
+      ecommerceOrders += 1;
+    } else {
+      posSpent += s.total_cents ?? 0;
+    }
+  }
+
+  const topServiceIds = [...serviceCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([id]) => id);
+
+  const courseIds = [
+    ...new Set(
+      (enrollRes.data ?? [])
+        .map((e) => e.course_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  const [servicesRes, coursesRes] = await Promise.all([
+    topServiceIds.length
+      ? supabase.from("inst_services").select("id, name").in("id", topServiceIds)
+      : Promise.resolve({ data: [] as Array<{ id: string; name: string }> }),
+    courseIds.length
+      ? supabase.from("acad_courses").select("id, title").in("id", courseIds)
+      : Promise.resolve({ data: [] as Array<{ id: string; title: string }> }),
+  ]);
+
+  const serviceNames = new Map(
+    (servicesRes.data ?? []).map((s) => [s.id, s.name]),
+  );
+  const courseTitles = new Map(
+    (coursesRes.data ?? []).map((c) => [c.id, c.title]),
+  );
+
+  const top_services: ClientTopService[] = topServiceIds
+    .map((service_id) => ({
+      service_id,
+      service_name: serviceNames.get(service_id) ?? "—",
+      count: serviceCounts.get(service_id) ?? 0,
+    }))
+    .filter((s) => s.count > 0);
+
+  const enrollments: ClientEnrollment[] = (enrollRes.data ?? []).map((e) => ({
+    id: e.id,
+    course_title: e.course_id ? (courseTitles.get(e.course_id) ?? "—") : "—",
+    status: e.status,
+    enrolled_at: e.created_at,
+  }));
+
+  return {
+    client: mapClient(clientRow as Record<string, unknown>),
+    stats: {
+      appointment_count: apptsRes.data?.length ?? 0,
+      completed_count: completed,
+      cancelled_count: cancelled,
+      no_show_count: noShow,
+      upcoming_count: upcoming,
+      booking_rate: bookingRate,
+      total_spent_cents: totalSpent,
+      pos_spent_cents: posSpent,
+      ecommerce_spent_cents: ecommerceSpent,
+      sale_count: saleCount,
+      ecommerce_order_count: ecommerceOrders,
+      loyalty_points: loyaltyRes.data?.points_balance ?? 0,
+    },
+    top_services,
+    enrollments,
+  };
+}
+
+export async function fetchClientAppointments(
+  supabase: Db,
+  tenantId: string,
+  clientId: string,
+): Promise<ClientAppointmentsPayload> {
+  const now = new Date().toISOString();
+
+  const { data: rows } = await supabase
+    .from("inst_appointments")
+    .select("id, starts_at, ends_at, status, price_cents, notes, service_id, staff_id")
+    .eq("tenant_id", tenantId)
+    .eq("client_id", clientId)
+    .order("starts_at", { ascending: false });
+
   const serviceIds = [
     ...new Set(
-      (apptsRes.data ?? [])
-        .map((a) => a.service_id)
-        .filter((id): id is string => Boolean(id)),
+      (rows ?? []).map((a) => a.service_id).filter((id): id is string => Boolean(id)),
     ),
   ];
   const staffIds = [
     ...new Set(
-      (apptsRes.data ?? [])
-        .map((a) => a.staff_id)
-        .filter((id): id is string => Boolean(id)),
+      (rows ?? []).map((a) => a.staff_id).filter((id): id is string => Boolean(id)),
     ),
   ];
 
@@ -270,7 +396,7 @@ export async function fetchClientProfile(
     (staffRes.data ?? []).map((s) => [s.id, s.full_name]),
   );
 
-  const appointments: ClientAppointment[] = (apptsRes.data ?? []).map((a) => ({
+  const appointments: ClientAppointment[] = (rows ?? []).map((a) => ({
     id: a.id,
     starts_at: a.starts_at,
     ends_at: a.ends_at,
@@ -281,110 +407,8 @@ export async function fetchClientProfile(
     staff_name: a.staff_id ? (staffNames.get(a.staff_id) ?? null) : null,
   }));
 
-  let completed = 0;
-  let cancelled = 0;
-  let noShow = 0;
-  let upcoming = 0;
-  const serviceCounts = new Map<string, { name: string; count: number }>();
-
-  for (const a of appointments) {
-    if (a.status === "completed") completed += 1;
-    else if (a.status === "cancelled") cancelled += 1;
-    else if (a.status === "no_show") noShow += 1;
-
-    if (
-      a.starts_at >= now &&
-      a.status !== "cancelled" &&
-      a.status !== "no_show"
-    ) {
-      upcoming += 1;
-    }
-
-    const apptRaw = apptsRes.data?.find((x) => x.id === a.id);
-    if (apptRaw?.service_id && a.service_name) {
-      const cur = serviceCounts.get(apptRaw.service_id) ?? {
-        name: a.service_name,
-        count: 0,
-      };
-      cur.count += 1;
-      serviceCounts.set(apptRaw.service_id, cur);
-    }
-  }
-
-  const decided = completed + cancelled + noShow;
-  const bookingRate = decided > 0 ? Math.round((completed / decided) * 100) : null;
-
-  const sales: ClientSale[] = (salesRes.data ?? []).map((s) => ({
-    id: s.id,
-    ticket_number: s.ticket_number,
-    total_cents: s.total_cents,
-    status: s.status,
-    payment_method: s.payment_method,
-    woo_order_id: s.woo_order_id,
-    created_at: s.created_at,
-    items: ((s.inst_sale_items ?? []) as Array<{
-      name: string;
-      quantity: number;
-      unit_price_cents: number;
-    }>).map((i) => ({
-      name: i.name,
-      quantity: i.quantity,
-      unit_price_cents: i.unit_price_cents,
-    })),
-  }));
-
-  let totalSpent = 0;
-  let posSpent = 0;
-  let ecommerceSpent = 0;
-  let ecommerceOrders = 0;
-  for (const s of sales) {
-    if (s.status !== "completed" && s.status !== "paid") continue;
-    totalSpent += s.total_cents;
-    if (s.woo_order_id) {
-      ecommerceSpent += s.total_cents;
-      ecommerceOrders += 1;
-    } else {
-      posSpent += s.total_cents;
-    }
-  }
-
-  const top_services: ClientTopService[] = [...serviceCounts.entries()]
-    .map(([service_id, v]) => ({
-      service_id,
-      service_name: v.name,
-      count: v.count,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  const enrollments: ClientEnrollment[] = (enrollRes.data ?? []).map((e) => {
-    const course = e.acad_courses as { title: string } | null;
-    return {
-      id: e.id,
-      course_title: course?.title ?? "—",
-      status: e.status,
-      enrolled_at: e.created_at,
-    };
-  });
-
   return {
-    client: mapClient(clientRow as Record<string, unknown>),
-    stats: {
-      appointment_count: appointments.length,
-      completed_count: completed,
-      cancelled_count: cancelled,
-      no_show_count: noShow,
-      upcoming_count: upcoming,
-      booking_rate: bookingRate,
-      total_spent_cents: totalSpent,
-      pos_spent_cents: posSpent,
-      ecommerce_spent_cents: ecommerceSpent,
-      sale_count: sales.filter((s) => s.status === "completed" || s.status === "paid")
-        .length,
-      ecommerce_order_count: ecommerceOrders,
-      loyalty_points: loyaltyRes.data?.points_balance ?? 0,
-    },
-    upcoming_appointments: appointments
+    upcoming: appointments
       .filter(
         (a) =>
           a.starts_at >= now &&
@@ -392,15 +416,89 @@ export async function fetchClientProfile(
           a.status !== "no_show",
       )
       .sort((a, b) => a.starts_at.localeCompare(b.starts_at)),
-    past_appointments: appointments.filter(
+    past: appointments.filter(
       (a) =>
         a.starts_at < now ||
         a.status === "cancelled" ||
         a.status === "no_show",
     ),
-    sales,
-    top_services,
-    enrollments,
+  };
+}
+
+export async function fetchClientSales(
+  supabase: Db,
+  tenantId: string,
+  clientId: string,
+): Promise<ClientSalesPayload> {
+  const { data: rows } = await supabase
+    .from("inst_sales")
+    .select(
+      "id, ticket_number, total_cents, status, payment_method, woo_order_id, created_at",
+    )
+    .eq("tenant_id", tenantId)
+    .eq("client_id", clientId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const saleIds = (rows ?? []).map((s) => s.id);
+  const { data: itemRows } = saleIds.length
+    ? await supabase
+        .from("inst_sale_items")
+        .select("sale_id, name, quantity, unit_price_cents")
+        .in("sale_id", saleIds)
+    : { data: [] as Array<{
+        sale_id: string;
+        name: string;
+        quantity: number;
+        unit_price_cents: number;
+      }> };
+
+  const itemsBySale = new Map<
+    string,
+    Array<{ name: string; quantity: number; unit_price_cents: number }>
+  >();
+  for (const item of itemRows ?? []) {
+    const list = itemsBySale.get(item.sale_id) ?? [];
+    list.push({
+      name: item.name,
+      quantity: item.quantity,
+      unit_price_cents: item.unit_price_cents,
+    });
+    itemsBySale.set(item.sale_id, list);
+  }
+
+  return {
+    sales: (rows ?? []).map((s) => ({
+      id: s.id,
+      ticket_number: s.ticket_number,
+      total_cents: s.total_cents,
+      status: s.status,
+      payment_method: s.payment_method,
+      woo_order_id: s.woo_order_id,
+      created_at: s.created_at,
+      items: itemsBySale.get(s.id) ?? [],
+    })),
+  };
+}
+
+export async function fetchClientProfile(
+  supabase: Db,
+  tenantId: string,
+  clientId: string,
+): Promise<ClientProfile | null> {
+  const overview = await fetchClientOverview(supabase, tenantId, clientId);
+  if (!overview) return null;
+
+  const [appointments, sales] = await Promise.all([
+    fetchClientAppointments(supabase, tenantId, clientId),
+    fetchClientSales(supabase, tenantId, clientId),
+  ]);
+
+  return {
+    ...overview,
+    upcoming_appointments: appointments.upcoming,
+    past_appointments: appointments.past,
+    sales: sales.sales,
   };
 }
 

@@ -296,7 +296,8 @@
       "title": "Assistent",
       "heading": "AI-ondersteund beheer",
       "description": "Klanten, opleidingen, planning — stel een vraag of kies een vooraf ingestelde actie in de assistent.",
-      "open": "Assistent openen"
+      "open": "Assistent openen",
+      "openShort": "Assistent"
     },
     "posSession": {
       "openTitle": "Kassa open",

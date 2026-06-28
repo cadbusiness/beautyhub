@@ -296,7 +296,8 @@
       "title": "Assistant",
       "heading": "Pilotage assisté par IA",
       "description": "Clients, formations, planning — posez une demande ou choisissez une action prédéfinie dans l'assistant.",
-      "open": "Ouvrir l'assistant"
+      "open": "Ouvrir l'assistant",
+      "openShort": "Assistant"
     },
     "posSession": {
       "openTitle": "Caisse ouverte",

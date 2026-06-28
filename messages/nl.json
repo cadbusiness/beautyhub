@@ -1764,7 +1764,7 @@
         "title": "Mijn account",
         "subtitle": "Meld u aan met uw klant-ID en pincode.",
         "loginId": "Klant-ID",
-        "loginIdPlaceholder": "100001",
+        "loginIdPlaceholder": "ins-001",
         "pin": "Pincode",
         "submit": "Aanmelden",
         "submitting": "Aanmelden…",

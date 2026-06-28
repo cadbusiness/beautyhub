@@ -46,7 +46,7 @@ export async function clientLogin(
     .from("clients")
     .select("id, email, login_id, pin_hash, password_hash")
     .eq("tenant_id", tenant.id)
-    .eq("login_id", loginId)
+    .eq("login_id", loginId.toLowerCase())
     .maybeSingle();
 
   if (!client) {

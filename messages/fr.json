@@ -1781,7 +1781,7 @@
         "title": "Mon compte",
         "subtitle": "Connectez-vous avec votre identifiant client et votre code PIN.",
         "loginId": "Identifiant client",
-        "loginIdPlaceholder": "100001",
+        "loginIdPlaceholder": "ins-001",
         "pin": "Code PIN",
         "submit": "Se connecter",
         "submitting": "Connexion…",

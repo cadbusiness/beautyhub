@@ -1,24 +1,47 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 import { generatePinCode, hashPin } from "@/lib/client-auth/pin";
+import {
+  formatClientLoginId,
+  parseClientLoginIdSequence,
+  tenantClientIdPrefix,
+} from "@/lib/institut/client-login-id";
 
 type Db = SupabaseClient<Database>;
+
+async function getTenantPrefix(
+  supabase: Db,
+  tenantId: string,
+): Promise<string> {
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("name, slug")
+    .eq("id", tenantId)
+    .maybeSingle();
+
+  return tenantClientIdPrefix(tenant?.name ?? "", tenant?.slug ?? "");
+}
 
 export async function generateClientLoginId(
   supabase: Db,
   tenantId: string,
 ): Promise<string> {
-  const { data } = await supabase
+  const prefix = await getTenantPrefix(supabase, tenantId);
+
+  const { data: clients } = await supabase
     .from("clients")
     .select("login_id")
     .eq("tenant_id", tenantId)
-    .not("login_id", "is", null)
-    .order("login_id", { ascending: false })
-    .limit(1);
+    .not("login_id", "is", null);
 
-  const last = data?.[0]?.login_id ? Number.parseInt(data[0].login_id, 10) : 100_000;
-  const next = Number.isFinite(last) ? last + 1 : 100_001;
-  return String(next).padStart(6, "0");
+  let maxSeq = 0;
+  for (const row of clients ?? []) {
+    if (!row.login_id) continue;
+    const seq = parseClientLoginIdSequence(row.login_id, prefix);
+    if (seq !== null && seq > maxSeq) maxSeq = seq;
+  }
+
+  return formatClientLoginId(prefix, maxSeq + 1);
 }
 
 export async function provisionClientAccess(
@@ -91,4 +114,31 @@ export async function regenerateClientPin(
   if (error) throw error;
 
   return { loginId, pinCode };
+}
+
+export async function upgradeLegacyClientLoginId(
+  supabase: Db,
+  tenantId: string,
+  clientId: string,
+): Promise<string | null> {
+  const { data: client } = await supabase
+    .from("clients")
+    .select("login_id")
+    .eq("tenant_id", tenantId)
+    .eq("id", clientId)
+    .maybeSingle();
+
+  if (!client?.login_id || !/^\d{4,8}$/.test(client.login_id)) {
+    return client?.login_id ?? null;
+  }
+
+  const loginId = await generateClientLoginId(supabase, tenantId);
+  const { error } = await supabase
+    .from("clients")
+    .update({ login_id: loginId })
+    .eq("tenant_id", tenantId)
+    .eq("id", clientId);
+
+  if (error) throw error;
+  return loginId;
 }

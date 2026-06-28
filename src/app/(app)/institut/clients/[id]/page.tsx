@@ -16,8 +16,16 @@ export default async function ClientDetailPage({
 
   if (!overview) notFound();
 
+  const { provisionClientAccess, upgradeLegacyClientLoginId } = await import(
+    "@/lib/institut/client-access"
+  );
+
+  if (overview.client.login_id && /^\d{4,8}$/.test(overview.client.login_id)) {
+    await upgradeLegacyClientLoginId(supabase, session.tenant.id, id);
+    overview = (await fetchClientOverview(supabase, session.tenant.id, id)) ?? overview;
+  }
+
   if (!overview.client.login_id || !overview.client.pin_code) {
-    const { provisionClientAccess } = await import("@/lib/institut/client-access");
     await provisionClientAccess(supabase, session.tenant.id, id);
     overview = (await fetchClientOverview(supabase, session.tenant.id, id)) ?? overview;
   }

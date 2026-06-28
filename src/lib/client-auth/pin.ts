@@ -20,5 +20,6 @@ export function isValidPin(pin: string): boolean {
 }
 
 export function isValidLoginId(loginId: string): boolean {
-  return /^\d{4,8}$/.test(loginId.trim());
+  const id = loginId.trim().toLowerCase();
+  return /^[a-z0-9]{2,4}-\d{3,4}$/.test(id) || /^\d{4,8}$/.test(id);
 }

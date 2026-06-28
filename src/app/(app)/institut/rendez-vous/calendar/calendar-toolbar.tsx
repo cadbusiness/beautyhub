@@ -25,6 +25,7 @@ export function CalendarToolbar({
   services,
   staff,
   refreshing,
+  onNewAppointment,
 }: {
   viewMode: CalendarViewMode;
   onViewModeChange: (mode: CalendarViewMode) => void;
@@ -41,6 +42,7 @@ export function CalendarToolbar({
   services: CalendarOption[];
   staff: CalendarOption[];
   refreshing?: boolean;
+  onNewAppointment?: () => void;
 }) {
   const t = useTranslations("appointments.calendar");
   const tCommon = useTranslations("common");
@@ -94,6 +96,11 @@ export function CalendarToolbar({
           ))}
         </Select>
         <div className="flex gap-2">
+          {onNewAppointment ? (
+            <Button type="button" className="h-9" onClick={onNewAppointment}>
+              + {t("newAppointment")}
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="outline"

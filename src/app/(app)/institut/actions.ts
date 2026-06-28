@@ -120,6 +120,7 @@ export async function createService(
 
   revalidatePath("/institut/prestations");
   revalidatePath("/institut/caisse");
+  revalidatePath("/institut/rendez-vous");
   revalidatePath("/reserver");
   return { ok: true, serviceId: created.id };
 }
@@ -486,12 +487,17 @@ export async function moveAppointment(formData: FormData): Promise<ActionResult>
 export async function getCalendarAppointments(rangeStart: string, rangeEnd: string) {
   const session = await requireModule("institut");
   const supabase = await createClient();
-  return fetchAppointmentsInRange(
-    supabase,
-    session.tenant.id,
-    new Date(rangeStart),
-    new Date(rangeEnd),
-  );
+  try {
+    return await fetchAppointmentsInRange(
+      supabase,
+      session.tenant.id,
+      new Date(rangeStart),
+      new Date(rangeEnd),
+    );
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "calendar_load_failed";
+    throw new Error(message);
+  }
 }
 
 export async function setAppointmentStatus(formData: FormData): Promise<void> {

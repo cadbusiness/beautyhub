@@ -34,8 +34,6 @@ export type ServiceRow = {
 
 type Tab = "general" | "time" | "advanced" | "extras";
 
-const TAB_ORDER: Tab[] = ["general", "time", "advanced", "extras"];
-
 const initial: ActionResult = {};
 
 function centsToEuros(cents: number): string {
@@ -53,6 +51,77 @@ function TabPanel({
     <div className={cn("space-y-4", !active && "hidden")} aria-hidden={!active}>
       {children}
     </div>
+  );
+}
+
+function ServiceStepNav({
+  steps,
+  current,
+  onChange,
+  navLabel,
+  navHint,
+}: {
+  steps: { id: Tab; label: string }[];
+  current: Tab;
+  onChange: (id: Tab) => void;
+  navLabel: string;
+  navHint: string;
+}) {
+  const currentIndex = steps.findIndex((s) => s.id === current);
+
+  return (
+    <nav aria-label={navLabel} className="border-b border-slate-200 px-4 py-3">
+      <ol className="flex items-start">
+        {steps.map((step, i) => {
+          const isActive = step.id === current;
+          const isPast = i < currentIndex;
+
+          return (
+            <li key={step.id} className="flex min-w-0 flex-1 items-start">
+              <button
+                type="button"
+                onClick={() => onChange(step.id)}
+                aria-current={isActive ? "step" : undefined}
+                className="group flex w-full flex-col items-center gap-1.5 px-1"
+              >
+                <span
+                  className={cn(
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors",
+                    isActive && "bg-slate-900 text-white ring-4 ring-slate-900/10",
+                    !isActive &&
+                      isPast &&
+                      "bg-slate-900 text-white group-hover:bg-slate-800",
+                    !isActive &&
+                      !isPast &&
+                      "border-2 border-slate-300 text-slate-500 group-hover:border-slate-400 group-hover:text-slate-700",
+                  )}
+                >
+                  {i + 1}
+                </span>
+                <span
+                  className={cn(
+                    "w-full truncate text-center text-xs leading-tight font-medium",
+                    isActive ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700",
+                  )}
+                >
+                  {step.label}
+                </span>
+              </button>
+              {i < steps.length - 1 ? (
+                <div
+                  aria-hidden
+                  className={cn(
+                    "mt-4 h-0.5 min-w-[8px] flex-1 rounded-full",
+                    i < currentIndex ? "bg-slate-900" : "bg-slate-200",
+                  )}
+                />
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
+      <p className="mt-2 text-center text-xs text-slate-400">{navHint}</p>
+    </nav>
   );
 }
 
@@ -85,7 +154,6 @@ export function ServiceDialog({
     { id: "extras", label: t("tabs.extras") },
   ];
 
-  const tabIndex = TAB_ORDER.indexOf(tab);
   const action = isEdit ? updateService : createService;
   const [state, formAction, pending] = useActionState(action, initial);
 
@@ -122,57 +190,31 @@ export function ServiceDialog({
     void finish();
   }, [state.ok, state.serviceId, isEdit, pendingImage, onClose]);
 
-  function validateStep(current: Tab): boolean {
-    const form = formRef.current;
-    if (!form) return true;
-
-    if (current === "general") {
-      const name = (form.elements.namedItem("name") as HTMLInputElement)?.value.trim();
-      if (!name) {
-        setStepError(t("wizard.nameRequired"));
-        return false;
-      }
-    }
-    if (current === "time") {
-      const duration = Number.parseInt(
-        (form.elements.namedItem("duration_min") as HTMLInputElement)?.value ?? "0",
-        10,
-      );
-      if (!Number.isFinite(duration) || duration < 1) {
-        setStepError(t("wizard.durationRequired"));
-        return false;
-      }
-    }
+  function goToStep(next: Tab) {
     setStepError(null);
-    return true;
-  }
-
-  function goNext() {
-    if (!validateStep(tab)) return;
-    const idx = TAB_ORDER.indexOf(tab);
-    if (idx < TAB_ORDER.length - 1) setTab(TAB_ORDER[idx + 1]!);
-  }
-
-  function goBack() {
-    setStepError(null);
-    const idx = TAB_ORDER.indexOf(tab);
-    if (idx > 0) setTab(TAB_ORDER[idx - 1]!);
+    setTab(next);
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    if (!isEdit && tab !== "extras") {
+    const name = (formRef.current?.elements.namedItem("name") as HTMLInputElement)?.value.trim();
+    const duration = Number.parseInt(
+      (formRef.current?.elements.namedItem("duration_min") as HTMLInputElement)?.value ?? "0",
+      10,
+    );
+
+    if (!name) {
       e.preventDefault();
-      goNext();
+      setStepError(t("wizard.nameRequired"));
+      setTab("general");
       return;
     }
-    if (!validateStep("general") || !validateStep("time")) {
+    if (!Number.isFinite(duration) || duration < 1) {
       e.preventDefault();
-      if (!(formRef.current?.elements.namedItem("name") as HTMLInputElement)?.value.trim()) {
-        setTab("general");
-      } else {
-        setTab("time");
-      }
+      setStepError(t("wizard.durationRequired"));
+      setTab("time");
+      return;
     }
+    setStepError(null);
   }
 
   return (
@@ -192,16 +234,9 @@ export function ServiceDialog({
         <input type="hidden" name="extras_step_position" value={extrasStepPosition} />
 
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">
-              {isEdit ? t("editTitle") : t("createTitle")}
-            </h2>
-            {!isEdit ? (
-              <p className="mt-0.5 text-xs text-slate-500">
-                {t("wizard.stepOf", { current: tabIndex + 1, total: TAB_ORDER.length })}
-              </p>
-            ) : null}
-          </div>
+          <h2 className="text-base font-semibold text-slate-900">
+            {isEdit ? t("editTitle") : t("createTitle")}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -212,48 +247,40 @@ export function ServiceDialog({
           </button>
         </div>
 
-        <div className="border-b border-slate-200 px-5 pt-2">
-          {!isEdit ? (
-            <div className="mb-3 flex gap-1">
-              {TAB_ORDER.map((id, i) => (
-                <div
-                  key={id}
-                  className={cn(
-                    "h-1 flex-1 rounded-full transition-colors",
-                    i <= tabIndex ? "bg-slate-900" : "bg-slate-200",
-                  )}
-                />
-              ))}
-            </div>
-          ) : null}
-          <div className="flex gap-1 overflow-x-auto">
+        {isEdit ? (
+          <div className="flex gap-1 overflow-x-auto border-b border-slate-200 px-5">
             {tabs.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => {
-                  if (isEdit || TAB_ORDER.indexOf(item.id) <= tabIndex) {
-                    setStepError(null);
-                    setTab(item.id);
-                  }
-                }}
+                onClick={() => goToStep(item.id)}
                 className={cn(
                   "shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
                   tab === item.id
                     ? "border-slate-900 text-slate-900"
                     : "border-transparent text-slate-500 hover:text-slate-800",
-                  !isEdit && TAB_ORDER.indexOf(item.id) > tabIndex
-                    ? "cursor-not-allowed opacity-40 hover:text-slate-500"
-                    : "",
                 )}
               >
                 {item.label}
               </button>
             ))}
           </div>
-        </div>
+        ) : (
+          <ServiceStepNav
+            steps={tabs}
+            current={tab}
+            onChange={goToStep}
+            navLabel={t("wizard.navLabel")}
+            navHint={t("wizard.navHint")}
+          />
+        )}
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
+          {!isEdit ? (
+            <p className="mb-4 text-sm font-medium text-slate-900">
+              {tabs.find((item) => item.id === tab)?.label}
+            </p>
+          ) : null}
           <TabPanel active={tab === "general"}>
             <Field label={tCommon("name")} htmlFor="name">
               <Input
@@ -404,33 +431,17 @@ export function ServiceDialog({
           {state.error ? <p className="mt-2 text-sm text-red-600">{state.error}</p> : null}
         </div>
 
-        <div className="flex justify-between gap-2 border-t border-slate-200 px-5 py-4">
-          <div>
-            {!isEdit && tabIndex > 0 ? (
-              <Button type="button" variant="outline" onClick={goBack}>
-                {tCommon("back")}
-              </Button>
-            ) : (
-              <Button type="button" variant="outline" onClick={onClose}>
-                {tCommon("cancel")}
-              </Button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            {!isEdit && tab !== "extras" ? (
-              <Button type="button" onClick={goNext}>
-                {tCommon("continue")}
-              </Button>
-            ) : isEdit ? (
-              <Button type="submit" disabled={pending}>
-                {pending ? t("submitting") : t("editSubmit")}
-              </Button>
-            ) : (
-              <Button type="submit" disabled={pending}>
-                {pending ? t("submitting") : t("createSubmit")}
-              </Button>
-            )}
-          </div>
+        <div className="flex items-center justify-between gap-2 border-t border-slate-200 px-5 py-4">
+          <Button type="button" variant="outline" onClick={onClose}>
+            {tCommon("cancel")}
+          </Button>
+          <Button type="submit" disabled={pending}>
+            {pending
+              ? t("submitting")
+              : isEdit
+                ? t("editSubmit")
+                : t("createSubmit")}
+          </Button>
         </div>
       </form>
     </dialog>

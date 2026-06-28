@@ -14,6 +14,8 @@ import { DayView, WeekView } from "./week-view";
 import { MonthView } from "./month-view";
 import { AppointmentPopover } from "./appointment-popover";
 import { AppointmentEditDialog } from "./appointment-edit-dialog";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { AppointmentForm } from "../appointment-form";
 import type {
   CalendarAppointment,
   CalendarColumn,
@@ -52,6 +54,7 @@ export function CalendarShell({
 }) {
   const router = useRouter();
   const t = useTranslations("common");
+  const tCal = useTranslations("appointments.calendar");
   const [viewMode, setViewMode] = useState<CalendarViewMode>("day");
   const [columnMode, setColumnMode] = useState<ColumnMode>("staff");
   const [anchor, setAnchor] = useState(() => startOfDay(new Date(initialDate)));
@@ -64,6 +67,7 @@ export function CalendarShell({
     rect: DOMRect;
   } | null>(null);
   const [editAppt, setEditAppt] = useState<CalendarAppointment | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetchPending, startFetch] = useTransition();
   const [actionPending, startAction] = useTransition();
@@ -198,6 +202,7 @@ export function CalendarShell({
         services={services}
         staff={staff}
         refreshing={fetchPending}
+        onNewAppointment={() => setCreateOpen(true)}
       />
 
       {showStaffChips ? (
@@ -264,6 +269,25 @@ export function CalendarShell({
         onClose={() => setEditAppt(null)}
         onSaved={handleSaved}
       />
+
+      <FormDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title={tCal("dialogTitle")}
+        size="lg"
+      >
+        <AppointmentForm
+          clients={clients}
+          services={services}
+          staff={staff}
+          resources={resources}
+          onSuccess={() => {
+            setCreateOpen(false);
+            loadAppointments();
+            router.refresh();
+          }}
+        />
+      </FormDialog>
     </div>
   );
 }

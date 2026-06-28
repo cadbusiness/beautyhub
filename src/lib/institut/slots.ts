@@ -83,7 +83,7 @@ export async function fetchAppointmentsInRange(
   const { data, error } = await supabase
     .from("inst_appointments")
     .select(
-      "id, starts_at, ends_at, status, notes, price_cents, staff_id, resource_id, service_id, client_id, service:inst_services(name, color, duration_min), staff:inst_staff(full_name, color), client:clients(full_name, email, phone), resource:inst_resources(name), extras:inst_appointment_extras(service_id, quantity, name, price_cents, duration_min)",
+      "id, starts_at, ends_at, status, notes, price_cents, staff_id, resource_id, service_id, client_id, service:inst_services(name, color, duration_min), staff:inst_staff(full_name, color), client:clients(full_name, email, phone), resource:inst_resources(name)",
     )
     .eq("tenant_id", tenantId)
     .gte("starts_at", rangeStart.toISOString())
@@ -91,7 +91,38 @@ export async function fetchAppointmentsInRange(
     .order("starts_at");
 
   if (error) throw new Error(error.message);
-  return data ?? [];
+
+  const appointments = data ?? [];
+  if (appointments.length === 0) return appointments;
+
+  const apptIds = appointments.map((a) => a.id);
+  const { data: extrasRows, error: extrasError } = await supabase
+    .from("inst_appointment_extras")
+    .select("appointment_id, service_id, quantity, name, price_cents, duration_min")
+    .eq("tenant_id", tenantId)
+    .in("appointment_id", apptIds);
+
+  if (extrasError) {
+    return appointments.map((a) => ({ ...a, extras: [] }));
+  }
+
+  const extrasByAppt = new Map<string, NonNullable<typeof extrasRows>>();
+  for (const row of extrasRows ?? []) {
+    const list = extrasByAppt.get(row.appointment_id) ?? [];
+    list.push(row);
+    extrasByAppt.set(row.appointment_id, list);
+  }
+
+  return appointments.map((a) => ({
+    ...a,
+    extras: (extrasByAppt.get(a.id) ?? []).map((e) => ({
+      service_id: e.service_id,
+      quantity: e.quantity,
+      name: e.name,
+      price_cents: e.price_cents,
+      duration_min: e.duration_min,
+    })),
+  }));
 }
 
 export interface WorkingHourRow {

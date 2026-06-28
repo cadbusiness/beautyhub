@@ -8,6 +8,7 @@ import {
   type ActionResult,
 } from "../actions";
 import { loadInstServiceExtras } from "../prestations/extras-actions";
+import { QuickServiceForm } from "../prestations/quick-service-form";
 import { ExtrasPicker } from "@/components/institut/extras-picker";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
@@ -72,6 +73,7 @@ export function AppointmentForm({
   const [serviceId, setServiceId] = useState(appointment?.service_id ?? "");
   const [extraCatalog, setExtraCatalog] = useState<ServiceExtraConfig[]>([]);
   const [extras, setExtras] = useState<BookingExtraLine[]>([]);
+  const [showQuickService, setShowQuickService] = useState(services.length === 0);
   const [, startLoadExtras] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -139,23 +141,50 @@ export function AppointmentForm({
         </Select>
       </Field>
       <Field label={t("service")} htmlFor="service_id">
-        <Select
-          id="service_id"
-          name="service_id"
-          required
-          value={serviceId}
-          onChange={(e) => setServiceId(e.target.value)}
-        >
-          <option value="" disabled>
-            {t("chooseService")}
-          </option>
-          {services.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.label}
+        {services.length === 0 ? (
+          <p className="mb-2 text-sm text-slate-600">{t("noServicesHint")}</p>
+        ) : (
+          <Select
+            id="service_id"
+            name="service_id"
+            required
+            value={serviceId}
+            onChange={(e) => setServiceId(e.target.value)}
+          >
+            <option value="" disabled>
+              {t("chooseService")}
             </option>
-          ))}
-        </Select>
+            {services.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </Select>
+        )}
+        {services.length > 0 && !showQuickService ? (
+          <button
+            type="button"
+            className="mt-1 text-xs text-slate-500 underline hover:text-slate-800"
+            onClick={() => setShowQuickService(true)}
+          >
+            + {t("addService")}
+          </button>
+        ) : null}
       </Field>
+
+      {showQuickService || services.length === 0 ? (
+        <QuickServiceForm
+          compact
+          onCreated={(id) => {
+            setServiceId(id);
+            setShowQuickService(false);
+          }}
+        />
+      ) : null}
+
+      {serviceId && services.length === 0 ? (
+        <input type="hidden" name="service_id" value={serviceId} />
+      ) : null}
 
       {selectedService && extraCatalog.length > 0 ? (
         <div className="space-y-2">
@@ -263,7 +292,7 @@ export function AppointmentForm({
         <p className="text-sm text-red-600">{state.error}</p>
       ) : null}
 
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending || !serviceId}>
         {pending
           ? tCommon("saving")
           : mode === "edit"

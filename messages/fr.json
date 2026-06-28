@@ -261,7 +261,9 @@
       "extras": "Options / extras",
       "endsAtExtrasHint": "Laissez vide pour recalculer automatiquement selon les extras.",
       "create": "Créer le rendez-vous",
-      "scheduleWarningConfirm": "Confirmer malgré l'horaire hors planning"
+      "scheduleWarningConfirm": "Confirmer malgré l'horaire hors planning",
+      "noServicesHint": "Aucune prestation disponible — créez-en une pour planifier un rendez-vous.",
+      "addService": "Nouvelle prestation"
     },
     "list": {
       "new": "Nouveau rendez-vous",
@@ -295,6 +297,8 @@
       },
       "today": "Aujourd'hui",
       "weekOf": "Semaine du {date}",
+      "newAppointment": "Nouveau RDV",
+      "dialogTitle": "Nouveau rendez-vous",
       "emptyStaff": "Ajoute du personnel dans Équipe pour afficher le calendrier.",
       "emptyResources": "Ajoute des cabines dans Équipe pour afficher le calendrier.",
       "monthAppointments": "{count, plural, one {# RDV} other {# RDV}}",
@@ -729,6 +733,14 @@
       "edit": "Modifier",
       "deleteShort": "Suppr.",
       "footer": "{count, plural, one {# prestation} other {# prestations}}",
+      "quickForm": {
+        "title": "Créer une prestation",
+        "name": "Nom",
+        "namePlaceholder": "Soin du visage",
+        "duration": "Durée (min)",
+        "price": "Prix (€)",
+        "submit": "Créer la prestation"
+      },
       "dialog": {
         "createTitle": "Nouvelle prestation",
         "editTitle": "Modifier prestation",
@@ -760,8 +772,10 @@
         "submitting": "Enregistrement…",
         "wizard": {
           "stepOf": "Étape {current} sur {total}",
-          "nameRequired": "Indiquez un nom pour continuer.",
-          "durationRequired": "Indiquez une durée valide (onglet Horaires)."
+          "navLabel": "Étapes de création",
+          "navHint": "Cliquez sur une étape pour y accéder directement.",
+          "nameRequired": "Indiquez un nom pour enregistrer.",
+          "durationRequired": "Indiquez une durée valide (minimum 1 min)."
         },
         "extras": {
           "hint": "Choisissez d'autres prestations à proposer en upsell avec celle-ci. Chaque extra conserve sa durée et son prix.",

@@ -31,7 +31,6 @@ export default async function RendezVousPage({
   const session = await requireModule("institut");
   const params = await searchParams;
   const view = params.view === "liste" ? "liste" : "calendrier";
-  const supabase = await createClient();
   const tenantId = session.tenant.id;
 
   const now = new Date();
@@ -40,15 +39,39 @@ export default async function RendezVousPage({
   const rangeEnd = new Date(now);
   rangeEnd.setDate(rangeEnd.getDate() + 35);
 
-  const [servicesRes, staffRes, resourcesRes, clientsRes, apptsRes, calendarAppts] =
+  const supabase = await createClient();
+
+  let catalogServices: Array<{
+    id: string;
+    name: string;
+    duration_min: number;
+    price_cents: number;
+    visibility?: string;
+  }> = [];
+
+  const servicesWithVisibility = await supabase
+    .from("inst_services")
+    .select("id, name, duration_min, price_cents, visibility")
+    .eq("tenant_id", tenantId)
+    .eq("is_active", true)
+    .order("name");
+
+  if (servicesWithVisibility.error?.message?.includes("visibility")) {
+    const fallback = await supabase
+      .from("inst_services")
+      .select("id, name, duration_min, price_cents")
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true)
+      .order("name");
+    catalogServices = fallback.data ?? [];
+  } else {
+    catalogServices = (servicesWithVisibility.data ?? []).filter(
+      (s) => s.visibility !== "extra_only",
+    );
+  }
+
+  const [staffRes, resourcesRes, clientsRes, apptsRes, calendarAppts] =
     await Promise.all([
-      supabase
-        .from("inst_services")
-        .select("id, name, duration_min, price_cents")
-        .eq("tenant_id", tenantId)
-        .eq("is_active", true)
-        .neq("visibility", "extra_only")
-        .order("name"),
       supabase
         .from("inst_staff")
         .select("id, full_name, color")
@@ -74,10 +97,10 @@ export default async function RendezVousPage({
         .eq("tenant_id", tenantId)
         .order("starts_at", { ascending: true })
         .limit(50),
-      fetchAppointmentsInRange(supabase, tenantId, rangeStart, rangeEnd),
+      fetchAppointmentsInRange(supabase, tenantId, rangeStart, rangeEnd).catch(() => []),
     ]);
 
-  const services = (servicesRes.data ?? []).map((s) => ({
+  const services = catalogServices.map((s) => ({
     id: s.id,
     label: `${s.name} (${s.duration_min} min · ${formatPrice(s.price_cents)})`,
     duration_min: s.duration_min,

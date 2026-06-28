@@ -261,7 +261,9 @@
       "extras": "Opties / extras",
       "endsAtExtrasHint": "Leeg laten om automatisch te herberekenen op basis van extras.",
       "create": "Afspraak aanmaken",
-      "scheduleWarningConfirm": "Bevestigen ondanks planning buiten openingstijden"
+      "scheduleWarningConfirm": "Bevestigen ondanks planning buiten openingstijden",
+      "noServicesHint": "Geen behandelingen beschikbaar — maak er een aan om een afspraak te plannen.",
+      "addService": "Nieuwe behandeling"
     },
     "list": {
       "new": "Nieuwe afspraak",
@@ -295,6 +297,8 @@
       },
       "today": "Vandaag",
       "weekOf": "Week van {date}",
+      "newAppointment": "Nieuwe afspraak",
+      "dialogTitle": "Nieuwe afspraak",
       "emptyStaff": "Voeg personeel toe in Team om de kalender te tonen.",
       "emptyResources": "Voeg cabines toe in Team om de kalender te tonen.",
       "monthAppointments": "{count, plural, one {# afspr.} other {# afspr.}}",
@@ -707,6 +711,14 @@
       "edit": "Bewerken",
       "deleteShort": "Verw.",
       "footer": "{count, plural, one {# behandeling} other {# behandelingen}}",
+      "quickForm": {
+        "title": "Behandeling aanmaken",
+        "name": "Naam",
+        "namePlaceholder": "Gezichtsverzorging",
+        "duration": "Duur (min)",
+        "price": "Prijs (€)",
+        "submit": "Behandeling aanmaken"
+      },
       "dialog": {
         "createTitle": "Nieuwe behandeling",
         "editTitle": "Behandeling bewerken",
@@ -738,8 +750,10 @@
         "submitting": "Opslaan…",
         "wizard": {
           "stepOf": "Stap {current} van {total}",
-          "nameRequired": "Vul een naam in om verder te gaan.",
-          "durationRequired": "Vul een geldige duur in (tabblad Tijden)."
+          "navLabel": "Aanmaakstappen",
+          "navHint": "Klik op een stap om er direct naartoe te gaan.",
+          "nameRequired": "Vul een naam in om op te slaan.",
+          "durationRequired": "Vul een geldige duur in (minimaal 1 min)."
         },
         "extras": {
           "hint": "Kies andere behandelingen als upsell bij deze behandeling. Elke extra behoudt duur en prijs.",

@@ -4,6 +4,7 @@ import { getAppShellData } from "@/lib/auth/team-session";
 import { ensureDefaultTenant } from "@/lib/tenant/ensure";
 import { getAiActionsFor, getNavFor } from "@/modules";
 import { AppHeader } from "@/components/app-shell/app-header";
+import { AppFooter } from "@/components/app-shell/app-footer";
 import { NavLink } from "@/components/app-shell/nav-link";
 import { AssistantPanel } from "@/components/app-shell/assistant-panel";
 
@@ -63,6 +64,7 @@ export default async function AppLayout({
             <div className="flex min-h-0 w-full flex-1 flex-col px-4 lg:px-6">
               {children}
             </div>
+            <AppFooter />
           </main>
           <AssistantPanel actions={aiActions} />
         </div>

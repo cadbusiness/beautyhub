@@ -1,5 +1,6 @@
 import { requirePlatformAdmin } from "@/lib/auth/guards";
 import { NavLink } from "@/components/app-shell/nav-link";
+import { AppFooter } from "@/components/app-shell/app-footer";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/login/actions";
 
@@ -35,6 +36,7 @@ export default async function AdminLayout({
         <div className="flex min-h-0 w-full flex-1 flex-col px-4 lg:px-6">
           {children}
         </div>
+        <AppFooter />
       </main>
     </div>
   );

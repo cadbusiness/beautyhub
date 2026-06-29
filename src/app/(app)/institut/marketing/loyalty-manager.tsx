@@ -3,7 +3,9 @@
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
+  applyLoyaltyStarterPack,
   deleteLoyaltyEarnRule,
   deleteLoyaltyReward,
   saveLoyaltyEarnRule,
@@ -115,6 +117,40 @@ function EmptyRow({
   );
 }
 
+function StarterPackButton({ label }: { label: string }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      className="h-8"
+      disabled={pending}
+      onClick={() => {
+        start(async () => {
+          await applyLoyaltyStarterPack();
+          router.refresh();
+        });
+      }}
+    >
+      {pending ? "…" : label}
+    </Button>
+  );
+}
+
+function CapabilityList({ items }: { items: { done: boolean; label: string }[] }) {
+  return (
+    <ul className="space-y-1 text-xs text-slate-500">
+      {items.map((item) => (
+        <li key={item.label} className={item.done ? "text-slate-600" : "text-slate-400"}>
+          {item.done ? "✓" : "○"} {item.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 type SetupPhase = 1 | 2 | 3 | "live";
 
 function getSetupPhase(
@@ -218,15 +254,30 @@ export function LoyaltyManager({
         statusLabel={t(`programStatus.${programStatus}`)}
       />
 
+      {phase === 1 && !hasRules ? (
+        <div className="flex flex-wrap items-center justify-end gap-2 border-b border-slate-200 px-4 py-2 lg:px-6">
+          <StarterPackButton label={t("starterPack")} />
+        </div>
+      ) : null}
+
       {isLive ? (
-        <p className="border-b border-slate-200 px-4 py-2 text-sm tabular-nums text-slate-600 lg:px-6">
-          {t("guide.liveSummary", {
-            clients: stats.clientsWithPoints,
-            clientsLabel: t("clientsLabel", { count: stats.clientsWithPoints }),
-            points: stats.totalPointsOutstanding,
-            label: program.points_label,
-          })}
-        </p>
+        <>
+          <p className="border-b border-slate-200 px-4 py-2 text-sm tabular-nums text-slate-600 lg:px-6">
+            {t("guide.liveSummary", {
+              clients: stats.clientsWithPoints,
+              clientsLabel: t("clientsLabel", { count: stats.clientsWithPoints }),
+              points: stats.totalPointsOutstanding,
+              label: program.points_label,
+            })}
+          </p>
+          <p className="border-b border-slate-200 px-4 py-2 text-xs tabular-nums text-slate-500 lg:px-6">
+            {t("stats.monthSummary", {
+              earned: stats.pointsEarnedThisMonth,
+              redeemed: stats.pointsRedeemedThisMonth,
+              label: program.points_label,
+            })}
+          </p>
+        </>
       ) : null}
 
       <ListToolbar
@@ -329,7 +380,14 @@ export function LoyaltyManager({
                       <td className={`${dataTableCell} font-medium text-slate-900`}>
                         {reward.name}
                       </td>
-                      <td className={dataTableCell}>{formatRewardType(reward, services, t)}</td>
+                      <td className={dataTableCell}>
+                        {formatRewardType(reward, services, t)}
+                        {reward.new_service_only ? (
+                          <span className="ml-1.5 text-xs text-violet-600">
+                            ({t("rewards.newServiceOnlyShort")})
+                          </span>
+                        ) : null}
+                      </td>
                       <td className={dataTableCell}>
                         {reward.points_cost} {program.points_label}
                       </td>
@@ -398,7 +456,29 @@ export function LoyaltyManager({
                   required
                 />
               </Field>
+              <Field label={t("program.birthdayBonus")} htmlFor="loyalty_birthday_bonus">
+                <Input
+                  id="loyalty_birthday_bonus"
+                  name="birthday_bonus_points"
+                  type="number"
+                  min={0}
+                  step={1}
+                  defaultValue={program.birthday_bonus_points ?? 0}
+                />
+              </Field>
             </div>
+            <p className="text-xs text-slate-500">{t("program.birthdayBonusHint")}</p>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                name="portal_visible"
+                value="1"
+                defaultChecked={program.portal_visible ?? true}
+                className="rounded border-slate-300"
+              />
+              {t("program.portalVisible")}
+            </label>
 
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input
@@ -416,6 +496,30 @@ export function LoyaltyManager({
             </Button>
           </form>
         </>
+      ) : null}
+
+      {showProgram ? (
+        <div className="border-t border-slate-200 px-4 py-3 lg:px-6">
+          <p className="text-sm font-medium text-slate-700">{t("capabilities.title")}</p>
+          <div className="mt-2">
+            <CapabilityList
+              items={[
+                { done: true, label: t("capabilities.earnPaid") },
+                { done: program.portal_visible, label: t("capabilities.portal") },
+                {
+                  done: (program.birthday_bonus_points ?? 0) > 0,
+                  label: t("capabilities.birthday"),
+                },
+                {
+                  done: rewards.some((r) => r.new_service_only),
+                  label: t("capabilities.upsell"),
+                },
+                { done: false, label: t("capabilities.redeemPos") },
+                { done: false, label: t("capabilities.referral") },
+              ]}
+            />
+          </div>
+        </div>
       ) : null}
 
       {isLive ? (
@@ -763,6 +867,18 @@ function RewardDialog({
             </Select>
           </Field>
         ) : null}
+
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            name="new_service_only"
+            value="1"
+            defaultChecked={reward?.new_service_only ?? false}
+            className="rounded border-slate-300"
+          />
+          {t("rewards.form.newServiceOnly")}
+        </label>
+        <p className="text-xs text-slate-500">{t("rewards.form.newServiceOnlyHint")}</p>
 
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <input

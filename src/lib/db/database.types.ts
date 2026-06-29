@@ -1542,29 +1542,35 @@ export type Database = {
       }
       inst_loyalty_programs: {
         Row: {
+          birthday_bonus_points: number
           created_at: string
           id: string
           is_active: boolean
           name: string
           points_label: string
+          portal_visible: boolean
           tenant_id: string
           updated_at: string
         }
         Insert: {
+          birthday_bonus_points?: number
           created_at?: string
           id?: string
           is_active?: boolean
           name?: string
           points_label?: string
+          portal_visible?: boolean
           tenant_id: string
           updated_at?: string
         }
         Update: {
+          birthday_bonus_points?: number
           created_at?: string
           id?: string
           is_active?: boolean
           name?: string
           points_label?: string
+          portal_visible?: boolean
           tenant_id?: string
           updated_at?: string
         }
@@ -1587,6 +1593,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          new_service_only: boolean
           points_cost: number
           program_id: string
           reward_type: string
@@ -1603,6 +1610,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          new_service_only?: boolean
           points_cost: number
           program_id: string
           reward_type: string
@@ -1619,6 +1627,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          new_service_only?: boolean
           points_cost?: number
           program_id?: string
           reward_type?: string
@@ -2275,6 +2284,54 @@ export type Database = {
           },
         ]
       }
+      mobile_apps: {
+        Row: {
+          app_name: string
+          app_slug: string
+          audience: string
+          branding: Json
+          bundle_id_android: string | null
+          bundle_id_ios: string | null
+          created_at: string
+          deep_link_scheme: string | null
+          id: string
+          is_active: boolean
+          scope_id: string
+          scope_type: string
+          updated_at: string
+        }
+        Insert: {
+          app_name: string
+          app_slug: string
+          audience: string
+          branding?: Json
+          bundle_id_android?: string | null
+          bundle_id_ios?: string | null
+          created_at?: string
+          deep_link_scheme?: string | null
+          id?: string
+          is_active?: boolean
+          scope_id: string
+          scope_type: string
+          updated_at?: string
+        }
+        Update: {
+          app_name?: string
+          app_slug?: string
+          audience?: string
+          branding?: Json
+          bundle_id_android?: string | null
+          bundle_id_ios?: string | null
+          created_at?: string
+          deep_link_scheme?: string | null
+          id?: string
+          is_active?: boolean
+          scope_id?: string
+          scope_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       modules: {
         Row: {
           category: string | null
@@ -2627,6 +2684,27 @@ export type Database = {
           id: string
           name: string
           slug: string
+        }[]
+      }
+      get_mobile_app_bootstrap: {
+        Args: { p_bundle_id: string }
+        Returns: {
+          app_id: string
+          app_name: string
+          app_slug: string
+          audience: string
+          brand_branding: Json
+          brand_id: string
+          brand_name: string
+          brand_slug: string
+          branding: Json
+          deep_link_scheme: string | null
+          scope_id: string
+          scope_type: string
+          tenant_branding: Json | null
+          tenant_id: string | null
+          tenant_name: string | null
+          tenant_slug: string | null
         }[]
       }
       next_document_number: {

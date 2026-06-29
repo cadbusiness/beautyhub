@@ -19,6 +19,8 @@ export interface LoyaltyProgram {
   name: string;
   is_active: boolean;
   points_label: string;
+  birthday_bonus_points: number;
+  portal_visible: boolean;
 }
 
 export interface LoyaltyEarnRule {
@@ -47,6 +49,7 @@ export interface LoyaltyReward {
   discount_cents: number | null;
   service_id: string | null;
   sort_order: number;
+  new_service_only: boolean;
 }
 
 export interface LoyaltyProgramSnapshot {
@@ -56,6 +59,8 @@ export interface LoyaltyProgramSnapshot {
   stats: {
     clientsWithPoints: number;
     totalPointsOutstanding: number;
+    pointsEarnedThisMonth: number;
+    pointsRedeemedThisMonth: number;
   };
 }
 
@@ -81,7 +86,7 @@ export async function ensureLoyaltyProgram(
 ): Promise<LoyaltyProgram> {
   const { data: existing } = await supabase
     .from("inst_loyalty_programs")
-    .select("id, tenant_id, name, is_active, points_label")
+    .select("id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible")
     .eq("tenant_id", tenantId)
     .maybeSingle();
 
@@ -90,7 +95,7 @@ export async function ensureLoyaltyProgram(
   const { data: created, error } = await supabase
     .from("inst_loyalty_programs")
     .insert({ tenant_id: tenantId })
-    .select("id, tenant_id, name, is_active, points_label")
+    .select("id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible")
     .single();
 
   if (error || !created) throw new Error(error?.message ?? "Programme fidélité introuvable");
@@ -103,7 +108,11 @@ export async function loadLoyaltyProgramSnapshot(
 ): Promise<LoyaltyProgramSnapshot> {
   const program = await ensureLoyaltyProgram(supabase, tenantId);
 
-  const [rulesRes, rewardsRes, balancesRes] = await Promise.all([
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const [rulesRes, rewardsRes, balancesRes, txRes] = await Promise.all([
     supabase
       .from("inst_loyalty_earn_rules")
       .select("*")
@@ -123,9 +132,25 @@ export async function loadLoyaltyProgramSnapshot(
       .select("points_balance")
       .eq("tenant_id", tenantId)
       .gt("points_balance", 0),
+    supabase
+      .from("inst_loyalty_transactions")
+      .select("type, points_delta")
+      .eq("tenant_id", tenantId)
+      .gte("created_at", monthStart.toISOString()),
   ]);
 
   const balances = balancesRes.data ?? [];
+  const monthTx = txRes.data ?? [];
+  let pointsEarnedThisMonth = 0;
+  let pointsRedeemedThisMonth = 0;
+  for (const tx of monthTx) {
+    if (tx.type === "earn" && tx.points_delta > 0) {
+      pointsEarnedThisMonth += tx.points_delta;
+    } else if (tx.type === "redeem" && tx.points_delta < 0) {
+      pointsRedeemedThisMonth += Math.abs(tx.points_delta);
+    }
+  }
+
   return {
     program,
     rules: (rulesRes.data ?? []) as LoyaltyEarnRule[],
@@ -133,6 +158,8 @@ export async function loadLoyaltyProgramSnapshot(
     stats: {
       clientsWithPoints: balances.length,
       totalPointsOutstanding: balances.reduce((sum, b) => sum + b.points_balance, 0),
+      pointsEarnedThisMonth,
+      pointsRedeemedThisMonth,
     },
   };
 }
@@ -202,7 +229,7 @@ export async function processLoyaltyForCompletedAppointment(
 
   const { data: program } = await supabase
     .from("inst_loyalty_programs")
-    .select("id, tenant_id, name, is_active, points_label")
+    .select("id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible")
     .eq("tenant_id", tenantId)
     .maybeSingle();
   if (!program?.is_active) return;
@@ -243,7 +270,7 @@ export async function processLoyaltyForPaidSale(
 
   const { data: program } = await supabase
     .from("inst_loyalty_programs")
-    .select("id, tenant_id, name, is_active, points_label")
+    .select("id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible")
     .eq("tenant_id", tenantId)
     .maybeSingle();
   if (!program?.is_active) return;

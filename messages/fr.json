@@ -623,13 +623,27 @@
         },
         "stats": {
           "clientsWithPoints": "Clientes participantes",
-          "pointsOutstanding": "{label} en circulation"
+          "pointsOutstanding": "{label} en circulation",
+          "monthSummary": "Ce mois : +{earned} {label} attribués · {redeemed} utilisés"
+        },
+        "starterPack": "Modèle institut (10 pts / visite, −10 % à 100 pts)",
+        "capabilities": {
+          "title": "Fonctionnalités",
+          "earnPaid": "Points après RDV terminé ou achat payé en caisse",
+          "portal": "Carte visible sur le portail cliente",
+          "birthday": "Bonus anniversaire configuré",
+          "upsell": "Récompense réservée aux nouvelles prestations",
+          "redeemPos": "Échange des points en caisse (bientôt)",
+          "referral": "Points parrainage (bientôt)"
         },
         "program": {
           "title": "Paramètres",
           "description": "Nom, libellé des points et activation du programme.",
           "name": "Nom du programme",
           "pointsLabel": "Libellé des points",
+          "birthdayBonus": "Bonus anniversaire (points)",
+          "birthdayBonusHint": "Points offerts le jour d'anniversaire — envoi automatique bientôt disponible.",
+          "portalVisible": "Visible sur le portail cliente (/client/compte)",
           "active": "Programme actif",
           "saved": "Programme enregistré."
         },
@@ -686,6 +700,7 @@
           "empty": "Aucune récompense pour l'instant.",
           "footer": "{count, plural, one {# récompense} other {# récompenses}}",
           "redeemHint": "L'utilisation des points en caisse arrive bientôt.",
+          "newServiceOnlyShort": "nouvelle prestation",
           "createTitle": "Nouvelle récompense",
           "editTitle": "Modifier la récompense",
           "deleteConfirm": "Supprimer cette récompense ?",
@@ -711,6 +726,8 @@
             "discountPercent": "Pourcentage de réduction",
             "discountEur": "Montant de la réduction (€)",
             "service": "Prestation offerte",
+            "newServiceOnly": "Nouvelle prestation uniquement",
+            "newServiceOnlyHint": "La cliente ne pourra l'utiliser que pour une prestation qu'elle n'a jamais réservée (incite à essayer autre chose).",
             "active": "Récompense active"
           }
         },
@@ -722,7 +739,9 @@
           "invalidReward": "Récompense invalide.",
           "invalidPercent": "Pourcentage invalide.",
           "invalidAmount": "Montant invalide.",
-          "serviceRequired": "Prestation requise."
+          "serviceRequired": "Prestation requise.",
+          "starterApplied": "Modèle appliqué : règle et récompense créées.",
+          "starterNotEmpty": "Le modèle ne s'applique qu'à un programme vide."
         }
       },
       "website": {
@@ -2106,6 +2125,12 @@
           "completed": "Terminé",
           "cancelled": "Annulé",
           "no_show": "Absent"
+        },
+        "loyalty": {
+          "subtitle": "Votre carte fidélité",
+          "newServiceOnly": "nouvelle prestation",
+          "noRewards": "Aucune récompense disponible pour le moment.",
+          "redeemSoon": "L'échange en ligne arrive bientôt — demandez à l'accueil en attendant."
         }
       }
     }

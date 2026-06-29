@@ -70,6 +70,11 @@ export async function saveLoyaltyProgramSettings(
       name,
       points_label: pointsLabel,
       is_active: formData.get("is_active") === "1",
+      birthday_bonus_points: Math.max(
+        0,
+        Math.round(Number(formData.get("birthday_bonus_points") ?? 0)),
+      ),
+      portal_visible: formData.get("portal_visible") === "1",
     })
     .eq("id", program.id)
     .eq("tenant_id", session.tenant.id);
@@ -190,6 +195,7 @@ export async function saveLoyaltyReward(
     discount_percent: null,
     discount_cents: null,
     service_id: null,
+    new_service_only: formData.get("new_service_only") === "1",
   };
 
   if (rewardType === "discount_percent") {
@@ -240,4 +246,55 @@ export async function deleteLoyaltyReward(rewardId: string): Promise<ActionResul
   if (error) return { error: error.message };
   revalidatePath(LOYALTY_PATH);
   return { ok: true };
+}
+
+export async function applyLoyaltyStarterPack(): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  const program = await ensureLoyaltyProgram(supabase, session.tenant.id);
+  const t = await getTranslations("institut.marketing.loyalty.actions");
+
+  const { count: ruleCount } = await supabase
+    .from("inst_loyalty_earn_rules")
+    .select("id", { count: "exact", head: true })
+    .eq("program_id", program.id);
+
+  const { count: rewardCount } = await supabase
+    .from("inst_loyalty_rewards")
+    .select("id", { count: "exact", head: true })
+    .eq("program_id", program.id);
+
+  if ((ruleCount ?? 0) > 0 || (rewardCount ?? 0) > 0) {
+    return { error: t("starterNotEmpty") };
+  }
+
+  const { error: ruleError } = await supabase.from("inst_loyalty_earn_rules").insert({
+    tenant_id: session.tenant.id,
+    program_id: program.id,
+    name: "Points par visite",
+    source_type: "appointment_completed",
+    calc_mode: "fixed_per_event",
+    points_value: 10,
+    min_amount_cents: 0,
+    sort_order: 0,
+    is_active: true,
+  });
+  if (ruleError) return { error: ruleError.message };
+
+  const { error: rewardError } = await supabase.from("inst_loyalty_rewards").insert({
+    tenant_id: session.tenant.id,
+    program_id: program.id,
+    name: "Réduction fidélité",
+    description: "10 % de réduction sur une prestation",
+    reward_type: "discount_percent",
+    points_cost: 100,
+    discount_percent: 10,
+    sort_order: 0,
+    is_active: true,
+    new_service_only: false,
+  });
+  if (rewardError) return { error: rewardError.message };
+
+  revalidatePath(LOYALTY_PATH);
+  return { ok: true, message: t("starterApplied") };
 }

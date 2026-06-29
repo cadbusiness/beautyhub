@@ -9,6 +9,8 @@ import { ListPanel } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { formatDateTime } from "@/lib/utils";
 import { ClientPortalPrivacyPanel } from "@/components/compliance/client-portal-privacy-panel";
+import { ClientLoyaltyPanel } from "@/components/client/client-loyalty-panel";
+import { loadClientLoyaltyPortalView } from "@/lib/institut/loyalty-portal";
 import { cancelClientAppointment, clientLogout } from "../actions";
 
 const STATUS_KEYS = ["booked", "confirmed", "completed", "cancelled", "no_show"] as const;
@@ -29,17 +31,23 @@ export default async function ClientComptePage() {
     inst_services: { name: string } | null;
   }> = [];
 
+  let loyalty = null;
+
   try {
     const db = createServiceClient();
-    const { data } = await db
-      .from("inst_appointments")
-      .select("id, starts_at, status, inst_services(name)")
-      .eq("tenant_id", tenant.id)
-      .eq("client_id", session.clientId)
-      .gte("starts_at", new Date().toISOString())
-      .not("status", "eq", "cancelled")
-      .order("starts_at");
-    appointments = (data ?? []) as typeof appointments;
+    const [apptsRes, loyaltyView] = await Promise.all([
+      db
+        .from("inst_appointments")
+        .select("id, starts_at, status, inst_services(name)")
+        .eq("tenant_id", tenant.id)
+        .eq("client_id", session.clientId)
+        .gte("starts_at", new Date().toISOString())
+        .not("status", "eq", "cancelled")
+        .order("starts_at"),
+      loadClientLoyaltyPortalView(db, tenant.id, session.clientId),
+    ]);
+    appointments = (apptsRes.data ?? []) as typeof appointments;
+    loyalty = loyaltyView;
   } catch {
     /* service role absent en dev */
   }
@@ -57,6 +65,8 @@ export default async function ClientComptePage() {
       >
         <span className="text-sm text-slate-600">{session.email}</span>
       </ListToolbar>
+
+      {loyalty ? <ClientLoyaltyPanel loyalty={loyalty} /> : null}
 
       <DataTable empty={appointments.length === 0 ? t("empty") : undefined}>
         <table className="w-full text-sm">

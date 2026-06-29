@@ -623,13 +623,27 @@
         },
         "stats": {
           "clientsWithPoints": "Deelnemende klanten",
-          "pointsOutstanding": "{label} in omloop"
+          "pointsOutstanding": "{label} in omloop",
+          "monthSummary": "Deze maand: +{earned} {label} toegekend · {redeemed} ingewisseld"
+        },
+        "starterPack": "Sjabloon instituut (10 pt / bezoek, −10 % bij 100 pt)",
+        "capabilities": {
+          "title": "Functies",
+          "earnPaid": "Punten na afgeronde afspraak of betaalde kassa-aankoop",
+          "portal": "Kaart zichtbaar op het klantenportaal",
+          "birthday": "Verjaardagsbonus geconfigureerd",
+          "upsell": "Beloning voor nieuwe behandelingen",
+          "redeemPos": "Punten inwisselen aan kassa (binnenkort)",
+          "referral": "Verwijzingspunten (binnenkort)"
         },
         "program": {
           "title": "Instellingen",
           "description": "Naam, puntenlabel en activering van het loyaliteitsprogramma.",
           "name": "Naam van het programma",
           "pointsLabel": "Label van de punten",
+          "birthdayBonus": "Verjaardagsbonus (punten)",
+          "birthdayBonusHint": "Punten op de verjaardag — automatische verzending binnenkort.",
+          "portalVisible": "Zichtbaar op het klantenportaal (/client/compte)",
           "active": "Programma actief",
           "saved": "Programma opgeslagen."
         },
@@ -686,6 +700,7 @@
           "empty": "Nog geen beloningen.",
           "footer": "{count, plural, one {# beloning} other {# beloningen}}",
           "redeemHint": "Punten inwisselen aan de kassa komt binnenkort.",
+          "newServiceOnlyShort": "nieuwe behandeling",
           "createTitle": "Nieuwe beloning",
           "editTitle": "Beloning bewerken",
           "deleteConfirm": "Deze beloning verwijderen?",
@@ -711,18 +726,22 @@
             "discountPercent": "Kortingspercentage",
             "discountEur": "Kortingsbedrag (€)",
             "service": "Gratis behandeling",
+            "newServiceOnly": "Alleen nieuwe behandeling",
+            "newServiceOnlyHint": "Alleen voor een behandeling die de klant nog nooit heeft geboekt.",
             "active": "Beloning actief"
           }
         },
         "actions": {
-          "missingFields": "Champs requis manquants.",
-          "invalidRule": "Règle invalide.",
-          "shopifyUnavailable": "Shopify n'est pas encore disponible.",
-          "wooRequired": "Connectez WooCommerce pour utiliser cette source.",
-          "invalidReward": "Récompense invalide.",
-          "invalidPercent": "Pourcentage invalide.",
-          "invalidAmount": "Montant invalide.",
-          "serviceRequired": "Prestation requise."
+          "missingFields": "Verplichte velden ontbreken.",
+          "invalidRule": "Ongeldige regel.",
+          "shopifyUnavailable": "Shopify is nog niet beschikbaar.",
+          "wooRequired": "Koppel WooCommerce om deze bron te gebruiken.",
+          "invalidReward": "Ongeldige beloning.",
+          "invalidPercent": "Ongeldig percentage.",
+          "invalidAmount": "Ongeldig bedrag.",
+          "serviceRequired": "Behandeling verplicht.",
+          "starterApplied": "Sjabloon toegepast: regel en beloning aangemaakt.",
+          "starterNotEmpty": "Sjabloon werkt alleen op een leeg programma."
         }
       },
       "website": {
@@ -2106,6 +2125,12 @@
           "completed": "Afgerond",
           "cancelled": "Geannuleerd",
           "no_show": "Niet verschenen"
+        },
+        "loyalty": {
+          "subtitle": "Uw loyaliteitskaart",
+          "newServiceOnly": "nieuwe behandeling",
+          "noRewards": "Nog geen beloningen beschikbaar.",
+          "redeemSoon": "Online inwisselen komt binnenkort — vraag intussen aan de balie."
         }
       }
     }

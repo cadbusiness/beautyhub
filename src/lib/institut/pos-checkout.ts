@@ -118,11 +118,26 @@ async function resolvePaymentReferences(
   return resolved;
 }
 
-export async function executePosCheckout(
+export interface ResolvedPosCartTotals {
+  lines: Awaited<ReturnType<typeof resolveCartLines>>;
+  totals: ReturnType<typeof computeCartTotals>;
+  preSubtotalCents: number;
+  loyaltyDiscountCents: number;
+  cartDiscountCents: number;
+  settings: PosSettings;
+}
+
+/** Calcule les totaux panier avec remise manuelle et récompense fidélité éventuelle. */
+export async function resolvePosCartTotals(
   supabase: Db,
   tenantId: string,
-  input: PosCheckoutInput,
-): Promise<PosCheckoutResult> {
+  input: {
+    cartJson: string;
+    cartDiscountCents?: number;
+    clientId?: string | null;
+    loyaltyRewardId?: string | null;
+  },
+): Promise<ResolvedPosCartTotals> {
   let cart: Record<string, number>;
   try {
     cart = parsePosCart(input.cartJson);
@@ -132,16 +147,8 @@ export async function executePosCheckout(
   if (Object.keys(cart).length === 0) throw new Error("empty_cart");
 
   const settings = await getPosSettings(supabase, tenantId);
-  let sessionId = input.cashSessionId ?? null;
-  if (!sessionId) {
-    const open = await getOpenCashSession(supabase, tenantId);
-    if (open) sessionId = open.id;
-    else await requireOpenSessionIfNeeded(supabase, tenantId);
-  }
-
   const lines = await resolveCartLines(supabase, tenantId, cart);
-  const baseCartDiscountCents =
-    input.cartDiscountCents ?? parseCartDiscountCents(null);
+  const baseCartDiscountCents = input.cartDiscountCents ?? 0;
 
   const preTotals = computeCartTotals(lines, {
     priceDisplay: settings.price_display,
@@ -166,14 +173,57 @@ export async function executePosCheckout(
   }
 
   const cartDiscountCents = baseCartDiscountCents + loyaltyDiscountCents;
-
   const totals = computeCartTotals(lines, {
     priceDisplay: settings.price_display,
     vatRateForType: (type) => vatRateForLineType(settings, type),
     cartDiscountCents,
   });
 
+  return {
+    lines,
+    totals,
+    preSubtotalCents: preTotals.subtotal_cents,
+    loyaltyDiscountCents,
+    cartDiscountCents,
+    settings,
+  };
+}
+
+export async function executePosCheckout(
+  supabase: Db,
+  tenantId: string,
+  input: PosCheckoutInput,
+): Promise<PosCheckoutResult> {
+  let cart: Record<string, number>;
+  try {
+    cart = parsePosCart(input.cartJson);
+  } catch {
+    throw new Error("invalid_cart");
+  }
+  if (Object.keys(cart).length === 0) throw new Error("empty_cart");
+
+  const baseCartDiscountCents =
+    input.cartDiscountCents ?? parseCartDiscountCents(null);
+
+  const { lines, totals, preSubtotalCents, settings } = await resolvePosCartTotals(
+    supabase,
+    tenantId,
+    {
+      cartJson: input.cartJson,
+      cartDiscountCents: baseCartDiscountCents,
+      clientId: input.clientId,
+      loyaltyRewardId: input.loyaltyRewardId,
+    },
+  );
+
   if (totals.total_cents <= 0) throw new Error("invalid_amount");
+
+  let sessionId = input.cashSessionId ?? null;
+  if (!sessionId) {
+    const open = await getOpenCashSession(supabase, tenantId);
+    if (open) sessionId = open.id;
+    else await requireOpenSessionIfNeeded(supabase, tenantId);
+  }
 
   const rawPayments = input.payments.filter((p) => p.amount_cents > 0);
   if (rawPayments.length === 0) throw new Error("no_payments");
@@ -310,12 +360,21 @@ export async function executePosCheckout(
       input.clientId,
       input.loyaltyRewardId,
       sale.id,
-      preTotals.subtotal_cents,
+      preSubtotalCents,
     );
   }
 
   if (status === "paid") {
     await processLoyaltyForPaidSale(supabase, tenantId, sale.id);
+  }
+
+  if (status === "paid" && input.appointmentId) {
+    await supabase
+      .from("inst_appointments")
+      .update({ status: "completed" })
+      .eq("tenant_id", tenantId)
+      .eq("id", input.appointmentId)
+      .in("status", ["booked", "confirmed"]);
   }
 
   return {

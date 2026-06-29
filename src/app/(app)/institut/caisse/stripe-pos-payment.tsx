@@ -20,6 +20,7 @@ function PaymentForm({
   cartJson,
   clientId,
   cartDiscountEuros,
+  loyaltyRewardId,
   totalCents,
   onSuccess,
   onCancel,
@@ -27,6 +28,7 @@ function PaymentForm({
   cartJson: string;
   clientId: string;
   cartDiscountEuros: string;
+  loyaltyRewardId: string;
   totalCents: number;
   onSuccess: (message: string) => void;
   onCancel: () => void;
@@ -64,6 +66,7 @@ function PaymentForm({
       cartJson,
       clientId || null,
       cartDiscountEuros,
+      loyaltyRewardId || null,
     );
     if (result.error) {
       setError(result.error);
@@ -95,6 +98,7 @@ export function StripePosPayment({
   clientId: initialClientId,
   totalCents,
   cartDiscountEuros = "0",
+  loyaltyRewardId = "",
   publishableKey,
   stripeAccountId,
   disabled,
@@ -104,6 +108,7 @@ export function StripePosPayment({
   clientId: string;
   totalCents: number;
   cartDiscountEuros?: string;
+  loyaltyRewardId?: string;
   publishableKey: string;
   stripeAccountId: string;
   disabled: boolean;
@@ -123,7 +128,12 @@ export function StripePosPayment({
   async function startPayment() {
     setLoading(true);
     setError(null);
-    const result = await createStripePaymentIntent(cartJson, cartDiscountEuros);
+    const result = await createStripePaymentIntent(
+      cartJson,
+      cartDiscountEuros,
+      initialClientId || null,
+      loyaltyRewardId || null,
+    );
     if (result.error || !result.clientSecret) {
       setError(result.error ?? t("startFailed"));
       setLoading(false);
@@ -140,6 +150,7 @@ export function StripePosPayment({
           cartJson={cartJson}
           clientId={initialClientId}
           cartDiscountEuros={cartDiscountEuros}
+          loyaltyRewardId={loyaltyRewardId}
           totalCents={totalCents}
           onSuccess={onSuccess}
           onCancel={() => setClientSecret(null)}

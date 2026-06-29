@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -316,6 +317,15 @@ export function AppointmentForm({
 
       {state.error && !showScheduleWarning ? (
         <p className="text-sm text-red-600">{state.error}</p>
+      ) : null}
+
+      {mode === "edit" && appointment && appointment.status !== "cancelled" ? (
+        <Link
+          href={`/institut/caisse?appointment=${appointment.id}`}
+          className="inline-flex h-9 w-full items-center justify-center rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-900 hover:bg-slate-50"
+        >
+          {t("checkout")}
+        </Link>
       ) : null}
 
       <Button type="submit" disabled={pending || !serviceId}>

@@ -32,11 +32,24 @@ export default async function ClientDetailPage({
     overview = (await fetchClientOverview(supabase, session.tenant.id, id)) ?? overview;
   }
 
+  const { data: referrerRows } = await supabase
+    .from("clients")
+    .select("id, full_name, email")
+    .eq("tenant_id", session.tenant.id)
+    .neq("id", id)
+    .order("full_name");
+
+  const referrerOptions = (referrerRows ?? []).map((c) => ({
+    id: c.id,
+    label: c.full_name ? `${c.full_name} (${c.email})` : c.email,
+  }));
+
   return (
     <ClientDetail
       overview={overview}
       canAnonymize={canManageInstitutSettings(session.role, session.enabledModuleIds)}
       isAnonymized={isAnonymizedClientEmail(overview.client.email)}
+      referrerOptions={referrerOptions}
     />
   );
 }

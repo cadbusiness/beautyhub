@@ -67,10 +67,12 @@ export function ClientDetail({
   overview,
   canAnonymize,
   isAnonymized,
+  referrerOptions = [],
 }: {
   overview: ClientOverview;
   canAnonymize: boolean;
   isAnonymized: boolean;
+  referrerOptions?: { id: string; label: string }[];
 }) {
   const t = useTranslations("institut.clients.detail");
   const tAppt = useTranslations("appointments.status");
@@ -497,7 +499,11 @@ export function ClientDetail({
       </ListPanel>
 
       <FormDialog open={editOpen} onClose={() => setEditOpen(false)} title={t("editTitle")} size="lg">
-        <ClientForm client={client} onSuccess={() => setEditOpen(false)} />
+        <ClientForm
+          client={client}
+          referrerOptions={referrerOptions}
+          onSuccess={() => setEditOpen(false)}
+        />
       </FormDialog>
     </>
   );

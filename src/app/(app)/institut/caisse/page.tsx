@@ -7,6 +7,7 @@ import { getTenantConnectionStatus } from "@/lib/connections";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { getStripeAccountForTenant } from "@/lib/stripe/index";
 import { buildCatalog } from "@/lib/institut/pos";
+import { buildPosAppointmentOption } from "@/lib/institut/pos-appointment";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import { getOpenCashSession } from "@/lib/institut/pos-session";
 import { Card } from "@/components/ui/card";
@@ -14,13 +15,24 @@ import { Button } from "@/components/ui/button";
 import { PosTerminal } from "./pos-terminal";
 import { syncWooProducts } from "../woo-actions";
 
-export default async function CaissePage() {
+const APPOINTMENT_SELECT =
+  "id, client_id, staff_id, service_id, starts_at, clients(full_name, email), inst_services(name), extras:inst_appointment_extras(service_id, quantity, name)";
+
+export default async function CaissePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ appointment?: string }>;
+}) {
   const t = await getTranslations("institut.pos");
+  const { appointment: initialAppointmentId } = await searchParams;
   const session = await requireModule("institut");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
-  const [woo, stripeAccount, servicesRes, productsRes, clientsRes, posSettings, staffRes, apptsRes, cashSession] =
+  const dayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+  const dayEnd = new Date(new Date().setHours(23, 59, 59, 999)).toISOString();
+
+  const [woo, stripeAccount, servicesRes, productsRes, clientsRes, posSettings, staffRes, apptsRes, cashSession, linkedApptRes] =
     await Promise.all([
     getTenantConnectionStatus(tenantId, WOO_PROVIDER),
     getStripeAccountForTenant(tenantId),
@@ -49,15 +61,22 @@ export default async function CaissePage() {
       .order("full_name"),
     supabase
       .from("inst_appointments")
-      .select(
-        "id, client_id, service_id, starts_at, clients(full_name, email), inst_services(name), extras:inst_appointment_extras(service_id, quantity, name)",
-      )
+      .select(APPOINTMENT_SELECT)
       .eq("tenant_id", tenantId)
-      .gte("starts_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
-      .lte("starts_at", new Date(new Date().setHours(23, 59, 59, 999)).toISOString())
+      .gte("starts_at", dayStart)
+      .lte("starts_at", dayEnd)
       .in("status", ["booked", "confirmed", "completed"])
       .order("starts_at"),
     getOpenCashSession(supabase, tenantId),
+    initialAppointmentId
+      ? supabase
+          .from("inst_appointments")
+          .select(APPOINTMENT_SELECT)
+          .eq("tenant_id", tenantId)
+          .eq("id", initialAppointmentId)
+          .in("status", ["booked", "confirmed", "completed"])
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   const connected = woo?.status === "connected";
@@ -70,33 +89,21 @@ export default async function CaissePage() {
     id: s.id,
     label: s.full_name,
   }));
-  const appointments = (apptsRes.data ?? []).map((a) => {
-    const client = a.clients as { full_name: string | null; email: string } | null;
-    const service = a.inst_services as { name: string } | null;
-    const extras = (a.extras ?? []) as { service_id: string; quantity: number; name: string }[];
-    const time = new Date(a.starts_at).toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const extrasLabel =
-      extras.length > 0
-        ? ` (+ ${extras.map((e) => (e.quantity > 1 ? `${e.quantity}× ` : "") + e.name).join(", ")})`
-        : "";
-    const prefillCart: Record<string, number> = {};
-    if (a.service_id) prefillCart[`service:${a.service_id}`] = 1;
-    for (const ex of extras) {
-      const key = `service:${ex.service_id}`;
-      prefillCart[key] = (prefillCart[key] ?? 0) + ex.quantity;
-    }
-    return {
-      id: a.id,
-      clientId: a.client_id ?? undefined,
-      serviceId: a.service_id ?? undefined,
-      extras,
-      prefillCart,
-      label: `${time} · ${service?.name ?? "?"}${extrasLabel} · ${client?.full_name ?? client?.email ?? "—"}`,
-    };
-  });
+  const appointmentRows = [...(apptsRes.data ?? [])];
+  if (
+    linkedApptRes.data &&
+    !appointmentRows.some((a) => a.id === linkedApptRes.data!.id)
+  ) {
+    appointmentRows.push(linkedApptRes.data);
+    appointmentRows.sort(
+      (a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+    );
+  }
+  const appointments = appointmentRows.map((a) =>
+    buildPosAppointmentOption(
+      a as Parameters<typeof buildPosAppointmentOption>[0],
+    ),
+  );
 
   const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
   const stripeEnabled = Boolean(stripeAccount && stripePublishableKey);
@@ -154,6 +161,7 @@ export default async function CaissePage() {
             clients={clients}
             staff={staff}
             appointments={appointments}
+            initialAppointmentId={initialAppointmentId ?? undefined}
             settings={posSettings}
             sessionOpen={Boolean(cashSession)}
             requireSession={posSettings.require_open_session}

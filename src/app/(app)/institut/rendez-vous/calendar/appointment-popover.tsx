@@ -2,8 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { useFormatter, useTranslations } from "next-intl";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { CalendarAppointment } from "./types";
+
+const CHECKOUT_STATUSES = new Set(["booked", "confirmed", "completed"]);
 
 const VALID_STATUSES = [
   "booked",
@@ -30,6 +33,7 @@ export function AppointmentPopover({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const t = useTranslations("common");
+  const tCal = useTranslations("appointments.calendar");
   const tStatus = useTranslations("appointments.status");
   const format = useFormatter();
 
@@ -131,21 +135,32 @@ export function AppointmentPopover({
             ) : null}
           </div>
         </dl>
-        <div className="mt-4 flex gap-2">
-          <Button type="button" className="h-9 flex-1" onClick={onEdit} disabled={pending}>
-            {t("edit")}
-          </Button>
-          {appt.status !== "cancelled" ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 text-red-600"
-              onClick={onCancel}
-              disabled={pending}
+        <div className="mt-4 flex flex-col gap-2">
+          {CHECKOUT_STATUSES.has(appt.status) ? (
+            <Link
+              href={`/institut/caisse?appointment=${appt.id}`}
+              className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800"
+              onClick={onClose}
             >
-              {t("cancel")}
-            </Button>
+              {tCal("checkout")}
+            </Link>
           ) : null}
+          <div className="flex gap-2">
+            <Button type="button" className="h-9 flex-1" onClick={onEdit} disabled={pending}>
+              {t("edit")}
+            </Button>
+            {appt.status !== "cancelled" ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 text-red-600"
+                onClick={onCancel}
+                disabled={pending}
+              >
+                {t("cancel")}
+              </Button>
+            ) : null}
+          </div>
         </div>
       </div>
     </>

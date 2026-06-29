@@ -20,6 +20,7 @@ export type ClientRow = {
   has_portal_account: boolean;
   login_id: string | null;
   pin_code: string | null;
+  referred_by_client_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -104,7 +105,7 @@ export type ClientProfile = ClientOverview & {
 };
 
 const CLIENT_SELECT =
-  "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_code, pin_hash, password_hash, created_at, updated_at";
+  "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_code, pin_hash, password_hash, referred_by_client_id, created_at, updated_at";
 
 function mapClient(row: Record<string, unknown>): ClientRow {
   return {
@@ -124,6 +125,7 @@ function mapClient(row: Record<string, unknown>): ClientRow {
     has_portal_account: Boolean(row.pin_hash ?? row.password_hash),
     login_id: (row.login_id as string | null) ?? null,
     pin_code: (row.pin_code as string | null) ?? null,
+    referred_by_client_id: (row.referred_by_client_id as string | null) ?? null,
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
   };
@@ -529,5 +531,7 @@ export function clientFormFields(formData: FormData) {
     notes: String(formData.get("notes") ?? "").trim() || null,
     tags: parseClientTags(String(formData.get("tags") ?? "")),
     marketing_opt_in: formData.get("marketing_opt_in") === "on",
+    referred_by_client_id:
+      String(formData.get("referred_by_client_id") ?? "").trim() || null,
   };
 }

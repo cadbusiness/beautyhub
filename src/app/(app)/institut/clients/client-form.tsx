@@ -4,17 +4,20 @@ import { useActionState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { createClientRecord, updateClientRecord, type ActionResult } from "../actions";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/input";
+import { Field, Input, Select } from "@/components/ui/input";
 import type { ClientRow } from "@/lib/institut/clients";
 
 const initial: ActionResult = {};
 
+type ReferrerOption = { id: string; label: string };
+
 type ClientFormProps = {
   client?: ClientRow | null;
+  referrerOptions?: ReferrerOption[];
   onSuccess?: () => void;
 };
 
-export function ClientForm({ client, onSuccess }: ClientFormProps) {
+export function ClientForm({ client, referrerOptions = [], onSuccess }: ClientFormProps) {
   const t = useTranslations("institut.clients.form");
   const tCommon = useTranslations("common");
   const isEdit = Boolean(client);
@@ -67,6 +70,26 @@ export function ClientForm({ client, onSuccess }: ClientFormProps) {
           defaultValue={client?.date_of_birth ?? ""}
         />
       </Field>
+
+      {referrerOptions.length > 0 ? (
+        <Field label={t("referrer")} htmlFor="referred_by_client_id">
+          <Select
+            id="referred_by_client_id"
+            name="referred_by_client_id"
+            defaultValue={client?.referred_by_client_id ?? ""}
+          >
+            <option value="">{t("referrerNone")}</option>
+            {referrerOptions
+              .filter((opt) => opt.id !== client?.id)
+              .map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
+          </Select>
+          <p className="mt-1 text-xs text-slate-500">{t("referrerHint")}</p>
+        </Field>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t("addressLine1")} htmlFor="address_line1">

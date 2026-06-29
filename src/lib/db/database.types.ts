@@ -164,6 +164,7 @@ export type Database = {
           pin_code: string | null
           pin_hash: string | null
           postal_code: string | null
+          referred_by_client_id: string | null
           tags: string[]
           tenant_id: string
           updated_at: string
@@ -187,6 +188,7 @@ export type Database = {
           pin_code?: string | null
           pin_hash?: string | null
           postal_code?: string | null
+          referred_by_client_id?: string | null
           tags?: string[]
           tenant_id: string
           updated_at?: string
@@ -210,6 +212,7 @@ export type Database = {
           pin_code?: string | null
           pin_hash?: string | null
           postal_code?: string | null
+          referred_by_client_id?: string | null
           tags?: string[]
           tenant_id?: string
           updated_at?: string

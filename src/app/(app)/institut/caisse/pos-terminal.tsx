@@ -17,16 +17,12 @@ import {
   vatRateForLineType,
   type PosSettings,
 } from "@/lib/institut/pos-settings";
+import {
+  applyPosAppointmentPrefill,
+  type PosAppointmentOption,
+} from "@/lib/institut/pos-appointment";
 import { CheckoutPanel } from "./checkout-panel";
-
-interface PosAppointmentOption {
-  id: string;
-  label: string;
-  clientId?: string;
-  serviceId?: string;
-  extras: { service_id: string; quantity: number; name: string }[];
-  prefillCart: Record<string, number>;
-}
+import { PosLoyaltyPicker } from "./pos-loyalty-picker";
 
 interface Option {
   id: string;
@@ -41,6 +37,7 @@ export function PosTerminal({
   clients,
   staff,
   appointments,
+  initialAppointmentId,
   settings,
   sessionOpen,
   requireSession,
@@ -52,6 +49,7 @@ export function PosTerminal({
   clients: Option[];
   staff: Option[];
   appointments: PosAppointmentOption[];
+  initialAppointmentId?: string;
   settings: PosSettings;
   sessionOpen: boolean;
   requireSession: boolean;
@@ -60,12 +58,19 @@ export function PosTerminal({
   stripeAccountId?: string;
 }) {
   const t = useTranslations("pos.terminal");
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const initialAppt = initialAppointmentId
+    ? appointments.find((a) => a.id === initialAppointmentId)
+    : undefined;
+  const initialPrefill = initialAppt ? applyPosAppointmentPrefill(initialAppt) : null;
+
+  const [cart, setCart] = useState<Record<string, number>>(() => initialPrefill?.cart ?? {});
   const [tab, setTab] = useState<PosCategory>("all");
   const [query, setQuery] = useState("");
-  const [clientId, setClientId] = useState("");
-  const [staffId, setStaffId] = useState("");
-  const [appointmentId, setAppointmentId] = useState("");
+  const [clientId, setClientId] = useState(() => initialPrefill?.clientId ?? "");
+  const [staffId, setStaffId] = useState(() => initialPrefill?.staffId ?? "");
+  const [appointmentId, setAppointmentId] = useState(() => initialPrefill?.appointmentId ?? "");
+  const [loyaltyRewardId, setLoyaltyRewardId] = useState("");
+  const [loyaltyPreviewCents, setLoyaltyPreviewCents] = useState(0);
   const [notes, setNotes] = useState("");
   const [cartDiscountEuros, setCartDiscountEuros] = useState("0");
   const [checkoutState, checkoutAction, checkoutPending] = useActionState(
@@ -85,8 +90,30 @@ export function PosTerminal({
       setLastSale(checkoutState);
       setCart({});
       setCartDiscountEuros("0");
+      setLoyaltyRewardId("");
+      setLoyaltyPreviewCents(0);
+      setAppointmentId("");
     }
   }, [checkoutState]);
+
+  function selectAppointment(id: string) {
+    setAppointmentId(id);
+    const appt = appointments.find((a) => a.id === id);
+    if (!appt) return;
+    if (appt.clientId) setClientId(appt.clientId);
+    if (appt.staffId) setStaffId(appt.staffId);
+    if (Object.keys(appt.prefillCart).length > 0) {
+      setCart(appt.prefillCart);
+      setLastSale(null);
+    }
+    setLoyaltyRewardId("");
+    setLoyaltyPreviewCents(0);
+  }
+
+  function handleLoyaltyChange(rewardId: string, discountCents: number) {
+    setLoyaltyRewardId(rewardId);
+    setLoyaltyPreviewCents(discountCents);
+  }
 
   const tabs: { id: PosCategory; label: string }[] = [
     { id: "all", label: t("tabs.all") },
@@ -148,6 +175,17 @@ export function PosTerminal({
     return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0;
   }, [cartDiscountEuros]);
 
+  const subtotalForLoyalty = useMemo(() => {
+    if (resolvedForTotals.length === 0) return 0;
+    return computeCartTotals(resolvedForTotals, {
+      priceDisplay: settings.price_display,
+      vatRateForType: (type) => vatRateForLineType(settings, type),
+      cartDiscountCents: discountCents,
+    }).subtotal_cents;
+  }, [resolvedForTotals, settings, discountCents]);
+
+  const totalDiscountCents = discountCents + loyaltyPreviewCents;
+
   const totals = useMemo(() => {
     if (resolvedForTotals.length === 0) {
       return {
@@ -162,9 +200,9 @@ export function PosTerminal({
     return computeCartTotals(resolvedForTotals, {
       priceDisplay: settings.price_display,
       vatRateForType: (type) => vatRateForLineType(settings, type),
-      cartDiscountCents: discountCents,
+      cartDiscountCents: totalDiscountCents,
     });
-  }, [resolvedForTotals, settings, discountCents]);
+  }, [resolvedForTotals, settings, totalDiscountCents]);
 
   const catalogTotal = useMemo(() => cartTotal(cart, catalog), [cart, catalog]);
 
@@ -191,6 +229,8 @@ export function PosTerminal({
   function handleStripeSuccess(message: string) {
     setCart({});
     setCartDiscountEuros("0");
+    setLoyaltyRewardId("");
+    setLoyaltyPreviewCents(0);
     setNotes("");
     void message;
   }
@@ -301,6 +341,13 @@ export function PosTerminal({
           </p>
         ) : null}
 
+        {initialAppt && appointmentId === initialAppt.id ? (
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+            <p className="font-medium">{t("appointmentLinked")}</p>
+            <p className="mt-0.5 text-xs text-blue-800">{initialAppt.label}</p>
+          </div>
+        ) : null}
+
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             {t("cart.title")}
@@ -388,13 +435,11 @@ export function PosTerminal({
           value={appointmentId}
           onChange={(e) => {
             const id = e.target.value;
-            setAppointmentId(id);
-            const appt = appointments.find((a) => a.id === id);
-            if (appt?.clientId) setClientId(appt.clientId);
-            if (appt?.prefillCart && Object.keys(appt.prefillCart).length > 0) {
-              setCart(appt.prefillCart);
-              setLastSale(null);
+            if (!id) {
+              setAppointmentId("");
+              return;
             }
+            selectAppointment(id);
           }}
           aria-label={t("cart.appointmentAria")}
         >
@@ -408,7 +453,11 @@ export function PosTerminal({
 
         <Select
           value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
+          onChange={(e) => {
+            setClientId(e.target.value);
+            setLoyaltyRewardId("");
+            setLoyaltyPreviewCents(0);
+          }}
           aria-label={t("cart.clientAria")}
         >
           <option value="">{t("cart.noClient")}</option>
@@ -427,6 +476,15 @@ export function PosTerminal({
         />
 
         {!cartEmpty ? (
+          <PosLoyaltyPicker
+            clientId={clientId}
+            subtotalCents={subtotalForLoyalty}
+            selectedRewardId={loyaltyRewardId}
+            onRewardChange={handleLoyaltyChange}
+          />
+        ) : null}
+
+        {!cartEmpty ? (
           <CheckoutPanel
             cartJson={cartJson}
             clientId={clientId}
@@ -434,6 +492,7 @@ export function PosTerminal({
             appointmentId={appointmentId}
             notes={notes}
             cartDiscountEuros={cartDiscountEuros}
+            loyaltyRewardId={loyaltyRewardId}
             totals={totals}
             settings={settings}
             stripeEnabled={Boolean(stripeEnabled)}

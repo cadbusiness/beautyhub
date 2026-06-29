@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/db/database.types";
 import { requireModule } from "@/lib/auth/guards";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
 import { translateQuotaError } from "@/lib/i18n/quota";
@@ -23,6 +24,7 @@ import {
   syncAppointmentExtras,
 } from "@/lib/institut/appointment-extras";
 import { processLoyaltyForCompletedAppointment } from "@/lib/institut/loyalty";
+import { processSameDayRebookOnNewAppointment } from "@/lib/institut/loyalty-events";
 import { WEEKDAYS } from "./equipe/constants";
 
 export interface ActionResult {
@@ -184,12 +186,23 @@ export async function createClientRecord(
   if (!fields.email) return { error: t("missingFields") };
 
   const supabase = await createClient();
+  const referredBy = fields.referred_by_client_id;
+  if (referredBy) {
+    const { data: referrer } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("tenant_id", session.tenant.id)
+      .eq("id", referredBy)
+      .maybeSingle();
+    if (!referrer) return { error: t("missingFields") };
+  }
+
   const { data: created, error } = await supabase
     .from("clients")
     .insert({
       tenant_id: session.tenant.id,
       ...fields,
-    })
+    } as Database["public"]["Tables"]["clients"]["Insert"])
     .select("id")
     .single();
   if (error) {
@@ -243,6 +256,18 @@ export async function updateClientRecord(
   if (!fields.email) return { error: t("missingFields") };
 
   const supabase = await createClient();
+
+  const referredBy = fields.referred_by_client_id;
+  if (referredBy) {
+    if (referredBy === clientId) return { error: t("clientReferrerSelf") };
+    const { data: referrer } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("tenant_id", session.tenant.id)
+      .eq("id", referredBy)
+      .maybeSingle();
+    if (!referrer) return { error: t("missingFields") };
+  }
 
   const { data: before } = await supabase
     .from("clients")
@@ -363,6 +388,17 @@ export async function createAppointment(
     extras,
   );
   if (extraErr) return { error: extraErr };
+
+  const bookedClientId = String(formData.get("client_id") ?? "") || null;
+  if (bookedClientId) {
+    await processSameDayRebookOnNewAppointment(
+      supabase,
+      session.tenant.id,
+      bookedClientId,
+      appt.id,
+    );
+  }
+
   revalidatePath("/institut/rendez-vous");
   return { ok: true };
 }

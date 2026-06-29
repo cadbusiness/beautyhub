@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import { processReferralOnFirstCompletedVisit } from "./loyalty-events";
 
 type Db = SupabaseClient<Database>;
 
@@ -259,6 +260,8 @@ export async function processLoyaltyForCompletedAppointment(
     idempotencyPrefix: `earn:appointment:${appt.id}`,
     notes: "RDV terminé",
   });
+
+  await processReferralOnFirstCompletedVisit(supabase, tenantId, appt.client_id);
 }
 
 export async function processLoyaltyForPaidSale(

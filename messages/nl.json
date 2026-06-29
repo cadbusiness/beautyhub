@@ -358,7 +358,8 @@
       "create": "Afspraak aanmaken",
       "scheduleWarningConfirm": "Bevestigen ondanks planning buiten openingstijden",
       "noServicesHint": "Geen behandelingen beschikbaar — maak er een aan om een afspraak te plannen.",
-      "addService": "Nieuwe behandeling"
+      "addService": "Nieuwe behandeling",
+      "checkout": "Deze afspraak afrekenen"
     },
     "list": {
       "new": "Nieuwe afspraak",
@@ -378,6 +379,7 @@
     },
     "calendar": {
       "editTitle": "Afspraak bewerken",
+      "checkout": "Afrekenen",
       "allServices": "Alle behandelingen",
       "allStaff": "Heel team",
       "publicPage": "Reserveringsinstellingen",
@@ -463,6 +465,12 @@
       "serviceDateRequired": "Behandeling en datum/tijd verplicht.",
       "missingFields": "Verplichte velden ontbreken.",
       "clientEmailExists": "Er bestaat al een klant met dit e-mailadres.",
+      "clientReferrerSelf": "Een klant kan zichzelf niet doorverwijzen.",
+      "loyaltyInsufficientPoints": "Onvoldoende loyaliteitspunten.",
+      "loyaltyRewardInvalid": "Ongeldige of inactieve beloning.",
+      "loyaltyRewardNotPos": "Deze beloning kan niet aan de kassa worden ingewisseld.",
+      "loyaltyNewServiceOnly": "Beloning alleen voor nieuwe behandelingen.",
+      "loyaltyProgramInactive": "Loyaliteitsprogramma inactief.",
       "workingHoursEndBeforeStart": "{day}: eindtijd moet na starttijd liggen.",
       "scheduleNameRequired": "Naam van het rooster is verplicht.",
       "scheduleNotFound": "Rooster niet gevonden.",
@@ -553,6 +561,11 @@
       "creditNoteInsufficient": "Onvoldoende creditnota-saldo.",
       "creditNoteExpired": "Creditnota verlopen.",
       "creditNoteRefRequired": "Creditnotanummer verplicht.",
+      "loyaltyInsufficientPoints": "Onvoldoende loyaltypunten.",
+      "loyaltyRewardInvalid": "Ongeldige loyaltybeloning.",
+      "loyaltyRewardNotPos": "Deze beloning kan niet aan de kassa worden gebruikt.",
+      "loyaltyNewServiceOnly": "Beloning alleen voor nieuwe behandelingen.",
+      "loyaltyProgramInactive": "Loyaltyprogramma inactief.",
       "extrasInvalid": "Extras invalides."
     },
     "scheduling": {
@@ -1073,6 +1086,9 @@
         "notes": "Interne notities",
         "notesPlaceholder": "Voorkeuren, contra-indicaties, opmerkingen…",
         "marketingOptIn": "Accepteert marketingcommunicatie",
+        "referrer": "Doorverwezen door",
+        "referrerNone": "— Geen doorverwijzing —",
+        "referrerHint": "Punten voor de doorverwijzer na het eerste afgeronde bezoek.",
         "submit": "Klant toevoegen",
         "submitting": "Toevoegen…",
         "submitEdit": "Opslaan",
@@ -2371,6 +2387,7 @@
         "appointmentAria": "Afspraak",
         "noAppointment": "— Geen afspr. —"
       },
+      "appointmentLinked": "Gekoppelde afspraak",
       "checkout": {
         "cashPending": "Afrekenen…",
         "cash": "Contant · {total}",
@@ -2405,6 +2422,15 @@
         "credit_note": "Creditnota"
       },
       "creditNotePlaceholder": "Creditnota nr. (AV-…)"
+    },
+    "loyalty": {
+      "title": "Loyalty",
+      "loading": "Punten laden…",
+      "pointsDefault": "punten",
+      "balance": "{count} {label}",
+      "noRewards": "Geen beloningen beschikbaar voor deze klant.",
+      "none": "Geen punten gebruiken",
+      "cost": "{count} {label}"
     },
     "stripe": {
       "paymentFailed": "Betaling mislukt.",

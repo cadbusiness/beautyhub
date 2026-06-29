@@ -3,6 +3,7 @@
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getTenantContext } from "@/lib/tenant/context";
+import { processSameDayRebookOnNewAppointment } from "@/lib/institut/loyalty-events";
 import type { BookingExtraLine, ServiceExtraConfig } from "@/lib/institut/service-extras";
 import {
   fetchPublicServiceExtras,
@@ -112,5 +113,23 @@ export async function bookPublicAppointment(input: {
   });
 
   if (error) return { error: error.message };
-  return { ok: true, appointmentId: data as string };
+
+  const appointmentId = data as string;
+  const { data: appt } = await supabase
+    .from("inst_appointments")
+    .select("client_id")
+    .eq("id", appointmentId)
+    .eq("tenant_id", tenant.id)
+    .maybeSingle();
+
+  if (appt?.client_id) {
+    await processSameDayRebookOnNewAppointment(
+      supabase,
+      tenant.id,
+      appt.client_id,
+      appointmentId,
+    );
+  }
+
+  return { ok: true, appointmentId };
 }

@@ -38,6 +38,7 @@ function revalidateCaisse() {
   revalidatePath("/institut/caisse");
   revalidatePath("/institut/caisse/historique");
   revalidatePath("/institut/caisse/produits");
+  revalidatePath("/institut/rendez-vous");
   revalidatePath("/compte/institut/caisse");
 }
 
@@ -78,6 +79,11 @@ async function translateCheckoutError(error: unknown): Promise<string> {
   if (code === "credit_note_insufficient") return t("creditNoteInsufficient");
   if (code === "credit_note_expired") return t("creditNoteExpired");
   if (code === "credit_note_ref_required") return t("creditNoteRefRequired");
+  if (code === "insufficient_points") return t("loyaltyInsufficientPoints");
+  if (code === "reward_invalid") return t("loyaltyRewardInvalid");
+  if (code === "reward_not_pos_eligible") return t("loyaltyRewardNotPos");
+  if (code === "new_service_only") return t("loyaltyNewServiceOnly");
+  if (code === "program_inactive") return t("loyaltyProgramInactive");
   return code;
 }
 
@@ -222,6 +228,7 @@ export async function checkoutPos(
       cartDiscountCents: parseCartDiscountCents(
         String(formData.get("cart_discount") ?? "0"),
       ),
+      loyaltyRewardId: String(formData.get("loyalty_reward_id") ?? "") || null,
       payments,
     });
 
@@ -253,6 +260,7 @@ export async function processPosCheckout(
     notes?: string;
     cartDiscountCents?: number;
     totalCents?: number;
+    loyaltyRewardId?: string | null;
   },
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
@@ -283,6 +291,7 @@ export async function processPosCheckout(
       notes: options?.notes,
       cartDiscountCents: options?.cartDiscountCents ?? 0,
       stripePaymentIntentId: options?.stripePaymentIntentId,
+      loyaltyRewardId: options?.loyaltyRewardId ?? null,
       payments: [
         {
           method: paymentMethod,

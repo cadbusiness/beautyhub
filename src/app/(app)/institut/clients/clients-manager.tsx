@@ -244,7 +244,14 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
         title={editing ? t("dialogEditTitle") : t("dialogTitle")}
         size={editing ? "lg" : "md"}
       >
-        <ClientForm client={editing} onSuccess={closeDialog} />
+        <ClientForm
+          client={editing}
+          referrerOptions={clients.map((c) => ({
+            id: c.id,
+            label: c.full_name ? `${c.full_name} (${c.email})` : c.email,
+          }))}
+          onSuccess={closeDialog}
+        />
       </FormDialog>
     </>
   );

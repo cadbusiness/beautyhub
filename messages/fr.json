@@ -358,7 +358,8 @@
       "create": "Créer le rendez-vous",
       "scheduleWarningConfirm": "Confirmer malgré l'horaire hors planning",
       "noServicesHint": "Aucune prestation disponible — créez-en une pour planifier un rendez-vous.",
-      "addService": "Nouvelle prestation"
+      "addService": "Nouvelle prestation",
+      "checkout": "Encaisser ce rendez-vous"
     },
     "list": {
       "new": "Nouveau rendez-vous",
@@ -378,6 +379,7 @@
     },
     "calendar": {
       "editTitle": "Modifier le rendez-vous",
+      "checkout": "Encaisser",
       "allServices": "Toutes les prestations",
       "allStaff": "Toute l'équipe",
       "publicPage": "Réglages réservation",
@@ -463,6 +465,12 @@
       "serviceDateRequired": "Prestation et date/heure requises.",
       "missingFields": "Champs requis manquants.",
       "clientEmailExists": "Un client avec cet e-mail existe déjà.",
+      "clientReferrerSelf": "Une cliente ne peut pas se parrainer elle-même.",
+      "loyaltyInsufficientPoints": "Points fidélité insuffisants.",
+      "loyaltyRewardInvalid": "Récompense fidélité invalide ou inactive.",
+      "loyaltyRewardNotPos": "Cette récompense n'est pas échangeable en caisse.",
+      "loyaltyNewServiceOnly": "Récompense réservée aux nouvelles prestations.",
+      "loyaltyProgramInactive": "Programme fidélité inactif.",
       "workingHoursEndBeforeStart": "{day} : l'heure de fin doit être après le début.",
       "scheduleNameRequired": "Nom de la grille requis.",
       "scheduleNotFound": "Grille horaire introuvable.",
@@ -553,7 +561,12 @@
       "creditNoteInvalid": "Avoir invalide.",
       "creditNoteInsufficient": "Solde avoir insuffisant.",
       "creditNoteExpired": "Avoir expiré.",
-      "creditNoteRefRequired": "Numéro d'avoir requis."
+      "creditNoteRefRequired": "Numéro d'avoir requis.",
+      "loyaltyInsufficientPoints": "Points fidélité insuffisants.",
+      "loyaltyRewardInvalid": "Récompense fidélité invalide.",
+      "loyaltyRewardNotPos": "Cette récompense n'est pas utilisable en caisse.",
+      "loyaltyNewServiceOnly": "Récompense réservée aux nouvelles prestations.",
+      "loyaltyProgramInactive": "Programme fidélité inactif."
     },
     "scheduling": {
       "conflict": {
@@ -1073,6 +1086,9 @@
         "notes": "Notes internes",
         "notesPlaceholder": "Préférences, contre-indications, remarques…",
         "marketingOptIn": "Accepte les communications marketing",
+        "referrer": "Parrainée par",
+        "referrerNone": "— Aucune parrainage —",
+        "referrerHint": "Points crédités à la parrainante après la première visite terminée.",
         "submit": "Ajouter le client",
         "submitting": "Ajout…",
         "submitEdit": "Enregistrer",
@@ -2368,6 +2384,7 @@
         "addToCheckout": "Ajoute des articles pour encaisser.",
         "settingsLink": "Paramètres caisse →"
       },
+      "appointmentLinked": "Rendez-vous lié",
       "sessionRequired": "Ouvrez la caisse pour enregistrer cette vente.",
       "openSession": "Ouvrir la caisse →",
       "noSessionHint": "Session fermée — ouvrir pour le suivi espèces",
@@ -2405,6 +2422,15 @@
         "gift_card": "Bon-cadeau",
         "credit_note": "Avoir"
       }
+    },
+    "loyalty": {
+      "title": "Fidélité",
+      "loading": "Chargement des points…",
+      "pointsDefault": "points",
+      "balance": "{count} {label}",
+      "noRewards": "Aucune récompense disponible pour ce client.",
+      "none": "Ne pas utiliser de points",
+      "cost": "{count} {label}"
     },
     "stripe": {
       "paymentFailed": "Paiement échoué.",

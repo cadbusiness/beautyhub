@@ -164,14 +164,31 @@ function getSetupPhase(
   return 1;
 }
 
+function LoyaltyQrPanel({ url, title, hint }: { url: string; title: string; hint: string }) {
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
+  return (
+    <div className="flex flex-wrap items-start gap-4">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={qrSrc} alt="" width={160} height={160} className="rounded border border-slate-200" />
+      <div className="min-w-0 flex-1 space-y-1">
+        <p className="text-sm font-medium text-slate-700">{title}</p>
+        <p className="break-all text-xs text-slate-500">{url}</p>
+        <p className="text-xs text-slate-400">{hint}</p>
+      </div>
+    </div>
+  );
+}
+
 export function LoyaltyManager({
   snapshot,
   integrations,
   services,
+  loyaltyPublicUrl,
 }: {
   snapshot: LoyaltyProgramSnapshot;
   integrations: LoyaltyIntegrations;
   services: ServiceOption[];
+  loyaltyPublicUrl: string;
 }) {
   const t = useTranslations("institut.marketing.loyalty");
   const tCommon = useTranslations("common");
@@ -466,8 +483,40 @@ export function LoyaltyManager({
                   defaultValue={program.birthday_bonus_points ?? 0}
                 />
               </Field>
+              <Field label={t("roadmap.referralPoints")} htmlFor="loyalty_referral_points">
+                <Input
+                  id="loyalty_referral_points"
+                  name="referral_points"
+                  type="number"
+                  min={0}
+                  step={1}
+                  defaultValue={program.referral_points ?? 0}
+                />
+              </Field>
+              <Field label={t("roadmap.rebookPoints")} htmlFor="loyalty_rebook_points">
+                <Input
+                  id="loyalty_rebook_points"
+                  name="same_day_rebook_points"
+                  type="number"
+                  min={0}
+                  step={1}
+                  defaultValue={program.same_day_rebook_points ?? 0}
+                />
+              </Field>
             </div>
             <p className="text-xs text-slate-500">{t("program.birthdayBonusHint")}</p>
+            <p className="text-xs text-slate-500">{t("roadmap.hint")}</p>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                name="birthday_auto_enabled"
+                value="1"
+                defaultChecked={program.birthday_auto_enabled ?? false}
+                className="rounded border-slate-300"
+              />
+              {t("program.birthdayAuto")}
+            </label>
 
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input
@@ -507,18 +556,34 @@ export function LoyaltyManager({
                 { done: true, label: t("capabilities.earnPaid") },
                 { done: program.portal_visible, label: t("capabilities.portal") },
                 {
-                  done: (program.birthday_bonus_points ?? 0) > 0,
+                  done:
+                    (program.birthday_bonus_points ?? 0) > 0 &&
+                    (program.birthday_auto_enabled ?? false),
                   label: t("capabilities.birthday"),
                 },
                 {
                   done: rewards.some((r) => r.new_service_only),
                   label: t("capabilities.upsell"),
                 },
-                { done: false, label: t("capabilities.redeemPos") },
-                { done: false, label: t("capabilities.referral") },
+                { done: isLive && hasRewards, label: t("capabilities.redeemPos") },
+                { done: (program.referral_points ?? 0) > 0, label: t("capabilities.referral") },
+                {
+                  done: (program.same_day_rebook_points ?? 0) > 0,
+                  label: t("capabilities.rebook"),
+                },
               ]}
             />
           </div>
+        </div>
+      ) : null}
+
+      {isLive && program.portal_visible ? (
+        <div className="border-t border-slate-200 px-4 py-3 lg:px-6">
+          <LoyaltyQrPanel
+            url={loyaltyPublicUrl}
+            title={t("roadmap.qrTitle")}
+            hint={t("roadmap.qrHint")}
+          />
         </div>
       ) : null}
 

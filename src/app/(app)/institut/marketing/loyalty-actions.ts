@@ -16,6 +16,7 @@ import {
   type LoyaltyRewardType,
   type LoyaltySourceType,
 } from "@/lib/institut/loyalty";
+import { buildLoyaltyPublicUrl } from "@/lib/institut/loyalty-public";
 
 const LOYALTY_PATH = "/institut/marketing/fidelite";
 
@@ -25,12 +26,13 @@ export async function loadLoyaltyPageData(): Promise<{
   snapshot: LoyaltyProgramSnapshot;
   integrations: LoyaltyIntegrations;
   services: { id: string; name: string }[];
+  loyaltyPublicUrl: string;
 }> {
   const session = await requireModule("institut");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
-  const [snapshot, wooConn, servicesRes] = await Promise.all([
+  const [snapshot, wooConn, servicesRes, loyaltyPublicUrl] = await Promise.all([
     loadLoyaltyProgramSnapshot(supabase, tenantId),
     resolveConnection(tenantId, WOO_PROVIDER),
     supabase
@@ -39,6 +41,7 @@ export async function loadLoyaltyPageData(): Promise<{
       .eq("tenant_id", tenantId)
       .eq("is_active", true)
       .order("name"),
+    buildLoyaltyPublicUrl(session.tenant.slug),
   ]);
 
   return {
@@ -48,6 +51,7 @@ export async function loadLoyaltyPageData(): Promise<{
       shopify: false,
     },
     services: servicesRes.data ?? [],
+    loyaltyPublicUrl,
   };
 }
 
@@ -74,7 +78,13 @@ export async function saveLoyaltyProgramSettings(
         0,
         Math.round(Number(formData.get("birthday_bonus_points") ?? 0)),
       ),
+      birthday_auto_enabled: formData.get("birthday_auto_enabled") === "1",
       portal_visible: formData.get("portal_visible") === "1",
+      referral_points: Math.max(0, Math.round(Number(formData.get("referral_points") ?? 0))),
+      same_day_rebook_points: Math.max(
+        0,
+        Math.round(Number(formData.get("same_day_rebook_points") ?? 0)),
+      ),
     })
     .eq("id", program.id)
     .eq("tenant_id", session.tenant.id);

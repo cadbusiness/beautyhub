@@ -633,8 +633,16 @@
           "portal": "Kaart zichtbaar op het klantenportaal",
           "birthday": "Verjaardagsbonus geconfigureerd",
           "upsell": "Beloning voor nieuwe behandelingen",
-          "redeemPos": "Punten inwisselen aan kassa (binnenkort)",
-          "referral": "Verwijzingspunten (binnenkort)"
+          "redeemPos": "Punten inwisselen aan kassa",
+          "referral": "Verwijzingspunten",
+          "rebook": "Bonus same-day rebooking"
+        },
+        "roadmap": {
+          "referralPoints": "Verwijzingspunten",
+          "rebookPoints": "Bonus same-day rebooking",
+          "hint": "Verwijzing en rebooking: automatische credit zodra een klant verwijst of dezelfde dag opnieuw boekt (0 = uit).",
+          "qrTitle": "QR-code ontvangst",
+          "qrHint": "Toon deze QR in de salon: klanten zien het programma en hun account."
         },
         "program": {
           "title": "Instellingen",
@@ -642,7 +650,8 @@
           "name": "Naam van het programma",
           "pointsLabel": "Label van de punten",
           "birthdayBonus": "Verjaardagsbonus (punten)",
-          "birthdayBonusHint": "Punten op de verjaardag — automatische verzending binnenkort.",
+          "birthdayBonusHint": "Punten op de verjaardag als automatische verzending is ingeschakeld.",
+          "birthdayAuto": "Automatische verjaardagsbonus",
           "portalVisible": "Zichtbaar op het klantenportaal (/client/compte)",
           "active": "Programma actief",
           "saved": "Programma opgeslagen."
@@ -699,7 +708,7 @@
           "add": "Nieuwe beloning",
           "empty": "Nog geen beloningen.",
           "footer": "{count, plural, one {# beloning} other {# beloningen}}",
-          "redeemHint": "Punten inwisselen aan de kassa komt binnenkort.",
+          "redeemHint": "Punten kunnen aan de kassa worden ingewisseld bij betaling (beloning selecteren).",
           "newServiceOnlyShort": "nieuwe behandeling",
           "createTitle": "Nieuwe beloning",
           "editTitle": "Beloning bewerken",
@@ -1974,6 +1983,15 @@
         "noServices": "Aucune prestation trouvée.",
         "hoursByAppointment": "Horaires sur rendez-vous."
       }
+    },
+    "loyalty": {
+      "unavailableTitle": "Loyaliteitsprogramma niet beschikbaar",
+      "unavailableBody": "Dit programma is momenteel niet actief.",
+      "intro": "Verdien punten bij elk bezoek en wissel ze in voor voordelen.",
+      "rewardsTitle": "Beloningen",
+      "pointsCost": "{cost} {label}",
+      "loginCta": "Mijn saldo bekijken",
+      "accountLink": "Ik heb al een account"
     },
     "booking": {
       "title": "Afspraak maken",

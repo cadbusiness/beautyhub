@@ -633,8 +633,16 @@
           "portal": "Carte visible sur le portail cliente",
           "birthday": "Bonus anniversaire configuré",
           "upsell": "Récompense réservée aux nouvelles prestations",
-          "redeemPos": "Échange des points en caisse (bientôt)",
-          "referral": "Points parrainage (bientôt)"
+          "redeemPos": "Échange des points en caisse",
+          "referral": "Points parrainage",
+          "rebook": "Bonus rebooking jour même"
+        },
+        "roadmap": {
+          "referralPoints": "Points parrainage",
+          "rebookPoints": "Bonus rebooking jour même",
+          "hint": "Parrainage et rebooking : crédit automatique dès qu'une cliente parraine ou reprend RDV le jour même (0 = désactivé).",
+          "qrTitle": "QR code accueil",
+          "qrHint": "Affichez ce QR en salon : vos clientes accèdent au programme et à leur compte."
         },
         "program": {
           "title": "Paramètres",
@@ -642,7 +650,8 @@
           "name": "Nom du programme",
           "pointsLabel": "Libellé des points",
           "birthdayBonus": "Bonus anniversaire (points)",
-          "birthdayBonusHint": "Points offerts le jour d'anniversaire — envoi automatique bientôt disponible.",
+          "birthdayBonusHint": "Points offerts le jour d'anniversaire si l'envoi automatique est activé.",
+          "birthdayAuto": "Envoi automatique du bonus anniversaire",
           "portalVisible": "Visible sur le portail cliente (/client/compte)",
           "active": "Programme actif",
           "saved": "Programme enregistré."
@@ -699,7 +708,7 @@
           "add": "Nouvelle récompense",
           "empty": "Aucune récompense pour l'instant.",
           "footer": "{count, plural, one {# récompense} other {# récompenses}}",
-          "redeemHint": "L'utilisation des points en caisse arrive bientôt.",
+          "redeemHint": "Les points peuvent être échangés en caisse lors du paiement (récompense à sélectionner).",
           "newServiceOnlyShort": "nouvelle prestation",
           "createTitle": "Nouvelle récompense",
           "editTitle": "Modifier la récompense",
@@ -1974,6 +1983,15 @@
         "noServices": "Aucune prestation trouvée.",
         "hoursByAppointment": "Horaires sur rendez-vous."
       }
+    },
+    "loyalty": {
+      "unavailableTitle": "Programme fidélité indisponible",
+      "unavailableBody": "Ce programme n'est pas actif pour le moment.",
+      "intro": "Gagnez des points à chaque visite et échangez-les contre des avantages.",
+      "rewardsTitle": "Récompenses",
+      "pointsCost": "{cost} {label}",
+      "loginCta": "Voir mon solde",
+      "accountLink": "J'ai déjà un compte"
     },
     "booking": {
       "title": "Prendre rendez-vous",

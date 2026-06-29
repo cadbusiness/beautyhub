@@ -17,6 +17,11 @@ import {
   redeemGiftCard,
 } from "./pos-vouchers";
 import { processLoyaltyForPaidSale } from "./loyalty";
+import {
+  LoyaltyRedeemError,
+  previewLoyaltyDiscountCents,
+  redeemLoyaltyAtSale,
+} from "./loyalty-redeem";
 
 type Db = SupabaseClient<Database>;
 
@@ -47,6 +52,8 @@ export interface PosCheckoutInput {
   cashSessionId?: string | null;
   parentSaleId?: string | null;
   saleKind?: "sale" | "balance";
+  /** Récompense fidélité à échanger sur cette vente (réduction appliquée avant paiement). */
+  loyaltyRewardId?: string | null;
 }
 
 export interface PosCheckoutResult {
@@ -133,8 +140,32 @@ export async function executePosCheckout(
   }
 
   const lines = await resolveCartLines(supabase, tenantId, cart);
-  const cartDiscountCents =
+  const baseCartDiscountCents =
     input.cartDiscountCents ?? parseCartDiscountCents(null);
+
+  const preTotals = computeCartTotals(lines, {
+    priceDisplay: settings.price_display,
+    vatRateForType: (type) => vatRateForLineType(settings, type),
+    cartDiscountCents: baseCartDiscountCents,
+  });
+
+  let loyaltyDiscountCents = 0;
+  if (input.loyaltyRewardId && input.clientId) {
+    try {
+      loyaltyDiscountCents = await previewLoyaltyDiscountCents(
+        supabase,
+        tenantId,
+        input.clientId,
+        input.loyaltyRewardId,
+        preTotals.subtotal_cents,
+      );
+    } catch (e) {
+      if (e instanceof LoyaltyRedeemError) throw new Error(e.message);
+      throw e;
+    }
+  }
+
+  const cartDiscountCents = baseCartDiscountCents + loyaltyDiscountCents;
 
   const totals = computeCartTotals(lines, {
     priceDisplay: settings.price_display,
@@ -271,6 +302,17 @@ export async function executePosCheckout(
     })),
   );
   if (payErr) throw new Error(payErr.message);
+
+  if (status === "paid" && input.loyaltyRewardId && input.clientId) {
+    await redeemLoyaltyAtSale(
+      supabase,
+      tenantId,
+      input.clientId,
+      input.loyaltyRewardId,
+      sale.id,
+      preTotals.subtotal_cents,
+    );
+  }
 
   if (status === "paid") {
     await processLoyaltyForPaidSale(supabase, tenantId, sale.id);

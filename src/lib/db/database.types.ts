@@ -1441,6 +1441,7 @@ export type Database = {
       inst_loyalty_balances: {
         Row: {
           client_id: string
+          last_birthday_bonus_year: number | null
           lifetime_earned: number
           lifetime_redeemed: number
           points_balance: number
@@ -1449,6 +1450,7 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          last_birthday_bonus_year?: number | null
           lifetime_earned?: number
           lifetime_redeemed?: number
           points_balance?: number
@@ -1457,6 +1459,7 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          last_birthday_bonus_year?: number | null
           lifetime_earned?: number
           lifetime_redeemed?: number
           points_balance?: number
@@ -1542,6 +1545,7 @@ export type Database = {
       }
       inst_loyalty_programs: {
         Row: {
+          birthday_auto_enabled: boolean
           birthday_bonus_points: number
           created_at: string
           id: string
@@ -1549,10 +1553,13 @@ export type Database = {
           name: string
           points_label: string
           portal_visible: boolean
+          referral_points: number
+          same_day_rebook_points: number
           tenant_id: string
           updated_at: string
         }
         Insert: {
+          birthday_auto_enabled?: boolean
           birthday_bonus_points?: number
           created_at?: string
           id?: string
@@ -1560,10 +1567,13 @@ export type Database = {
           name?: string
           points_label?: string
           portal_visible?: boolean
+          referral_points?: number
+          same_day_rebook_points?: number
           tenant_id: string
           updated_at?: string
         }
         Update: {
+          birthday_auto_enabled?: boolean
           birthday_bonus_points?: number
           created_at?: string
           id?: string
@@ -1571,6 +1581,8 @@ export type Database = {
           name?: string
           points_label?: string
           portal_visible?: boolean
+          referral_points?: number
+          same_day_rebook_points?: number
           tenant_id?: string
           updated_at?: string
         }
@@ -1653,6 +1665,91 @@ export type Database = {
           },
           {
             foreignKeyName: "inst_loyalty_rewards_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_loyalty_redemptions: {
+        Row: {
+          appointment_id: string | null
+          client_id: string
+          created_at: string
+          discount_cents: number | null
+          id: string
+          points_spent: number
+          program_id: string
+          reward_id: string
+          sale_id: string | null
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          client_id: string
+          created_at?: string
+          discount_cents?: number | null
+          id?: string
+          points_spent: number
+          program_id: string
+          reward_id: string
+          sale_id?: string | null
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          client_id?: string
+          created_at?: string
+          discount_cents?: number | null
+          id?: string
+          points_spent?: number
+          program_id?: string
+          reward_id?: string
+          sale_id?: string | null
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_loyalty_redemptions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "inst_appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_redemptions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_redemptions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "inst_loyalty_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "inst_loyalty_rewards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_redemptions_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "inst_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_redemptions_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2889,6 +2986,33 @@ export type Database = {
           p_tenant_id: string
         }
         Returns: boolean
+      }
+      inst_loyalty_credit_bonus: {
+        Args: {
+          p_client_id: string
+          p_idempotency_key: string
+          p_notes?: string
+          p_points: number
+          p_program_id: string
+          p_source_id: string
+          p_source_type: string
+          p_tenant_id: string
+        }
+        Returns: boolean
+      }
+      inst_loyalty_redeem: {
+        Args: {
+          p_client_id: string
+          p_discount_cents: number
+          p_idempotency_key: string
+          p_notes?: string
+          p_points: number
+          p_program_id: string
+          p_reward_id: string
+          p_sale_id: string
+          p_tenant_id: string
+        }
+        Returns: string
       }
     }
     Enums: {

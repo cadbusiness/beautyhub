@@ -21,6 +21,9 @@ export interface LoyaltyProgram {
   points_label: string;
   birthday_bonus_points: number;
   portal_visible: boolean;
+  referral_points: number;
+  same_day_rebook_points: number;
+  birthday_auto_enabled: boolean;
 }
 
 export interface LoyaltyEarnRule {
@@ -86,7 +89,9 @@ export async function ensureLoyaltyProgram(
 ): Promise<LoyaltyProgram> {
   const { data: existing } = await supabase
     .from("inst_loyalty_programs")
-    .select("id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible")
+    .select(
+      "id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled",
+    )
     .eq("tenant_id", tenantId)
     .maybeSingle();
 
@@ -95,7 +100,9 @@ export async function ensureLoyaltyProgram(
   const { data: created, error } = await supabase
     .from("inst_loyalty_programs")
     .insert({ tenant_id: tenantId })
-    .select("id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible")
+    .select(
+      "id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled",
+    )
     .single();
 
   if (error || !created) throw new Error(error?.message ?? "Programme fidélité introuvable");
@@ -229,7 +236,9 @@ export async function processLoyaltyForCompletedAppointment(
 
   const { data: program } = await supabase
     .from("inst_loyalty_programs")
-    .select("id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible")
+    .select(
+      "id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled",
+    )
     .eq("tenant_id", tenantId)
     .maybeSingle();
   if (!program?.is_active) return;
@@ -270,7 +279,9 @@ export async function processLoyaltyForPaidSale(
 
   const { data: program } = await supabase
     .from("inst_loyalty_programs")
-    .select("id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible")
+    .select(
+      "id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled",
+    )
     .eq("tenant_id", tenantId)
     .maybeSingle();
   if (!program?.is_active) return;

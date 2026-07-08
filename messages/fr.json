@@ -1593,36 +1593,43 @@
       "notConnected": "Non connecté",
       "shop": "Boutique :",
       "disconnect": "Déconnecter",
+      "connectedBanner": "Boutique {shop} reliée — stock synchronisé automatiquement.",
+      "pairedAt": "Connectée le {date}",
+      "showManual": "Connexion manuelle (clés API)",
+      "hideManual": "Masquer la connexion manuelle",
+      "manualHint": "Réservé aux cas avancés si le lien magique ne fonctionne pas.",
+      "auto": {
+        "title": "Connexion automatique",
+        "description": "Connecté à BeautyHub ? Saisissez l’URL de votre boutique, cliquez sur Connecter, puis ouvrez le lien dans l’admin WordPress.",
+        "shopUrl": "URL de la boutique",
+        "shopUrlPlaceholder": "https://maboutique.com",
+        "shopRequired": "L’URL de la boutique est requise.",
+        "shopInvalid": "URL de boutique invalide.",
+        "connect": "Connecter",
+        "generating": "Génération du lien…",
+        "waiting": "En attente de la boutique…",
+        "linkHint": "Ouvrez ce lien dans un onglet où vous êtes connecté à l’admin WordPress/WooCommerce :",
+        "openLink": "Ouvrir le lien magique",
+        "polling": "En attente de confirmation depuis votre boutique…"
+      },
       "setup": {
-        "intro": "Installez le connecteur sur votre boutique pour synchroniser le stock en temps réel (vente caisse ↔ commande en ligne).",
+        "intro": "Téléchargez le plugin, installez-le sur WordPress, puis connectez en un clic depuis BeautyHub.",
         "download": "Télécharger le plugin v{version}",
-        "connectedHint": "Boutique connectée — le plugin envoie les mises à jour stock automatiquement.",
+        "connectedHint": "Boutique connectée — le stock se synchronise automatiquement.",
         "steps": {
           "download": {
-            "title": "Télécharger le plugin BeautyHub Connector",
-            "description": "Extension WordPress/WooCommerce à installer sur votre boutique."
+            "title": "Télécharger BeautyHub Connector",
+            "description": "Extension WordPress à installer sur votre boutique WooCommerce."
           },
           "install": {
-            "title": "Installer sur WordPress",
-            "description": "Extensions → Ajouter → Téléverser le ZIP → Activer."
-          },
-          "plugin": {
-            "title": "Configurer le plugin (WooCommerce → BeautyHub)",
-            "description": "Collez l'URL BeautyHub, le token et le secret webhook affichés ci-dessous."
+            "title": "Installer et activer le plugin",
+            "description": "WordPress → Extensions → Téléverser le ZIP → Activer."
           },
           "connect": {
-            "title": "Connecter les clés API REST",
-            "description": "Générez des clés Lecture/Écriture dans WooCommerce et saisissez-les ici."
+            "title": "Connecter en un clic",
+            "description": "Depuis BeautyHub, saisissez l’URL boutique et ouvrez le lien magique dans l’admin WordPress."
           }
         }
-      },
-      "webhook": {
-        "title": "Identifiants plugin",
-        "description": "À copier dans WooCommerce → BeautyHub sur votre boutique.",
-        "url": "URL webhook",
-        "token": "Token",
-        "secret": "Secret",
-        "copy": "Copier"
       },
       "form": {
         "shopUrl": "URL de la boutique",

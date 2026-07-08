@@ -10,6 +10,12 @@ import {
   getTenantConnectionStatus,
   saveTenantConnection,
 } from "@/lib/connections";
+import { apiBaseUrl } from "@/lib/app-url";
+import {
+  buildPairingAdminUrl,
+  createPairingToken,
+  normalizeShopUrl,
+} from "@/lib/connectors/pairing";
 import {
   WOO_PROVIDER,
   WooClient,
@@ -43,6 +49,44 @@ async function ensureWebhookConfig(
     url,
     webhook_token: creds.webhookToken,
     webhook_secret: creds.webhookSecret,
+  };
+}
+
+export interface PairingResult {
+  error?: string;
+  pairingUrl?: string;
+  shopUrl?: string;
+}
+
+export async function startWooPairing(
+  _prev: PairingResult,
+  formData: FormData,
+): Promise<PairingResult> {
+  const t = await getTranslations("institut.woo.auto");
+  const session = await requireInstitutSettingsModule();
+
+  const shopUrl = String(formData.get("shop_url") ?? "").trim();
+  if (!shopUrl) {
+    return { error: t("shopRequired") };
+  }
+
+  let normalized: string;
+  try {
+    normalized = normalizeShopUrl(shopUrl);
+    new URL(normalized);
+  } catch {
+    return { error: t("shopInvalid") };
+  }
+
+  const token = createPairingToken({
+    tenantId: session.tenant.id,
+    shopUrl: normalized,
+    apiUrl: apiBaseUrl(),
+  });
+
+  return {
+    pairingUrl: buildPairingAdminUrl(normalized, token, apiBaseUrl()),
+    shopUrl: normalized,
   };
 }
 

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import type { Json } from "@/lib/db/database.types";
 import { decryptCredentials, encryptCredentials } from "./crypto";
 
@@ -95,6 +96,44 @@ export async function saveTenantConnection(
   status: "connected" | "disconnected" = "connected",
 ): Promise<void> {
   const supabase = await createClient();
+  const enc = encryptCredentials(credentials);
+
+  const { data: existing } = await supabase
+    .from("connections")
+    .select("id")
+    .eq("scope_type", "tenant")
+    .eq("scope_id", tenantId)
+    .eq("provider", provider)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("connections")
+      .update({ credentials: enc as Json, config: config as Json, status })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from("connections").insert({
+      scope_type: "tenant",
+      scope_id: tenantId,
+      provider,
+      credentials: enc as Json,
+      config: config as Json,
+      status,
+    });
+    if (error) throw new Error(error.message);
+  }
+}
+
+/** Cree ou met a jour une connexion tenant (service role — webhooks, pairing). */
+export async function saveTenantConnectionWithService(
+  tenantId: string,
+  provider: string,
+  credentials: Record<string, unknown>,
+  config: Record<string, unknown> = {},
+  status: "connected" | "disconnected" = "connected",
+): Promise<void> {
+  const supabase = createServiceClient();
   const enc = encryptCredentials(credentials);
 
   const { data: existing } = await supabase

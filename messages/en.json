@@ -2035,36 +2035,43 @@
       "connected": "Connected",
       "description": "Product catalog, bidirectional stock and POS orders.",
       "disconnect": "Disconnect",
+      "connectedBanner": "Store {shop} linked — stock syncs automatically.",
+      "pairedAt": "Connected on {date}",
+      "showManual": "Manual connection (API keys)",
+      "hideManual": "Hide manual connection",
+      "manualHint": "For advanced cases if the magic link does not work.",
+      "auto": {
+        "title": "Automatic connection",
+        "description": "Logged into BeautyHub? Enter your store URL, click Connect, then open the link in WordPress admin.",
+        "shopUrl": "Store URL",
+        "shopUrlPlaceholder": "https://mystore.com",
+        "shopRequired": "Store URL is required.",
+        "shopInvalid": "Invalid store URL.",
+        "connect": "Connect",
+        "generating": "Generating link…",
+        "waiting": "Waiting for store…",
+        "linkHint": "Open this link in a tab where you are logged into WordPress/WooCommerce admin:",
+        "openLink": "Open magic link",
+        "polling": "Waiting for confirmation from your store…"
+      },
       "setup": {
-        "intro": "Install the store connector for real-time stock sync (POS ↔ online orders).",
+        "intro": "Download the plugin, install on WordPress, then one-click connect from BeautyHub.",
         "download": "Download plugin v{version}",
-        "connectedHint": "Store connected — the plugin pushes stock updates automatically.",
+        "connectedHint": "Store connected — stock syncs automatically.",
         "steps": {
           "download": {
-            "title": "Download BeautyHub Connector plugin",
-            "description": "WordPress/WooCommerce extension for your store."
+            "title": "Download BeautyHub Connector",
+            "description": "WordPress extension for your WooCommerce store."
           },
           "install": {
-            "title": "Install on WordPress",
-            "description": "Plugins → Add New → Upload ZIP → Activate."
-          },
-          "plugin": {
-            "title": "Configure plugin (WooCommerce → BeautyHub)",
-            "description": "Paste BeautyHub URL, webhook token and secret shown below."
+            "title": "Install and activate",
+            "description": "WordPress → Plugins → Upload ZIP → Activate."
           },
           "connect": {
-            "title": "Connect REST API keys",
-            "description": "Generate Read/Write keys in WooCommerce and enter them here."
+            "title": "One-click connect",
+            "description": "From BeautyHub, enter store URL and open the magic link in WordPress admin."
           }
         }
-      },
-      "webhook": {
-        "title": "Plugin credentials",
-        "description": "Copy into WooCommerce → BeautyHub on your store.",
-        "url": "Webhook URL",
-        "token": "Token",
-        "secret": "Secret",
-        "copy": "Copy"
       },
       "form": {
         "consumerKey": "Consumer key",

@@ -1,41 +1,13 @@
 import { getTranslations } from "next-intl/server";
 import { requireInstitutSettingsModule } from "@/lib/auth/institut-settings";
-import { getTenantConnectionStatus, updateTenantConnectionConfig } from "@/lib/connections";
-import { apiBaseUrl } from "@/lib/app-url";
+import { getTenantConnectionStatus } from "@/lib/connections";
 import { wooConnectorManifest } from "@/lib/connectors";
-import { WOO_PROVIDER, generateWebhookCredentials } from "@/lib/woocommerce";
+import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { Button } from "@/components/ui/button";
 import { disconnectWoo } from "@/app/(app)/institut/woo-actions";
-import { WooConnectionForm } from "../woo-connection-form";
+import { WooConnectPanel } from "../woo-connect-panel";
 import { WooSetupGuide } from "../woo-setup-guide";
-import { WooWebhookCredentials } from "../woo-webhook-credentials";
 import { SettingsSection } from "../settings-section";
-
-async function ensureWebhookCredentials(
-  tenantId: string,
-  config: Record<string, unknown>,
-): Promise<Record<string, unknown>> {
-  if (
-    typeof config.webhook_token === "string" &&
-    typeof config.webhook_secret === "string"
-  ) {
-    return config;
-  }
-
-  const creds = generateWebhookCredentials();
-  const next = {
-    ...config,
-    webhook_token: creds.webhookToken,
-    webhook_secret: creds.webhookSecret,
-  };
-
-  const existing = await getTenantConnectionStatus(tenantId, WOO_PROVIDER);
-  if (existing?.status === "connected") {
-    await updateTenantConnectionConfig(tenantId, WOO_PROVIDER, next);
-  }
-
-  return next;
-}
 
 export default async function CompteInstitutWooPage() {
   const tWoo = await getTranslations("institut.woo");
@@ -46,19 +18,8 @@ export default async function CompteInstitutWooPage() {
   const woo = await getTenantConnectionStatus(session.tenant.id, WOO_PROVIDER);
   const wooConnected = woo?.status === "connected";
   const wooUrl = typeof woo?.config?.url === "string" ? woo.config.url : undefined;
-
-  let config = (woo?.config ?? {}) as Record<string, unknown>;
-  if (wooConnected) {
-    config = await ensureWebhookCredentials(session.tenant.id, config);
-  }
-
-  const webhookToken =
-    typeof config.webhook_token === "string" ? config.webhook_token : "";
-  const webhookSecret =
-    typeof config.webhook_secret === "string" ? config.webhook_secret : "";
-  const webhookUrl = webhookToken
-    ? `${apiBaseUrl()}/api/webhooks/woocommerce/${webhookToken}`
-    : "";
+  const pairedAt =
+    typeof woo?.config?.paired_at === "string" ? woo.config.paired_at : null;
 
   return (
     <>
@@ -73,19 +34,18 @@ export default async function CompteInstitutWooPage() {
           connectorVersion={wooConnectorManifest.version}
         />
 
-        {wooConnected && webhookToken && webhookSecret ? (
-          <WooWebhookCredentials
-            webhookUrl={webhookUrl}
-            webhookToken={webhookToken}
-            webhookSecret={webhookSecret}
-          />
-        ) : null}
-
         {wooConnected ? (
-          <div className="space-y-4 pt-4">
-            <p className="text-sm text-slate-600">
-              {tWoo("shop")} <span className="font-medium text-slate-900">{wooUrl}</span>
-            </p>
+          <div className="space-y-4">
+            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+              {tWoo("connectedBanner", { shop: wooUrl ?? "" })}
+            </div>
+            {pairedAt ? (
+              <p className="text-xs text-slate-500">
+                {tWoo("pairedAt", {
+                  date: new Date(pairedAt).toLocaleString("fr-FR"),
+                })}
+              </p>
+            ) : null}
             <form action={disconnectWoo}>
               <Button variant="outline" type="submit" className="text-red-600">
                 {tCommon("disconnect")}
@@ -93,9 +53,7 @@ export default async function CompteInstitutWooPage() {
             </form>
           </div>
         ) : (
-          <div className="pt-4">
-            <WooConnectionForm defaultUrl={wooUrl} />
-          </div>
+          <WooConnectPanel defaultShopUrl={wooUrl} />
         )}
       </SettingsSection>
 

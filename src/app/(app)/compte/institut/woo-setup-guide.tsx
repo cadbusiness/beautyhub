@@ -14,8 +14,7 @@ export function WooSetupGuide({
   const steps = [
     { key: "download", number: 1 },
     { key: "install", number: 2 },
-    { key: "plugin", number: 3 },
-    { key: "connect", number: 4 },
+    { key: "connect", number: 3 },
   ] as const;
 
   return (

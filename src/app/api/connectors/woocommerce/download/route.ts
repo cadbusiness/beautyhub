@@ -1,10 +1,31 @@
-import { execSync } from "child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
+import { existsSync, readFileSync, readdirSync, statSync } from "fs";
+import { join, relative } from "path";
+import { zipSync } from "fflate";
 import { NextResponse } from "next/server";
 import { requireInstitutSettingsModule } from "@/lib/auth/institut-settings";
 import { wooConnectorManifest } from "@/lib/connectors";
+
+function collectFiles(
+  dir: string,
+  root: string,
+  out: Record<string, Uint8Array>,
+): void {
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    const rel = relative(root, full).replace(/\\/g, "/");
+    if (statSync(full).isDirectory()) {
+      collectFiles(full, root, out);
+    } else {
+      out[rel] = new Uint8Array(readFileSync(full));
+    }
+  }
+}
+
+function zipDirectory(sourceDir: string): Buffer {
+  const files: Record<string, Uint8Array> = {};
+  collectFiles(sourceDir, sourceDir, files);
+  return Buffer.from(zipSync(files));
+}
 
 export async function GET() {
   await requireInstitutSettingsModule();
@@ -19,12 +40,8 @@ export async function GET() {
     return NextResponse.json({ error: "package_missing" }, { status: 404 });
   }
 
-  const tempDir = mkdtempSync(join(tmpdir(), "bh-woo-"));
-  const zipPath = join(tempDir, "beautyhub-connector.zip");
-
   try {
-    execSync(`zip -r "${zipPath}" .`, { cwd: sourceDir, stdio: "pipe" });
-    const buffer = readFileSync(zipPath);
+    const buffer = zipDirectory(sourceDir);
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": "application/zip",
@@ -37,7 +54,5 @@ export async function GET() {
       { error: (e as Error).message },
       { status: 500 },
     );
-  } finally {
-    rmSync(tempDir, { recursive: true, force: true });
   }
 }

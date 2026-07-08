@@ -7,9 +7,16 @@ import { requireModule } from "@/lib/auth/guards";
 import { requireInstitutSettingsModule, COMPTE_INSTITUT_WOO } from "@/lib/auth/institut-settings";
 import {
   disconnectTenantConnection,
+  getTenantConnectionStatus,
   saveTenantConnection,
 } from "@/lib/connections";
-import { WOO_PROVIDER, WooClient, getWooClientForTenant } from "@/lib/woocommerce";
+import {
+  WOO_PROVIDER,
+  WooClient,
+  generateWebhookCredentials,
+  getWooClientForTenant,
+  mapWooProductToRow,
+} from "@/lib/woocommerce";
 
 export interface ActionResult {
   error?: string;
@@ -17,9 +24,26 @@ export interface ActionResult {
   message?: string;
 }
 
-function priceToCents(value: string): number {
-  const n = Number.parseFloat(value);
-  return Number.isFinite(n) ? Math.round(n * 100) : 0;
+async function ensureWebhookConfig(
+  tenantId: string,
+  url: string,
+): Promise<Record<string, unknown>> {
+  const existing = await getTenantConnectionStatus(tenantId, WOO_PROVIDER);
+  const prev = existing?.config ?? {};
+
+  if (
+    typeof prev.webhook_token === "string" &&
+    typeof prev.webhook_secret === "string"
+  ) {
+    return { url, webhook_token: prev.webhook_token, webhook_secret: prev.webhook_secret };
+  }
+
+  const creds = generateWebhookCredentials();
+  return {
+    url,
+    webhook_token: creds.webhookToken,
+    webhook_secret: creds.webhookSecret,
+  };
 }
 
 export async function saveWooConnection(
@@ -44,11 +68,12 @@ export async function saveWooConnection(
   }
 
   try {
+    const config = await ensureWebhookConfig(session.tenant.id, url);
     await saveTenantConnection(
       session.tenant.id,
       WOO_PROVIDER,
       { url, consumerKey, consumerSecret },
-      { url },
+      config,
       "connected",
     );
   } catch (e) {
@@ -73,24 +98,12 @@ export async function syncWooProducts(): Promise<void> {
   if (!client) return;
 
   const supabase = await createClient();
-  const now = new Date().toISOString();
 
   for (let page = 1; page <= 5; page++) {
     const products = await client.listProducts(page, 50);
     if (products.length === 0) break;
 
-    const rows = products.map((p) => ({
-      tenant_id: session.tenant.id,
-      woo_id: p.id,
-      name: p.name,
-      sku: p.sku || null,
-      price_cents: priceToCents(p.price),
-      stock_quantity: p.stock_quantity,
-      image_url: p.images?.[0]?.src ?? null,
-      status: p.status,
-      source: "woocommerce" as const,
-      synced_at: now,
-    }));
+    const rows = products.map((p) => mapWooProductToRow(session.tenant.id, p));
 
     await supabase
       .from("inst_products")
@@ -100,4 +113,5 @@ export async function syncWooProducts(): Promise<void> {
   }
 
   revalidatePath("/institut/caisse");
+  revalidatePath("/institut/caisse/produits");
 }

@@ -93,4 +93,22 @@ export class WooClient {
       }),
     });
   }
+
+  async getProduct(id: number): Promise<WooProduct> {
+    return this.request<WooProduct>(`/products/${id}`);
+  }
+
+  async updateProductStock(
+    id: number,
+    stockQuantity: number,
+    manageStock = true,
+  ): Promise<WooProduct> {
+    return this.request<WooProduct>(`/products/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        manage_stock: manageStock,
+        stock_quantity: stockQuantity,
+      }),
+    });
+  }
 }

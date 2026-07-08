@@ -1588,11 +1588,42 @@
     },
     "woo": {
       "title": "WooCommerce",
-      "description": "Catalogue produits et commandes de la caisse.",
+      "description": "Catalogue produits, stock bidirectionnel et commandes caisse.",
       "connected": "Connecté",
       "notConnected": "Non connecté",
       "shop": "Boutique :",
       "disconnect": "Déconnecter",
+      "setup": {
+        "intro": "Installez le connecteur sur votre boutique pour synchroniser le stock en temps réel (vente caisse ↔ commande en ligne).",
+        "download": "Télécharger le plugin v{version}",
+        "connectedHint": "Boutique connectée — le plugin envoie les mises à jour stock automatiquement.",
+        "steps": {
+          "download": {
+            "title": "Télécharger le plugin BeautyHub Connector",
+            "description": "Extension WordPress/WooCommerce à installer sur votre boutique."
+          },
+          "install": {
+            "title": "Installer sur WordPress",
+            "description": "Extensions → Ajouter → Téléverser le ZIP → Activer."
+          },
+          "plugin": {
+            "title": "Configurer le plugin (WooCommerce → BeautyHub)",
+            "description": "Collez l'URL BeautyHub, le token et le secret webhook affichés ci-dessous."
+          },
+          "connect": {
+            "title": "Connecter les clés API REST",
+            "description": "Générez des clés Lecture/Écriture dans WooCommerce et saisissez-les ici."
+          }
+        }
+      },
+      "webhook": {
+        "title": "Identifiants plugin",
+        "description": "À copier dans WooCommerce → BeautyHub sur votre boutique.",
+        "url": "URL webhook",
+        "token": "Token",
+        "secret": "Secret",
+        "copy": "Copier"
+      },
       "form": {
         "shopUrl": "URL de la boutique",
         "shopUrlPlaceholder": "https://maboutique.com",

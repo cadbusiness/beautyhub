@@ -2033,8 +2033,39 @@
     },
     "woo": {
       "connected": "Connected",
-      "description": "Product catalog and cash register orders.",
+      "description": "Product catalog, bidirectional stock and POS orders.",
       "disconnect": "Disconnect",
+      "setup": {
+        "intro": "Install the store connector for real-time stock sync (POS ↔ online orders).",
+        "download": "Download plugin v{version}",
+        "connectedHint": "Store connected — the plugin pushes stock updates automatically.",
+        "steps": {
+          "download": {
+            "title": "Download BeautyHub Connector plugin",
+            "description": "WordPress/WooCommerce extension for your store."
+          },
+          "install": {
+            "title": "Install on WordPress",
+            "description": "Plugins → Add New → Upload ZIP → Activate."
+          },
+          "plugin": {
+            "title": "Configure plugin (WooCommerce → BeautyHub)",
+            "description": "Paste BeautyHub URL, webhook token and secret shown below."
+          },
+          "connect": {
+            "title": "Connect REST API keys",
+            "description": "Generate Read/Write keys in WooCommerce and enter them here."
+          }
+        }
+      },
+      "webhook": {
+        "title": "Plugin credentials",
+        "description": "Copy into WooCommerce → BeautyHub on your store.",
+        "url": "Webhook URL",
+        "token": "Token",
+        "secret": "Secret",
+        "copy": "Copy"
+      },
       "form": {
         "consumerKey": "Consumer key",
         "consumerKeyPlaceholder": "ck_…",

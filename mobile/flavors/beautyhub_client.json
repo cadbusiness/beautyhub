@@ -1,0 +1,5 @@
+{
+  "BUNDLE_ID": "app.beautyhub.client",
+  "BOOTSTRAP_BASE_URL": "http://localhost:3000",
+  "APP_AUDIENCE": "client"
+}

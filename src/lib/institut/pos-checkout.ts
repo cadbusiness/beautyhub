@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 import { getWooClientForTenant } from "@/lib/woocommerce";
+import { decrementLocalProductStock } from "@/lib/woocommerce/sync";
 import { parsePosCart, resolveCartLines } from "./pos";
 import {
   formatTicketNumber,
@@ -366,6 +367,19 @@ export async function executePosCheckout(
 
   if (status === "paid") {
     await processLoyaltyForPaidSale(supabase, tenantId, sale.id);
+  }
+
+  if (status === "paid") {
+    for (const line of totals.lines) {
+      if (line.type === "product" && line.product_id) {
+        await decrementLocalProductStock(
+          supabase,
+          tenantId,
+          line.product_id,
+          line.quantity,
+        );
+      }
+    }
   }
 
   if (status === "paid" && input.appointmentId) {

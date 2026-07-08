@@ -124,6 +124,22 @@ export async function saveTenantConnection(
   }
 }
 
+/** Met à jour uniquement le config d'une connexion tenant (sans toucher aux credentials). */
+export async function updateTenantConnectionConfig(
+  tenantId: string,
+  provider: string,
+  config: Record<string, unknown>,
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("connections")
+    .update({ config: config as Json })
+    .eq("scope_type", "tenant")
+    .eq("scope_id", tenantId)
+    .eq("provider", provider);
+  if (error) throw new Error(error.message);
+}
+
 /** Marque une connexion tenant comme deconnectee (sans supprimer les credentials). */
 export async function disconnectTenantConnection(
   tenantId: string,

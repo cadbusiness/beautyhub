@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { apiBaseUrl } from "@/lib/app-url";
 import { resolveMobileBranding } from "@/lib/mobile/branding";
 import type { MobileBootstrap } from "@/lib/mobile/types";
 
@@ -20,14 +21,6 @@ type BootstrapRow = {
   tenant_slug: string | null;
   tenant_branding: unknown;
 };
-
-function apiBaseUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (explicit) return explicit.replace(/\/$/, "");
-  const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) return `https://${vercel}`;
-  return "http://localhost:3000";
-}
 
 async function fetchEnabledModules(tenantId: string | null): Promise<string[]> {
   if (!tenantId) return [];

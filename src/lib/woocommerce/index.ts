@@ -23,5 +23,16 @@ export async function getWooClientForTenant(
   });
 }
 
+export {
+  applyWooStockUpdate,
+  decrementLocalProductStock,
+  generateWebhookCredentials,
+  getWooCredentialsForTenant,
+  mapWooProductToRow,
+  upsertWooProduct,
+  deactivateWooProduct,
+  resolveWooWebhookConnection,
+  verifyWebhookSignature,
+} from "./sync";
 export { WooClient };
 export type { WooCredentials } from "./client";

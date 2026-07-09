@@ -9,10 +9,10 @@ if (!defined('ABSPATH')) {
  */
 class BeautyHub_Updater
 {
-    private string $slug;
-    private string $basename;
-    private string $version;
-    private ?object $update_data = null;
+    private $slug;
+    private $basename;
+    private $version;
+    private $update_data = null;
 
     public function __construct()
     {
@@ -163,7 +163,7 @@ class BeautyHub_Updater
         return $transient;
     }
 
-    private function get_update_data(bool $force = false): ?object
+    private function get_update_data($force = false)
     {
         if ($this->update_data !== null && !$force) {
             return $this->update_data;
@@ -312,7 +312,7 @@ class BeautyHub_Updater
     }
 
     /** @return array{version:string,package:string}|null */
-    public function get_available_update(bool $force = false): ?array
+    public function get_available_update($force = false)
     {
         $data = $this->get_update_data($force);
         if (!$data || empty($data->version)) {

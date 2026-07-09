@@ -1,139 +1,129 @@
+/* BeautyHub Connector — aligné sur le design system SaaS (slate, cartes épurées) */
+
 .bh-wrap {
-  max-width: 960px;
+  --bh-bg: #f8fafc;
+  --bh-surface: #ffffff;
+  --bh-surface-muted: #f1f5f9;
+  --bh-border: #e2e8f0;
+  --bh-muted: #64748b;
+  --bh-fg: #0f172a;
+  --bh-primary: #0f172a;
+  --bh-primary-hover: #1e293b;
+
+  max-width: 900px;
   margin: 20px 20px 40px 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--bh-fg);
 }
 
-.bh-hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+.bh-banner {
   margin-bottom: 16px;
-  padding: 20px 24px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #fff;
-}
-
-.bh-hero-brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.bh-logo {
-  width: 44px;
-  height: 44px;
+  padding: 12px 16px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 13px;
 }
 
-.bh-hero-kicker {
-  margin: 0 0 2px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.bh-hero .bh-title {
-  margin: 0;
-  font-size: 24px;
+.bh-banner a {
+  color: #1d4ed8;
   font-weight: 600;
-  color: #fff;
-  letter-spacing: -0.02em;
 }
 
 .bh-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr) 260px;
   gap: 16px;
   align-items: start;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 920px) {
   .bh-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* Card — mirror du composant SaaS: rounded-xl border-slate-200 bg-white shadow-sm */
 .bh-card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--bh-surface);
+  border: 1px solid var(--bh-border);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
-.bh-card--main {
-  padding: 28px 32px;
+.bh-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
-.bh-subtitle {
-  margin: 0 0 20px;
-  font-size: 14px;
-  line-height: 1.55;
-  color: #64748b;
+.bh-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--bh-fg);
+  line-height: 1.3;
 }
 
+.bh-card-desc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--bh-muted);
+}
+
+/* Badge pastille — comme SettingsSection (rounded-full, xs) */
 .bh-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 6px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  flex-shrink: 0;
 }
 
-.bh-badge-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #94a3b8;
+.bh-badge--ok {
+  background: #dcfce7;
+  color: #166534;
 }
 
-.bh-badge--ok .bh-badge-dot {
-  background: #4ade80;
-  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
+.bh-badge--idle {
+  background: var(--bh-surface-muted);
+  color: #475569;
 }
 
+/* Étapes — lignes compactes façon liste SaaS */
 .bh-steps {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .bh-step {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding: 14px 16px;
-  border: 1px solid #f1f5f9;
+  padding: 12px 14px;
+  border: 1px solid var(--bh-border);
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--bh-surface);
 }
 
 .bh-step-num {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
-  background: #0f172a;
-  color: #fff;
+  background: var(--bh-surface-muted);
+  color: #334155;
   font-size: 12px;
   font-weight: 600;
   display: inline-flex;
@@ -143,19 +133,20 @@
 }
 
 .bh-step-title {
-  margin: 0 0 4px;
-  font-size: 14px;
+  margin: 0 0 2px;
+  font-size: 13px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--bh-fg);
 }
 
 .bh-step-desc {
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
-  color: #64748b;
+  color: var(--bh-muted);
 }
 
+/* Notices */
 .bh-notice {
   margin-bottom: 16px;
   padding: 12px 14px;
@@ -182,17 +173,18 @@
   color: #1d4ed8;
 }
 
+/* Stats connectées — label xs uppercase + valeur (style KPI compact SaaS) */
 .bh-status-grid {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 8px;
 }
 
 .bh-stat {
   padding: 12px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bh-border);
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--bh-surface-muted);
 }
 
 .bh-stat-label {
@@ -200,18 +192,19 @@
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #64748b;
-  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+  color: var(--bh-muted);
+  margin-bottom: 3px;
 }
 
 .bh-stat-value {
   display: block;
   font-size: 13px;
-  color: #0f172a;
+  color: var(--bh-fg);
   word-break: break-all;
 }
 
+/* Boutons — rounded-lg, primary slate-900 (comme SaaS) */
 .bh-actions {
   margin-top: 20px;
   display: flex;
@@ -224,26 +217,46 @@
   align-items: center;
   justify-content: center;
   height: 36px;
-  padding: 0 14px;
+  padding: 0 16px;
   border-radius: 8px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
   border: 1px solid transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.bh-btn--primary {
+  background: var(--bh-primary);
+  color: #fff !important;
+}
+
+.bh-btn--primary:hover {
+  background: var(--bh-primary-hover);
+  color: #fff !important;
 }
 
 .bh-btn--ghost {
-  background: #fff;
+  background: var(--bh-surface);
   border-color: #cbd5e1;
   color: #334155 !important;
+}
+
+.bh-btn--ghost:hover {
+  background: #f8fafc;
+}
+
+/* Colonne latérale */
+.bh-card--side {
+  padding: 20px;
 }
 
 .bh-side-title {
   margin: 0 0 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--bh-fg);
 }
 
 .bh-features {
@@ -270,18 +283,18 @@
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: #0f172a;
+  background: var(--bh-primary);
 }
 
 .bh-side-note {
   margin: 0;
   font-size: 12px;
   line-height: 1.5;
-  color: #64748b;
+  color: var(--bh-muted);
   padding: 10px 12px;
   border-radius: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bh-surface-muted);
+  border: 1px solid var(--bh-border);
 }
 
 .bh-side-note--ok {
@@ -290,7 +303,7 @@
   color: #166534;
 }
 
-/* Entrée menu latérale WordPress */
+/* Icône menu latéral WordPress */
 #adminmenu .toplevel_page_beautyhub-connector .wp-menu-image img {
   width: 18px;
   height: 18px;

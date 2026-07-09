@@ -162,7 +162,7 @@ class BeautyHub_Admin
         ?>
         <div class="bh-wrap">
             <?php if ($update_available) : ?>
-                <div class="bh-notice bh-notice--info" style="margin-bottom:12px;">
+                <div class="bh-banner">
                     <?php
                     echo wp_kses_post(
                         sprintf(
@@ -175,25 +175,20 @@ class BeautyHub_Admin
                     ?>
                 </div>
             <?php endif; ?>
-            <div class="bh-hero">
-                <div class="bh-hero-brand">
-                    <span class="bh-logo" aria-hidden="true">BH</span>
-                    <div>
-                        <p class="bh-hero-kicker">Connecteur institut</p>
-                        <h1 class="bh-title">BeautyHub</h1>
-                    </div>
-                </div>
-                <span class="bh-badge <?php echo $connected ? 'bh-badge--ok' : 'bh-badge--idle'; ?>">
-                    <span class="bh-badge-dot" aria-hidden="true"></span>
-                    <?php echo $connected ? esc_html__('Connecté', 'beautyhub-connector') : esc_html__('En attente', 'beautyhub-connector'); ?>
-                </span>
-            </div>
 
             <div class="bh-grid">
-                <div class="bh-card bh-card--main">
-                    <p class="bh-subtitle">
-                        Synchronisez catalogue, stock et commandes entre cette boutique et la caisse BeautyHub.
-                    </p>
+                <div class="bh-card">
+                    <div class="bh-card-head">
+                        <div>
+                            <h2 class="bh-card-title">BeautyHub Connector</h2>
+                            <p class="bh-card-desc">
+                                Synchronisez catalogue, stock et commandes entre cette boutique et la caisse BeautyHub.
+                            </p>
+                        </div>
+                        <span class="bh-badge <?php echo $connected ? 'bh-badge--ok' : 'bh-badge--idle'; ?>">
+                            <?php echo $connected ? esc_html__('Connecté', 'beautyhub-connector') : esc_html__('En attente', 'beautyhub-connector'); ?>
+                        </span>
+                    </div>
 
                     <?php if ($just_connected) : ?>
                         <div class="bh-notice bh-notice--success">
@@ -236,7 +231,7 @@ class BeautyHub_Admin
                             </a>
                         </div>
                     <?php else : ?>
-                        <ul class="bh-steps">
+                        <ol class="bh-steps">
                             <li class="bh-step">
                                 <span class="bh-step-num">1</span>
                                 <div>
@@ -264,7 +259,7 @@ class BeautyHub_Admin
                                     </p>
                                 </div>
                             </li>
-                        </ul>
+                        </ol>
                     <?php endif; ?>
                 </div>
 

@@ -79,10 +79,7 @@ class BeautyHub_Pairing
         $data = json_decode($raw, true);
 
         if ($code < 200 || $code >= 300 || !is_array($data) || empty($data['ok'])) {
-            $message = is_array($data) && !empty($data['error'])
-                ? (string) $data['error']
-                : 'pairing_failed';
-            return new WP_Error('beautyhub_pairing', $message);
+            return new WP_Error('beautyhub_pairing', self::error_detail($data, $raw, $code));
         }
 
         update_option('beautyhub_api_url', rtrim((string) ($data['api_url'] ?? $api_url), '/'));
@@ -92,6 +89,42 @@ class BeautyHub_Pairing
         update_option('beautyhub_consumer_key_id', (int) ($keys['key_id'] ?? 0));
 
         return true;
+    }
+
+    /**
+     * Construit un message d'erreur lisible depuis la réponse de l'API BeautyHub.
+     *
+     * @param mixed  $data Réponse JSON décodée.
+     * @param string $raw  Corps brut.
+     * @param int    $code Code HTTP.
+     */
+    private static function error_detail($data, $raw, $code)
+    {
+        $parts = array();
+
+        if (is_array($data)) {
+            if (!empty($data['error'])) {
+                $parts[] = is_scalar($data['error'])
+                    ? (string) $data['error']
+                    : wp_json_encode($data['error']);
+            }
+            if (!empty($data['message']) && is_scalar($data['message'])) {
+                $parts[] = (string) $data['message'];
+            }
+        }
+
+        $detail = trim(implode(' — ', $parts));
+        if ($detail === '') {
+            $detail = trim((string) $raw);
+        }
+        if ($detail === '') {
+            $detail = 'réponse vide';
+        }
+        if (strlen($detail) > 300) {
+            $detail = substr($detail, 0, 300) . '…';
+        }
+
+        return sprintf('%s (HTTP %d)', $detail, $code);
     }
 
     /**

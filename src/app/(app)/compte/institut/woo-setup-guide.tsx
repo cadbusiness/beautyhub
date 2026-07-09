@@ -18,8 +18,11 @@ export function WooSetupGuide({
   ] as const;
 
   return (
-    <div className="space-y-4 border-b border-slate-200 pb-6">
-      <p className="text-xs leading-relaxed text-slate-500">{t("intro")}</p>
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-medium text-slate-900">{t("heading")}</h3>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">{t("intro")}</p>
+      </div>
       <ol className="space-y-3">
         {steps.map((step) => (
           <li key={step.key} className="flex gap-3 text-sm">
@@ -28,7 +31,9 @@ export function WooSetupGuide({
             </span>
             <div className="min-w-0 space-y-1">
               <p className="font-medium text-slate-900">{t(`steps.${step.key}.title`)}</p>
-              <p className="text-slate-600">{t(`steps.${step.key}.description`)}</p>
+              <p className="text-xs leading-relaxed text-slate-600">
+                {t(`steps.${step.key}.description`)}
+              </p>
               {step.key === "download" ? (
                 <a
                   href="/downloads/beautyhub-connector.zip"
@@ -42,7 +47,9 @@ export function WooSetupGuide({
         ))}
       </ol>
       {connected ? (
-        <p className="text-xs text-green-700">{t("connectedHint")}</p>
+        <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700">
+          {t("connectedHint")}
+        </p>
       ) : null}
     </div>
   );

@@ -60,32 +60,42 @@ export default async function CompteInstitutWooPage({
         status={wooConnected ? tWoo("connected") : tWoo("notConnected")}
         statusTone={wooConnected ? "success" : "neutral"}
       >
-        <WooSetupGuide
-          connected={wooConnected}
-          connectorVersion={wooConnectorManifest.version}
-        />
-
-        {wooConnected ? (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8">
           <div className="space-y-4">
-            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-              {tWoo("connectedBanner", { shop: wooUrl ?? "" })}
-            </div>
-            {pairedAt ? (
-              <p className="text-xs text-slate-500">
-                {tWoo("pairedAt", {
-                  date: new Date(pairedAt).toLocaleString("fr-FR"),
-                })}
-              </p>
-            ) : null}
-            <form action={disconnectWoo}>
-              <Button variant="outline" type="submit" className="text-red-600">
-                {tCommon("disconnect")}
-              </Button>
-            </form>
+            <h3 className="text-sm font-medium text-slate-900">
+              {tWoo("connectSideTitle")}
+            </h3>
+
+            {wooConnected ? (
+              <div className="space-y-4">
+                <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                  {tWoo("connectedBanner", { shop: wooUrl ?? "" })}
+                </div>
+                {pairedAt ? (
+                  <p className="text-xs text-slate-500">
+                    {tWoo("pairedAt", {
+                      date: new Date(pairedAt).toLocaleString("fr-FR"),
+                    })}
+                  </p>
+                ) : null}
+                <form action={disconnectWoo}>
+                  <Button variant="outline" type="submit" className="text-red-600">
+                    {tCommon("disconnect")}
+                  </Button>
+                </form>
+              </div>
+            ) : (
+              <WooConnectPanel defaultShopUrl={wooUrl} />
+            )}
           </div>
-        ) : (
-          <WooConnectPanel defaultShopUrl={wooUrl} />
-        )}
+
+          <aside className="lg:border-l lg:border-slate-200 lg:pl-8">
+            <WooSetupGuide
+              connected={wooConnected}
+              connectorVersion={wooConnectorManifest.version}
+            />
+          </aside>
+        </div>
       </SettingsSection>
 
       <p className="text-xs leading-relaxed text-slate-400">{tSettings("securityNote")}</p>

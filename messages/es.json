@@ -2046,6 +2046,7 @@
         "submitting": "Probando y grabando..."
       },
       "notConnected": "No conectado",
+      "connectSideTitle": "Conexión",
       "shop": "Comercio :",
       "title": "WooCommerce"
     }

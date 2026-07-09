@@ -1591,6 +1591,7 @@
       "description": "Productcatalogus en kassa-bestellingen.",
       "connected": "Gekoppeld",
       "notConnected": "Niet gekoppeld",
+      "connectSideTitle": "Verbinding",
       "shop": "Winkel:",
       "disconnect": "Ontkoppelen",
       "form": {

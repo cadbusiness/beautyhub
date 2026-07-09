@@ -10,7 +10,7 @@ export function WooConnectPanel({ defaultShopUrl }: { defaultShopUrl?: string })
   const [showManual, setShowManual] = useState(false);
 
   return (
-    <div className="space-y-4 pt-4">
+    <div className="space-y-4">
       <WooAutoConnect defaultShopUrl={defaultShopUrl} />
 
       <div className="border-t border-slate-200 pt-4">

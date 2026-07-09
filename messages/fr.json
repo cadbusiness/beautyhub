@@ -1591,6 +1591,7 @@
       "description": "Catalogue produits, stock bidirectionnel et commandes caisse.",
       "connected": "Connecté",
       "notConnected": "Non connecté",
+      "connectSideTitle": "Connexion",
       "shop": "Boutique :",
       "disconnect": "Déconnecter",
       "connectedBanner": "Boutique {shop} reliée — stock synchronisé automatiquement.",
@@ -1613,6 +1614,7 @@
         "polling": "En attente de confirmation depuis votre boutique…"
       },
       "setup": {
+        "heading": "Installer le plugin",
         "intro": "Téléchargez le plugin une fois : les mises à jour suivantes apparaissent automatiquement dans WordPress (Extensions → Mettre à jour).",
         "download": "Télécharger le plugin v{version}",
         "connectedHint": "Boutique connectée — le stock se synchronise automatiquement.",

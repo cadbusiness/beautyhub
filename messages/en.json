@@ -2055,6 +2055,7 @@
         "polling": "Waiting for confirmation from your store…"
       },
       "setup": {
+        "heading": "Install the plugin",
         "intro": "Download the plugin, install on WordPress, then one-click connect from BeautyHub.",
         "download": "Download plugin v{version}",
         "connectedHint": "Store connected — stock syncs automatically.",
@@ -2084,6 +2085,7 @@
         "submitting": "Testing and recording…"
       },
       "notConnected": "Not connected",
+      "connectSideTitle": "Connection",
       "shop": "Shop :",
       "title": "WooCommerce"
     }

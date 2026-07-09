@@ -51,15 +51,24 @@ export async function resolveConnection(
 
     const { data } = await query.maybeSingle();
     if (data) {
+      let credentials: Record<string, unknown> | null = null;
+      try {
+        credentials = decryptCredentials(
+          (data.credentials as { enc?: string }) ?? {},
+        );
+      } catch {
+        // Keep pages resilient if encryption key is missing/invalid
+        // or legacy credentials payload cannot be decrypted.
+        continue;
+      }
+
       return {
         scopeType: data.scope_type as ConnectionScope,
         scopeId: data.scope_id,
         provider: data.provider,
         status: data.status as "connected" | "disconnected",
         config: (data.config as Record<string, unknown>) ?? {},
-        credentials: decryptCredentials(
-          (data.credentials as { enc?: string }) ?? {},
-        ),
+        credentials,
       };
     }
   }

@@ -16,7 +16,6 @@ import {
   type LoyaltyRewardType,
   type LoyaltySourceType,
 } from "@/lib/institut/loyalty";
-import { buildLoyaltyPublicUrl } from "@/lib/institut/loyalty-public";
 
 const LOYALTY_PATH = "/institut/marketing/fidelite";
 
@@ -31,14 +30,13 @@ export async function loadLoyaltyPageData(selectedProgramId?: string): Promise<{
   snapshot: LoyaltyProgramSnapshot;
   integrations: LoyaltyIntegrations;
   services: { id: string; name: string }[];
-  loyaltyPublicUrl: string;
   selectedProgramId: string;
 }> {
   const session = await requireModule("institut");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
-  const [snapshot, wooConn, servicesRes, loyaltyPublicUrl] = await Promise.all([
+  const [snapshot, wooConn, servicesRes] = await Promise.all([
     loadLoyaltyProgramSnapshot(supabase, tenantId, selectedProgramId),
     resolveConnection(tenantId, WOO_PROVIDER),
     supabase
@@ -47,7 +45,6 @@ export async function loadLoyaltyPageData(selectedProgramId?: string): Promise<{
       .eq("tenant_id", tenantId)
       .eq("is_active", true)
       .order("name"),
-    buildLoyaltyPublicUrl(session.tenant.slug),
   ]);
 
   return {
@@ -57,7 +54,6 @@ export async function loadLoyaltyPageData(selectedProgramId?: string): Promise<{
       shopify: false,
     },
     services: servicesRes.data ?? [],
-    loyaltyPublicUrl,
     selectedProgramId: snapshot.program.id,
   };
 }

@@ -9,15 +9,13 @@ export default async function MarketingFidelitePage({
 }) {
   await requireModule("institut");
   const { program } = await searchParams;
-  const { snapshot, integrations, services, loyaltyPublicUrl, selectedProgramId } =
-    await loadLoyaltyPageData(program);
+  const { snapshot, integrations, services, selectedProgramId } = await loadLoyaltyPageData(program);
 
   return (
     <LoyaltyManager
       snapshot={snapshot}
       integrations={integrations}
       services={services}
-      loyaltyPublicUrl={loyaltyPublicUrl}
       selectedProgramId={selectedProgramId}
     />
   );

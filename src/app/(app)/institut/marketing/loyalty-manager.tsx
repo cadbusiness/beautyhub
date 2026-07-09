@@ -22,6 +22,7 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { Field, Input, Select } from "@/components/ui/input";
 import { ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { PageTabs } from "@/components/ui/page-tabs";
 import { RowActionButton, RowActions } from "@/components/ui/row-actions";
 import { cn, formatPrice } from "@/lib/utils";
 import {
@@ -76,28 +77,6 @@ function ProgramStatusBadge({ status, label }: { status: ProgramStatus; label: s
   );
 }
 
-function GuideHeader({
-  title,
-  action,
-  status,
-  statusLabel,
-}: {
-  title: string;
-  action?: string;
-  status: ProgramStatus;
-  statusLabel: string;
-}) {
-  return (
-    <div className="border-b border-slate-200 px-4 py-3 lg:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium text-slate-900">{title}</p>
-        <ProgramStatusBadge status={status} label={statusLabel} />
-      </div>
-      {action ? <p className="mt-1 text-sm text-slate-500">{action}</p> : null}
-    </div>
-  );
-}
-
 function EmptyRow({
   message,
   actionLabel,
@@ -143,57 +122,16 @@ function StarterPackButton({ label, programId }: { label: string; programId: str
   );
 }
 
-function CapabilityList({ items }: { items: { done: boolean; label: string }[] }) {
-  return (
-    <ul className="space-y-1 text-xs text-slate-500">
-      {items.map((item) => (
-        <li key={item.label} className={item.done ? "text-slate-600" : "text-slate-400"}>
-          {item.done ? "✓" : "○"} {item.label}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-type SetupPhase = 1 | 2 | 3 | "live";
-
-function getSetupPhase(
-  hasRules: boolean,
-  hasRewards: boolean,
-  isActive: boolean,
-): SetupPhase {
-  if (isActive && hasRules) return "live";
-  if (hasRules && hasRewards) return 3;
-  if (hasRules) return 2;
-  return 1;
-}
-
-function LoyaltyQrPanel({ url, title, hint }: { url: string; title: string; hint: string }) {
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
-  return (
-    <div className="flex flex-wrap items-start gap-4">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={qrSrc} alt="" width={160} height={160} className="rounded border border-slate-200" />
-      <div className="min-w-0 flex-1 space-y-1">
-        <p className="text-sm font-medium text-slate-700">{title}</p>
-        <p className="break-all text-xs text-slate-500">{url}</p>
-        <p className="text-xs text-slate-400">{hint}</p>
-      </div>
-    </div>
-  );
-}
 
 export function LoyaltyManager({
   snapshot,
   integrations,
   services,
-  loyaltyPublicUrl,
   selectedProgramId,
 }: {
   snapshot: LoyaltyProgramSnapshot;
   integrations: LoyaltyIntegrations;
   services: ServiceOption[];
-  loyaltyPublicUrl: string;
   selectedProgramId: string;
 }) {
   const t = useTranslations("institut.marketing.loyalty");
@@ -213,12 +151,13 @@ export function LoyaltyManager({
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateError, setDuplicateError] = useState<string | null>(null);
+  const [section, setSection] = useState<"rules" | "rewards" | "program">("rules");
   const [editingRule, setEditingRule] = useState<LoyaltyEarnRule | null>(null);
   const [editingReward, setEditingReward] = useState<LoyaltyReward | null>(null);
   const [pendingDelete, startDelete] = useTransition();
   const [duplicatePending, startDuplicate] = useTransition();
 
-  const { program, rules, rewards, stats } = snapshot;
+  const { program, rules, rewards } = snapshot;
 
   function openCreateRule() {
     setEditingRule(null);
@@ -257,26 +196,6 @@ export function LoyaltyManager({
   const hasRules = rules.length > 0;
   const hasRewards = rewards.length > 0;
   const programStatus = deriveProgramStatus(hasRules, hasRewards, program.is_active);
-  const phase = getSetupPhase(hasRules, hasRewards, program.is_active);
-  const isLive = phase === "live";
-  const showRewards = hasRules;
-  const showProgram = hasRules && hasRewards;
-
-  const guideTitle = isLive
-    ? t("guide.liveTitle")
-    : phase === 1
-      ? t("guide.phase1Title")
-      : phase === 2
-        ? t("guide.phase2Title")
-        : t("guide.phase3Title");
-
-  const guideAction = isLive
-    ? undefined
-    : phase === 1
-      ? t("guide.phase1Action")
-      : phase === 2
-        ? t("guide.phase2Action")
-        : t("guide.phase3Action");
 
   useEffect(() => {
     if (!programCreateState.ok || !programCreateState.createdProgramId) return;
@@ -335,45 +254,30 @@ export function LoyaltyManager({
         </div>
       </ListToolbar>
 
-      <GuideHeader
-        title={guideTitle}
-        action={guideAction}
-        status={programStatus}
-        statusLabel={t(`programStatus.${programStatus}`)}
-      />
-      <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-2.5 lg:px-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-600">
-          {t("clarity.title")}
-        </p>
-        <p className="mt-1 text-sm text-slate-600">{t("clarity.body")}</p>
+      <div className="border-b border-slate-200 px-4 py-2.5 lg:px-6">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm text-slate-600">{program.name}</p>
+          <ProgramStatusBadge status={programStatus} label={t(`programStatus.${programStatus}`)} />
+        </div>
       </div>
 
-      {phase === 1 && !hasRules ? (
-        <div className="flex flex-wrap items-center justify-end gap-2 border-b border-slate-200 px-4 py-2 lg:px-6">
+      <PageTabs
+        tabs={[
+          { id: "rules", label: t("rules.title"), count: rules.length || undefined },
+          { id: "rewards", label: t("rewards.title"), count: rewards.length || undefined },
+          { id: "program", label: t("program.title") },
+        ]}
+        active={section}
+        onChange={(value) => setSection(value as "rules" | "rewards" | "program")}
+      />
+
+      {section === "rules" ? (
+        <>
+      {!hasRules ? (
+        <div className="flex justify-end border-b border-slate-200 px-4 py-2 lg:px-6">
           <StarterPackButton label={t("starterPack")} programId={snapshot.program.id} />
         </div>
       ) : null}
-
-      {isLive ? (
-        <>
-          <p className="border-b border-slate-200 px-4 py-2 text-sm tabular-nums text-slate-600 lg:px-6">
-            {t("guide.liveSummary", {
-              clients: stats.clientsWithPoints,
-              clientsLabel: t("clientsLabel", { count: stats.clientsWithPoints }),
-              points: stats.totalPointsOutstanding,
-              label: program.points_label,
-            })}
-          </p>
-          <p className="border-b border-slate-200 px-4 py-2 text-xs tabular-nums text-slate-500 lg:px-6">
-            {t("stats.monthSummary", {
-              earned: stats.pointsEarnedThisMonth,
-              redeemed: stats.pointsRedeemedThisMonth,
-              label: program.points_label,
-            })}
-          </p>
-        </>
-      ) : null}
-
       <ListToolbar
         action={
           <Button onClick={openCreateRule} className="h-9 w-full sm:w-auto">
@@ -442,8 +346,10 @@ export function LoyaltyManager({
       {rules.length > 0 ? (
         <ListPanelFooter>{t("rules.footer", { count: rules.length })}</ListPanelFooter>
       ) : null}
+      </>
+      ) : null}
 
-      {showRewards ? (
+      {section === "rewards" ? (
         <>
           <ListToolbar
             action={
@@ -527,7 +433,7 @@ export function LoyaltyManager({
         </>
       ) : null}
 
-      {showProgram ? (
+      {section === "program" ? (
         <>
           <div className="border-t border-slate-200 px-4 py-3 lg:px-6">
             <div className="flex flex-wrap items-center gap-2">
@@ -542,7 +448,7 @@ export function LoyaltyManager({
             action={programAction}
             className={cn(
               "space-y-4 border-t border-slate-200 px-4 py-4 lg:px-6",
-              phase === 3 && "bg-slate-50/80",
+              "bg-slate-50/50",
             )}
           >
             <input type="hidden" name="program_id" value={snapshot.program.id} />
@@ -640,52 +546,6 @@ export function LoyaltyManager({
             </Button>
           </form>
         </>
-      ) : null}
-
-      {showProgram ? (
-        <div className="border-t border-slate-200 px-4 py-3 lg:px-6">
-          <p className="text-sm font-medium text-slate-700">{t("capabilities.title")}</p>
-          <div className="mt-2">
-            <CapabilityList
-              items={[
-                { done: true, label: t("capabilities.earnPaid") },
-                { done: program.portal_visible, label: t("capabilities.portal") },
-                {
-                  done:
-                    (program.birthday_bonus_points ?? 0) > 0 &&
-                    (program.birthday_auto_enabled ?? false),
-                  label: t("capabilities.birthday"),
-                },
-                {
-                  done: rewards.some((r) => r.new_service_only),
-                  label: t("capabilities.upsell"),
-                },
-                { done: isLive && hasRewards, label: t("capabilities.redeemPos") },
-                { done: (program.referral_points ?? 0) > 0, label: t("capabilities.referral") },
-                {
-                  done: (program.same_day_rebook_points ?? 0) > 0,
-                  label: t("capabilities.rebook"),
-                },
-              ]}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {isLive && program.portal_visible ? (
-        <div className="border-t border-slate-200 px-4 py-3 lg:px-6">
-          <LoyaltyQrPanel
-            url={loyaltyPublicUrl}
-            title={t("roadmap.qrTitle")}
-            hint={t("roadmap.qrHint")}
-          />
-        </div>
-      ) : null}
-
-      {isLive ? (
-        <p className="border-t border-slate-200 px-4 py-2.5 text-xs text-slate-500 lg:px-6">
-          {t("rewards.redeemHint")}
-        </p>
       ) : null}
 
       <EarnRuleDialog

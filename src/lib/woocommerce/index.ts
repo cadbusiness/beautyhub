@@ -67,6 +67,41 @@ export async function getWooConnectionForTenant(
   };
 }
 
+export async function listWooConnectionsForTenant(
+  tenantId: string,
+): Promise<Array<{ connectionId: string; shopUrl: string; client: WooClient }>> {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("connections")
+    .select("id, credentials, external_id")
+    .eq("scope_type", "tenant")
+    .eq("scope_id", tenantId)
+    .eq("provider", WOO_PROVIDER)
+    .eq("status", "connected")
+    .order("updated_at", { ascending: false });
+
+  if (!data || data.length === 0) return [];
+
+  const out: Array<{ connectionId: string; shopUrl: string; client: WooClient }> = [];
+  for (const row of data) {
+    if (!row.credentials || !row.id) continue;
+    const creds = decryptCredentials(
+      (row.credentials as { enc?: string }) ?? {},
+    ) as Partial<WooCredentials>;
+    if (!creds.url || !creds.consumerKey || !creds.consumerSecret) continue;
+    out.push({
+      connectionId: row.id,
+      shopUrl: typeof row.external_id === "string" ? row.external_id : creds.url,
+      client: new WooClient({
+        url: creds.url,
+        consumerKey: creds.consumerKey,
+        consumerSecret: creds.consumerSecret,
+      }),
+    });
+  }
+  return out;
+}
+
 export {
   applyWooStockUpdate,
   decrementLocalProductStock,

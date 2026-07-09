@@ -17,11 +17,10 @@ import {
   normalizeShopUrl,
 } from "@/lib/connectors/pairing";
 import {
+  listWooConnectionsForTenant,
   WOO_PROVIDER,
   WooClient,
   generateWebhookCredentials,
-  getWooConnectionForTenant,
-  getWooClientForTenant,
   mapWooProductToRow,
 } from "@/lib/woocommerce";
 
@@ -155,25 +154,26 @@ export async function disconnectWoo(): Promise<void> {
 
 export async function syncWooProducts(): Promise<void> {
   const session = await requireModule("institut");
-  const connection = await getWooConnectionForTenant(session.tenant.id);
-  const client = connection?.client ?? (await getWooClientForTenant(session.tenant.id));
-  if (!client || !connection) return;
+  const connections = await listWooConnectionsForTenant(session.tenant.id);
+  if (connections.length === 0) return;
 
   const supabase = await createClient();
 
-  for (let page = 1; page <= 5; page++) {
-    const products = await client.listProducts(page, 50);
-    if (products.length === 0) break;
+  for (const connection of connections) {
+    for (let page = 1; page <= 5; page++) {
+      const products = await connection.client.listProducts(page, 50);
+      if (products.length === 0) break;
 
-    const rows = products.map((p) =>
-      mapWooProductToRow(session.tenant.id, connection.connectionId, p),
-    );
+      const rows = products.map((p) =>
+        mapWooProductToRow(session.tenant.id, connection.connectionId, p),
+      );
 
-    await supabase
-      .from("inst_products")
-      .upsert(rows, { onConflict: "tenant_id,connection_id,woo_id" });
+      await supabase
+        .from("inst_products")
+        .upsert(rows, { onConflict: "tenant_id,connection_id,woo_id" });
 
-    if (products.length < 50) break;
+      if (products.length < 50) break;
+    }
   }
 
   revalidatePath("/institut/caisse");

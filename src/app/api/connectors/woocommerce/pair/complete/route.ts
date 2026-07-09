@@ -6,7 +6,7 @@ import {
   ensureWebhookConfigForTenant,
   WOO_PROVIDER,
 } from "@/lib/woocommerce/pairing-server";
-import { WooClient } from "@/lib/woocommerce";
+import { mapWooProductToRow, WooClient } from "@/lib/woocommerce";
 
 interface CompleteBody {
   pairing_token?: string;
@@ -42,12 +42,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "shop_url_mismatch" }, { status: 400 });
   }
 
+  const client = new WooClient({
+    url: normalizedSite,
+    consumerKey,
+    consumerSecret,
+  });
+
   try {
-    const client = new WooClient({
-      url: normalizedSite,
-      consumerKey,
-      consumerSecret,
-    });
     await client.testConnection();
   } catch (e) {
     return NextResponse.json(
@@ -77,6 +78,31 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (!tenant) {
       return NextResponse.json({ error: "tenant_not_found" }, { status: 404 });
+    }
+
+    const { data: connection } = await supabase
+      .from("connections")
+      .select("id")
+      .eq("scope_type", "tenant")
+      .eq("scope_id", payload.tenantId)
+      .eq("provider", WOO_PROVIDER)
+      .eq("external_id", normalizedSite)
+      .maybeSingle();
+
+    if (connection?.id) {
+      for (let page = 1; page <= 5; page++) {
+        const products = await client.listProducts(page, 50);
+        if (products.length === 0) break;
+
+        const rows = products.map((p) =>
+          mapWooProductToRow(payload.tenantId, connection.id, p),
+        );
+        await supabase
+          .from("inst_products")
+          .upsert(rows, { onConflict: "tenant_id,connection_id,woo_id" });
+
+        if (products.length < 50) break;
+      }
     }
 
     return NextResponse.json({

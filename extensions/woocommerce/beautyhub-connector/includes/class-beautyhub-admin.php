@@ -149,8 +149,32 @@ class BeautyHub_Admin
             admin_url('admin.php?page=' . self::PAGE_SLUG . '&beautyhub_disconnect=1'),
             'beautyhub_disconnect'
         );
+
+        $update_available = null;
+        $cached_update = get_transient('beautyhub_connector_update_data');
+        if (
+            is_object($cached_update)
+            && !empty($cached_update->version)
+            && version_compare(BEAUTYHUB_CONNECTOR_VERSION, (string) $cached_update->version, '<')
+        ) {
+            $update_available = (string) $cached_update->version;
+        }
         ?>
         <div class="bh-wrap">
+            <?php if ($update_available) : ?>
+                <div class="bh-notice bh-notice--info" style="margin-bottom:12px;">
+                    <?php
+                    echo wp_kses_post(
+                        sprintf(
+                            /* translators: 1: version, 2: plugins admin URL */
+                            __('Mise à jour %1$s disponible — <a href="%2$s">Mettre à jour maintenant</a>', 'beautyhub-connector'),
+                            esc_html($update_available),
+                            esc_url(admin_url('plugins.php'))
+                        )
+                    );
+                    ?>
+                </div>
+            <?php endif; ?>
             <div class="bh-hero">
                 <div class="bh-hero-brand">
                     <span class="bh-logo" aria-hidden="true">BH</span>

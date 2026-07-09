@@ -3,8 +3,9 @@
  * Plugin Name: BeautyHub Connector
  * Plugin URI: https://beautyhub.app
  * Description: Synchronise catalogue, stock et commandes entre WooCommerce et BeautyHub (caisse institut).
- * Version: 1.1.1
+ * Version: 1.2.0
  * Author: BeautyHub
+ * Update URI: https://beautyhub-two.vercel.app/api/connectors/woocommerce/updates
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * WC requires at least: 7.0
@@ -16,13 +17,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('BEAUTYHUB_CONNECTOR_VERSION', '1.1.1');
+define('BEAUTYHUB_CONNECTOR_VERSION', '1.2.0');
 define('BEAUTYHUB_CONNECTOR_PATH', plugin_dir_path(__FILE__));
 define('BEAUTYHUB_CONNECTOR_URL', plugin_dir_url(__FILE__));
+define('BEAUTYHUB_CONNECTOR_BASENAME', plugin_basename(__FILE__));
 
 require_once BEAUTYHUB_CONNECTOR_PATH . 'includes/class-beautyhub-pairing.php';
 require_once BEAUTYHUB_CONNECTOR_PATH . 'includes/class-beautyhub-admin.php';
 require_once BEAUTYHUB_CONNECTOR_PATH . 'includes/class-beautyhub-webhooks.php';
+require_once BEAUTYHUB_CONNECTOR_PATH . 'includes/class-beautyhub-updater.php';
 
 add_action('plugins_loaded', function () {
     if (!class_exists('WooCommerce')) {
@@ -32,6 +35,7 @@ add_action('plugins_loaded', function () {
         return;
     }
 
+    new BeautyHub_Updater();
     BeautyHub_Admin::init();
     BeautyHub_Pairing::init();
     BeautyHub_Webhooks::init();

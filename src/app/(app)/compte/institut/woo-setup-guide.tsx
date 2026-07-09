@@ -31,7 +31,7 @@ export function WooSetupGuide({
               <p className="text-slate-600">{t(`steps.${step.key}.description`)}</p>
               {step.key === "download" ? (
                 <a
-                  href="/api/connectors/woocommerce/download"
+                  href="/downloads/beautyhub-connector.zip"
                   className="mt-1 inline-flex h-8 items-center rounded-lg border border-slate-300 bg-white px-3 text-xs font-medium text-slate-900 hover:bg-slate-50"
                 >
                   {t("download", { version: connectorVersion })}

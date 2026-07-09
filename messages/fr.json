@@ -1613,7 +1613,7 @@
         "polling": "En attente de confirmation depuis votre boutique…"
       },
       "setup": {
-        "intro": "Téléchargez le plugin, installez-le sur WordPress, puis connectez en un clic depuis BeautyHub.",
+        "intro": "Téléchargez le plugin une fois : les mises à jour suivantes apparaissent automatiquement dans WordPress (Extensions → Mettre à jour).",
         "download": "Télécharger le plugin v{version}",
         "connectedHint": "Boutique connectée — le stock se synchronise automatiquement.",
         "steps": {

@@ -74,6 +74,21 @@ class BeautyHub_Webhooks
             }
         }
 
+        $categories = [];
+        $category_ids = $product->get_category_ids();
+        if (is_array($category_ids) && !empty($category_ids)) {
+            foreach ($category_ids as $category_id) {
+                $term = get_term((int) $category_id, 'product_cat');
+                if ($term && !is_wp_error($term)) {
+                    $categories[] = [
+                        'id' => (int) $term->term_id,
+                        'name' => (string) $term->name,
+                        'slug' => (string) $term->slug,
+                    ];
+                }
+            }
+        }
+
         return [
             'id' => $product->get_id(),
             'name' => $product->get_name(),
@@ -84,6 +99,7 @@ class BeautyHub_Webhooks
                 : null,
             'status' => $product->get_status() === 'publish' ? 'publish' : $product->get_status(),
             'images' => $images,
+            'categories' => $categories,
         ];
     }
 

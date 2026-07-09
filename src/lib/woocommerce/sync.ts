@@ -83,6 +83,12 @@ export function mapWooProductToRow(
   connectionId: string,
   product: WooProduct,
 ) {
+  const categories = Array.isArray(product.categories)
+    ? product.categories
+        .map((c) => (typeof c?.name === "string" ? c.name.trim() : ""))
+        .filter((name): name is string => name.length > 0)
+    : [];
+
   return {
     tenant_id: tenantId,
     connection_id: connectionId,
@@ -92,6 +98,7 @@ export function mapWooProductToRow(
     price_cents: priceToCents(product.price),
     stock_quantity: product.stock_quantity,
     image_url: product.images?.[0]?.src ?? null,
+    woo_categories: categories,
     status: product.status === "publish" ? "active" : product.status,
     source: "woocommerce" as const,
     synced_at: new Date().toISOString(),

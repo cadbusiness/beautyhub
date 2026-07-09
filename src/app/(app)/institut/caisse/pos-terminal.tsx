@@ -66,6 +66,7 @@ export function PosTerminal({
   const [cart, setCart] = useState<Record<string, number>>(() => initialPrefill?.cart ?? {});
   const [tab, setTab] = useState<PosCategory>("all");
   const [query, setQuery] = useState("");
+  const [wooCategory, setWooCategory] = useState("all");
   const [clientId, setClientId] = useState(() => initialPrefill?.clientId ?? "");
   const [staffId, setStaffId] = useState(() => initialPrefill?.staffId ?? "");
   const [appointmentId, setAppointmentId] = useState(() => initialPrefill?.appointmentId ?? "");
@@ -137,13 +138,30 @@ export function PosTerminal({
     const q = query.trim().toLowerCase();
     return catalog.filter((item) => {
       if (tab !== "all" && item.category !== tab) return false;
+      if (wooCategory !== "all" && (tab === "all" || tab === "woocommerce")) {
+        if (item.category !== "woocommerce") return false;
+        const names = item.woo_categories ?? [];
+        if (!names.some((name) => name === wooCategory)) return false;
+      }
       if (!q) return true;
       return (
         item.name.toLowerCase().includes(q) ||
         (item.sku?.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [catalog, tab, query]);
+  }, [catalog, tab, query, wooCategory]);
+
+  const wooCategoryOptions = useMemo(() => {
+    const categories = new Set<string>();
+    for (const item of catalog) {
+      if (item.category !== "woocommerce") continue;
+      for (const name of item.woo_categories ?? []) {
+        const trimmed = name.trim();
+        if (trimmed) categories.add(trimmed);
+      }
+    }
+    return Array.from(categories).sort((a, b) => a.localeCompare(b, "fr"));
+  }, [catalog]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -284,7 +302,30 @@ export function PosTerminal({
         />
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-          <span>{t("pagination.showing", { from: pageFrom, to: pageTo, total: filtered.length })}</span>
+          <div className="flex items-center gap-2">
+            {wooCategoryOptions.length > 0 ? (
+              <>
+                <label htmlFor="woo-category-filter">{t("filters.wooCategory")}</label>
+                <Select
+                  id="woo-category-filter"
+                  value={wooCategory}
+                  onChange={(e) => {
+                    setWooCategory(e.target.value);
+                    setPage(1);
+                  }}
+                  className="h-8 min-w-40"
+                >
+                  <option value="all">{t("filters.wooCategoryAll")}</option>
+                  {wooCategoryOptions.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </Select>
+              </>
+            ) : null}
+            <span>{t("pagination.showing", { from: pageFrom, to: pageTo, total: filtered.length })}</span>
+          </div>
           <div className="flex items-center gap-2">
             <label htmlFor="page-size">{t("pagination.perPage")}</label>
             <Select

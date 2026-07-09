@@ -2410,6 +2410,10 @@
       "searchArticles": "Rechercher un article…",
       "searchAria": "Rechercher",
       "emptyCategory": "Aucun article dans cette catégorie. Ajoute des prestations, synchronise WooCommerce ou crée des produits internes.",
+      "filters": {
+        "wooCategory": "Catégorie Woo",
+        "wooCategoryAll": "Toutes les catégories"
+      },
       "pagination": {
         "showing": "{from}-{to} sur {total} articles",
         "perPage": "Par page",

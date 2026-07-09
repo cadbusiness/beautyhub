@@ -2563,6 +2563,10 @@
         "cashPending": "Collection…"
       },
       "emptyCategory": "No articles in this category. ",
+      "filters": {
+        "wooCategory": "Woo category",
+        "wooCategoryAll": "All categories"
+      },
       "pagination": {
         "showing": "{from}-{to} of {total} items",
         "perPage": "Per page",

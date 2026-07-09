@@ -1013,6 +1013,7 @@ export type Database = {
           synced_at: string | null
           tenant_id: string
           updated_at: string
+          woo_categories: string[]
           woo_id: number | null
         }
         Insert: {
@@ -1030,6 +1031,7 @@ export type Database = {
           synced_at?: string | null
           tenant_id: string
           updated_at?: string
+          woo_categories?: string[]
           woo_id?: number | null
         }
         Update: {
@@ -1047,6 +1049,7 @@ export type Database = {
           synced_at?: string | null
           tenant_id?: string
           updated_at?: string
+          woo_categories?: string[]
           woo_id?: number | null
         }
         Relationships: [

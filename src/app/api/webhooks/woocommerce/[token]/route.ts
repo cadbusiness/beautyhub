@@ -39,6 +39,36 @@ function asWooProduct(payload: Record<string, unknown>): WooProduct | null {
             typeof (img as { src?: unknown }).src === "string",
         )
       : undefined,
+    categories: Array.isArray(payload.categories)
+      ? payload.categories
+          .map((cat) => {
+            if (typeof cat === "string") {
+              return { id: 0, name: cat, slug: cat.toLowerCase().replace(/\s+/g, "-") };
+            }
+            if (
+              typeof cat === "object" &&
+              cat !== null &&
+              typeof (cat as { name?: unknown }).name === "string"
+            ) {
+              return {
+                id:
+                  typeof (cat as { id?: unknown }).id === "number"
+                    ? (cat as { id: number }).id
+                    : 0,
+                name: (cat as { name: string }).name,
+                slug:
+                  typeof (cat as { slug?: unknown }).slug === "string"
+                    ? (cat as { slug: string }).slug
+                    : (cat as { name: string }).name.toLowerCase().replace(/\s+/g, "-"),
+              };
+            }
+            return null;
+          })
+          .filter(
+            (cat): cat is { id: number; name: string; slug: string } =>
+              cat !== null && cat.name.trim().length > 0,
+          )
+      : undefined,
   };
 }
 

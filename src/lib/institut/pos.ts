@@ -17,6 +17,7 @@ export interface PosCatalogItem {
   category: "service" | "woocommerce" | "internal";
   duration_min?: number;
   sku?: string | null;
+  woo_categories?: string[];
   visibility?: string;
   is_appointment_extra?: boolean;
 }
@@ -150,6 +151,7 @@ export function buildCatalog(
     sku: string | null;
     color?: string | null;
     woo_id?: number | null;
+    woo_categories?: string[] | null;
   }>,
 ): PosCatalogItem[] {
   const items: PosCatalogItem[] = services.map((s) => ({
@@ -177,6 +179,7 @@ export function buildCatalog(
       color: p.color ?? null,
       category: isWoo ? "woocommerce" : "internal",
       sku: p.sku,
+      woo_categories: p.woo_categories ?? [],
     });
   }
   return items;

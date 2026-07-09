@@ -12,6 +12,7 @@ export interface WooProduct {
   stock_quantity: number | null;
   status: string;
   images?: Array<{ src: string }>;
+  categories?: Array<{ id: number; name: string; slug: string }>;
 }
 
 export interface WooOrderLineItem {

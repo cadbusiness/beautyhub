@@ -39,6 +39,8 @@ export function getWooConnectorRelease(): ConnectorReleaseInfo {
     changelog: `
       <h4>${version}</h4>
       <ul>
+        <li>Filtre catégories Woo en caisse + pagination compacte</li>
+        <li>Webhooks produits envoient désormais les catégories Woo</li>
         <li>Message d'erreur de connexion détaillé (fini le « Array » : cause réelle + code HTTP)</li>
         <li>Nouvelle interface : header avec logo, bouton « Se connecter » en un clic, design pleine largeur</li>
         <li>Protection anti-double-déclaration + garde version PHP (fin des erreurs fatales à l'activation)</li>

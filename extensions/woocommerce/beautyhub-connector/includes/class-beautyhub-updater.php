@@ -4,6 +4,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+if (class_exists('BeautyHub_Updater')) {
+    return;
+}
+
 /**
  * Mises à jour automatiques depuis BeautyHub (même principe que Bruce Pilot).
  */

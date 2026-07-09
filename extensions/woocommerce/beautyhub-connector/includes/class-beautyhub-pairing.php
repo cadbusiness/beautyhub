@@ -4,6 +4,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+if (class_exists('BeautyHub_Pairing')) {
+    return;
+}
+
 class BeautyHub_Pairing
 {
     public static function init(): void

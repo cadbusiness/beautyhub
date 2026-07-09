@@ -4,6 +4,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+if (class_exists('BeautyHub_Webhooks')) {
+    return;
+}
+
 class BeautyHub_Webhooks
 {
     public static function init(): void

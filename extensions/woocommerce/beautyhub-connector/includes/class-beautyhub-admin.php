@@ -4,6 +4,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+if (class_exists('BeautyHub_Admin')) {
+    return;
+}
+
 class BeautyHub_Admin
 {
     public const PAGE_SLUG = 'beautyhub-connector';

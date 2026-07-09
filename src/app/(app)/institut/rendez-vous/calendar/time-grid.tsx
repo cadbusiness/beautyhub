@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { StaffAvatar } from "@/components/ui/staff-avatar";
 import type { CalendarAppointment } from "./types";
 import { HOUR_END, HOUR_START, SLOT_MINUTES, SLOT_PX } from "./types";
 import { gridHeightPx, slotCount } from "./utils";
@@ -62,15 +63,16 @@ export function TimeGrid({
         {columns.map((c) => (
           <div
             key={c.id}
-            className="border-b border-r border-slate-200 bg-slate-50 px-2 py-2 text-center text-sm font-medium text-slate-800"
+            className="border-b border-r border-slate-200 bg-slate-50 px-2 py-2 text-sm font-medium text-slate-800"
           >
-            {c.color ? (
-              <span
-                className="mr-1 inline-block h-2 w-2 rounded-full"
-                style={{ backgroundColor: c.color }}
-              />
-            ) : null}
-            {c.label}
+            {columnKind === "staff" ? (
+              <span className="flex items-center justify-center gap-1.5">
+                <StaffAvatar name={c.label} color={c.color} size="sm" />
+                <span className="truncate">{c.label}</span>
+              </span>
+            ) : (
+              <span className="text-center">{c.label}</span>
+            )}
           </div>
         ))}
 

@@ -22,6 +22,7 @@ import { ServiceDialog, type ServiceRow } from "./service-dialog";
 const LIST_PAGE_SIZE = 10;
 
 type Filter = "all" | "active" | "inactive";
+type Scope = "catalog" | "extra_only" | "all";
 
 function IconButton({
   label,
@@ -93,6 +94,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
   const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [scope, setScope] = useState<Scope>("extra_only");
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceRow | null>(null);
@@ -102,13 +104,15 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
     return services.filter((s) => {
       if (filter === "active" && !s.is_active) return false;
       if (filter === "inactive" && s.is_active) return false;
+      if (scope === "catalog" && s.visibility === "extra_only") return false;
+      if (scope === "extra_only" && s.visibility !== "extra_only") return false;
       if (!q) return true;
       return (
         s.name.toLowerCase().includes(q) ||
         (s.description?.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [services, query, filter]);
+  }, [services, query, filter, scope]);
 
   const slice = useMemo(
     () => paginateItems(filtered, page, LIST_PAGE_SIZE),
@@ -117,7 +121,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
 
   useEffect(() => {
     setPage(1);
-  }, [query, filter]);
+  }, [query, filter, scope]);
 
   useEffect(() => {
     if (page > slice.totalPages) setPage(slice.totalPages);
@@ -144,7 +148,16 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
     form?.requestSubmit();
   }
 
-  const emptyMessage = services.length === 0 ? t("empty") : t("noResults");
+  const createVisibility = scope === "extra_only" ? "extra_only" : "catalog";
+  const createLabel = scope === "extra_only" ? t("newExtra") : t("new");
+  const emptyMessage =
+    services.length === 0
+      ? scope === "extra_only"
+        ? t("emptyExtras")
+        : t("empty")
+      : scope === "extra_only"
+        ? t("noExtraResults")
+        : t("noResults");
 
   return (
     <>
@@ -161,7 +174,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
           }
           action={
             <Button onClick={openCreate} className="h-9 w-full sm:w-auto">
-              + {t("new")}
+              + {createLabel}
             </Button>
           }
         >
@@ -172,6 +185,15 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
             onChange={(e) => setQuery(e.target.value)}
             className="h-9 sm:max-w-xs"
           />
+          <select
+            value={scope}
+            onChange={(e) => setScope(e.target.value as Scope)}
+            className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 sm:w-48"
+          >
+            <option value="catalog">{t("scopeCatalog")}</option>
+            <option value="extra_only">{t("scopeExtras")}</option>
+            <option value="all">{t("scopeAll")}</option>
+          </select>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as Filter)}
@@ -258,6 +280,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
         open={dialogOpen}
         service={editing}
         allServices={services}
+        createVisibility={createVisibility}
         onClose={closeDialog}
       />
     </>

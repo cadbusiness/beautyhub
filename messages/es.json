@@ -1198,6 +1198,10 @@
           "phase3Action": "Marque \"Programa activo\" y luego guarde.",
           "phase3Title": "Paso 3: cargar"
         },
+        "clarity": {
+          "title": "Cómo leer esta pantalla",
+          "body": "Las reglas definen cómo se ganan puntos (puede crear varias con importes distintos). Los ajustes de abajo son globales y se aplican a todo el programa de fidelidad."
+        },
         "integrations": {
           "comingSoon": "Pronto",
           "connectHint": "Conecta tu tienda para activar esta fuente:",
@@ -1206,10 +1210,21 @@
         "program": {
           "active": "programa activo",
           "description": "Nombre, redacción de puntos y activación del programa.",
+          "selectorLabel": "Programa",
+          "newProgram": "Nuevo programa",
+          "newProgramTitle": "Crear programa de fidelidad",
+          "newProgramName": "Nombre del programa",
+          "globalHint": "Estos ajustes se aplican a todas las reglas y recompensas de este programa.",
           "name": "Nombre del programa",
           "pointsLabel": "Redacción de puntos",
+          "pointsLabelHint": "Ejemplo: puntos, estrellas, créditos (misma etiqueta en todas partes).",
           "saved": "Programa grabado.",
-          "title": "Ajustes"
+          "scopeBadge": "Global",
+          "title": "Ajustes",
+          "duplicateProgram": "Duplicar",
+          "duplicateProgramTitle": "Duplicar programa",
+          "duplicateProgramName": "Nombre de la copia",
+          "copySuffix": "(copia)"
         },
         "programStatus": {
           "draft": "Borrador",
@@ -1239,6 +1254,7 @@
             "service": "Servicio ofrecido",
             "type": "tipo de recompensa"
           },
+          "hint": "Defina aquí lo que los clientes pueden canjear con sus puntos.",
           "redeemHint": "El uso de puntos al finalizar la compra estará disponible próximamente.",
           "title": "Premios",
           "types": {
@@ -1276,6 +1292,7 @@
             "preview": "Ejemplo: Gasto 50€ → __UCI0__ __UCI1__",
             "source": "Residencia en"
           },
+          "hint": "Cree varias reglas si quiere puntos distintos según el caso.",
           "title": "Gana puntos"
         },
         "sources": {
@@ -1758,13 +1775,13 @@
           "afterTime": "Después de elegir el nicho",
           "beforeTime": "Antes de elegir el nicho",
           "extraOnlyBadge": "Extra",
-          "hint": "Elija otros servicios para ofrecer como venta adicional con este. Cada extra conserva su duración y precio.",
+          "hint": "Elige extras desde tu catálogo dedicado. Cada extra conserva su duración y precio.",
           "maxQty": "máx.",
           "minQty": "mín.",
-          "noCandidates": "Crear otros servicios (catálogo o “solo extra”) para ofrecerlos aquí.",
-          "noSearchResults": "No hay coincidencias de servicio.",
+          "noCandidates": "No hay extras disponibles todavía. Crea uno en el catálogo de extras primero.",
+          "noSearchResults": "No hay coincidencias de extras.",
           "saveExtras": "Guardar extras",
-          "searchPlaceholder": "Buscar un servicio…",
+          "searchPlaceholder": "Buscar un extra…",
           "selectedCount": "{recuento, plural, uno {# extra sélectionné} otro {# extras sélectionnés}}",
           "stepPosition": "Paso extras en la reserva"
         },
@@ -1810,11 +1827,17 @@
       "filterActive": "Visible",
       "filterAll": "Todo",
       "filterInactive": "Enmascarado",
+      "scopeCatalog": "Servicios",
+      "scopeExtras": "Catálogo de extras",
+      "scopeAll": "Servicios + extras",
       "footer": "{recuento, plural, uno {# prestation} otro {# prestations}}",
       "hidden": "Enmascarado",
       "hiddenBadge": "Enmascarado",
       "new": "Nuevo servicio",
+      "newExtra": "Nuevo extra",
+      "emptyExtras": "Todavía no hay extras.",
       "noResults": "No hay resultados para esta búsqueda.",
+      "noExtraResults": "Ningún extra coincide con esta búsqueda.",
       "quickForm": {
         "duration": "Duración (min)",
         "name": "Nombre",

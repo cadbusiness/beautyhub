@@ -32,6 +32,9 @@ export async function loadPublicLoyaltyView(
     .from("inst_loyalty_programs")
     .select("id, name, points_label, is_active, portal_visible")
     .eq("tenant_id", tenantId)
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!program?.is_active || !program.portal_visible) return null;

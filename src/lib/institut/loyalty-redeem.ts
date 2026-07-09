@@ -51,6 +51,9 @@ export async function validateLoyaltyRedemption(
     .from("inst_loyalty_programs")
     .select("id, is_active")
     .eq("tenant_id", tenantId)
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!program?.is_active) throw new LoyaltyRedeemError("program_inactive");
@@ -74,6 +77,7 @@ export async function validateLoyaltyRedemption(
     .select("points_balance")
     .eq("tenant_id", tenantId)
     .eq("client_id", clientId)
+    .eq("program_id", program.id)
     .maybeSingle();
 
   const balance = balanceRow?.points_balance ?? 0;

@@ -1464,6 +1464,7 @@ export type Database = {
           lifetime_earned: number
           lifetime_redeemed: number
           points_balance: number
+          program_id: string
           tenant_id: string
           updated_at: string
         }
@@ -1473,6 +1474,7 @@ export type Database = {
           lifetime_earned?: number
           lifetime_redeemed?: number
           points_balance?: number
+          program_id: string
           tenant_id: string
           updated_at?: string
         }
@@ -1482,6 +1484,7 @@ export type Database = {
           lifetime_earned?: number
           lifetime_redeemed?: number
           points_balance?: number
+          program_id?: string
           tenant_id?: string
           updated_at?: string
         }
@@ -1491,6 +1494,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_loyalty_balances_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "inst_loyalty_programs"
             referencedColumns: ["id"]
           },
           {
@@ -1609,7 +1619,7 @@ export type Database = {
           {
             foreignKeyName: "inst_loyalty_programs_tenant_id_fkey"
             columns: ["tenant_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },

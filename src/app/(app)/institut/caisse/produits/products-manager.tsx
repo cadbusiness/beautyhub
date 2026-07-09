@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { deleteInternalProduct } from "../../caisse-actions";
@@ -9,6 +10,7 @@ import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/compone
 import { FormDialog } from "@/components/ui/form-dialog";
 import { ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { RowActionButton } from "@/components/ui/row-actions";
 import { formatPrice } from "@/lib/utils";
 import { InternalProductForm } from "./internal-product-form";
 
@@ -82,9 +84,9 @@ export function ProductsManager({ products }: { products: ProductRow[] }) {
                 <td className={`text-right ${dataTableCell}`}>
                   <form action={deleteInternalProduct}>
                     <input type="hidden" name="id" value={p.id} />
-                    <Button variant="ghost" type="submit" className="h-8 text-red-600">
+                    <RowActionButton type="submit" tone="danger" icon={<Trash2 className="h-3.5 w-3.5" />}>
                       {t("delete")}
-                    </Button>
+                    </RowActionButton>
                   </form>
                 </td>
               </tr>

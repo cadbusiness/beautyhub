@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createTimeOff, deleteTimeOff, type ActionResult } from "../schedule-actions";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { Field } from "@/components/ui/input";
 import { dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
+import { RowActionButton } from "@/components/ui/row-actions";
 import { formatDateTime } from "@/lib/utils";
 
 const initial: ActionResult = {};
@@ -166,9 +168,9 @@ export function TimeOffPanel({
                     <td className={`text-right ${dataTableCell}`}>
                       <form action={deleteTimeOff}>
                         <input type="hidden" name="id" value={row.id} />
-                        <Button variant="ghost" type="submit" className="h-8 text-red-600">
+                        <RowActionButton type="submit" tone="danger" icon={<Trash2 className="h-3.5 w-3.5" />}>
                           {t("delete")}
-                        </Button>
+                        </RowActionButton>
                       </form>
                     </td>
                   </tr>

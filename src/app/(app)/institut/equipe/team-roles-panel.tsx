@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -11,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { RowActionButton, RowActions } from "@/components/ui/row-actions";
 import {
   INSTITUT_PERMISSION_SECTIONS,
   type InstitutPermissions,
@@ -21,15 +23,12 @@ const initial: ActionResult = {};
 
 function PermissionCheckboxes({
   permissions,
-  prefix,
   wildcard,
 }: {
   permissions?: InstitutPermissions;
-  prefix?: string;
   wildcard?: boolean;
 }) {
   const t = useTranslations("institut.team.roles");
-  const p = prefix ?? "";
 
   if (wildcard) {
     return (
@@ -161,19 +160,19 @@ export function TeamRolesPanel({ roles }: { roles: TenantRole[] }) {
                   <p className="mt-0.5 text-sm text-slate-500">{role.description}</p>
                 ) : null}
               </div>
-              <div className="flex shrink-0 gap-2">
-                <Button variant="outline" className="h-8" onClick={() => openEdit(role)}>
+              <RowActions className="shrink-0">
+                <RowActionButton type="button" onClick={() => openEdit(role)} icon={<Pencil className="h-3.5 w-3.5" />}>
                   {t("edit")}
-                </Button>
+                </RowActionButton>
                 {!role.is_system ? (
                   <form action={deleteTenantRole}>
                     <input type="hidden" name="role_id" value={role.id} />
-                    <Button variant="ghost" type="submit" className="h-8 text-red-600">
+                    <RowActionButton type="submit" tone="danger" icon={<Trash2 className="h-3.5 w-3.5" />}>
                       {t("delete")}
-                    </Button>
+                    </RowActionButton>
                   </form>
                 ) : null}
-              </div>
+              </RowActions>
             </li>
           ))}
         </ul>

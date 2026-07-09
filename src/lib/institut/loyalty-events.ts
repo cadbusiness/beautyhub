@@ -22,6 +22,9 @@ export async function creditReferralBonus(
     .from("inst_loyalty_programs")
     .select("id, referral_points, is_active")
     .eq("tenant_id", tenantId)
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!program?.is_active || program.referral_points <= 0) return false;
@@ -52,6 +55,9 @@ export async function creditSameDayRebookBonus(
     .from("inst_loyalty_programs")
     .select("id, same_day_rebook_points, is_active")
     .eq("tenant_id", tenantId)
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!program?.is_active || program.same_day_rebook_points <= 0) return false;

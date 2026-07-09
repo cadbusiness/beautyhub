@@ -39,6 +39,9 @@ export async function loadClientLoyaltyPortalView(
     .from("inst_loyalty_programs")
     .select("id, name, is_active, points_label, portal_visible")
     .eq("tenant_id", tenantId)
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!program?.is_active || !program.portal_visible) return null;
@@ -49,6 +52,7 @@ export async function loadClientLoyaltyPortalView(
       .select("points_balance, lifetime_earned")
       .eq("tenant_id", tenantId)
       .eq("client_id", clientId)
+      .eq("program_id", program.id)
       .maybeSingle(),
     supabase
       .from("inst_loyalty_rewards")

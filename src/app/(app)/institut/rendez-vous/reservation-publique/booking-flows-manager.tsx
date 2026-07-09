@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil, Share2, Star, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,7 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { Field, Input, Select } from "@/components/ui/input";
+import { RowActionButton, RowActions } from "@/components/ui/row-actions";
 
 type ServiceOption = { id: string; label: string };
 
@@ -250,34 +252,41 @@ export function BookingFlowsManager({
                   {flow.is_published ? t("published") : t("draft")}
                 </td>
                 <td className={`text-right ${dataTableCell}`}>
-                  <div className="flex flex-wrap justify-end gap-1">
-                    <Button type="button" variant="ghost" className="h-8" onClick={() => setShareFlow(flow)}>
+                  <RowActions>
+                    <RowActionButton
+                      type="button"
+                      onClick={() => setShareFlow(flow)}
+                      icon={<Share2 className="h-3.5 w-3.5" />}
+                    >
                       {t("share")}
-                    </Button>
-                    <Button type="button" variant="ghost" className="h-8" onClick={() => openEdit(flow)}>
+                    </RowActionButton>
+                    <RowActionButton
+                      type="button"
+                      onClick={() => openEdit(flow)}
+                      icon={<Pencil className="h-3.5 w-3.5" />}
+                    >
                       {tCommon("edit")}
-                    </Button>
+                    </RowActionButton>
                     {!flow.is_default ? (
                       <>
-                        <Button
+                        <RowActionButton
                           type="button"
-                          variant="ghost"
-                          className="h-8"
                           onClick={() => void handleSetDefault(flow.id)}
+                          icon={<Star className="h-3.5 w-3.5" />}
                         >
                           {t("setDefault")}
-                        </Button>
-                        <Button
+                        </RowActionButton>
+                        <RowActionButton
                           type="button"
-                          variant="ghost"
-                          className="h-8 text-red-600"
+                          tone="danger"
                           onClick={() => void handleDelete(flow.id)}
+                          icon={<Trash2 className="h-3.5 w-3.5" />}
                         >
                           {tCommon("delete")}
-                        </Button>
+                        </RowActionButton>
                       </>
                     ) : null}
-                  </div>
+                  </RowActions>
                 </td>
               </tr>
             ))}

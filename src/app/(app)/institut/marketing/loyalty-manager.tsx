@@ -2,12 +2,15 @@
 
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { CopyPlus, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   applyLoyaltyStarterPack,
+  createLoyaltyProgram,
   deleteLoyaltyEarnRule,
   deleteLoyaltyReward,
+  duplicateLoyaltyProgram,
   saveLoyaltyEarnRule,
   saveLoyaltyProgramSettings,
   saveLoyaltyReward,
@@ -19,6 +22,7 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { Field, Input, Select } from "@/components/ui/input";
 import { ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { RowActionButton, RowActions } from "@/components/ui/row-actions";
 import { cn, formatPrice } from "@/lib/utils";
 import {
   calcPointsForRule,
@@ -117,7 +121,7 @@ function EmptyRow({
   );
 }
 
-function StarterPackButton({ label }: { label: string }) {
+function StarterPackButton({ label, programId }: { label: string; programId: string }) {
   const router = useRouter();
   const [pending, start] = useTransition();
 
@@ -129,7 +133,7 @@ function StarterPackButton({ label }: { label: string }) {
       disabled={pending}
       onClick={() => {
         start(async () => {
-          await applyLoyaltyStarterPack();
+          await applyLoyaltyStarterPack(programId);
           router.refresh();
         });
       }}
@@ -184,23 +188,35 @@ export function LoyaltyManager({
   integrations,
   services,
   loyaltyPublicUrl,
+  selectedProgramId,
 }: {
   snapshot: LoyaltyProgramSnapshot;
   integrations: LoyaltyIntegrations;
   services: ServiceOption[];
   loyaltyPublicUrl: string;
+  selectedProgramId: string;
 }) {
   const t = useTranslations("institut.marketing.loyalty");
   const tCommon = useTranslations("common");
+  const router = useRouter();
+  const pathname = usePathname();
   const [programState, programAction, programPending] = useActionState(
     saveLoyaltyProgramSettings,
     initial,
   );
+  const [programCreateState, programCreateAction, programCreatePending] = useActionState(
+    createLoyaltyProgram,
+    initial,
+  );
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
   const [rewardDialogOpen, setRewardDialogOpen] = useState(false);
+  const [programDialogOpen, setProgramDialogOpen] = useState(false);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
   const [editingRule, setEditingRule] = useState<LoyaltyEarnRule | null>(null);
   const [editingReward, setEditingReward] = useState<LoyaltyReward | null>(null);
   const [pendingDelete, startDelete] = useTransition();
+  const [duplicatePending, startDuplicate] = useTransition();
 
   const { program, rules, rewards, stats } = snapshot;
 
@@ -262,18 +278,79 @@ export function LoyaltyManager({
         ? t("guide.phase2Action")
         : t("guide.phase3Action");
 
+  useEffect(() => {
+    if (!programCreateState.ok || !programCreateState.createdProgramId) return;
+    router.replace(`${pathname}?program=${programCreateState.createdProgramId}`);
+  }, [programCreateState.ok, programCreateState.createdProgramId, pathname, router]);
+
+  function handleDuplicateProgramSubmit(formData: FormData) {
+    setDuplicateError(null);
+    startDuplicate(async () => {
+      const result = await duplicateLoyaltyProgram(formData);
+      if (!result.ok || !result.createdProgramId) {
+        setDuplicateError(result.error ?? t("actions.invalidRule"));
+        return;
+      }
+      setDuplicateDialogOpen(false);
+      router.replace(`${pathname}?program=${result.createdProgramId}`);
+    });
+  }
+
   return (
     <>
+      <ListToolbar
+        action={
+          <div className="flex w-full flex-wrap justify-end gap-2 sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDuplicateDialogOpen(true)}
+              className="h-9 w-full sm:w-auto"
+            >
+              <CopyPlus className="h-4 w-4" />
+              {t("program.duplicateProgram")}
+            </Button>
+            <Button type="button" onClick={() => setProgramDialogOpen(true)} className="h-9 w-full sm:w-auto">
+              + {t("program.newProgram")}
+            </Button>
+          </div>
+        }
+      >
+        <div className="w-full sm:max-w-xs">
+          <label htmlFor="loyalty_program_picker" className="mb-1 block text-xs uppercase tracking-wide text-slate-500">
+            {t("program.selectorLabel")}
+          </label>
+          <Select
+            id="loyalty_program_picker"
+            value={selectedProgramId}
+            onChange={(e) => router.replace(`${pathname}?program=${e.target.value}`)}
+            className="h-9"
+          >
+            {snapshot.programs.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </ListToolbar>
+
       <GuideHeader
         title={guideTitle}
         action={guideAction}
         status={programStatus}
         statusLabel={t(`programStatus.${programStatus}`)}
       />
+      <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-2.5 lg:px-6">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-600">
+          {t("clarity.title")}
+        </p>
+        <p className="mt-1 text-sm text-slate-600">{t("clarity.body")}</p>
+      </div>
 
       {phase === 1 && !hasRules ? (
         <div className="flex flex-wrap items-center justify-end gap-2 border-b border-slate-200 px-4 py-2 lg:px-6">
-          <StarterPackButton label={t("starterPack")} />
+          <StarterPackButton label={t("starterPack")} programId={snapshot.program.id} />
         </div>
       ) : null}
 
@@ -304,7 +381,10 @@ export function LoyaltyManager({
           </Button>
         }
       >
-        <p className="text-sm font-medium text-slate-700">{t("rules.title")}</p>
+        <div>
+          <p className="text-sm font-medium text-slate-700">{t("rules.title")}</p>
+          <p className="text-xs text-slate-500">{t("rules.hint")}</p>
+        </div>
       </ListToolbar>
       <DataTable>
         <table className="w-full text-sm">
@@ -334,23 +414,24 @@ export function LoyaltyManager({
                     {rule.is_active ? t("status.active") : t("status.inactive")}
                   </td>
                   <td className={dataTableCell}>
-                    <div className="flex gap-2">
-                      <button
+                    <RowActions className="justify-start">
+                      <RowActionButton
                         type="button"
                         onClick={() => openEditRule(rule)}
-                        className="text-sm text-slate-600 hover:text-slate-900"
+                        icon={<Pencil className="h-3.5 w-3.5" />}
                       >
                         {tCommon("edit")}
-                      </button>
-                      <button
+                      </RowActionButton>
+                      <RowActionButton
                         type="button"
                         onClick={() => handleDeleteRule(rule.id)}
                         disabled={pendingDelete}
-                        className="text-sm text-red-600 hover:text-red-700"
+                        tone="danger"
+                        icon={<Trash2 className="h-3.5 w-3.5" />}
                       >
                         {tCommon("delete")}
-                      </button>
-                    </div>
+                      </RowActionButton>
+                    </RowActions>
                   </td>
                 </tr>
               ))
@@ -371,7 +452,10 @@ export function LoyaltyManager({
               </Button>
             }
           >
-            <p className="text-sm font-medium text-slate-700">{t("rewards.title")}</p>
+            <div>
+              <p className="text-sm font-medium text-slate-700">{t("rewards.title")}</p>
+              <p className="text-xs text-slate-500">{t("rewards.hint")}</p>
+            </div>
           </ListToolbar>
           <DataTable>
             <table className="w-full text-sm">
@@ -412,23 +496,24 @@ export function LoyaltyManager({
                         {reward.is_active ? t("status.active") : t("status.inactive")}
                       </td>
                       <td className={dataTableCell}>
-                        <div className="flex gap-2">
-                          <button
+                        <RowActions className="justify-start">
+                          <RowActionButton
                             type="button"
                             onClick={() => openEditReward(reward)}
-                            className="text-sm text-slate-600 hover:text-slate-900"
+                            icon={<Pencil className="h-3.5 w-3.5" />}
                           >
                             {tCommon("edit")}
-                          </button>
-                          <button
+                          </RowActionButton>
+                          <RowActionButton
                             type="button"
                             onClick={() => handleDeleteReward(reward.id)}
                             disabled={pendingDelete}
-                            className="text-sm text-red-600 hover:text-red-700"
+                            tone="danger"
+                            icon={<Trash2 className="h-3.5 w-3.5" />}
                           >
                             {tCommon("delete")}
-                          </button>
-                        </div>
+                          </RowActionButton>
+                        </RowActions>
                       </td>
                     </tr>
                   ))
@@ -445,7 +530,13 @@ export function LoyaltyManager({
       {showProgram ? (
         <>
           <div className="border-t border-slate-200 px-4 py-3 lg:px-6">
-            <p className="text-sm font-medium text-slate-700">{t("program.title")}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium text-slate-700">{t("program.title")}</p>
+              <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                {t("program.scopeBadge")}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">{t("program.globalHint")}</p>
           </div>
           <form
             action={programAction}
@@ -454,6 +545,7 @@ export function LoyaltyManager({
               phase === 3 && "bg-slate-50/80",
             )}
           >
+            <input type="hidden" name="program_id" value={snapshot.program.id} />
             {programState.error ? (
               <p className="text-sm text-red-600">{programState.error}</p>
             ) : null}
@@ -466,12 +558,15 @@ export function LoyaltyManager({
                 <Input id="loyalty_name" name="name" defaultValue={program.name} required />
               </Field>
               <Field label={t("program.pointsLabel")} htmlFor="loyalty_points_label">
-                <Input
-                  id="loyalty_points_label"
-                  name="points_label"
-                  defaultValue={program.points_label}
-                  required
-                />
+                <div className="space-y-1">
+                  <Input
+                    id="loyalty_points_label"
+                    name="points_label"
+                    defaultValue={program.points_label}
+                    required
+                  />
+                  <p className="text-xs text-slate-500">{t("program.pointsLabelHint")}</p>
+                </div>
               </Field>
               <Field label={t("program.birthdayBonus")} htmlFor="loyalty_birthday_bonus">
                 <Input
@@ -599,6 +694,7 @@ export function LoyaltyManager({
         rule={editingRule}
         integrations={integrations}
         pointsLabel={program.points_label}
+        programId={snapshot.program.id}
       />
 
       <RewardDialog
@@ -607,7 +703,67 @@ export function LoyaltyManager({
         reward={editingReward}
         services={services}
         pointsLabel={program.points_label}
+        programId={snapshot.program.id}
       />
+
+      <FormDialog
+        open={programDialogOpen}
+        onClose={() => setProgramDialogOpen(false)}
+        title={t("program.newProgramTitle")}
+      >
+        <form action={programCreateAction} className="space-y-4">
+          {programCreateState.error ? <p className="text-sm text-red-600">{programCreateState.error}</p> : null}
+          <Field label={t("program.newProgramName")} htmlFor="new_program_name">
+            <Input id="new_program_name" name="name" required />
+          </Field>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" className="h-9" onClick={() => setProgramDialogOpen(false)}>
+              {tCommon("cancel")}
+            </Button>
+            <Button type="submit" className="h-9" disabled={programCreatePending}>
+              {programCreatePending ? tCommon("saving") : tCommon("save")}
+            </Button>
+          </div>
+        </form>
+      </FormDialog>
+
+      <FormDialog
+        open={duplicateDialogOpen}
+        onClose={() => {
+          setDuplicateDialogOpen(false);
+          setDuplicateError(null);
+        }}
+        title={t("program.duplicateProgramTitle")}
+      >
+        <form action={handleDuplicateProgramSubmit} className="space-y-4">
+          <input type="hidden" name="source_program_id" value={snapshot.program.id} />
+          {duplicateError ? <p className="text-sm text-red-600">{duplicateError}</p> : null}
+          <Field label={t("program.duplicateProgramName")} htmlFor="duplicate_program_name">
+            <Input
+              id="duplicate_program_name"
+              name="name"
+              required
+              defaultValue={`${snapshot.program.name} ${t("program.copySuffix")}`}
+            />
+          </Field>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-9"
+              onClick={() => {
+                setDuplicateDialogOpen(false);
+                setDuplicateError(null);
+              }}
+            >
+              {tCommon("cancel")}
+            </Button>
+            <Button type="submit" className="h-9" disabled={duplicatePending}>
+              {duplicatePending ? tCommon("saving") : t("program.duplicateProgram")}
+            </Button>
+          </div>
+        </form>
+      </FormDialog>
     </>
   );
 }
@@ -646,12 +802,14 @@ function EarnRuleDialog({
   rule,
   integrations,
   pointsLabel,
+  programId,
 }: {
   open: boolean;
   onClose: () => void;
   rule: LoyaltyEarnRule | null;
   integrations: LoyaltyIntegrations;
   pointsLabel: string;
+  programId: string;
 }) {
   const t = useTranslations("institut.marketing.loyalty");
   const tCommon = useTranslations("common");
@@ -693,6 +851,7 @@ function EarnRuleDialog({
       size="lg"
     >
       <form action={action} className="space-y-4">
+        <input type="hidden" name="program_id" value={programId} />
         {rule ? <input type="hidden" name="id" value={rule.id} /> : null}
         {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
 
@@ -818,12 +977,14 @@ function RewardDialog({
   reward,
   services,
   pointsLabel,
+  programId,
 }: {
   open: boolean;
   onClose: () => void;
   reward: LoyaltyReward | null;
   services: ServiceOption[];
   pointsLabel: string;
+  programId: string;
 }) {
   const t = useTranslations("institut.marketing.loyalty");
   const tCommon = useTranslations("common");
@@ -848,6 +1009,7 @@ function RewardDialog({
       size="lg"
     >
       <form action={action} className="space-y-4">
+        <input type="hidden" name="program_id" value={programId} />
         {reward ? <input type="hidden" name="id" value={reward.id} /> : null}
         {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
 

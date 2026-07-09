@@ -17,7 +17,7 @@ export type ClientDataExport = {
   appointments: Record<string, unknown>;
   sales: Record<string, unknown>;
   loyalty: {
-    balance: Record<string, unknown> | null;
+    balances: Array<Record<string, unknown>>;
     transactions: Array<Record<string, unknown>>;
   };
 };
@@ -45,10 +45,9 @@ export async function exportClientData(
         .order("created_at", { ascending: false }),
       supabase
         .from("inst_loyalty_balances")
-        .select("points_balance, updated_at")
+        .select("program_id, points_balance, updated_at")
         .eq("tenant_id", tenantId)
-        .eq("client_id", clientId)
-        .maybeSingle(),
+        .eq("client_id", clientId),
       supabase
         .from("inst_loyalty_transactions")
         .select("type, points_delta, balance_after, source_type, created_at, notes")
@@ -58,7 +57,8 @@ export async function exportClientData(
         .limit(100),
     ]);
 
-  const { pin_code: _pinCode, ...safeClient } = client;
+  const safeClient = { ...client };
+  delete (safeClient as { pin_code?: string | null }).pin_code;
 
   return {
     exported_at: new Date().toISOString(),
@@ -69,7 +69,7 @@ export async function exportClientData(
     appointments: appointments as unknown as Record<string, unknown>,
     sales: sales as unknown as Record<string, unknown>,
     loyalty: {
-      balance: loyaltyBalanceRes.data as Record<string, unknown> | null,
+      balances: (loyaltyBalanceRes.data ?? []) as Array<Record<string, unknown>>,
       transactions: (loyaltyTxRes.data ?? []) as Array<Record<string, unknown>>,
     },
   };

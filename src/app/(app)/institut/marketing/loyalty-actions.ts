@@ -20,20 +20,26 @@ import { buildLoyaltyPublicUrl } from "@/lib/institut/loyalty-public";
 
 const LOYALTY_PATH = "/institut/marketing/fidelite";
 
-export type ActionResult = { ok?: boolean; error?: string; message?: string };
+export type ActionResult = {
+  ok?: boolean;
+  error?: string;
+  message?: string;
+  createdProgramId?: string;
+};
 
-export async function loadLoyaltyPageData(): Promise<{
+export async function loadLoyaltyPageData(selectedProgramId?: string): Promise<{
   snapshot: LoyaltyProgramSnapshot;
   integrations: LoyaltyIntegrations;
   services: { id: string; name: string }[];
   loyaltyPublicUrl: string;
+  selectedProgramId: string;
 }> {
   const session = await requireModule("institut");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
   const [snapshot, wooConn, servicesRes, loyaltyPublicUrl] = await Promise.all([
-    loadLoyaltyProgramSnapshot(supabase, tenantId),
+    loadLoyaltyProgramSnapshot(supabase, tenantId, selectedProgramId),
     resolveConnection(tenantId, WOO_PROVIDER),
     supabase
       .from("inst_services")
@@ -52,6 +58,7 @@ export async function loadLoyaltyPageData(): Promise<{
     },
     services: servicesRes.data ?? [],
     loyaltyPublicUrl,
+    selectedProgramId: snapshot.program.id,
   };
 }
 
@@ -61,19 +68,29 @@ export async function saveLoyaltyProgramSettings(
 ): Promise<ActionResult> {
   const session = await requireModule("institut");
   const supabase = await createClient();
-  const program = await ensureLoyaltyProgram(supabase, session.tenant.id);
+  const programId = String(formData.get("program_id") ?? "").trim() || undefined;
+  const program = await ensureLoyaltyProgram(supabase, session.tenant.id, programId);
 
   const name = String(formData.get("name") ?? "").trim();
   const pointsLabel = String(formData.get("points_label") ?? "").trim();
   const t = await getTranslations("institut.marketing.loyalty.actions");
   if (!name || !pointsLabel) return { error: t("missingFields") };
 
+  const isActive = formData.get("is_active") === "1";
+  if (isActive) {
+    await supabase
+      .from("inst_loyalty_programs")
+      .update({ is_active: false })
+      .eq("tenant_id", session.tenant.id)
+      .neq("id", program.id);
+  }
+
   const { error } = await supabase
     .from("inst_loyalty_programs")
     .update({
       name,
       points_label: pointsLabel,
-      is_active: formData.get("is_active") === "1",
+      is_active: isActive,
       birthday_bonus_points: Math.max(
         0,
         Math.round(Number(formData.get("birthday_bonus_points") ?? 0)),
@@ -101,7 +118,8 @@ export async function saveLoyaltyEarnRule(
 ): Promise<ActionResult> {
   const session = await requireModule("institut");
   const supabase = await createClient();
-  const program = await ensureLoyaltyProgram(supabase, session.tenant.id);
+  const programId = String(formData.get("program_id") ?? "").trim() || undefined;
+  const program = await ensureLoyaltyProgram(supabase, session.tenant.id, programId);
 
   const id = String(formData.get("id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
@@ -179,7 +197,8 @@ export async function saveLoyaltyReward(
 ): Promise<ActionResult> {
   const session = await requireModule("institut");
   const supabase = await createClient();
-  const program = await ensureLoyaltyProgram(supabase, session.tenant.id);
+  const programId = String(formData.get("program_id") ?? "").trim() || undefined;
+  const program = await ensureLoyaltyProgram(supabase, session.tenant.id, programId);
 
   const id = String(formData.get("id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
@@ -258,10 +277,10 @@ export async function deleteLoyaltyReward(rewardId: string): Promise<ActionResul
   return { ok: true };
 }
 
-export async function applyLoyaltyStarterPack(): Promise<ActionResult> {
+export async function applyLoyaltyStarterPack(programId?: string): Promise<ActionResult> {
   const session = await requireModule("institut");
   const supabase = await createClient();
-  const program = await ensureLoyaltyProgram(supabase, session.tenant.id);
+  const program = await ensureLoyaltyProgram(supabase, session.tenant.id, programId);
   const t = await getTranslations("institut.marketing.loyalty.actions");
 
   const { count: ruleCount } = await supabase
@@ -307,4 +326,129 @@ export async function applyLoyaltyStarterPack(): Promise<ActionResult> {
 
   revalidatePath(LOYALTY_PATH);
   return { ok: true, message: t("starterApplied") };
+}
+
+export async function createLoyaltyProgram(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  const t = await getTranslations("institut.marketing.loyalty.actions");
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: t("missingFields") };
+
+  const { data, error } = await supabase
+    .from("inst_loyalty_programs")
+    .insert({
+      tenant_id: session.tenant.id,
+      name,
+      is_active: false,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) return { error: error?.message ?? t("invalidRule") };
+  revalidatePath(LOYALTY_PATH);
+  return { ok: true, createdProgramId: data.id };
+}
+
+export async function duplicateLoyaltyProgram(formData: FormData): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  const t = await getTranslations("institut.marketing.loyalty.actions");
+  const sourceProgramId = String(formData.get("source_program_id") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+
+  if (!sourceProgramId || !name) return { error: t("missingFields") };
+
+  const { data: sourceProgram } = await supabase
+    .from("inst_loyalty_programs")
+    .select(
+      "id, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled",
+    )
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", sourceProgramId)
+    .maybeSingle();
+
+  if (!sourceProgram) return { error: t("invalidRule") };
+
+  const { data: createdProgram, error: createError } = await supabase
+    .from("inst_loyalty_programs")
+    .insert({
+      tenant_id: session.tenant.id,
+      name,
+      is_active: false,
+      points_label: sourceProgram.points_label,
+      birthday_bonus_points: sourceProgram.birthday_bonus_points,
+      portal_visible: sourceProgram.portal_visible,
+      referral_points: sourceProgram.referral_points,
+      same_day_rebook_points: sourceProgram.same_day_rebook_points,
+      birthday_auto_enabled: sourceProgram.birthday_auto_enabled,
+    })
+    .select("id")
+    .single();
+
+  if (createError || !createdProgram) {
+    return { error: createError?.message ?? t("invalidRule") };
+  }
+
+  const [rulesRes, rewardsRes] = await Promise.all([
+    supabase
+      .from("inst_loyalty_earn_rules")
+      .select("name, is_active, source_type, calc_mode, points_value, min_amount_cents, sort_order")
+      .eq("tenant_id", session.tenant.id)
+      .eq("program_id", sourceProgramId)
+      .order("sort_order")
+      .order("created_at"),
+    supabase
+      .from("inst_loyalty_rewards")
+      .select(
+        "name, description, is_active, reward_type, points_cost, discount_percent, discount_cents, service_id, sort_order, new_service_only",
+      )
+      .eq("tenant_id", session.tenant.id)
+      .eq("program_id", sourceProgramId)
+      .order("sort_order")
+      .order("created_at"),
+  ]);
+
+  if ((rulesRes.data ?? []).length > 0) {
+    const { error } = await supabase.from("inst_loyalty_earn_rules").insert(
+      (rulesRes.data ?? []).map((row) => ({
+        tenant_id: session.tenant.id,
+        program_id: createdProgram.id,
+        name: row.name,
+        is_active: row.is_active,
+        source_type: row.source_type,
+        calc_mode: row.calc_mode,
+        points_value: row.points_value,
+        min_amount_cents: row.min_amount_cents,
+        sort_order: row.sort_order,
+      })),
+    );
+    if (error) return { error: error.message };
+  }
+
+  if ((rewardsRes.data ?? []).length > 0) {
+    const { error } = await supabase.from("inst_loyalty_rewards").insert(
+      (rewardsRes.data ?? []).map((row) => ({
+        tenant_id: session.tenant.id,
+        program_id: createdProgram.id,
+        name: row.name,
+        description: row.description,
+        is_active: row.is_active,
+        reward_type: row.reward_type,
+        points_cost: row.points_cost,
+        discount_percent: row.discount_percent,
+        discount_cents: row.discount_cents,
+        service_id: row.service_id,
+        sort_order: row.sort_order,
+        new_service_only: row.new_service_only,
+      })),
+    );
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath(LOYALTY_PATH);
+  return { ok: true, createdProgramId: createdProgram.id };
 }

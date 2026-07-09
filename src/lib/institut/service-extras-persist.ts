@@ -17,6 +17,21 @@ export async function persistServiceExtras(
   links: ServiceExtraLinkInput[],
   extrasStepPosition: "before_time" | "after_time",
 ): Promise<string | null> {
+  if (links.length > 0) {
+    const extraIds = [...new Set(links.map((link) => link.extra_service_id))];
+    const { data: extras, error: extrasError } = await supabase
+      .from("inst_services")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("visibility", "extra_only")
+      .in("id", extraIds);
+    if (extrasError) return extrasError.message;
+
+    const allowed = new Set((extras ?? []).map((row) => row.id));
+    const hasInvalid = extraIds.some((id) => !allowed.has(id));
+    if (hasInvalid) return "invalid_extra_selection";
+  }
+
   const { error: posError } = await supabase
     .from("inst_services")
     .update({ extras_step_position: extrasStepPosition })

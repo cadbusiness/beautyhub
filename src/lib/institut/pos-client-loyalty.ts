@@ -32,6 +32,9 @@ export async function loadPosClientLoyalty(
     .from("inst_loyalty_programs")
     .select("id, is_active, points_label")
     .eq("tenant_id", tenantId)
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!program?.is_active) return null;
@@ -41,6 +44,7 @@ export async function loadPosClientLoyalty(
     .select("points_balance")
     .eq("tenant_id", tenantId)
     .eq("client_id", clientId)
+    .eq("program_id", program.id)
     .maybeSingle();
 
   const balance = balanceRow?.points_balance ?? 0;

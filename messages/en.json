@@ -1198,6 +1198,10 @@
           "phase3Action": "Check “Active program” then save.",
           "phase3Title": "Step 3 — Upload"
         },
+        "clarity": {
+          "title": "How to read this screen",
+          "body": "Rules define how points are earned (you can create several with different amounts). Settings below are global and apply to the whole loyalty program."
+        },
         "integrations": {
           "comingSoon": "Soon",
           "connectHint": "Connect your store to activate this source:",
@@ -1206,10 +1210,21 @@
         "program": {
           "active": "Active program",
           "description": "Name, wording of points and activation of the program.",
+          "selectorLabel": "Program",
+          "newProgram": "New program",
+          "newProgramTitle": "Create loyalty program",
+          "newProgramName": "Program name",
+          "globalHint": "These settings apply to all rules and rewards in this program.",
           "name": "Program name",
           "pointsLabel": "Point wording",
+          "pointsLabelHint": "Example: points, stars, credits (same label everywhere).",
           "saved": "Recorded program.",
-          "title": "Settings"
+          "scopeBadge": "Global",
+          "title": "Settings",
+          "duplicateProgram": "Duplicate",
+          "duplicateProgramTitle": "Duplicate program",
+          "duplicateProgramName": "Copy name",
+          "copySuffix": "(copy)"
         },
         "programStatus": {
           "draft": "Draft",
@@ -1239,6 +1254,7 @@
             "service": "Service offered",
             "type": "Type of reward"
           },
+          "hint": "Define what customers can redeem with their points here.",
           "redeemHint": "Using points at checkout is coming soon.",
           "title": "Awards",
           "types": {
@@ -1276,6 +1292,7 @@
             "preview": "Example: €50 expense → {points} {label}",
             "source": "Based on"
           },
+          "hint": "Create multiple rules if you want different earning amounts by case.",
           "title": "Gain points"
         },
         "sources": {
@@ -1761,13 +1778,13 @@
           "afterTime": "After choosing the niche",
           "beforeTime": "Before choosing the niche",
           "extraOnlyBadge": "Extra",
-          "hint": "Choose other services to offer as an upsell with this one. ",
+          "hint": "Choose extras from your dedicated extras catalog.",
           "maxQty": "Max",
           "minQty": "Min",
-          "noCandidates": "Create other services (catalog or “extra only”) to offer them here.",
-          "noSearchResults": "No service matches.",
+          "noCandidates": "No extras available yet. Create one in the extras catalog first.",
+          "noSearchResults": "No extra matches.",
           "saveExtras": "Save extras",
-          "searchPlaceholder": "Search for a service…",
+          "searchPlaceholder": "Search for an extra…",
           "selectedCount": "{count, plural, one {# extra sélectionné} other {# extras sélectionnés}}",
           "stepPosition": "Extras step in booking"
         },
@@ -1813,11 +1830,17 @@
       "filterActive": "Visible",
       "filterAll": "All",
       "filterInactive": "Masked",
+      "scopeCatalog": "Services",
+      "scopeExtras": "Extras catalog",
+      "scopeAll": "Services + extras",
       "footer": "{count, plural, one {# prestation} other {# prestations}}",
       "hidden": "Masked",
       "hiddenBadge": "Masked",
       "new": "New service",
+      "newExtra": "New extra",
+      "emptyExtras": "No extras yet.",
       "noResults": "No results for this search.",
+      "noExtraResults": "No extras match this search.",
       "quickForm": {
         "duration": "Duration (min)",
         "name": "Name",
@@ -2121,21 +2144,48 @@
       "ctaClient": "Customer area",
       "description": "Appointments, WooCommerce checkout, customers, team and training — a single back office. ",
       "stats": {
-        "ai": { "label": "Built-in actions", "value": "AI" },
-        "isolation": { "label": "Insulation holding", "value": "RLS" },
-        "modules": { "label": "Business modules", "value": "6+" }
+        "ai": {
+          "label": "Built-in actions",
+          "value": "AI"
+        },
+        "isolation": {
+          "label": "Insulation holding",
+          "value": "RLS"
+        },
+        "modules": {
+          "label": "Business modules",
+          "value": "6+"
+        }
       },
       "titleLine1": "Manage your institute",
       "titleLine2": "like a professional platform"
     },
     "modules": {
       "items": {
-        "academie": { "text": "Training, registrations and student monitoring.", "title": "Academy" },
-        "appointments": { "text": "Practitioner/cabin calendar, online reservation, customer portal.", "title": "Appointment" },
-        "assistant": { "text": "Actions declared by module — control without rewiring.", "title": "AI Assistant" },
-        "multitenant": { "text": "Strict isolation by institute, RLS Supabase, team roles.", "title": "Multi-tenant" },
-        "pos": { "text": "Services, WooCommerce products and internal items in a single basket.", "title": "Unified checkout" },
-        "whitelabel": { "text": "Platform → brands → institutes, domains and custom branding.", "title": "White label" }
+        "academie": {
+          "text": "Training, registrations and student monitoring.",
+          "title": "Academy"
+        },
+        "appointments": {
+          "text": "Practitioner/cabin calendar, online reservation, customer portal.",
+          "title": "Appointment"
+        },
+        "assistant": {
+          "text": "Actions declared by module — control without rewiring.",
+          "title": "AI Assistant"
+        },
+        "multitenant": {
+          "text": "Strict isolation by institute, RLS Supabase, team roles.",
+          "title": "Multi-tenant"
+        },
+        "pos": {
+          "text": "Services, WooCommerce products and internal items in a single basket.",
+          "title": "Unified checkout"
+        },
+        "whitelabel": {
+          "text": "Platform → brands → institutes, domains and custom branding.",
+          "title": "White label"
+        }
       },
       "subtitle": "Each module is activated according to the institute's formula. ",
       "title": "Everything you need for your business"
@@ -2146,9 +2196,18 @@
     },
     "steps": {
       "items": {
-        "1": { "text": "WooCommerce, Stripe, team and services.", "title": "Connect your institute" },
-        "2": { "text": "Institute, Academy — according to your formula.", "title": "Activate your modules" },
-        "3": { "text": "Cash register, public appointments and AI assistant.", "title": "Collect and plan" }
+        "1": {
+          "text": "WooCommerce, Stripe, team and services.",
+          "title": "Connect your institute"
+        },
+        "2": {
+          "text": "Institute, Academy — according to your formula.",
+          "title": "Activate your modules"
+        },
+        "3": {
+          "text": "Cash register, public appointments and AI assistant.",
+          "title": "Collect and plan"
+        }
       },
       "title": "Quick start"
     }
@@ -2186,11 +2245,26 @@
       "progress": "{done} / {total} steps completed",
       "checkedAt": "Completed on {date}",
       "checklist": {
-        "privacy_policy": { "title": "Privacy policy published", "hint": "Inform customers how their data is processed." },
-        "client_notices": { "title": "Form notices", "hint": "Purpose, legal basis and policy link on booking forms." },
-        "dpa_signed": { "title": "DPA signed", "hint": "Art. 28 GDPR agreement between your institute and BeautyHub." },
-        "retention_policy": { "title": "Retention periods set", "hint": "Configure inactive client retention below." },
-        "team_training": { "title": "Team trained", "hint": "Limited access, passwords, incident reporting." }
+        "privacy_policy": {
+          "title": "Privacy policy published",
+          "hint": "Inform customers how their data is processed."
+        },
+        "client_notices": {
+          "title": "Form notices",
+          "hint": "Purpose, legal basis and policy link on booking forms."
+        },
+        "dpa_signed": {
+          "title": "DPA signed",
+          "hint": "Art. 28 GDPR agreement between your institute and BeautyHub."
+        },
+        "retention_policy": {
+          "title": "Retention periods set",
+          "hint": "Configure inactive client retention below."
+        },
+        "team_training": {
+          "title": "Team trained",
+          "hint": "Limited access, passwords, incident reporting."
+        }
       },
       "retentionTitle": "Data retention",
       "retentionHint": "Retention for inactive client records (automatic purge — coming soon). Leave empty for no limit.",
@@ -2225,39 +2299,90 @@
       "intro": "How BeautyHub processes personal data when you use the platform.",
       "updated": "Last updated: June 2026 — draft for legal review.",
       "sections": {
-        "1": { "title": "Data controller", "body": "Institutes are controllers for their end customers. BeautyHub acts as processor." },
-        "2": { "title": "Data collected", "body": "Identity, contact details, appointments, purchases, marketing preferences, access logs." },
-        "3": { "title": "Purposes", "body": "Contract, booking, POS, support, security. Marketing: consent." },
-        "4": { "title": "Recipients", "body": "See Sub-processors page. Data isolated per tenant (RLS)." },
-        "5": { "title": "Retention", "body": "Contract duration plus legal periods. Export and anonymization in product." },
-        "6": { "title": "Your rights", "body": "Access, rectification, erasure, portability, objection. Contact your institute or supervisory authority." },
-        "7": { "title": "Security", "body": "TLS, AES-256-GCM for secrets, authentication, audit logs. See /legal/securite." }
+        "1": {
+          "title": "Data controller",
+          "body": "Institutes are controllers for their end customers. BeautyHub acts as processor."
+        },
+        "2": {
+          "title": "Data collected",
+          "body": "Identity, contact details, appointments, purchases, marketing preferences, access logs."
+        },
+        "3": {
+          "title": "Purposes",
+          "body": "Contract, booking, POS, support, security. Marketing: consent."
+        },
+        "4": {
+          "title": "Recipients",
+          "body": "See Sub-processors page. Data isolated per tenant (RLS)."
+        },
+        "5": {
+          "title": "Retention",
+          "body": "Contract duration plus legal periods. Export and anonymization in product."
+        },
+        "6": {
+          "title": "Your rights",
+          "body": "Access, rectification, erasure, portability, objection. Contact your institute or supervisory authority."
+        },
+        "7": {
+          "title": "Security",
+          "body": "TLS, AES-256-GCM for secrets, authentication, audit logs. See /legal/securite."
+        }
       }
     },
     "terms": {
       "title": "Terms of use",
       "intro": "BeautyHub platform terms — draft.",
       "sections": {
-        "1": { "title": "Purpose", "body": "SaaS for beauty institutes (appointments, clients, POS)." },
-        "2": { "title": "Accounts", "body": "You are responsible for credentials and team access." },
-        "3": { "title": "Data", "body": "Institute guarantees legal bases. BeautyHub processes on institute instructions." },
-        "4": { "title": "Availability", "body": "Service as-is; planned maintenance." },
-        "5": { "title": "IP", "body": "BeautyHub owns the software. Institute owns its data." },
-        "6": { "title": "Law", "body": "French law unless mandatory otherwise." }
+        "1": {
+          "title": "Purpose",
+          "body": "SaaS for beauty institutes (appointments, clients, POS)."
+        },
+        "2": {
+          "title": "Accounts",
+          "body": "You are responsible for credentials and team access."
+        },
+        "3": {
+          "title": "Data",
+          "body": "Institute guarantees legal bases. BeautyHub processes on institute instructions."
+        },
+        "4": {
+          "title": "Availability",
+          "body": "Service as-is; planned maintenance."
+        },
+        "5": {
+          "title": "IP",
+          "body": "BeautyHub owns the software. Institute owns its data."
+        },
+        "6": {
+          "title": "Law",
+          "body": "French law unless mandatory otherwise."
+        }
       }
     },
     "subprocessors": {
       "title": "Sub-processors",
       "intro": "Technical sub-processors used by hosted BeautyHub.",
-      "columns": { "name": "Provider", "purpose": "Purpose", "location": "Location", "safeguards": "Safeguards" },
+      "columns": {
+        "name": "Provider",
+        "purpose": "Purpose",
+        "location": "Location",
+        "safeguards": "Safeguards"
+      },
       "purposes": {
         "database": "Database, auth, storage",
         "hosting": "Application hosting",
         "payments": "Online payments",
         "ai": "AI assistant (if enabled)"
       },
-      "locations": { "euUs": "EU / US", "global": "Global", "us": "United States" },
-      "safeguards": { "dpaScc": "DPA + SCCs", "dpaOptIn": "DPA; configurable per institute" },
+      "locations": {
+        "euUs": "EU / US",
+        "global": "Global",
+        "us": "United States"
+      },
+      "safeguards": {
+        "dpaScc": "DPA + SCCs",
+        "dpaOptIn": "DPA; configurable per institute"
+      },
       "note": "Indicative list — update when adding providers."
     },
     "security": {

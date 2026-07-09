@@ -110,6 +110,7 @@ export async function createService(
         sort_order: number;
       }>;
       if (links.length > 0) {
+        const tActions = await getTranslations("institut.actions");
         const { persistServiceExtras } = await import("@/lib/institut/service-extras-persist");
         const stepPos =
           parsed.data.extras_step_position === "before_time" ? "before_time" : "after_time";
@@ -120,7 +121,12 @@ export async function createService(
           links,
           stepPos,
         );
-        if (extraErr) return { error: extraErr };
+        if (extraErr) {
+          return {
+            error:
+              extraErr === "invalid_extra_selection" ? tActions("extrasInvalid") : extraErr,
+          };
+        }
       }
     } catch {
       const t = await getTranslations("institut.actions");

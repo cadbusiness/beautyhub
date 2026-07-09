@@ -28,6 +28,13 @@ export interface LoyaltyProgram {
   birthday_auto_enabled: boolean;
 }
 
+export interface LoyaltyProgramListItem {
+  id: string;
+  name: string;
+  is_active: boolean;
+  points_label: string;
+}
+
 export interface LoyaltyEarnRule {
   id: string;
   tenant_id: string;
@@ -59,6 +66,7 @@ export interface LoyaltyReward {
 
 export interface LoyaltyProgramSnapshot {
   program: LoyaltyProgram;
+  programs: LoyaltyProgramListItem[];
   rules: LoyaltyEarnRule[];
   rewards: LoyaltyReward[];
   stats: {
@@ -103,11 +111,25 @@ export function calcPointsForRule(
 export async function ensureLoyaltyProgram(
   supabase: Db,
   tenantId: string,
+  preferredProgramId?: string | null,
 ): Promise<LoyaltyProgram> {
+  if (preferredProgramId) {
+    const { data: preferred } = await supabase
+      .from("inst_loyalty_programs")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .eq("id", preferredProgramId)
+      .maybeSingle();
+    if (preferred) return normalizeLoyaltyProgram(preferred);
+  }
+
   const { data: existing } = await supabase
     .from("inst_loyalty_programs")
     .select("*")
     .eq("tenant_id", tenantId)
+    .order("is_active", { ascending: false })
+    .order("created_at")
+    .limit(1)
     .maybeSingle();
 
   if (existing) return normalizeLoyaltyProgram(existing);
@@ -125,8 +147,22 @@ export async function ensureLoyaltyProgram(
 export async function loadLoyaltyProgramSnapshot(
   supabase: Db,
   tenantId: string,
+  preferredProgramId?: string | null,
 ): Promise<LoyaltyProgramSnapshot> {
-  const program = await ensureLoyaltyProgram(supabase, tenantId);
+  const { data: programsRes } = await supabase
+    .from("inst_loyalty_programs")
+    .select("id, name, is_active, points_label, tenant_id, created_at")
+    .eq("tenant_id", tenantId)
+    .order("created_at");
+
+  const programs = (programsRes ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    is_active: p.is_active,
+    points_label: p.points_label,
+  }));
+
+  const program = await ensureLoyaltyProgram(supabase, tenantId, preferredProgramId);
 
   const monthStart = new Date();
   monthStart.setDate(1);
@@ -151,11 +187,13 @@ export async function loadLoyaltyProgramSnapshot(
       .from("inst_loyalty_balances")
       .select("points_balance")
       .eq("tenant_id", tenantId)
+      .eq("program_id", program.id)
       .gt("points_balance", 0),
     supabase
       .from("inst_loyalty_transactions")
       .select("type, points_delta")
       .eq("tenant_id", tenantId)
+      .eq("program_id", program.id)
       .gte("created_at", monthStart.toISOString()),
   ]);
 
@@ -173,6 +211,9 @@ export async function loadLoyaltyProgramSnapshot(
 
   return {
     program,
+    programs: programs.length
+      ? programs
+      : [{ id: program.id, name: program.name, is_active: program.is_active, points_label: program.points_label }],
     rules: (rulesRes.data ?? []) as LoyaltyEarnRule[],
     rewards: (rewardsRes.data ?? []) as LoyaltyReward[],
     stats: {
@@ -182,6 +223,21 @@ export async function loadLoyaltyProgramSnapshot(
       pointsRedeemedThisMonth,
     },
   };
+}
+
+async function loadActiveLoyaltyProgram(
+  supabase: Db,
+  tenantId: string,
+): Promise<LoyaltyProgram | null> {
+  const { data } = await supabase
+    .from("inst_loyalty_programs")
+    .select("*")
+    .eq("tenant_id", tenantId)
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ? normalizeLoyaltyProgram(data) : null;
 }
 
 function saleSourceType(sale: { woo_order_id: number | null }): LoyaltySourceType {
@@ -247,19 +303,14 @@ export async function processLoyaltyForCompletedAppointment(
 
   if (!appt || appt.status !== "completed" || !appt.client_id) return;
 
-  const { data: program } = await supabase
-    .from("inst_loyalty_programs")
-    .select("*")
-    .eq("tenant_id", tenantId)
-    .maybeSingle();
-  if (!program?.is_active) return;
-  const normalizedProgram = normalizeLoyaltyProgram(program);
+  const normalizedProgram = await loadActiveLoyaltyProgram(supabase, tenantId);
+  if (!normalizedProgram) return;
 
   const { data: rules } = await supabase
     .from("inst_loyalty_earn_rules")
     .select("*")
     .eq("tenant_id", tenantId)
-    .eq("program_id", program.id)
+    .eq("program_id", normalizedProgram.id)
     .eq("is_active", true)
     .eq("source_type", "appointment_completed");
 
@@ -291,19 +342,14 @@ export async function processLoyaltyForPaidSale(
 
   const sourceType = saleSourceType(sale);
 
-  const { data: program } = await supabase
-    .from("inst_loyalty_programs")
-    .select("*")
-    .eq("tenant_id", tenantId)
-    .maybeSingle();
-  if (!program?.is_active) return;
-  const normalizedProgram = normalizeLoyaltyProgram(program);
+  const normalizedProgram = await loadActiveLoyaltyProgram(supabase, tenantId);
+  if (!normalizedProgram) return;
 
   const { data: rules } = await supabase
     .from("inst_loyalty_earn_rules")
     .select("*")
     .eq("tenant_id", tenantId)
-    .eq("program_id", program.id)
+    .eq("program_id", normalizedProgram.id)
     .eq("is_active", true)
     .eq("source_type", sourceType);
 

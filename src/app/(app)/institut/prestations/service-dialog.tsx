@@ -130,11 +130,13 @@ export function ServiceDialog({
   open,
   service,
   allServices,
+  createVisibility = "catalog",
   onClose,
 }: {
   open: boolean;
   service: ServiceRow | null;
   allServices: ServiceRow[];
+  createVisibility?: "catalog" | "extra_only";
   onClose: () => void;
 }) {
   const t = useTranslations("institut.services.dialog");
@@ -217,6 +219,8 @@ export function ServiceDialog({
     }
     setStepError(null);
   }
+
+  const visibilityValue = service?.visibility === "extra_only" ? "extra_only" : createVisibility;
 
   return (
     <dialog
@@ -339,9 +343,10 @@ export function ServiceDialog({
 
             <Field label={t("visibility")} htmlFor="visibility">
               <select
+                key={`visibility-${service?.id ?? createVisibility}`}
                 id="visibility"
                 name="visibility"
-                defaultValue={service?.visibility ?? "catalog"}
+                defaultValue={visibilityValue}
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
               >
                 <option value="catalog">{t("visibilityCatalog")}</option>

@@ -192,7 +192,10 @@ export async function fetchClientsWithSummary(
 
   const loyaltyMap = new Map<string, number>();
   for (const l of loyaltyRes.data ?? []) {
-    loyaltyMap.set(l.client_id, l.points_balance ?? 0);
+    loyaltyMap.set(
+      l.client_id,
+      (loyaltyMap.get(l.client_id) ?? 0) + (l.points_balance ?? 0),
+    );
   }
 
   return (clientsRes.data ?? []).map((row) => {
@@ -241,8 +244,7 @@ export async function fetchClientOverview(
       .from("inst_loyalty_balances")
       .select("points_balance")
       .eq("tenant_id", tenantId)
-      .eq("client_id", clientId)
-      .maybeSingle(),
+      .eq("client_id", clientId),
     supabase
       .from("acad_enrollments")
       .select("id, status, created_at, course_id")
@@ -354,7 +356,10 @@ export async function fetchClientOverview(
       ecommerce_spent_cents: ecommerceSpent,
       sale_count: saleCount,
       ecommerce_order_count: ecommerceOrders,
-      loyalty_points: loyaltyRes.data?.points_balance ?? 0,
+      loyalty_points: (loyaltyRes.data ?? []).reduce(
+        (sum, row) => sum + (row.points_balance ?? 0),
+        0,
+      ),
     },
     top_services,
     enrollments,

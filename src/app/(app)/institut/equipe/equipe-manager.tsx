@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { MailPlus, Pencil, Trash2 } from "lucide-react";
 import { deleteStaffMember, deleteResource } from "../actions";
 import { Button } from "@/components/ui/button";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
@@ -9,6 +10,8 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { PageTabs } from "@/components/ui/page-tabs";
+import { RowActionButton, RowActions } from "@/components/ui/row-actions";
+import { StaffAvatar } from "@/components/ui/staff-avatar";
 import type {
   StaffWithAccess,
   TeamInvitation,
@@ -150,7 +153,7 @@ export function EquipeManager({
                 <table className="w-full text-sm">
                   <thead className="border-b border-slate-200">
                     <tr>
-                      <th className={`w-10 ${dataTableHead}`} aria-label={t("personnel.columns.color")} />
+                      <th className={`w-14 ${dataTableHead}`} aria-label={t("personnel.columns.color")} />
                       <th className={dataTableHead}>{t("personnel.columns.name")}</th>
                       <th className={dataTableHead}>{t("personnel.columns.email")}</th>
                       <th className={dataTableHead}>{t("personnel.columns.access")}</th>
@@ -160,73 +163,74 @@ export function EquipeManager({
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredStaff.map((s) => (
-                      <tr key={s.id} className={dataTableRow}>
-                        <td className={dataTableCell}>
-                          <span
-                            className="inline-block h-2.5 w-2.5 rounded-full"
-                            style={{ backgroundColor: s.color ?? "#64748b" }}
-                          />
-                        </td>
-                        <td className={`font-medium text-slate-900 ${dataTableCell}`}>
-                          {s.full_name}
-                        </td>
-                        <td className={`text-slate-600 ${dataTableCell}`}>
-                          {s.email ?? tCommon("dash")}
-                        </td>
-                        <td className={dataTableCell}>
-                          <span
-                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                              s.access_status === "active"
-                                ? "bg-emerald-50 text-emerald-700"
-                                : s.access_status === "pending"
-                                  ? "bg-amber-50 text-amber-700"
-                                  : "bg-slate-100 text-slate-600"
-                            }`}
-                          >
-                            {s.access_status === "active"
-                              ? t("personnel.accessActive")
-                              : s.access_status === "pending"
-                                ? t("personnel.accessPending")
-                                : t("personnel.accessNone")}
-                          </span>
-                          {s.tenant_role_name ? (
-                            <span className="ml-1.5 text-xs text-slate-500">{s.tenant_role_name}</span>
-                          ) : null}
-                        </td>
-                        <td className={`text-right ${dataTableCell}`}>
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              type="button"
-                              className="h-8"
-                              onClick={() => {
-                                setEditingStaff(s);
-                                setStaffDialogOpen(true);
-                              }}
+                    {filteredStaff.map((s) => {
+                      return (
+                        <tr key={s.id} className={dataTableRow}>
+                          <td className={dataTableCell}>
+                            <StaffAvatar name={s.full_name} color={s.color} />
+                          </td>
+                          <td className={`font-medium text-slate-900 ${dataTableCell}`}>
+                            {s.full_name}
+                          </td>
+                          <td className={`text-slate-600 ${dataTableCell}`}>
+                            {s.email ?? tCommon("dash")}
+                          </td>
+                          <td className={dataTableCell}>
+                            <span
+                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                                s.access_status === "active"
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : s.access_status === "pending"
+                                    ? "bg-amber-50 text-amber-700"
+                                    : "bg-slate-100 text-slate-600"
+                              }`}
                             >
-                              {t("personnel.edit")}
-                            </Button>
-                            {s.access_status !== "active" ? (
-                              <Button
-                                variant="ghost"
-                                type="button"
-                                className="h-8"
-                                onClick={() => setInviteStaff(s)}
-                              >
-                                {t("personnel.invite")}
-                              </Button>
+                              {s.access_status === "active"
+                                ? t("personnel.accessActive")
+                                : s.access_status === "pending"
+                                  ? t("personnel.accessPending")
+                                  : t("personnel.accessNone")}
+                            </span>
+                            {s.tenant_role_name ? (
+                              <span className="ml-1.5 text-xs text-slate-500">{s.tenant_role_name}</span>
                             ) : null}
-                            <form action={deleteStaffMember}>
-                              <input type="hidden" name="id" value={s.id} />
-                              <Button variant="ghost" type="submit" className="h-8 text-red-600">
-                                {t("personnel.delete")}
-                              </Button>
-                            </form>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className={`text-right ${dataTableCell}`}>
+                            <RowActions>
+                              <RowActionButton
+                                type="button"
+                                onClick={() => {
+                                  setEditingStaff(s);
+                                  setStaffDialogOpen(true);
+                                }}
+                                icon={<Pencil className="h-3.5 w-3.5" />}
+                              >
+                                {t("personnel.edit")}
+                              </RowActionButton>
+                              {s.access_status !== "active" ? (
+                                <RowActionButton
+                                  type="button"
+                                  onClick={() => setInviteStaff(s)}
+                                  icon={<MailPlus className="h-3.5 w-3.5" />}
+                                >
+                                  {t("personnel.invite")}
+                                </RowActionButton>
+                              ) : null}
+                              <form action={deleteStaffMember}>
+                                <input type="hidden" name="id" value={s.id} />
+                                <RowActionButton
+                                  type="submit"
+                                  tone="danger"
+                                  icon={<Trash2 className="h-3.5 w-3.5" />}
+                                >
+                                  {t("personnel.delete")}
+                                </RowActionButton>
+                              </form>
+                            </RowActions>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               ) : null}

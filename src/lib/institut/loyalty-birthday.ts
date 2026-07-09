@@ -25,6 +25,9 @@ export async function processBirthdayBonusesForTenant(
     .from("inst_loyalty_programs")
     .select("id, birthday_bonus_points, birthday_auto_enabled, is_active")
     .eq("tenant_id", tenantId)
+    .eq("is_active", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (
@@ -54,6 +57,7 @@ export async function processBirthdayBonusesForTenant(
       .select("last_birthday_bonus_year")
       .eq("tenant_id", tenantId)
       .eq("client_id", client.id)
+      .eq("program_id", program.id)
       .maybeSingle();
 
     if (balance?.last_birthday_bonus_year === year) {
@@ -81,7 +85,8 @@ export async function processBirthdayBonusesForTenant(
       .from("inst_loyalty_balances")
       .update({ last_birthday_bonus_year: year })
       .eq("tenant_id", tenantId)
-      .eq("client_id", client.id);
+      .eq("client_id", client.id)
+      .eq("program_id", program.id);
 
     credited += 1;
   }
@@ -98,9 +103,10 @@ export async function processAllBirthdayBonuses(supabase: Db): Promise<BirthdayB
     .eq("birthday_auto_enabled", true)
     .gt("birthday_bonus_points", 0);
 
+  const tenantIds = [...new Set((programs ?? []).map((row) => row.tenant_id))];
   const results: BirthdayBonusResult[] = [];
-  for (const row of programs ?? []) {
-    results.push(await processBirthdayBonusesForTenant(supabase, row.tenant_id));
+  for (const tenantId of tenantIds) {
+    results.push(await processBirthdayBonusesForTenant(supabase, tenantId));
   }
   return results;
 }

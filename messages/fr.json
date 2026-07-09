@@ -467,8 +467,8 @@
       "clientEmailExists": "Un client avec cet e-mail existe déjà.",
       "clientReferrerSelf": "Une cliente ne peut pas se parrainer elle-même.",
       "loyaltyInsufficientPoints": "Points fidélité insuffisants.",
-      "loyaltyRewardInvalid": "Récompense fidélité invalide ou inactive.",
-      "loyaltyRewardNotPos": "Cette récompense n'est pas échangeable en caisse.",
+      "loyaltyRewardInvalid": "Récompense fidélité invalide.",
+      "loyaltyRewardNotPos": "Cette récompense n'est pas utilisable en caisse.",
       "loyaltyNewServiceOnly": "Récompense réservée aux nouvelles prestations.",
       "loyaltyProgramInactive": "Programme fidélité inactif.",
       "workingHoursEndBeforeStart": "{day} : l'heure de fin doit être après le début.",
@@ -561,12 +561,7 @@
       "creditNoteInvalid": "Avoir invalide.",
       "creditNoteInsufficient": "Solde avoir insuffisant.",
       "creditNoteExpired": "Avoir expiré.",
-      "creditNoteRefRequired": "Numéro d'avoir requis.",
-      "loyaltyInsufficientPoints": "Points fidélité insuffisants.",
-      "loyaltyRewardInvalid": "Récompense fidélité invalide.",
-      "loyaltyRewardNotPos": "Cette récompense n'est pas utilisable en caisse.",
-      "loyaltyNewServiceOnly": "Récompense réservée aux nouvelles prestations.",
-      "loyaltyProgramInactive": "Programme fidélité inactif."
+      "creditNoteRefRequired": "Numéro d'avoir requis."
     },
     "scheduling": {
       "conflict": {
@@ -628,6 +623,10 @@
           "liveTitle": "Programme en ligne",
           "liveSummary": "{clients} {clientsLabel} · {points} {label}"
         },
+        "clarity": {
+          "title": "Comment lire cet écran",
+          "body": "Les règles définissent comment gagner des points (vous pouvez en créer plusieurs avec des points différents). Les paramètres ci-dessous sont globaux et s'appliquent au programme entier."
+        },
         "clientsLabel": "{count, plural, one {cliente} other {clientes}}",
         "programStatus": {
           "draft": "Brouillon",
@@ -660,14 +659,25 @@
         "program": {
           "title": "Paramètres",
           "description": "Nom, libellé des points et activation du programme.",
+          "selectorLabel": "Programme",
+          "newProgram": "Nouveau programme",
+          "newProgramTitle": "Créer un programme de fidélité",
+          "newProgramName": "Nom du programme",
+          "scopeBadge": "Global",
+          "globalHint": "Ces paramètres s'appliquent à toutes les règles et récompenses de ce programme.",
           "name": "Nom du programme",
           "pointsLabel": "Libellé des points",
+          "pointsLabelHint": "Exemple : points, étoiles, crédits (même libellé partout).",
           "birthdayBonus": "Bonus anniversaire (points)",
           "birthdayBonusHint": "Points offerts le jour d'anniversaire si l'envoi automatique est activé.",
           "birthdayAuto": "Envoi automatique du bonus anniversaire",
           "portalVisible": "Visible sur le portail cliente (/client/compte)",
           "active": "Programme actif",
-          "saved": "Programme enregistré."
+          "saved": "Programme enregistré.",
+          "duplicateProgram": "Dupliquer",
+          "duplicateProgramTitle": "Dupliquer le programme",
+          "duplicateProgramName": "Nom de la copie",
+          "copySuffix": "(copie)"
         },
         "status": {
           "active": "Actif",
@@ -690,6 +700,7 @@
         },
         "rules": {
           "title": "Gain de points",
+          "hint": "Créez plusieurs règles si vous voulez des gains différents selon les cas.",
           "add": "Nouvelle règle",
           "empty": "Aucune règle pour l'instant.",
           "footer": "{count, plural, one {# règle} other {# règles}}",
@@ -718,6 +729,7 @@
         },
         "rewards": {
           "title": "Récompenses",
+          "hint": "Définissez ici ce que les clientes peuvent obtenir avec leurs points.",
           "add": "Nouvelle récompense",
           "empty": "Aucune récompense pour l'instant.",
           "footer": "{count, plural, one {# récompense} other {# récompenses}}",
@@ -1223,12 +1235,18 @@
     },
     "services": {
       "new": "Nouvelle prestation",
+      "newExtra": "Nouvel extra",
       "searchPlaceholder": "Recherche par nom…",
       "filterAll": "Toutes",
       "filterActive": "Visibles",
       "filterInactive": "Masquées",
+      "scopeCatalog": "Prestations",
+      "scopeExtras": "Répertoire extras",
+      "scopeAll": "Prestations + extras",
       "empty": "Aucune prestation pour le moment.",
+      "emptyExtras": "Aucun extra pour le moment.",
       "noResults": "Aucun résultat pour cette recherche.",
+      "noExtraResults": "Aucun extra ne correspond à cette recherche.",
       "columns": {
         "status": "Statut",
         "title": "Titre",
@@ -1295,16 +1313,16 @@
           "durationRequired": "Indiquez une durée valide (minimum 1 min)."
         },
         "extras": {
-          "hint": "Choisissez d'autres prestations à proposer en upsell avec celle-ci. Chaque extra conserve sa durée et son prix.",
+          "hint": "Choisissez des extras depuis votre répertoire dédié. Chaque extra conserve sa durée et son prix.",
           "stepPosition": "Étape extras dans la réservation",
           "beforeTime": "Avant le choix du créneau",
           "afterTime": "Après le choix du créneau",
-          "noCandidates": "Créez d'autres prestations (catalogue ou « extra uniquement ») pour les proposer ici.",
+          "noCandidates": "Aucun extra disponible. Créez un extra dans « Répertoire extras » puis revenez ici.",
           "extraOnlyBadge": "Extra",
           "minQty": "Min",
           "maxQty": "Max",
-          "searchPlaceholder": "Rechercher une prestation…",
-          "noSearchResults": "Aucune prestation ne correspond.",
+          "searchPlaceholder": "Rechercher un extra…",
+          "noSearchResults": "Aucun extra ne correspond.",
           "selectedCount": "{count, plural, one {# extra sélectionné} other {# extras sélectionnés}}",
           "saveExtras": "Enregistrer les extras"
         },
@@ -2743,9 +2761,18 @@
       "ctaBackOffice": "Accéder au back-office",
       "ctaClient": "Espace client",
       "stats": {
-        "modules": { "value": "6+", "label": "Modules métier" },
-        "isolation": { "value": "RLS", "label": "Isolation tenant" },
-        "ai": { "value": "IA", "label": "Actions intégrées" }
+        "modules": {
+          "value": "6+",
+          "label": "Modules métier"
+        },
+        "isolation": {
+          "value": "RLS",
+          "label": "Isolation tenant"
+        },
+        "ai": {
+          "value": "IA",
+          "label": "Actions intégrées"
+        }
       }
     },
     "modules": {
@@ -2929,12 +2956,30 @@
       "title": "Conditions générales d'utilisation",
       "intro": "CGU de la plateforme BeautyHub — document de travail.",
       "sections": {
-        "1": { "title": "Objet", "body": "BeautyHub fournit un logiciel SaaS de gestion pour instituts (rendez-vous, clients, caisse, marketing)." },
-        "2": { "title": "Comptes", "body": "L'utilisateur est responsable de la confidentialité de ses identifiants et des accès accordés à son équipe." },
-        "3": { "title": "Données", "body": "L'institut garantit disposer des bases légales pour traiter les données de ses clients. BeautyHub traite ces données sur instruction de l'institut." },
-        "4": { "title": "Disponibilité", "body": "Service fourni en l'état ; maintenance et évolutions planifiées." },
-        "5": { "title": "Propriété intellectuelle", "body": "BeautyHub reste propriétaire du logiciel. Les données saisies par l'institut lui appartiennent." },
-        "6": { "title": "Droit applicable", "body": "Droit français. Tribunaux compétents du siège de l'éditeur, sauf disposition impérative contraire." }
+        "1": {
+          "title": "Objet",
+          "body": "BeautyHub fournit un logiciel SaaS de gestion pour instituts (rendez-vous, clients, caisse, marketing)."
+        },
+        "2": {
+          "title": "Comptes",
+          "body": "L'utilisateur est responsable de la confidentialité de ses identifiants et des accès accordés à son équipe."
+        },
+        "3": {
+          "title": "Données",
+          "body": "L'institut garantit disposer des bases légales pour traiter les données de ses clients. BeautyHub traite ces données sur instruction de l'institut."
+        },
+        "4": {
+          "title": "Disponibilité",
+          "body": "Service fourni en l'état ; maintenance et évolutions planifiées."
+        },
+        "5": {
+          "title": "Propriété intellectuelle",
+          "body": "BeautyHub reste propriétaire du logiciel. Les données saisies par l'institut lui appartiennent."
+        },
+        "6": {
+          "title": "Droit applicable",
+          "body": "Droit français. Tribunaux compétents du siège de l'éditeur, sauf disposition impérative contraire."
+        }
       }
     },
     "subprocessors": {

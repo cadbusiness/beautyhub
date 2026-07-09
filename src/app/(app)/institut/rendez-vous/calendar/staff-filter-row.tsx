@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { StaffAvatar } from "@/components/ui/staff-avatar";
 import { cn } from "@/lib/utils";
 import type { CalendarColumn } from "./types";
 
@@ -46,12 +47,7 @@ export function StaffFilterRow({
               : "bg-slate-100 text-slate-600 hover:bg-slate-200",
           )}
         >
-          <span
-            className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold text-white"
-            style={{ backgroundColor: s.color ?? "#64748b" }}
-          >
-            {s.label.charAt(0).toUpperCase()}
-          </span>
+          <StaffAvatar name={s.label} color={s.color} />
           <span className="max-w-24 truncate">{s.label}</span>
         </button>
       ))}

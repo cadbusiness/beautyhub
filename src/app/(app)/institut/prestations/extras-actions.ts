@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import type { ServiceExtraConfig } from "@/lib/institut/service-extras";
@@ -41,7 +42,13 @@ export async function saveServiceExtras(
     links,
     extrasStepPosition,
   );
-  if (err) return { error: err };
+  if (err) {
+    if (err === "invalid_extra_selection") {
+      const t = await getTranslations("institut.actions");
+      return { error: t("extrasInvalid") };
+    }
+    return { error: err };
+  }
 
   revalidatePath("/institut/prestations");
   revalidatePath("/reserver");

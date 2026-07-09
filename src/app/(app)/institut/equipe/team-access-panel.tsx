@@ -1,14 +1,15 @@
 "use client";
 
+import { Ban, Copy, Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { resendTeamInvitation, revokeTeamInvitation } from "../actions";
-import { Button } from "@/components/ui/button";
 import {
   DataTable,
   dataTableCellCompact,
   dataTableHeadCompact,
   dataTableRow,
 } from "@/components/ui/data-table";
+import { RowActionButton, RowActions } from "@/components/ui/row-actions";
 import type { TeamInvitation, TeamMember } from "@/lib/institut/team-access";
 import { formatDateTime } from "@/lib/utils";
 
@@ -98,28 +99,27 @@ export function TeamAccessPanel({
                       {formatDateTime(inv.expires_at)}
                     </td>
                     <td className={`text-right ${dataTableCellCompact}`}>
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          className="h-8"
+                      <RowActions>
+                        <RowActionButton
                           type="button"
                           onClick={() => void navigator.clipboard.writeText(inviteUrl(inv.token))}
+                          icon={<Copy className="h-3.5 w-3.5" />}
                         >
                           {t("copyLink")}
-                        </Button>
+                        </RowActionButton>
                         <form action={resendTeamInvitation}>
                           <input type="hidden" name="invitation_id" value={inv.id} />
-                          <Button variant="ghost" type="submit" className="h-8">
+                          <RowActionButton type="submit" icon={<Send className="h-3.5 w-3.5" />}>
                             {t("resend")}
-                          </Button>
+                          </RowActionButton>
                         </form>
                         <form action={revokeTeamInvitation}>
                           <input type="hidden" name="invitation_id" value={inv.id} />
-                          <Button variant="ghost" type="submit" className="h-8 text-red-600">
+                          <RowActionButton type="submit" tone="danger" icon={<Ban className="h-3.5 w-3.5" />}>
                             {t("revoke")}
-                          </Button>
+                          </RowActionButton>
                         </form>
-                      </div>
+                      </RowActions>
                     </td>
                   </tr>
                 ))}

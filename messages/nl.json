@@ -466,11 +466,11 @@
       "missingFields": "Verplichte velden ontbreken.",
       "clientEmailExists": "Er bestaat al een klant met dit e-mailadres.",
       "clientReferrerSelf": "Een klant kan zichzelf niet doorverwijzen.",
-      "loyaltyInsufficientPoints": "Onvoldoende loyaliteitspunten.",
-      "loyaltyRewardInvalid": "Ongeldige of inactieve beloning.",
-      "loyaltyRewardNotPos": "Deze beloning kan niet aan de kassa worden ingewisseld.",
+      "loyaltyInsufficientPoints": "Onvoldoende loyaltypunten.",
+      "loyaltyRewardInvalid": "Ongeldige loyaltybeloning.",
+      "loyaltyRewardNotPos": "Deze beloning kan niet aan de kassa worden gebruikt.",
       "loyaltyNewServiceOnly": "Beloning alleen voor nieuwe behandelingen.",
-      "loyaltyProgramInactive": "Loyaliteitsprogramma inactief.",
+      "loyaltyProgramInactive": "Loyaltyprogramma inactief.",
       "workingHoursEndBeforeStart": "{day}: eindtijd moet na starttijd liggen.",
       "scheduleNameRequired": "Naam van het rooster is verplicht.",
       "scheduleNotFound": "Rooster niet gevonden.",
@@ -561,11 +561,6 @@
       "creditNoteInsufficient": "Onvoldoende creditnota-saldo.",
       "creditNoteExpired": "Creditnota verlopen.",
       "creditNoteRefRequired": "Creditnotanummer verplicht.",
-      "loyaltyInsufficientPoints": "Onvoldoende loyaltypunten.",
-      "loyaltyRewardInvalid": "Ongeldige loyaltybeloning.",
-      "loyaltyRewardNotPos": "Deze beloning kan niet aan de kassa worden gebruikt.",
-      "loyaltyNewServiceOnly": "Beloning alleen voor nieuwe behandelingen.",
-      "loyaltyProgramInactive": "Loyaltyprogramma inactief.",
       "extrasInvalid": "Extras invalides."
     },
     "scheduling": {
@@ -628,6 +623,10 @@
           "liveTitle": "Programma actief",
           "liveSummary": "{clients} {clientsLabel} · {points} {label}"
         },
+        "clarity": {
+          "title": "Hoe dit scherm werkt",
+          "body": "Regels bepalen hoe punten worden verdiend (je kunt meerdere regels met verschillende aantallen maken). De instellingen hieronder zijn globaal en gelden voor het hele programma."
+        },
         "clientsLabel": "{count, plural, one {klant} other {klanten}}",
         "programStatus": {
           "draft": "Concept",
@@ -660,14 +659,25 @@
         "program": {
           "title": "Instellingen",
           "description": "Naam, puntenlabel en activering van het loyaliteitsprogramma.",
+          "selectorLabel": "Programma",
+          "newProgram": "Nieuw programma",
+          "newProgramTitle": "Loyaliteitsprogramma maken",
+          "newProgramName": "Naam van het programma",
+          "scopeBadge": "Globaal",
+          "globalHint": "Deze instellingen gelden voor alle regels en beloningen van dit programma.",
           "name": "Naam van het programma",
           "pointsLabel": "Label van de punten",
+          "pointsLabelHint": "Voorbeeld: punten, sterren, credits (overal hetzelfde label).",
           "birthdayBonus": "Verjaardagsbonus (punten)",
           "birthdayBonusHint": "Punten op de verjaardag als automatische verzending is ingeschakeld.",
           "birthdayAuto": "Automatische verjaardagsbonus",
           "portalVisible": "Zichtbaar op het klantenportaal (/client/compte)",
           "active": "Programma actief",
-          "saved": "Programma opgeslagen."
+          "saved": "Programma opgeslagen.",
+          "duplicateProgram": "Dupliceren",
+          "duplicateProgramTitle": "Programma dupliceren",
+          "duplicateProgramName": "Naam van de kopie",
+          "copySuffix": "(kopie)"
         },
         "status": {
           "active": "Actief",
@@ -690,6 +700,7 @@
         },
         "rules": {
           "title": "Punten verdienen",
+          "hint": "Maak meerdere regels als je verschillende punten per situatie wilt.",
           "add": "Nieuwe regel",
           "empty": "Nog geen regels.",
           "footer": "{count, plural, one {# regel} other {# regels}}",
@@ -718,6 +729,7 @@
         },
         "rewards": {
           "title": "Beloningen",
+          "hint": "Definieer hier wat klanten met hun punten kunnen krijgen.",
           "add": "Nieuwe beloning",
           "empty": "Nog geen beloningen.",
           "footer": "{count, plural, one {# beloning} other {# beloningen}}",
@@ -1223,12 +1235,18 @@
     },
     "services": {
       "new": "Nieuwe behandeling",
+      "newExtra": "Nieuwe extra",
       "searchPlaceholder": "Zoek op naam…",
       "filterAll": "Alle",
       "filterActive": "Zichtbaar",
       "filterInactive": "Verborgen",
+      "scopeCatalog": "Behandelingen",
+      "scopeExtras": "Extra-catalogus",
+      "scopeAll": "Behandelingen + extras",
       "empty": "Nog geen behandelingen.",
+      "emptyExtras": "Nog geen extras.",
       "noResults": "Geen resultaten voor deze zoekopdracht.",
+      "noExtraResults": "Geen extras gevonden voor deze zoekopdracht.",
       "columns": {
         "status": "Status",
         "title": "Titel",
@@ -1295,16 +1313,16 @@
           "durationRequired": "Vul een geldige duur in (minimaal 1 min)."
         },
         "extras": {
-          "hint": "Kies andere behandelingen als upsell bij deze behandeling. Elke extra behoudt duur en prijs.",
+          "hint": "Kies extras uit je aparte extra-catalogus. Elke extra behoudt duur en prijs.",
           "stepPosition": "Extras-stap in reservering",
           "beforeTime": "Vóór tijdslot",
           "afterTime": "Na tijdslot",
-          "noCandidates": "Maak andere behandelingen aan (catalogus of « alleen extra ») om ze hier aan te bieden.",
+          "noCandidates": "Nog geen extras beschikbaar. Maak er eerst een in de extra-catalogus.",
           "extraOnlyBadge": "Extra",
           "minQty": "Min",
           "maxQty": "Max",
-          "searchPlaceholder": "Zoek een behandeling…",
-          "noSearchResults": "Geen behandeling gevonden.",
+          "searchPlaceholder": "Zoek een extra…",
+          "noSearchResults": "Geen extra gevonden.",
           "selectedCount": "{count, plural, one {# extra geselecteerd} other {# extras geselecteerd}}",
           "saveExtras": "Extras opslaan"
         },

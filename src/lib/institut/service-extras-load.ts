@@ -22,9 +22,10 @@ export async function loadServiceExtrasCatalog(
   const extraIds = [...new Set(links.map((l) => l.extra_service_id))];
   const { data: extras } = await supabase
     .from("inst_services")
-    .select("id, name, description, duration_min, price_cents, image_url, is_active")
+    .select("id, name, description, duration_min, price_cents, image_url, is_active, visibility")
     .in("id", extraIds)
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .eq("visibility", "extra_only");
 
   const extraMap = new Map((extras ?? []).map((e) => [e.id, e]));
 
@@ -66,5 +67,16 @@ export async function loadServiceExtraLinks(
     .eq("tenant_id", tenantId)
     .eq("service_id", serviceId)
     .order("sort_order");
-  return data ?? [];
+  if (!data?.length) return [];
+
+  const extraIds = [...new Set(data.map((row) => row.extra_service_id))];
+  const { data: extraRows } = await supabase
+    .from("inst_services")
+    .select("id")
+    .in("id", extraIds)
+    .eq("tenant_id", tenantId)
+    .eq("visibility", "extra_only");
+
+  const allowed = new Set((extraRows ?? []).map((row) => row.id));
+  return data.filter((row) => allowed.has(row.extra_service_id));
 }

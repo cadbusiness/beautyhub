@@ -81,7 +81,11 @@ export class WooClient {
 
   async createOrder(
     lineItems: WooOrderLineItem[],
-    opts?: { billingEmail?: string; setPaid?: boolean },
+    opts?: {
+      billingEmail?: string;
+      setPaid?: boolean;
+      metaData?: Array<{ key: string; value: string }>;
+    },
   ): Promise<WooOrder> {
     return this.request<WooOrder>("/orders", {
       method: "POST",
@@ -91,6 +95,7 @@ export class WooClient {
         set_paid: opts?.setPaid ?? true,
         billing: opts?.billingEmail ? { email: opts.billingEmail } : undefined,
         line_items: lineItems,
+        meta_data: opts?.metaData ?? undefined,
       }),
     });
   }

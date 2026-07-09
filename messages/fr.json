@@ -549,6 +549,8 @@
       "sessionClosed": "Clôture Z effectuée",
       "varianceNotesRequired": "Un écart de caisse nécessite une note explicative.",
       "giftCardIssued": "Bon-cadeau émis",
+      "voucherIssued": "Voucher émis",
+      "voucherVoided": "Voucher annulé",
       "creditNoteCreated": "Avoir créé",
       "creditAmountInvalid": "Montant d'avoir invalide.",
       "saleNotFound": "Vente introuvable.",
@@ -558,6 +560,10 @@
       "giftCardInsufficient": "Solde bon-cadeau insuffisant.",
       "giftCardExpired": "Bon-cadeau expiré.",
       "giftCardCodeRequired": "Code bon-cadeau requis.",
+      "voucherCodeRequired": "Code voucher requis.",
+      "voucherInvalid": "Voucher invalide.",
+      "voucherInsufficient": "Solde voucher insuffisant.",
+      "voucherExpired": "Voucher expiré.",
       "creditNoteInvalid": "Avoir invalide.",
       "creditNoteInsufficient": "Solde avoir insuffisant.",
       "creditNoteExpired": "Avoir expiré.",
@@ -2476,6 +2482,7 @@
       "methodAria": "Moyen de paiement",
       "amountAria": "Montant",
       "giftCodePlaceholder": "Code bon",
+      "voucherCodePlaceholder": "Code voucher",
       "fillRemaining": "Solde",
       "addPayment": "Ajouter un moyen de paiement",
       "overpaid": "Trop-perçu : {amount}",
@@ -2491,6 +2498,7 @@
         "cash": "Espèces",
         "card": "Carte TPE",
         "transfer": "Virement",
+        "voucher": "Voucher",
         "gift_card": "Bon-cadeau",
         "credit_note": "Avoir"
       }
@@ -2561,6 +2569,7 @@
         "card": "Carte TPE",
         "stripe": "Stripe",
         "transfer": "Virement",
+        "voucher": "Voucher",
         "gift_card": "Bon-cadeau",
         "credit_note": "Avoir",
         "mixed": "Mixte",
@@ -2586,6 +2595,7 @@
         "card": "Carte",
         "stripe": "Stripe",
         "transfer": "Virement",
+        "voucher": "Voucher",
         "gift_card": "Bon-cadeau",
         "credit_note": "Avoir",
         "other": "Autre"
@@ -2645,6 +2655,7 @@
         "card": "Carte",
         "stripe": "Stripe",
         "transfer": "Virement",
+        "voucher": "Voucher",
         "gift_card": "Bon-cadeau",
         "credit_note": "Avoir"
       },
@@ -2706,24 +2717,55 @@
       }
     },
     "vouchers": {
+      "issueVoucher": "Émettre un voucher",
       "issueGiftCard": "Émettre un bon-cadeau",
       "issueCreditNote": "Créer un avoir",
+      "vouchersTitle": "Vouchers",
       "giftCardsTitle": "Bons-cadeaux",
       "creditNotesTitle": "Avoirs",
+      "noVouchers": "Aucun voucher.",
       "noGiftCards": "Aucun bon-cadeau.",
       "noCreditNotes": "Aucun avoir.",
+      "openVoucher": "Document",
+      "voidVoucher": "Annuler",
       "columns": {
         "code": "Code",
+        "type": "Type",
         "balance": "Solde",
         "number": "N°",
         "remaining": "Restant",
         "status": "Statut",
-        "date": "Date"
+        "date": "Date",
+        "lastEvent": "Dernier événement",
+        "actions": "Actions"
+      },
+      "types": {
+        "voucher": "Voucher",
+        "gift_card": "Bon-cadeau",
+        "credit_note": "Avoir"
+      },
+      "events": {
+        "issue": "Émission",
+        "redeem": "Utilisation",
+        "refund": "Remboursement",
+        "void": "Annulation",
+        "sync": "Synchronisation",
+        "adjustment": "Ajustement"
       },
       "status": {
         "active": "Actif",
         "depleted": "Épuisé",
-        "cancelled": "Annulé"
+        "cancelled": "Annulé",
+        "expired": "Expiré"
+      },
+      "voucherForm": {
+        "typeVoucher": "Voucher standard",
+        "typeGiftCard": "Bon-cadeau",
+        "typeCreditNote": "Avoir",
+        "amount": "Montant (€)",
+        "codeOptional": "Code (optionnel)",
+        "recipientOptional": "Destinataire (optionnel)",
+        "submit": "Émettre le voucher"
       },
       "giftForm": {
         "amount": "Montant (€)",

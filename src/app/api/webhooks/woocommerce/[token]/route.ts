@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { redeemVoucher } from "@/lib/institut/vouchers-core";
 import {
   applyWooStockUpdate,
   deactivateWooProduct,
@@ -148,7 +149,34 @@ export async function POST(
         break;
       }
       case "order.completed":
-        // Stock Woo déjà ajusté ; le plugin envoie product.stock_updated par ligne si besoin.
+        if (typeof payload.id === "number" && Array.isArray(payload.coupon_lines)) {
+          for (const line of payload.coupon_lines) {
+            if (
+              typeof line === "object" &&
+              line !== null &&
+              typeof (line as { code?: unknown }).code === "string"
+            ) {
+              const code = String((line as { code: string }).code).trim().toUpperCase();
+              if (!code || !/^(VC|GC|AV|BHV)[A-Z0-9-]*$/.test(code)) continue;
+              const discount =
+                typeof (line as { discount?: unknown }).discount === "number"
+                  ? (line as { discount: number }).discount
+                  : Number.parseFloat(String((line as { discount?: unknown }).discount ?? "0"));
+              const amountCents = Math.max(1, Math.round(discount * 100));
+              await redeemVoucher(supabase, connection.tenantId, {
+                code,
+                amountCents,
+                sourceChannel: "woo",
+                wooOrderId: payload.id,
+                wooCouponCode: code,
+                idempotencyKey: `woo:webhook:${payload.id}:${code}:${amountCents}`,
+                metadata: {
+                  event: event,
+                },
+              });
+            }
+          }
+        }
         break;
       default:
         return NextResponse.json({ error: "unknown_event" }, { status: 400 });

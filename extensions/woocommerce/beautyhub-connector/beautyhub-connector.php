@@ -35,6 +35,7 @@ define('BEAUTYHUB_CONNECTOR_BASENAME', plugin_basename(__FILE__));
 require_once BEAUTYHUB_CONNECTOR_PATH . 'includes/class-beautyhub-pairing.php';
 require_once BEAUTYHUB_CONNECTOR_PATH . 'includes/class-beautyhub-admin.php';
 require_once BEAUTYHUB_CONNECTOR_PATH . 'includes/class-beautyhub-webhooks.php';
+require_once BEAUTYHUB_CONNECTOR_PATH . 'includes/class-beautyhub-vouchers.php';
 require_once BEAUTYHUB_CONNECTOR_PATH . 'includes/class-beautyhub-updater.php';
 
 add_action('plugins_loaded', function () {
@@ -49,6 +50,7 @@ add_action('plugins_loaded', function () {
     BeautyHub_Admin::init();
     BeautyHub_Pairing::init();
     BeautyHub_Webhooks::init();
+    BeautyHub_Vouchers::init();
 });
 
 register_activation_hook(__FILE__, function () {

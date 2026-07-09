@@ -42,7 +42,7 @@ interface CheckoutPanelProps {
   onSuccess: (message: string) => void;
 }
 
-const METHOD_KEYS = ["cash", "card", "transfer", "gift_card", "credit_note"] as const;
+const METHOD_KEYS = ["cash", "card", "transfer", "voucher", "gift_card", "credit_note"] as const;
 
 function newRow(method: string, amountEuros: string): PaymentRow {
   return {
@@ -81,7 +81,7 @@ export function CheckoutPanel({
 
   const enabledMethods = useMemo(() => {
     return METHOD_KEYS.filter((key) => {
-      if (key === "credit_note") return true;
+      if (key === "credit_note" || key === "voucher") return true;
       return pm[key as keyof PosPaymentMethodsConfig];
     });
   }, [pm]);
@@ -210,6 +210,14 @@ export function CheckoutPanel({
             {row.method === "gift_card" ? (
               <Input
                 placeholder={t("giftCodePlaceholder")}
+                value={row.reference}
+                onChange={(e) => updateRow(row.id, { reference: e.target.value })}
+                className="min-w-[6rem] flex-1"
+              />
+            ) : null}
+            {row.method === "voucher" ? (
+              <Input
+                placeholder={t("voucherCodePlaceholder")}
                 value={row.reference}
                 onChange={(e) => updateRow(row.id, { reference: e.target.value })}
                 className="min-w-[6rem] flex-1"

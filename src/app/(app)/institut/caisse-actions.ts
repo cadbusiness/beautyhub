@@ -75,6 +75,10 @@ async function translateCheckoutError(error: unknown): Promise<string> {
   if (code === "gift_card_insufficient") return t("giftCardInsufficient");
   if (code === "gift_card_expired") return t("giftCardExpired");
   if (code === "gift_card_code_required") return t("giftCardCodeRequired");
+  if (code === "voucher_invalid") return t("voucherInvalid");
+  if (code === "voucher_insufficient") return t("voucherInsufficient");
+  if (code === "voucher_expired") return t("voucherExpired");
+  if (code === "voucher_code_required") return t("voucherCodeRequired");
   if (code === "credit_note_invalid") return t("creditNoteInvalid");
   if (code === "credit_note_insufficient") return t("creditNoteInsufficient");
   if (code === "credit_note_expired") return t("creditNoteExpired");

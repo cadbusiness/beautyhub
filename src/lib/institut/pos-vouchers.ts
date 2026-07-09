@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 import { formatTicketNumber, getPosSettings } from "./pos-settings";
 import { generateGiftCardCode } from "./pos-session";
+import { issueVoucher } from "./vouchers-core";
 
 type Db = SupabaseClient<Database>;
 
@@ -137,7 +138,28 @@ export async function issueGiftCard(
       })
       .select("id, code")
       .single();
-    if (!error && data) return data;
+    if (!error && data) {
+      try {
+        await issueVoucher(supabase, tenantId, {
+          code: data.code,
+          voucherType: "gift_card",
+          sourceChannel: "pos",
+          amountCents: opts.amountCents,
+          recipientName: opts.recipientName ?? null,
+          clientId: opts.clientId ?? null,
+          expiresAt: opts.expiresAt ?? null,
+          saleId: opts.saleId ?? null,
+          metadata: {
+            legacy_table: "inst_gift_cards",
+            legacy_id: data.id,
+          },
+          idempotencyKey: `legacy-gift-card:${tenantId}:${data.id}`,
+        });
+      } catch {
+        // Keep legacy issuance usable even if voucher-core mirror fails.
+      }
+      return data;
+    }
     code = generateGiftCardCode(settings.gift_card_prefix);
   }
   throw new Error("gift_card_create_failed");
@@ -182,6 +204,25 @@ export async function createCreditNoteFromSale(
     .select("id")
     .single();
   if (error || !note) throw new Error(error?.message ?? "credit_note_failed");
+
+  try {
+    await issueVoucher(supabase, tenantId, {
+      code: creditNumber,
+      voucherType: "credit_note",
+      sourceChannel: "pos",
+      amountCents: opts.amountCents,
+      clientId: opts.clientId ?? sale.client_id,
+      saleId: opts.saleId,
+      metadata: {
+        legacy_table: "inst_credit_notes",
+        legacy_id: note.id,
+        reason: opts.reason ?? null,
+      },
+      idempotencyKey: `legacy-credit-note:${tenantId}:${note.id}`,
+    });
+  } catch {
+    // Keep legacy credit note issuance usable even if voucher-core mirror fails.
+  }
 
   const newStatus =
     opts.amountCents >= sale.amount_paid_cents ? "refunded" : sale.status;

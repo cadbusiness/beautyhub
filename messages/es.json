@@ -972,7 +972,13 @@
       "giftCardExpired": "El vale regalo caducó.",
       "giftCardInsufficient": "Saldo insuficiente del vale regalo.",
       "giftCardInvalid": "Vale regalo no válido.",
+      "voucherCodeRequired": "Se requiere código de voucher.",
+      "voucherInvalid": "Voucher no válido.",
+      "voucherInsufficient": "Saldo de voucher insuficiente.",
+      "voucherExpired": "Voucher caducado.",
       "giftCardIssued": "Cheque regalo emitido",
+      "voucherIssued": "Voucher emitido",
+      "voucherVoided": "Voucher anulado",
       "invalidAmount": "Cantidad no válida.",
       "invalidCart": "Cesta no válida.",
       "invalidCredentials": "Identificadores incorrectos.",
@@ -2211,6 +2217,7 @@
       "addPayment": "Agregar un método de pago",
       "amountAria": "Cantidad",
       "creditNotePlaceholder": "Número de activo (AV-…)",
+      "voucherCodePlaceholder": "Código voucher",
       "discount": "Descuento",
       "fillRemaining": "Pagar",
       "giftCodePlaceholder": "código de cupón",
@@ -2220,6 +2227,7 @@
         "cash": "Especies",
         "credit_note": "Tener",
         "gift_card": "Vale regalo",
+        "voucher": "Voucher",
         "transfer": "Pago"
       },
       "overpaid": "Sobrepago: {amount}",
@@ -2254,6 +2262,7 @@
         "cash": "Especies",
         "credit_note": "Tener",
         "gift_card": "Vale regalo",
+        "voucher": "Voucher",
         "mixed": "Mezclado",
         "other": "Otro",
         "stripe": "raya",
@@ -2463,6 +2472,7 @@
         "cash": "Especies",
         "credit_note": "Tener",
         "gift_card": "Vale regalo",
+        "voucher": "Voucher",
         "other": "Otro",
         "stripe": "raya",
         "transfer": "Pago"
@@ -2480,13 +2490,30 @@
       "vatAmount": "TINA"
     },
     "vouchers": {
+      "issueVoucher": "Emitir voucher",
       "columns": {
         "balance": "Pagar",
         "code": "Código",
         "date": "Fecha",
+        "type": "Tipo",
+        "lastEvent": "Último evento",
+        "actions": "Acciones",
         "number": "No.",
         "remaining": "Restante",
         "status": "Estado"
+      },
+      "types": {
+        "voucher": "Voucher",
+        "gift_card": "Vale regalo",
+        "credit_note": "Nota de crédito"
+      },
+      "events": {
+        "issue": "Emisión",
+        "redeem": "Uso",
+        "refund": "Reembolso",
+        "void": "Anulación",
+        "sync": "Sincronización",
+        "adjustment": "Ajuste"
       },
       "creditForm": {
         "amount": "Importe crédito (€)",
@@ -2496,11 +2523,24 @@
         "submit": "crear el credito"
       },
       "creditNotesTitle": "Activos",
+      "vouchersTitle": "Vouchers",
       "giftCardsTitle": "Vales regalo",
+      "openVoucher": "Documento",
+      "voidVoucher": "Anular",
+      "noVouchers": "Sin vouchers.",
       "giftForm": {
         "amount": "Importe (€)",
         "recipient": "Destinatario (opcional)",
         "submit": "Emitir el bono"
+      },
+      "voucherForm": {
+        "typeVoucher": "Voucher estándar",
+        "typeGiftCard": "Vale regalo",
+        "typeCreditNote": "Nota de crédito",
+        "amount": "Importe (€)",
+        "codeOptional": "Código (opcional)",
+        "recipientOptional": "Destinatario (opcional)",
+        "submit": "Emitir voucher"
       },
       "issueCreditNote": "crear un credito",
       "issueGiftCard": "Emitir un vale regalo",
@@ -2509,7 +2549,8 @@
       "status": {
         "active": "Activo",
         "cancelled": "Cancelado",
-        "depleted": "Exhausto"
+        "depleted": "Exhausto",
+        "expired": "Caducado"
       }
     }
   },

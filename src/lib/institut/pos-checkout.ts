@@ -17,6 +17,7 @@ import {
   redeemCreditNote,
   redeemGiftCard,
 } from "./pos-vouchers";
+import { getVoucherByCode, redeemVoucher } from "./vouchers-core";
 import { processLoyaltyForPaidSale } from "./loyalty";
 import {
   LoyaltyRedeemError,
@@ -31,6 +32,7 @@ export type SalePaymentMethod =
   | "card"
   | "stripe"
   | "transfer"
+  | "voucher"
   | "gift_card"
   | "credit_note"
   | "other";
@@ -91,6 +93,8 @@ async function nextTicketNumber(
 }
 
 interface ResolvedPayment extends SalePaymentInput {
+  voucher_id?: string;
+  voucher_code?: string;
   gift_card_id?: string;
   credit_note_id?: string;
 }
@@ -102,16 +106,43 @@ async function resolvePaymentReferences(
 ): Promise<ResolvedPayment[]> {
   const resolved: ResolvedPayment[] = [];
   for (const p of payments) {
-    if (p.method === "gift_card") {
+    if (p.method === "voucher") {
+      if (!p.reference?.trim()) throw new Error("voucher_code_required");
+      const voucher = await getVoucherByCode(supabase, tenantId, p.reference);
+      if (!voucher || voucher.status !== "active") throw new Error("voucher_invalid");
+      resolved.push({
+        ...p,
+        voucher_id: voucher.id,
+        voucher_code: voucher.code,
+      });
+    } else if (p.method === "gift_card") {
       if (!p.reference?.trim()) throw new Error("gift_card_code_required");
       const card = await findGiftCardByCode(supabase, tenantId, p.reference);
-      if (!card || card.status !== "active") throw new Error("gift_card_invalid");
-      resolved.push({ ...p, gift_card_id: card.id });
+      if (card && card.status === "active") {
+        resolved.push({ ...p, gift_card_id: card.id });
+      } else {
+        const voucher = await getVoucherByCode(supabase, tenantId, p.reference);
+        if (!voucher || voucher.status !== "active") throw new Error("gift_card_invalid");
+        resolved.push({
+          ...p,
+          voucher_id: voucher.id,
+          voucher_code: voucher.code,
+        });
+      }
     } else if (p.method === "credit_note") {
       if (!p.reference?.trim()) throw new Error("credit_note_ref_required");
       const note = await findCreditNoteByNumber(supabase, tenantId, p.reference);
-      if (!note || note.status !== "active") throw new Error("credit_note_invalid");
-      resolved.push({ ...p, credit_note_id: note.id });
+      if (note && note.status === "active") {
+        resolved.push({ ...p, credit_note_id: note.id });
+      } else {
+        const voucher = await getVoucherByCode(supabase, tenantId, p.reference);
+        if (!voucher || voucher.status !== "active") throw new Error("credit_note_invalid");
+        resolved.push({
+          ...p,
+          voucher_id: voucher.id,
+          voucher_code: voucher.code,
+        });
+      }
     } else {
       resolved.push(p);
     }
@@ -232,7 +263,12 @@ export async function executePosCheckout(
   const payments = await resolvePaymentReferences(supabase, tenantId, rawPayments);
 
   for (const p of payments) {
-    if (p.method === "credit_note" || p.method === "other" || p.method === "stripe") {
+    if (
+      p.method === "voucher" ||
+      p.method === "credit_note" ||
+      p.method === "other" ||
+      p.method === "stripe"
+    ) {
       continue;
     }
     if (!settings.payment_methods[p.method as keyof typeof settings.payment_methods]) {
@@ -272,7 +308,25 @@ export async function executePosCheckout(
       .filter((l) => l.type === "product" && l.woo_id)
       .map((l) => ({ product_id: Number(l.woo_id), quantity: l.quantity }));
     if (lineItems.length > 0) {
-      const order = await wooClient.createOrder(lineItems, { setPaid: true });
+      const voucherMeta = payments
+        .filter((p) => p.method === "voucher" || p.method === "gift_card" || p.method === "credit_note")
+        .map((p) => ({
+          method: p.method,
+          code: p.reference ?? p.voucher_code ?? null,
+          amount_cents: p.amount_cents,
+        }));
+      const order = await wooClient.createOrder(lineItems, {
+        setPaid: true,
+        metaData:
+          voucherMeta.length > 0
+            ? [
+                {
+                  key: "beautyhub_vouchers",
+                  value: JSON.stringify(voucherMeta),
+                },
+              ]
+            : undefined,
+      });
       wooOrderId = order.id;
     }
   }
@@ -333,6 +387,18 @@ export async function executePosCheckout(
   if (itemsErr) throw new Error(itemsErr.message);
 
   for (const p of payments) {
+    if (p.voucher_id && p.voucher_code) {
+      await redeemVoucher(supabase, tenantId, {
+        code: p.voucher_code,
+        amountCents: p.amount_cents,
+        sourceChannel: "pos",
+        saleId: sale.id,
+        idempotencyKey: `pos:sale:${sale.id}:payment:${p.method}:${p.reference ?? p.voucher_code}:${p.amount_cents}`,
+        metadata: {
+          payment_method: p.method,
+        },
+      });
+    }
     if (p.gift_card_id) {
       await redeemGiftCard(supabase, tenantId, p.gift_card_id, p.amount_cents);
     }
@@ -348,6 +414,7 @@ export async function executePosCheckout(
       method: p.method,
       amount_cents: p.amount_cents,
       reference: p.reference ?? null,
+      voucher_id: p.voucher_id ?? null,
       gift_card_id: p.gift_card_id ?? null,
       credit_note_id: p.credit_note_id ?? null,
     })),
@@ -429,6 +496,19 @@ export async function executeBalancePayment(
   const sessionId = await requireOpenSessionIfNeeded(supabase, tenantId);
 
   for (const p of resolved) {
+    if (p.voucher_id && p.voucher_code) {
+      await redeemVoucher(supabase, tenantId, {
+        code: p.voucher_code,
+        amountCents: p.amount_cents,
+        sourceChannel: "pos",
+        saleId,
+        idempotencyKey: `pos:balance:${saleId}:payment:${p.method}:${p.reference ?? p.voucher_code}:${p.amount_cents}`,
+        metadata: {
+          payment_method: p.method,
+          sale_kind: "balance",
+        },
+      });
+    }
     if (p.gift_card_id) {
       await redeemGiftCard(supabase, tenantId, p.gift_card_id, p.amount_cents);
     }
@@ -444,6 +524,7 @@ export async function executeBalancePayment(
       method: p.method,
       amount_cents: p.amount_cents,
       reference: p.reference ?? null,
+      voucher_id: p.voucher_id ?? null,
       gift_card_id: p.gift_card_id ?? null,
       credit_note_id: p.credit_note_id ?? null,
     })),
@@ -494,6 +575,7 @@ export function parsePaymentsJson(raw: string): SalePaymentInput[] {
         "card",
         "stripe",
         "transfer",
+        "voucher",
         "gift_card",
         "credit_note",
         "other",

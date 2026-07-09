@@ -1278,6 +1278,7 @@ export type Database = {
           reference: string | null
           sale_id: string
           tenant_id: string
+          voucher_id: string | null
         }
         Insert: {
           amount_cents: number
@@ -1289,6 +1290,7 @@ export type Database = {
           reference?: string | null
           sale_id: string
           tenant_id: string
+          voucher_id?: string | null
         }
         Update: {
           amount_cents?: number
@@ -1300,6 +1302,7 @@ export type Database = {
           reference?: string | null
           sale_id?: string
           tenant_id?: string
+          voucher_id?: string | null
         }
         Relationships: [
           {
@@ -1314,6 +1317,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_sale_payments_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "inst_vouchers"
             referencedColumns: ["id"]
           },
         ]
@@ -2206,6 +2216,206 @@ export type Database = {
           },
         ]
       }
+      inst_voucher_events: {
+        Row: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at: string
+          event_type: string
+          id: string
+          idempotency_key: string | null
+          metadata: Json
+          sale_id: string | null
+          source_channel: string
+          tenant_id: string
+          voucher_id: string
+          woo_coupon_code: string | null
+          woo_order_id: number | null
+        }
+        Insert: {
+          amount_cents?: number
+          balance_after_cents?: number
+          created_at?: string
+          event_type: string
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json
+          sale_id?: string | null
+          source_channel?: string
+          tenant_id: string
+          voucher_id: string
+          woo_coupon_code?: string | null
+          woo_order_id?: number | null
+        }
+        Update: {
+          amount_cents?: number
+          balance_after_cents?: number
+          created_at?: string
+          event_type?: string
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json
+          sale_id?: string | null
+          source_channel?: string
+          tenant_id?: string
+          voucher_id?: string
+          woo_coupon_code?: string | null
+          woo_order_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_voucher_events_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "inst_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_voucher_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_voucher_events_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "inst_vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_voucher_links: {
+        Row: {
+          created_at: string
+          id: string
+          legacy_id: string | null
+          legacy_type: string | null
+          sale_id: string | null
+          tenant_id: string
+          voucher_id: string
+          woo_coupon_code: string | null
+          woo_order_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          legacy_id?: string | null
+          legacy_type?: string | null
+          sale_id?: string | null
+          tenant_id: string
+          voucher_id: string
+          woo_coupon_code?: string | null
+          woo_order_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          legacy_id?: string | null
+          legacy_type?: string | null
+          sale_id?: string | null
+          tenant_id?: string
+          voucher_id?: string
+          woo_coupon_code?: string | null
+          woo_order_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_voucher_links_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "inst_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_voucher_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_voucher_links_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "inst_vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_vouchers: {
+        Row: {
+          client_id: string | null
+          code: string
+          created_at: string
+          currency: string
+          current_balance_cents: number
+          expires_at: string | null
+          id: string
+          initial_amount_cents: number
+          issued_at: string
+          metadata: Json
+          recipient_name: string | null
+          source_channel: string
+          status: string
+          tenant_id: string
+          updated_at: string
+          voucher_type: string
+        }
+        Insert: {
+          client_id?: string | null
+          code: string
+          created_at?: string
+          currency?: string
+          current_balance_cents: number
+          expires_at?: string | null
+          id?: string
+          initial_amount_cents: number
+          issued_at?: string
+          metadata?: Json
+          recipient_name?: string | null
+          source_channel?: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          voucher_type: string
+        }
+        Update: {
+          client_id?: string | null
+          code?: string
+          created_at?: string
+          currency?: string
+          current_balance_cents?: number
+          expires_at?: string | null
+          id?: string
+          initial_amount_cents?: number
+          issued_at?: string
+          metadata?: Json
+          recipient_name?: string | null
+          source_channel?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          voucher_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_vouchers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_vouchers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_working_hours: {
         Row: {
           created_at: string
@@ -2796,7 +3006,20 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      inst_legacy_vouchers: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          current_balance_cents: number | null
+          initial_amount_cents: number | null
+          legacy_id: string | null
+          legacy_type: string | null
+          status: string | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       auth_has_brand_access: { Args: { bid: string }; Returns: boolean }
@@ -2919,6 +3142,26 @@ export type Database = {
       inst_booking_price_cents: {
         Args: { p_service_id: string; p_extras?: Json }
         Returns: number
+      }
+      inst_redeem_voucher: {
+        Args: {
+          p_tenant_id: string
+          p_code: string
+          p_amount_cents: number
+          p_source_channel?: string
+          p_sale_id?: string
+          p_woo_order_id?: number
+          p_woo_coupon_code?: string
+          p_idempotency_key?: string
+          p_metadata?: Json
+        }
+        Returns: {
+          voucher_id: string
+          code: string
+          remaining_cents: number
+          status: string
+          event_id: string
+        }[]
       }
       get_public_site_home: {
         Args: { p_tenant_id: string }

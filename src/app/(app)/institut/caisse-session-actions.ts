@@ -12,11 +12,17 @@ import {
 } from "@/lib/institut/pos-session";
 import type { Json } from "@/lib/db/database.types";
 import type { ActionResult } from "./caisse-actions";
+import {
+  issueVoucher,
+  voidVoucher,
+  type VoucherType,
+} from "@/lib/institut/vouchers-core";
 
 function revalidateSession() {
   revalidatePath("/institut/caisse");
   revalidatePath("/institut/caisse/session");
   revalidatePath("/institut/caisse/bons");
+  revalidatePath("/institut/caisse/bons/voucher");
   revalidatePath("/institut/caisse/historique");
 }
 
@@ -212,6 +218,58 @@ export async function issueGiftCardAction(
   }
 }
 
+export async function issueVoucherAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+
+  const amount = parseEurosCents(formData.get("amount"));
+  if (amount <= 0) return { error: t("invalidAmount") };
+  const voucherTypeRaw = String(formData.get("voucher_type") ?? "voucher");
+  const voucherType: VoucherType =
+    voucherTypeRaw === "gift_card" || voucherTypeRaw === "credit_note"
+      ? voucherTypeRaw
+      : "voucher";
+  const customCode = String(formData.get("code") ?? "").trim();
+
+  let code = customCode;
+  if (!code) {
+    const settings = await import("@/lib/institut/pos-settings");
+    const posSettings = await settings.getPosSettings(supabase, session.tenant.id);
+    const { generateGiftCardCode } = await import("@/lib/institut/pos-session");
+    const prefix =
+      voucherType === "gift_card"
+        ? posSettings.gift_card_prefix
+        : voucherType === "credit_note"
+          ? posSettings.credit_note_prefix
+          : "VC";
+    code = generateGiftCardCode(prefix);
+  }
+
+  try {
+    const voucher = await issueVoucher(supabase, session.tenant.id, {
+      code,
+      voucherType,
+      sourceChannel: "pos",
+      amountCents: amount,
+      recipientName: String(formData.get("recipient_name") ?? "").trim() || null,
+      clientId: String(formData.get("client_id") ?? "") || null,
+      expiresAt: String(formData.get("expires_at") ?? "") || null,
+      metadata: {
+        issued_from: "bons_page",
+      } as Json,
+      idempotencyKey: `manual-issue:${session.tenant.id}:${voucherType}:${code.toUpperCase()}`,
+    });
+    revalidateSession();
+    return { ok: true, message: `${t("voucherIssued")} · ${voucher.code}` };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
 export async function createCreditNoteAction(
   _prev: ActionResult,
   formData: FormData,
@@ -276,6 +334,38 @@ export async function payBalanceAction(
     if (msg === "sale_not_partial") return { error: t("saleNotPartial") };
     if (msg === "overpaid") return { error: t("overpaid") };
     return { error: msg };
+  }
+}
+
+export async function voidVoucherAction(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  const voucherId = String(formData.get("voucher_id") ?? "");
+  if (!voucherId) return { error: t("missingFields") };
+
+  try {
+    await voidVoucher(supabase, session.tenant.id, voucherId, {
+      sourceChannel: "admin",
+      metadata: {
+        void_reason: String(formData.get("reason") ?? "").trim() || null,
+      },
+      idempotencyKey: `manual-void:${session.tenant.id}:${voucherId}`,
+    });
+    revalidateSession();
+    return { ok: true, message: t("voucherVoided") };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export async function voidVoucherDirect(formData: FormData): Promise<void> {
+  const res = await voidVoucherAction({}, formData);
+  if (res.error) {
+    throw new Error(res.error);
   }
 }
 

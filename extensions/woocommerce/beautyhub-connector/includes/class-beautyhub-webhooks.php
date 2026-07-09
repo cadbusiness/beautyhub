@@ -141,10 +141,35 @@ class BeautyHub_Webhooks
             return;
         }
 
+        $coupon_lines = [];
+        foreach ($order->get_items('coupon') as $coupon) {
+            $coupon_lines[] = [
+                'code' => strtoupper((string) $coupon->get_code()),
+                'discount' => (float) $coupon->get_discount(),
+                'discount_tax' => (float) $coupon->get_discount_tax(),
+            ];
+        }
+
+        $line_items = [];
+        foreach ($order->get_items() as $item) {
+            $line_items[] = [
+                'product_id' => $item->get_product_id(),
+                'variation_id' => $item->get_variation_id(),
+                'quantity' => $item->get_quantity(),
+                'total' => (float) $item->get_total(),
+            ];
+        }
+
         self::send('order.completed', [
             'id' => $order_id,
             'total' => $order->get_total(),
             'status' => $order->get_status(),
+            'currency' => $order->get_currency(),
+            'coupon_lines' => $coupon_lines,
+            'line_items' => $line_items,
+            'meta' => [
+                'payment_method' => $order->get_payment_method(),
+            ],
         ]);
 
         foreach ($order->get_items() as $item) {

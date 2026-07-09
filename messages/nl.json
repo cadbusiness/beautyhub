@@ -548,6 +548,8 @@
       "sessionClosed": "Z-afsluiting voltooid",
       "varianceNotesRequired": "Een kassaverschil vereist een toelichting.",
       "giftCardIssued": "Cadeaubon uitgegeven",
+      "voucherIssued": "Voucher uitgegeven",
+      "voucherVoided": "Voucher geannuleerd",
       "creditNoteCreated": "Creditnota aangemaakt",
       "creditAmountInvalid": "Ongeldig creditnota-bedrag.",
       "saleNotFound": "Verkoop niet gevonden.",
@@ -557,6 +559,10 @@
       "giftCardInsufficient": "Onvoldoende saldo cadeaubon.",
       "giftCardExpired": "Cadeaubon verlopen.",
       "giftCardCodeRequired": "Cadeauboncode verplicht.",
+      "voucherCodeRequired": "Vouchercode verplicht.",
+      "voucherInvalid": "Ongeldige voucher.",
+      "voucherInsufficient": "Onvoldoende voucher-saldo.",
+      "voucherExpired": "Voucher verlopen.",
       "creditNoteInvalid": "Ongeldige creditnota.",
       "creditNoteInsufficient": "Onvoldoende creditnota-saldo.",
       "creditNoteExpired": "Creditnota verlopen.",
@@ -2423,6 +2429,7 @@
       "methodAria": "Betaalmethode",
       "amountAria": "Bedrag",
       "giftCodePlaceholder": "Boncode",
+      "voucherCodePlaceholder": "Vouchercode",
       "fillRemaining": "Saldo",
       "addPayment": "Betaalmethode toevoegen",
       "overpaid": "Te veel ontvangen: {amount}",
@@ -2437,6 +2444,7 @@
         "cash": "Contant",
         "card": "Betaalterminal",
         "transfer": "Overschrijving",
+        "voucher": "Voucher",
         "gift_card": "Cadeaubon",
         "credit_note": "Creditnota"
       },
@@ -2507,6 +2515,7 @@
         "card": "Betaalterminal",
         "stripe": "Stripe",
         "transfer": "Overschrijving",
+        "voucher": "Voucher",
         "gift_card": "Cadeaubon",
         "mixed": "Gemengd",
         "other": "Anders",
@@ -2533,6 +2542,7 @@
         "card": "Kaart",
         "stripe": "Stripe",
         "transfer": "Overschrijving",
+        "voucher": "Voucher",
         "gift_card": "Cadeaubon",
         "other": "Anders",
         "credit_note": "Creditnota"
@@ -2592,6 +2602,7 @@
         "card": "Kaart",
         "stripe": "Stripe",
         "transfer": "Overschrijving",
+        "voucher": "Voucher",
         "gift_card": "Cadeaubon",
         "credit_note": "Tegoed"
       },
@@ -2653,24 +2664,55 @@
       }
     },
     "vouchers": {
+      "issueVoucher": "Voucher uitgeven",
       "issueGiftCard": "Cadeaubon uitgeven",
       "issueCreditNote": "Creditnota aanmaken",
+      "vouchersTitle": "Vouchers",
       "giftCardsTitle": "Cadeaubonnen",
       "creditNotesTitle": "Creditnota's",
+      "noVouchers": "Geen vouchers.",
       "noGiftCards": "Geen cadeaubonnen.",
       "noCreditNotes": "Geen creditnota's.",
+      "openVoucher": "Document",
+      "voidVoucher": "Annuleren",
       "columns": {
         "code": "Code",
+        "type": "Type",
         "balance": "Saldo",
         "number": "Nr.",
         "remaining": "Resterend",
         "status": "Status",
-        "date": "Datum"
+        "date": "Datum",
+        "lastEvent": "Laatste event",
+        "actions": "Acties"
+      },
+      "types": {
+        "voucher": "Voucher",
+        "gift_card": "Cadeaubon",
+        "credit_note": "Creditnota"
+      },
+      "events": {
+        "issue": "Uitgifte",
+        "redeem": "Gebruik",
+        "refund": "Terugbetaling",
+        "void": "Annulering",
+        "sync": "Synchronisatie",
+        "adjustment": "Correctie"
       },
       "status": {
         "active": "Actief",
         "depleted": "Opgebruikt",
-        "cancelled": "Geannuleerd"
+        "cancelled": "Geannuleerd",
+        "expired": "Verlopen"
+      },
+      "voucherForm": {
+        "typeVoucher": "Standaard voucher",
+        "typeGiftCard": "Cadeaubon",
+        "typeCreditNote": "Creditnota",
+        "amount": "Bedrag (€)",
+        "codeOptional": "Code (optioneel)",
+        "recipientOptional": "Ontvanger (optioneel)",
+        "submit": "Voucher uitgeven"
       },
       "giftForm": {
         "amount": "Bedrag (€)",

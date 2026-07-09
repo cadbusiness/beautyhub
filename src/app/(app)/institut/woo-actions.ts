@@ -30,6 +30,13 @@ export interface ActionResult {
   message?: string;
 }
 
+export interface SyncWooResult {
+  ok?: boolean;
+  error?: string;
+  syncedCount?: number;
+  shopsCount?: number;
+}
+
 async function ensureWebhookConfig(
   tenantId: string,
   url: string,
@@ -154,10 +161,19 @@ export async function disconnectWoo(): Promise<void> {
 
 export async function syncWooProducts(): Promise<void> {
   const session = await requireModule("institut");
-  const connections = await listWooConnectionsForTenant(session.tenant.id);
-  if (connections.length === 0) return;
+  await syncWooProductsForTenant(session.tenant.id);
+  revalidatePath("/institut/caisse");
+  revalidatePath("/institut/caisse/produits");
+}
+
+async function syncWooProductsForTenant(
+  tenantId: string,
+): Promise<{ syncedCount: number; shopsCount: number }> {
+  const connections = await listWooConnectionsForTenant(tenantId);
+  if (connections.length === 0) return { syncedCount: 0, shopsCount: 0 };
 
   const supabase = await createClient();
+  let syncedCount = 0;
 
   for (const connection of connections) {
     for (let page = 1; page <= 5; page++) {
@@ -165,17 +181,32 @@ export async function syncWooProducts(): Promise<void> {
       if (products.length === 0) break;
 
       const rows = products.map((p) =>
-        mapWooProductToRow(session.tenant.id, connection.connectionId, p),
+        mapWooProductToRow(tenantId, connection.connectionId, p),
       );
 
       await supabase
         .from("inst_products")
         .upsert(rows, { onConflict: "tenant_id,connection_id,woo_id" });
+      syncedCount += rows.length;
 
       if (products.length < 50) break;
     }
   }
 
-  revalidatePath("/institut/caisse");
-  revalidatePath("/institut/caisse/produits");
+  return { syncedCount, shopsCount: connections.length };
+}
+
+export async function syncWooProductsAction(
+  _prev: SyncWooResult,
+): Promise<SyncWooResult> {
+  void _prev;
+  try {
+    const session = await requireModule("institut");
+    const result = await syncWooProductsForTenant(session.tenant.id);
+    revalidatePath("/institut/caisse");
+    revalidatePath("/institut/caisse/produits");
+    return { ok: true, ...result };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
 }

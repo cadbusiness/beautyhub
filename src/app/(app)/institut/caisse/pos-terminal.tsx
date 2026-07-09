@@ -73,6 +73,8 @@ export function PosTerminal({
   const [loyaltyPreviewCents, setLoyaltyPreviewCents] = useState(0);
   const [notes, setNotes] = useState("");
   const [cartDiscountEuros, setCartDiscountEuros] = useState("0");
+  const [pageSize, setPageSize] = useState(24);
+  const [page, setPage] = useState(1);
   const [checkoutState, checkoutAction, checkoutPending] = useActionState(
     checkoutPos,
     initial,
@@ -142,6 +144,17 @@ export function PosTerminal({
       );
     });
   }, [catalog, tab, query]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+
+  const pagedItems = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
+
+  const pageFrom = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const pageTo = Math.min(filtered.length, currentPage * pageSize);
 
   const cartLines = useMemo(() => {
     const byKey = new Map(catalog.map((i) => [i.key, i]));
@@ -245,7 +258,10 @@ export function PosTerminal({
             <button
               key={item.id}
               type="button"
-              onClick={() => setTab(item.id)}
+              onClick={() => {
+                setTab(item.id);
+                setPage(1);
+              }}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 tab === item.id
                   ? "bg-slate-100 text-slate-900"
@@ -260,17 +276,42 @@ export function PosTerminal({
         <Input
           placeholder={t("searchArticles")}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setPage(1);
+          }}
           aria-label={t("searchAria")}
         />
+
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+          <span>{t("pagination.showing", { from: pageFrom, to: pageTo, total: filtered.length })}</span>
+          <div className="flex items-center gap-2">
+            <label htmlFor="page-size">{t("pagination.perPage")}</label>
+            <Select
+              id="page-size"
+              value={String(pageSize)}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              className="h-8 w-24"
+            >
+              <option value="12">12</option>
+              <option value="24">24</option>
+              <option value="48">48</option>
+              <option value="96">96</option>
+            </Select>
+          </div>
+        </div>
 
         {filtered.length === 0 ? (
           <Card>
             <p className="text-sm text-slate-500">{t("emptyCategory")}</p>
           </Card>
         ) : (
+          <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-            {filtered.map((item) => (
+            {pagedItems.map((item) => (
               <button
                 key={item.key}
                 type="button"
@@ -307,6 +348,28 @@ export function PosTerminal({
               </button>
             ))}
           </div>
+          <div className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+            <span>{t("pagination.page", { current: currentPage, total: totalPages })}</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="rounded border border-slate-300 px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {t("pagination.prev")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="rounded border border-slate-300 px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {t("pagination.next")}
+              </button>
+            </div>
+          </div>
+          </>
         )}
       </div>
 

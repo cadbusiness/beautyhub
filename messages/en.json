@@ -1617,6 +1617,9 @@
       "linkSettings": "Settings",
       "settingsButton": "Cash register settings",
       "syncWoo": "Sync WooCommerce",
+      "syncWooPending": "Syncing…",
+      "syncWooDone": "{products} products synced ({shops} shop(s))",
+      "syncWooError": "Sync failed",
       "wooNotConnected": "WooCommerce not connected — only internal services and products are available."
     },
     "posSettings": {
@@ -2560,6 +2563,13 @@
         "cashPending": "Collection…"
       },
       "emptyCategory": "No articles in this category. ",
+      "pagination": {
+        "showing": "{from}-{to} of {total} items",
+        "perPage": "Per page",
+        "page": "Page {current} / {total}",
+        "prev": "Previous",
+        "next": "Next"
+      },
       "noSessionHint": "Session closed — open for cash tracking",
       "openSession": "Open checkout →",
       "searchAria": "To research",

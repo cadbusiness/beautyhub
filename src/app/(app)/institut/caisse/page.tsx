@@ -13,7 +13,7 @@ import { getOpenCashSession } from "@/lib/institut/pos-session";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PosTerminal } from "./pos-terminal";
-import { syncWooProducts } from "../woo-actions";
+import { SyncWooButton } from "./sync-woo-button";
 
 const APPOINTMENT_SELECT =
   "id, client_id, staff_id, service_id, starts_at, clients(full_name, email), inst_services(name), extras:inst_appointment_extras(service_id, quantity, name)";
@@ -123,11 +123,7 @@ export default async function CaissePage({
           </Link>
         ) : null}
         {connected ? (
-          <form action={syncWooProducts}>
-            <Button variant="outline" type="submit" className="h-9">
-              {t("syncWoo")}
-            </Button>
-          </form>
+          <SyncWooButton />
         ) : null}
       </div>
 

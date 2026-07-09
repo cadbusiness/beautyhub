@@ -1518,6 +1518,9 @@
     },
     "pos": {
       "syncWoo": "Sync WooCommerce",
+      "syncWooPending": "Synchronisation…",
+      "syncWooDone": "{products} produits synchronisés ({shops} boutique(s))",
+      "syncWooError": "Échec de la synchronisation",
       "emptyCatalog": "Commence par ajouter des prestations, des produits internes ou connecter WooCommerce dans les paramètres.",
       "linkServices": "Prestations",
       "linkProducts": "Produits internes",
@@ -2407,6 +2410,13 @@
       "searchArticles": "Rechercher un article…",
       "searchAria": "Rechercher",
       "emptyCategory": "Aucun article dans cette catégorie. Ajoute des prestations, synchronise WooCommerce ou crée des produits internes.",
+      "pagination": {
+        "showing": "{from}-{to} sur {total} articles",
+        "perPage": "Par page",
+        "page": "Page {current} / {total}",
+        "prev": "Précédent",
+        "next": "Suivant"
+      },
       "cart": {
         "title": "Panier",
         "clear": "Vider",

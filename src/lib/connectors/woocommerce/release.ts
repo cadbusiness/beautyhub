@@ -39,6 +39,7 @@ export function getWooConnectorRelease(): ConnectorReleaseInfo {
     changelog: `
       <h4>${version}</h4>
       <ul>
+        <li>Nouvelle interface : header avec logo, bouton « Se connecter » en un clic, design pleine largeur</li>
         <li>Protection anti-double-déclaration + garde version PHP (fin des erreurs fatales à l'activation)</li>
         <li>Compatibilité PHP 7.1+ (correctif erreur fatale à l'activation)</li>
         <li>Mises à jour automatiques depuis BeautyHub (comme Bruce Pilot)</li>

@@ -163,8 +163,40 @@ class BeautyHub_Admin
         ) {
             $update_available = (string) $cached_update->version;
         }
+
+        $connect_base = $api_url !== '' ? rtrim($api_url, '/') : 'https://beautyhub-two.vercel.app';
+        $connect_url = $connect_base . '/compte/institut/woocommerce?shop=' . rawurlencode($shop_url);
+        $version = BEAUTYHUB_CONNECTOR_VERSION;
         ?>
-        <div class="bh-wrap">
+        <div class="bh-app">
+            <header class="bh-topbar">
+                <div class="bh-brand">
+                    <span class="bh-logo" aria-hidden="true">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="40" height="40" rx="11" fill="url(#bhLogoGrad)"/>
+                            <path d="M13.6 28.4V11.6h6.9c3.1 0 5 1.6 5 4.1 0 1.7-.9 3-2.5 3.5 1.9.4 3 1.8 3 3.9 0 2.8-2 4.5-5.4 4.5h-7zm3.3-10h3c1.4 0 2.3-.7 2.3-1.9 0-1.2-.9-1.8-2.3-1.8h-3v3.7zm0 7.3h3.2c1.5 0 2.4-.7 2.4-2 0-1.3-.9-2-2.4-2h-3.2v4z" fill="#fff"/>
+                            <defs>
+                                <linearGradient id="bhLogoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#818cf8"/>
+                                    <stop offset="1" stop-color="#0f172a"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </span>
+                    <span class="bh-brand-text">
+                        <span class="bh-brand-name">BeautyHub</span>
+                        <span class="bh-brand-sub">Connector · WooCommerce</span>
+                    </span>
+                </div>
+                <div class="bh-topbar-right">
+                    <span class="bh-badge <?php echo $connected ? 'bh-badge--ok' : 'bh-badge--idle'; ?>">
+                        <span class="bh-badge-dot"></span>
+                        <?php echo $connected ? esc_html__('Connecté', 'beautyhub-connector') : esc_html__('Non connecté', 'beautyhub-connector'); ?>
+                    </span>
+                    <span class="bh-version">v<?php echo esc_html($version); ?></span>
+                </div>
+            </header>
+
             <?php if ($update_available) : ?>
                 <div class="bh-banner">
                     <?php
@@ -180,110 +212,108 @@ class BeautyHub_Admin
                 </div>
             <?php endif; ?>
 
-            <div class="bh-grid">
-                <div class="bh-card">
-                    <div class="bh-card-head">
-                        <div>
-                            <h2 class="bh-card-title">BeautyHub Connector</h2>
-                            <p class="bh-card-desc">
-                                Synchronisez catalogue, stock et commandes entre cette boutique et la caisse BeautyHub.
-                            </p>
-                        </div>
-                        <span class="bh-badge <?php echo $connected ? 'bh-badge--ok' : 'bh-badge--idle'; ?>">
-                            <?php echo $connected ? esc_html__('Connecté', 'beautyhub-connector') : esc_html__('En attente', 'beautyhub-connector'); ?>
-                        </span>
-                    </div>
+            <?php if ($just_connected) : ?>
+                <div class="bh-notice bh-notice--success">Boutique reliée à BeautyHub. Le stock se synchronise automatiquement.</div>
+            <?php endif; ?>
+            <?php if ($just_disconnected) : ?>
+                <div class="bh-notice bh-notice--info">Connexion BeautyHub supprimée sur cette boutique.</div>
+            <?php endif; ?>
+            <?php if ($error !== '') : ?>
+                <div class="bh-notice bh-notice--error">Échec de la connexion : <?php echo esc_html($error); ?></div>
+            <?php endif; ?>
 
-                    <?php if ($just_connected) : ?>
-                        <div class="bh-notice bh-notice--success">
-                            Boutique reliée à BeautyHub. Le stock se synchronise automatiquement.
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($just_disconnected) : ?>
-                        <div class="bh-notice bh-notice--info">
-                            Connexion BeautyHub supprimée sur cette boutique.
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($error !== '') : ?>
-                        <div class="bh-notice bh-notice--error">
-                            Échec de la connexion : <?php echo esc_html($error); ?>
-                        </div>
-                    <?php endif; ?>
-
+            <div class="bh-layout">
+                <main class="bh-main">
                     <?php if ($connected) : ?>
-                        <div class="bh-status-grid">
-                            <div class="bh-stat">
-                                <span class="bh-stat-label">Boutique</span>
-                                <span class="bh-stat-value"><?php echo esc_html($shop_url); ?></span>
+                        <section class="bh-panel bh-panel--connected">
+                            <div class="bh-connected-head">
+                                <span class="bh-check" aria-hidden="true">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </span>
+                                <div>
+                                    <h2 class="bh-panel-title">Boutique connectée</h2>
+                                    <p class="bh-panel-desc">Catalogue, stock et commandes sont synchronisés en temps réel avec BeautyHub.</p>
+                                </div>
                             </div>
-                            <div class="bh-stat">
-                                <span class="bh-stat-label">BeautyHub</span>
-                                <span class="bh-stat-value"><?php echo esc_html($api_url); ?></span>
-                            </div>
-                            <?php if ($connected_at !== '') : ?>
+                            <div class="bh-status-grid">
                                 <div class="bh-stat">
-                                    <span class="bh-stat-label">Connecté le</span>
-                                    <span class="bh-stat-value"><?php echo esc_html($connected_at); ?></span>
+                                    <span class="bh-stat-label">Boutique</span>
+                                    <span class="bh-stat-value"><?php echo esc_html($shop_url); ?></span>
                                 </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="bh-actions">
-                            <a class="bh-btn bh-btn--ghost" href="<?php echo esc_url($disconnect_url); ?>">
-                                Déconnecter
+                                <div class="bh-stat">
+                                    <span class="bh-stat-label">BeautyHub</span>
+                                    <span class="bh-stat-value"><?php echo esc_html($api_url); ?></span>
+                                </div>
+                                <?php if ($connected_at !== '') : ?>
+                                    <div class="bh-stat">
+                                        <span class="bh-stat-label">Connecté le</span>
+                                        <span class="bh-stat-value"><?php echo esc_html($connected_at); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="bh-actions">
+                                <a class="bh-btn bh-btn--primary" href="<?php echo esc_url($connect_base . '/compte/institut/woocommerce'); ?>" target="_blank" rel="noopener">Ouvrir BeautyHub</a>
+                                <a class="bh-btn bh-btn--ghost" href="<?php echo esc_url($disconnect_url); ?>">Déconnecter</a>
+                            </div>
+                        </section>
+                    <?php else : ?>
+                        <section class="bh-hero">
+                            <span class="bh-hero-icon" aria-hidden="true">
+                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M9 7V4m6 3V4M8 7h8a2 2 0 012 2v3a6 6 0 01-6 6h-0a6 6 0 01-6-6V9a2 2 0 012-2zM12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                            <h2 class="bh-hero-title">Reliez votre boutique à BeautyHub</h2>
+                            <p class="bh-hero-desc">Synchronisez catalogue, stock et commandes en un clic. Aucune clé API à copier-coller.</p>
+                            <a class="bh-btn bh-btn--primary bh-btn--lg" href="<?php echo esc_url($connect_url); ?>" target="_blank" rel="noopener">
+                                Se connecter
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </a>
-                        </div>
-                    <?php else : ?>
-                        <ol class="bh-steps">
-                            <li class="bh-step">
-                                <span class="bh-step-num">1</span>
-                                <div>
-                                    <p class="bh-step-title">Plugin installé</p>
-                                    <p class="bh-step-desc">Le connecteur BeautyHub est actif sur <?php echo esc_html($shop_url); ?>.</p>
-                                </div>
-                            </li>
-                            <li class="bh-step">
-                                <span class="bh-step-num">2</span>
-                                <div>
-                                    <p class="bh-step-title">Connectez depuis BeautyHub</p>
-                                    <p class="bh-step-desc">
-                                        Back-office BeautyHub → Compte → Institut → WooCommerce.
-                                        Saisissez l’URL de cette boutique et cliquez sur <strong>Connecter</strong>.
-                                    </p>
-                                </div>
-                            </li>
-                            <li class="bh-step">
-                                <span class="bh-step-num">3</span>
-                                <div>
-                                    <p class="bh-step-title">Ouvrez le lien magique ici</p>
-                                    <p class="bh-step-desc">
-                                        Restez connecté à WordPress et ouvrez le lien généré par BeautyHub.
-                                        Tout se configure automatiquement.
-                                    </p>
-                                </div>
-                            </li>
-                        </ol>
-                    <?php endif; ?>
-                </div>
+                            <p class="bh-hero-hint">Vous serez redirigé vers votre back-office BeautyHub pour valider la connexion en toute sécurité.</p>
+                        </section>
 
-                <aside class="bh-card bh-card--side">
-                    <h2 class="bh-side-title">Sync temps réel</h2>
-                    <ul class="bh-features">
-                        <li>Stock boutique ↔ caisse</li>
-                        <li>Catalogue produits</li>
-                        <li>Commandes en ligne</li>
-                        <li>Ventes institut (POS)</li>
-                    </ul>
-                    <?php if (!$connected) : ?>
-                        <p class="bh-side-note">
-                            Aucune clé API à copier-coller. La connexion se fait en un clic depuis BeautyHub.
-                        </p>
-                    <?php else : ?>
-                        <p class="bh-side-note bh-side-note--ok">
-                            Synchronisation active. Les changements de stock sont propagés dans les deux sens.
-                        </p>
+                        <section class="bh-panel">
+                            <h3 class="bh-panel-subtitle">Comment ça marche</h3>
+                            <ol class="bh-steps">
+                                <li class="bh-step">
+                                    <span class="bh-step-num">1</span>
+                                    <div>
+                                        <p class="bh-step-title">Plugin installé</p>
+                                        <p class="bh-step-desc">Le connecteur est actif sur <?php echo esc_html($shop_url); ?>.</p>
+                                    </div>
+                                </li>
+                                <li class="bh-step">
+                                    <span class="bh-step-num">2</span>
+                                    <div>
+                                        <p class="bh-step-title">Cliquez sur « Se connecter »</p>
+                                        <p class="bh-step-desc">Vous ouvrez votre back-office BeautyHub, déjà identifié.</p>
+                                    </div>
+                                </li>
+                                <li class="bh-step">
+                                    <span class="bh-step-num">3</span>
+                                    <div>
+                                        <p class="bh-step-title">Validez dans BeautyHub</p>
+                                        <p class="bh-step-desc">Les clés API et webhooks se configurent automatiquement. C'est prêt.</p>
+                                    </div>
+                                </li>
+                            </ol>
+                        </section>
                     <?php endif; ?>
+                </main>
+
+                <aside class="bh-aside">
+                    <div class="bh-panel bh-panel--aside">
+                        <h3 class="bh-aside-title">Synchronisation temps réel</h3>
+                        <ul class="bh-features">
+                            <li>Stock boutique ↔ caisse</li>
+                            <li>Catalogue produits</li>
+                            <li>Commandes en ligne</li>
+                            <li>Ventes institut (POS)</li>
+                        </ul>
+                        <?php if (!$connected) : ?>
+                            <p class="bh-side-note">Aucune clé API à copier-coller. La connexion se fait en un clic depuis BeautyHub.</p>
+                        <?php else : ?>
+                            <p class="bh-side-note bh-side-note--ok">Synchronisation active. Le stock est propagé dans les deux sens.</p>
+                        <?php endif; ?>
+                    </div>
                 </aside>
             </div>
         </div>

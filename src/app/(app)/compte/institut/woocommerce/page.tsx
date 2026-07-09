@@ -1,7 +1,14 @@
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireInstitutSettingsModule } from "@/lib/auth/institut-settings";
 import { getTenantConnectionStatus } from "@/lib/connections";
 import { wooConnectorManifest } from "@/lib/connectors";
+import {
+  buildPairingAdminUrl,
+  createPairingToken,
+  normalizeShopUrl,
+} from "@/lib/connectors/pairing";
+import { apiBaseUrl } from "@/lib/app-url";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { Button } from "@/components/ui/button";
 import { disconnectWoo } from "@/app/(app)/institut/woo-actions";
@@ -9,7 +16,11 @@ import { WooConnectPanel } from "../woo-connect-panel";
 import { WooSetupGuide } from "../woo-setup-guide";
 import { SettingsSection } from "../settings-section";
 
-export default async function CompteInstitutWooPage() {
+export default async function CompteInstitutWooPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ shop?: string }>;
+}) {
   const tWoo = await getTranslations("institut.woo");
   const tSettings = await getTranslations("institut.settings");
   const tCommon = await getTranslations("common");
@@ -18,6 +29,26 @@ export default async function CompteInstitutWooPage() {
   const woo = await getTenantConnectionStatus(session.tenant.id, WOO_PROVIDER);
   const wooConnected = woo?.status === "connected";
   const wooUrl = typeof woo?.config?.url === "string" ? woo.config.url : undefined;
+
+  const { shop } = await searchParams;
+  let autoPairUrl: string | null = null;
+  if (shop && !wooConnected) {
+    try {
+      const normalized = normalizeShopUrl(shop);
+      new URL(normalized);
+      const token = createPairingToken({
+        tenantId: session.tenant.id,
+        shopUrl: normalized,
+        apiUrl: apiBaseUrl(),
+      });
+      autoPairUrl = buildPairingAdminUrl(normalized, token, apiBaseUrl());
+    } catch {
+      // URL invalide : on retombe sur le formulaire manuel ci-dessous.
+    }
+  }
+  if (autoPairUrl) {
+    redirect(autoPairUrl);
+  }
   const pairedAt =
     typeof woo?.config?.paired_at === "string" ? woo.config.paired_at : null;
 

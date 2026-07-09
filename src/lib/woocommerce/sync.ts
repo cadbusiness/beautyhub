@@ -9,6 +9,7 @@ import type { WooProduct } from "@/lib/woocommerce/client";
 type Db = SupabaseClient<Database>;
 
 export interface WooWebhookConnection {
+  connectionId: string;
   tenantId: string;
   webhookSecret: string;
   shopUrl: string;
@@ -31,7 +32,7 @@ export async function resolveWooWebhookConnection(
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("connections")
-    .select("scope_id, status, config, credentials")
+    .select("id, scope_id, status, config, credentials")
     .eq("provider", WOO_PROVIDER)
     .eq("scope_type", "tenant")
     .eq("status", "connected")
@@ -47,6 +48,7 @@ export async function resolveWooWebhookConnection(
   if (!webhookSecret || !shopUrl) return null;
 
   return {
+    connectionId: data.id,
     tenantId: data.scope_id,
     webhookSecret,
     shopUrl,
@@ -76,9 +78,14 @@ function priceToCents(value: string): number {
   return Number.isFinite(n) ? Math.round(n * 100) : 0;
 }
 
-export function mapWooProductToRow(tenantId: string, product: WooProduct) {
+export function mapWooProductToRow(
+  tenantId: string,
+  connectionId: string,
+  product: WooProduct,
+) {
   return {
     tenant_id: tenantId,
+    connection_id: connectionId,
     woo_id: product.id,
     name: product.name,
     sku: product.sku || null,
@@ -95,12 +102,13 @@ export function mapWooProductToRow(tenantId: string, product: WooProduct) {
 export async function upsertWooProduct(
   supabase: Db,
   tenantId: string,
+  connectionId: string,
   product: WooProduct,
 ): Promise<void> {
-  const row = mapWooProductToRow(tenantId, product);
+  const row = mapWooProductToRow(tenantId, connectionId, product);
   const { error } = await supabase
     .from("inst_products")
-    .upsert(row, { onConflict: "tenant_id,woo_id" });
+    .upsert(row, { onConflict: "tenant_id,connection_id,woo_id" });
   if (error) throw new Error(error.message);
 }
 
@@ -108,6 +116,7 @@ export async function upsertWooProduct(
 export async function applyWooStockUpdate(
   supabase: Db,
   tenantId: string,
+  connectionId: string,
   wooId: number,
   stockQuantity: number | null,
 ): Promise<void> {
@@ -118,6 +127,7 @@ export async function applyWooStockUpdate(
       synced_at: new Date().toISOString(),
     })
     .eq("tenant_id", tenantId)
+    .eq("connection_id", connectionId)
     .eq("woo_id", wooId)
     .eq("source", "woocommerce");
   if (error) throw new Error(error.message);
@@ -127,12 +137,14 @@ export async function applyWooStockUpdate(
 export async function deactivateWooProduct(
   supabase: Db,
   tenantId: string,
+  connectionId: string,
   wooId: number,
 ): Promise<void> {
   await supabase
     .from("inst_products")
     .update({ status: "trash", synced_at: new Date().toISOString() })
     .eq("tenant_id", tenantId)
+    .eq("connection_id", connectionId)
     .eq("woo_id", wooId);
 }
 
@@ -175,6 +187,8 @@ export async function getWooCredentialsForTenant(
     .eq("scope_id", tenantId)
     .eq("provider", WOO_PROVIDER)
     .eq("status", "connected")
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!data?.credentials) return null;

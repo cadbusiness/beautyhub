@@ -71,15 +71,24 @@ export async function resolveConnection(
 export async function getTenantConnectionStatus(
   tenantId: string,
   provider: string,
+  externalId?: string,
 ): Promise<{ status: "connected" | "disconnected"; config: Record<string, unknown> } | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+  let query = supabase
     .from("connections")
     .select("status, config")
     .eq("scope_type", "tenant")
     .eq("scope_id", tenantId)
-    .eq("provider", provider)
-    .maybeSingle();
+    .eq("provider", provider);
+
+  if (externalId) {
+    query = query.eq("external_id", externalId);
+  } else {
+    // Multi-connexions possibles (Woo) : on prend la plus récente par défaut.
+    query = query.order("updated_at", { ascending: false }).limit(1);
+  }
+
+  const { data } = await query.maybeSingle();
   if (!data) return null;
   return {
     status: data.status as "connected" | "disconnected",
@@ -94,17 +103,23 @@ export async function saveTenantConnection(
   credentials: Record<string, unknown>,
   config: Record<string, unknown> = {},
   status: "connected" | "disconnected" = "connected",
+  externalId?: string,
 ): Promise<void> {
   const supabase = await createClient();
   const enc = encryptCredentials(credentials);
 
-  const { data: existing } = await supabase
+  let existingQuery = supabase
     .from("connections")
     .select("id")
     .eq("scope_type", "tenant")
     .eq("scope_id", tenantId)
-    .eq("provider", provider)
-    .maybeSingle();
+    .eq("provider", provider);
+  if (externalId) {
+    existingQuery = existingQuery.eq("external_id", externalId);
+  } else {
+    existingQuery = existingQuery.is("external_id", null);
+  }
+  const { data: existing } = await existingQuery.maybeSingle();
 
   if (existing) {
     const { error } = await supabase
@@ -117,6 +132,7 @@ export async function saveTenantConnection(
       scope_type: "tenant",
       scope_id: tenantId,
       provider,
+      external_id: externalId ?? null,
       credentials: enc as Json,
       config: config as Json,
       status,
@@ -132,17 +148,23 @@ export async function saveTenantConnectionWithService(
   credentials: Record<string, unknown>,
   config: Record<string, unknown> = {},
   status: "connected" | "disconnected" = "connected",
+  externalId?: string,
 ): Promise<void> {
   const supabase = createServiceClient();
   const enc = encryptCredentials(credentials);
 
-  const { data: existing } = await supabase
+  let existingQuery = supabase
     .from("connections")
     .select("id")
     .eq("scope_type", "tenant")
     .eq("scope_id", tenantId)
-    .eq("provider", provider)
-    .maybeSingle();
+    .eq("provider", provider);
+  if (externalId) {
+    existingQuery = existingQuery.eq("external_id", externalId);
+  } else {
+    existingQuery = existingQuery.is("external_id", null);
+  }
+  const { data: existing } = await existingQuery.maybeSingle();
 
   if (existing) {
     const { error } = await supabase
@@ -155,6 +177,7 @@ export async function saveTenantConnectionWithService(
       scope_type: "tenant",
       scope_id: tenantId,
       provider,
+      external_id: externalId ?? null,
       credentials: enc as Json,
       config: config as Json,
       status,
@@ -183,12 +206,17 @@ export async function updateTenantConnectionConfig(
 export async function disconnectTenantConnection(
   tenantId: string,
   provider: string,
+  externalId?: string,
 ): Promise<void> {
   const supabase = await createClient();
-  await supabase
+  let query = supabase
     .from("connections")
     .update({ status: "disconnected" })
     .eq("scope_type", "tenant")
     .eq("scope_id", tenantId)
     .eq("provider", provider);
+  if (externalId) {
+    query = query.eq("external_id", externalId);
+  }
+  await query;
 }

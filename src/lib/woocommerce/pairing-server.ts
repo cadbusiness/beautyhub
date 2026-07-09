@@ -6,7 +6,7 @@ export async function ensureWebhookConfigForTenant(
   tenantId: string,
   shopUrl: string,
 ): Promise<Record<string, unknown>> {
-  const existing = await getTenantConnectionStatusService(tenantId);
+  const existing = await getTenantConnectionStatusService(tenantId, shopUrl);
   const prev = existing?.config ?? {};
 
   if (
@@ -32,7 +32,7 @@ export async function ensureWebhookConfigForTenant(
 
 export { WOO_PROVIDER };
 
-async function getTenantConnectionStatusService(tenantId: string) {
+async function getTenantConnectionStatusService(tenantId: string, shopUrl: string) {
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("connections")
@@ -40,6 +40,7 @@ async function getTenantConnectionStatusService(tenantId: string) {
     .eq("scope_type", "tenant")
     .eq("scope_id", tenantId)
     .eq("provider", WOO_PROVIDER)
+    .eq("external_id", shopUrl)
     .maybeSingle();
   if (!data) return null;
   return {

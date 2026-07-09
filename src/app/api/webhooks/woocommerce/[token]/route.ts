@@ -76,7 +76,12 @@ export async function POST(
         if (!product) {
           return NextResponse.json({ error: "invalid_product" }, { status: 400 });
         }
-        await upsertWooProduct(supabase, connection.tenantId, product);
+        await upsertWooProduct(
+          supabase,
+          connection.tenantId,
+          connection.connectionId,
+          product,
+        );
         break;
       }
       case "product.stock_updated": {
@@ -90,7 +95,13 @@ export async function POST(
             : payload.stock_quantity === null
               ? null
               : null;
-        await applyWooStockUpdate(supabase, connection.tenantId, wooId, stock);
+        await applyWooStockUpdate(
+          supabase,
+          connection.tenantId,
+          connection.connectionId,
+          wooId,
+          stock,
+        );
         break;
       }
       case "product.deleted": {
@@ -98,7 +109,12 @@ export async function POST(
         if (typeof wooId !== "number") {
           return NextResponse.json({ error: "invalid_product" }, { status: 400 });
         }
-        await deactivateWooProduct(supabase, connection.tenantId, wooId);
+        await deactivateWooProduct(
+          supabase,
+          connection.tenantId,
+          connection.connectionId,
+          wooId,
+        );
         break;
       }
       case "order.completed":

@@ -11,15 +11,20 @@ export async function GET(request: Request) {
     if (!shopUrl) {
       return NextResponse.json({ error: "missing_shop_url" }, { status: 400 });
     }
+    const normalizedShopUrl = normalizeShopUrl(shopUrl);
 
-    const woo = await getTenantConnectionStatus(session.tenant.id, WOO_PROVIDER);
+    const woo = await getTenantConnectionStatus(
+      session.tenant.id,
+      WOO_PROVIDER,
+      normalizedShopUrl,
+    );
     const connected = woo?.status === "connected";
     const configUrl =
       typeof woo?.config?.url === "string" ? woo.config.url : null;
     const matched =
       connected &&
       configUrl !== null &&
-      normalizeShopUrl(configUrl) === normalizeShopUrl(shopUrl);
+      normalizeShopUrl(configUrl) === normalizedShopUrl;
 
     return NextResponse.json({
       connected: matched,

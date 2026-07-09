@@ -20,6 +20,7 @@ import {
   WOO_PROVIDER,
   WooClient,
   generateWebhookCredentials,
+  getWooConnectionForTenant,
   getWooClientForTenant,
   mapWooProductToRow,
 } from "@/lib/woocommerce";
@@ -34,19 +35,24 @@ async function ensureWebhookConfig(
   tenantId: string,
   url: string,
 ): Promise<Record<string, unknown>> {
-  const existing = await getTenantConnectionStatus(tenantId, WOO_PROVIDER);
+  const normalizedUrl = normalizeShopUrl(url);
+  const existing = await getTenantConnectionStatus(tenantId, WOO_PROVIDER, normalizedUrl);
   const prev = existing?.config ?? {};
 
   if (
     typeof prev.webhook_token === "string" &&
     typeof prev.webhook_secret === "string"
   ) {
-    return { url, webhook_token: prev.webhook_token, webhook_secret: prev.webhook_secret };
+    return {
+      url: normalizedUrl,
+      webhook_token: prev.webhook_token,
+      webhook_secret: prev.webhook_secret,
+    };
   }
 
   const creds = generateWebhookCredentials();
   return {
-    url,
+    url: normalizedUrl,
     webhook_token: creds.webhookToken,
     webhook_secret: creds.webhookSecret,
   };
@@ -104,21 +110,29 @@ export async function saveWooConnection(
     return { error: t("urlKeySecretRequired") };
   }
 
+  let normalizedUrl: string;
   try {
-    const client = new WooClient({ url, consumerKey, consumerSecret });
+    normalizedUrl = normalizeShopUrl(url);
+  } catch {
+    return { error: "URL WooCommerce invalide." };
+  }
+
+  try {
+    const client = new WooClient({ url: normalizedUrl, consumerKey, consumerSecret });
     await client.testConnection();
   } catch (e) {
     return { error: t("connectionFailed", { message: (e as Error).message }) };
   }
 
   try {
-    const config = await ensureWebhookConfig(session.tenant.id, url);
+    const config = await ensureWebhookConfig(session.tenant.id, normalizedUrl);
     await saveTenantConnection(
       session.tenant.id,
       WOO_PROVIDER,
-      { url, consumerKey, consumerSecret },
+      { url: normalizedUrl, consumerKey, consumerSecret },
       config,
       "connected",
+      normalizedUrl,
     );
   } catch (e) {
     return { error: (e as Error).message };
@@ -131,15 +145,19 @@ export async function saveWooConnection(
 
 export async function disconnectWoo(): Promise<void> {
   const session = await requireInstitutSettingsModule();
-  await disconnectTenantConnection(session.tenant.id, WOO_PROVIDER);
+  const status = await getTenantConnectionStatus(session.tenant.id, WOO_PROVIDER);
+  const externalId =
+    typeof status?.config?.url === "string" ? normalizeShopUrl(status.config.url) : undefined;
+  await disconnectTenantConnection(session.tenant.id, WOO_PROVIDER, externalId);
   revalidatePath(COMPTE_INSTITUT_WOO);
   revalidatePath("/institut/caisse");
 }
 
 export async function syncWooProducts(): Promise<void> {
   const session = await requireModule("institut");
-  const client = await getWooClientForTenant(session.tenant.id);
-  if (!client) return;
+  const connection = await getWooConnectionForTenant(session.tenant.id);
+  const client = connection?.client ?? (await getWooClientForTenant(session.tenant.id));
+  if (!client || !connection) return;
 
   const supabase = await createClient();
 
@@ -147,11 +165,13 @@ export async function syncWooProducts(): Promise<void> {
     const products = await client.listProducts(page, 50);
     if (products.length === 0) break;
 
-    const rows = products.map((p) => mapWooProductToRow(session.tenant.id, p));
+    const rows = products.map((p) =>
+      mapWooProductToRow(session.tenant.id, connection.connectionId, p),
+    );
 
     await supabase
       .from("inst_products")
-      .upsert(rows, { onConflict: "tenant_id,woo_id" });
+      .upsert(rows, { onConflict: "tenant_id,connection_id,woo_id" });
 
     if (products.length < 50) break;
   }

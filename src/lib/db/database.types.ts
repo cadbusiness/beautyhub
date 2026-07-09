@@ -339,6 +339,7 @@ export type Database = {
           config: Json
           created_at: string
           credentials: Json
+          external_id: string | null
           id: string
           provider: string
           scope_id: string | null
@@ -350,6 +351,7 @@ export type Database = {
           config?: Json
           created_at?: string
           credentials?: Json
+          external_id?: string | null
           id?: string
           provider: string
           scope_id?: string | null
@@ -361,6 +363,7 @@ export type Database = {
           config?: Json
           created_at?: string
           credentials?: Json
+          external_id?: string | null
           id?: string
           provider?: string
           scope_id?: string | null
@@ -996,6 +999,7 @@ export type Database = {
       }
       inst_products: {
         Row: {
+          connection_id: string | null
           created_at: string
           currency: string
           id: string
@@ -1012,6 +1016,7 @@ export type Database = {
           woo_id: number | null
         }
         Insert: {
+          connection_id?: string | null
           created_at?: string
           currency?: string
           id?: string
@@ -1028,6 +1033,7 @@ export type Database = {
           woo_id?: number | null
         }
         Update: {
+          connection_id?: string | null
           created_at?: string
           currency?: string
           id?: string
@@ -1044,6 +1050,13 @@ export type Database = {
           woo_id?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "inst_products_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "connections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inst_products_tenant_id_fkey"
             columns: ["tenant_id"]

@@ -66,6 +66,7 @@ export async function POST(request: Request) {
       { url: normalizedSite, consumerKey, consumerSecret },
       config,
       "connected",
+      normalizedSite,
     );
 
     // Vérifie que le tenant existe toujours

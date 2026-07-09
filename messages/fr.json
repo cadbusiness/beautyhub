@@ -1313,16 +1313,16 @@
           "durationRequired": "Indiquez une durée valide (minimum 1 min)."
         },
         "extras": {
-          "hint": "Choisissez des extras depuis votre répertoire dédié. Chaque extra conserve sa durée et son prix.",
+          "hint": "Choisissez des extras à proposer en upsell : prestations existantes ou extras dédiés. Chaque extra conserve sa durée et son prix.",
           "stepPosition": "Étape extras dans la réservation",
           "beforeTime": "Avant le choix du créneau",
           "afterTime": "Après le choix du créneau",
-          "noCandidates": "Aucun extra disponible. Créez un extra dans « Répertoire extras » puis revenez ici.",
+          "noCandidates": "Aucun extra disponible. Ajoutez une prestation active ou créez un extra dédié dans « Répertoire extras ».",
           "extraOnlyBadge": "Extra",
           "minQty": "Min",
           "maxQty": "Max",
-          "searchPlaceholder": "Rechercher un extra…",
-          "noSearchResults": "Aucun extra ne correspond.",
+          "searchPlaceholder": "Rechercher une prestation ou un extra…",
+          "noSearchResults": "Aucune prestation ou extra ne correspond.",
           "selectedCount": "{count, plural, one {# extra sélectionné} other {# extras sélectionnés}}",
           "saveExtras": "Enregistrer les extras"
         },

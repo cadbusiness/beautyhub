@@ -1313,16 +1313,16 @@
           "durationRequired": "Vul een geldige duur in (minimaal 1 min)."
         },
         "extras": {
-          "hint": "Kies extras uit je aparte extra-catalogus. Elke extra behoudt duur en prijs.",
+          "hint": "Kies upsell-extras: bestaande behandelingen of aparte extras.",
           "stepPosition": "Extras-stap in reservering",
           "beforeTime": "Vóór tijdslot",
           "afterTime": "Na tijdslot",
-          "noCandidates": "Nog geen extras beschikbaar. Maak er eerst een in de extra-catalogus.",
+          "noCandidates": "Nog geen extras beschikbaar. Gebruik een actieve behandeling of maak een extra in de extra-catalogus.",
           "extraOnlyBadge": "Extra",
           "minQty": "Min",
           "maxQty": "Max",
-          "searchPlaceholder": "Zoek een extra…",
-          "noSearchResults": "Geen extra gevonden.",
+          "searchPlaceholder": "Zoek een behandeling of extra…",
+          "noSearchResults": "Geen behandeling of extra gevonden.",
           "selectedCount": "{count, plural, one {# extra geselecteerd} other {# extras geselecteerd}}",
           "saveExtras": "Extras opslaan"
         },

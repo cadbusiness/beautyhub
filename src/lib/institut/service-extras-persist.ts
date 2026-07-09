@@ -23,7 +23,7 @@ export async function persistServiceExtras(
       .from("inst_services")
       .select("id")
       .eq("tenant_id", tenantId)
-      .eq("visibility", "extra_only")
+      .eq("is_active", true)
       .in("id", extraIds);
     if (extrasError) return extrasError.message;
 

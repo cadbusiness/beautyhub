@@ -54,9 +54,7 @@ export function ServiceExtrasEditor({
 
   const available = useMemo(
     () =>
-      candidateServices.filter(
-        (s) => s.is_active && s.visibility === "extra_only" && (!serviceId || s.id !== serviceId),
-      ),
+      candidateServices.filter((s) => s.is_active && (!serviceId || s.id !== serviceId)),
     [candidateServices, serviceId],
   );
 

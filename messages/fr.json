@@ -1623,11 +1623,11 @@
           },
           "install": {
             "title": "Installer et activer le plugin",
-            "description": "WordPress → Extensions → Téléverser le ZIP → Activer."
+            "description": "WordPress → Extensions → Téléverser le ZIP → Activer. Le menu BeautyHub apparaît dans la barre latérale."
           },
           "connect": {
             "title": "Connecter en un clic",
-            "description": "Depuis BeautyHub, saisissez l’URL boutique et ouvrez le lien magique dans l’admin WordPress."
+            "description": "Depuis BeautyHub, saisissez l’URL boutique et ouvrez le lien magique dans WordPress (menu latéral → BeautyHub)."
           }
         }
       },

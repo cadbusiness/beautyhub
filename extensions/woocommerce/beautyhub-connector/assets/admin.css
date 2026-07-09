@@ -1,59 +1,113 @@
 .bh-wrap {
-  max-width: 720px;
-  margin: 24px 0 40px;
+  max-width: 960px;
+  margin: 20px 20px 40px 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.bh-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #fff;
+}
+
+.bh-hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bh-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.bh-hero-kicker {
+  margin: 0 0 2px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.bh-hero .bh-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.bh-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .bh-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .bh-card {
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 28px 32px;
+  padding: 24px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.bh-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.bh-title {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 600;
-  color: #0f172a;
-  letter-spacing: -0.02em;
+.bh-card--main {
+  padding: 28px 32px;
 }
 
 .bh-subtitle {
-  margin: 6px 0 0;
+  margin: 0 0 20px;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.55;
   color: #64748b;
 }
 
 .bh-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 8px;
+  padding: 6px 12px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
-.bh-badge--ok {
-  background: #dcfce7;
-  color: #166534;
+.bh-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #94a3b8;
 }
 
-.bh-badge--idle {
-  background: #f1f5f9;
-  color: #475569;
+.bh-badge--ok .bh-badge-dot {
+  background: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
 }
 
 .bh-steps {
@@ -68,18 +122,18 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border: 1px solid #f1f5f9;
   border-radius: 10px;
   background: #f8fafc;
 }
 
 .bh-step-num {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 999px;
-  background: #e2e8f0;
-  color: #334155;
+  background: #0f172a;
+  color: #fff;
   font-size: 12px;
   font-weight: 600;
   display: inline-flex;
@@ -89,21 +143,21 @@
 }
 
 .bh-step-title {
-  margin: 0 0 2px;
-  font-size: 13px;
+  margin: 0 0 4px;
+  font-size: 14px;
   font-weight: 600;
   color: #0f172a;
 }
 
 .bh-step-desc {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.5;
   color: #64748b;
 }
 
 .bh-notice {
-  margin-top: 16px;
+  margin-bottom: 16px;
   padding: 12px 14px;
   border-radius: 10px;
   font-size: 13px;
@@ -128,6 +182,36 @@
   color: #1d4ed8;
 }
 
+.bh-status-grid {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.bh-stat {
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.bh-stat-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.bh-stat-value {
+  display: block;
+  font-size: 13px;
+  color: #0f172a;
+  word-break: break-all;
+}
+
 .bh-actions {
   margin-top: 20px;
   display: flex;
@@ -149,30 +233,72 @@
   border: 1px solid transparent;
 }
 
-.bh-btn--primary {
-  background: #0f172a;
-  color: #fff !important;
-}
-
-.bh-btn--primary:hover {
-  background: #1e293b;
-  color: #fff !important;
-}
-
 .bh-btn--ghost {
   background: #fff;
   border-color: #cbd5e1;
   color: #334155 !important;
 }
 
-.bh-meta {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid #e2e8f0;
-  font-size: 12px;
-  color: #64748b;
+.bh-side-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
 }
 
-.bh-meta strong {
-  color: #334155;
+.bh-features {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.bh-features li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.bh-features li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #0f172a;
+}
+
+.bh-side-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #64748b;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.bh-side-note--ok {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+/* Entrée menu latérale WordPress */
+#adminmenu .toplevel_page_beautyhub-connector .wp-menu-image img {
+  width: 18px;
+  height: 18px;
+  padding: 6px 0;
+  opacity: 0.95;
+}
+
+#adminmenu .toplevel_page_beautyhub-connector.current .wp-menu-image img,
+#adminmenu .toplevel_page_beautyhub-connector.wp-has-current-submenu .wp-menu-image img {
+  opacity: 1;
 }

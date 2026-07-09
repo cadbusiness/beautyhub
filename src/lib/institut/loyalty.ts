@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db/database.types";
 import { processReferralOnFirstCompletedVisit } from "./loyalty-events";
 
 type Db = SupabaseClient<Database>;
+type LoyaltyProgramRow = Database["public"]["Tables"]["inst_loyalty_programs"]["Row"];
 
 export type LoyaltySourceType =
   | "appointment_completed"
@@ -73,6 +74,21 @@ export interface LoyaltyIntegrations {
   shopify: boolean;
 }
 
+function normalizeLoyaltyProgram(row: LoyaltyProgramRow): LoyaltyProgram {
+  return {
+    id: row.id,
+    tenant_id: row.tenant_id,
+    name: row.name,
+    is_active: row.is_active,
+    points_label: row.points_label,
+    birthday_bonus_points: row.birthday_bonus_points ?? 0,
+    portal_visible: row.portal_visible ?? true,
+    referral_points: row.referral_points ?? 0,
+    same_day_rebook_points: row.same_day_rebook_points ?? 0,
+    birthday_auto_enabled: row.birthday_auto_enabled ?? false,
+  };
+}
+
 export function calcPointsForRule(
   rule: Pick<LoyaltyEarnRule, "calc_mode" | "points_value">,
   amountCents: number,
@@ -90,24 +106,20 @@ export async function ensureLoyaltyProgram(
 ): Promise<LoyaltyProgram> {
   const { data: existing } = await supabase
     .from("inst_loyalty_programs")
-    .select(
-      "id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled",
-    )
+    .select("*")
     .eq("tenant_id", tenantId)
     .maybeSingle();
 
-  if (existing) return existing;
+  if (existing) return normalizeLoyaltyProgram(existing);
 
   const { data: created, error } = await supabase
     .from("inst_loyalty_programs")
     .insert({ tenant_id: tenantId })
-    .select(
-      "id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled",
-    )
+    .select("*")
     .single();
 
   if (error || !created) throw new Error(error?.message ?? "Programme fidélité introuvable");
-  return created;
+  return normalizeLoyaltyProgram(created);
 }
 
 export async function loadLoyaltyProgramSnapshot(
@@ -237,12 +249,11 @@ export async function processLoyaltyForCompletedAppointment(
 
   const { data: program } = await supabase
     .from("inst_loyalty_programs")
-    .select(
-      "id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled",
-    )
+    .select("*")
     .eq("tenant_id", tenantId)
     .maybeSingle();
   if (!program?.is_active) return;
+  const normalizedProgram = normalizeLoyaltyProgram(program);
 
   const { data: rules } = await supabase
     .from("inst_loyalty_earn_rules")
@@ -252,7 +263,7 @@ export async function processLoyaltyForCompletedAppointment(
     .eq("is_active", true)
     .eq("source_type", "appointment_completed");
 
-  await applyEarnRules(supabase, tenantId, program, (rules ?? []) as LoyaltyEarnRule[], {
+  await applyEarnRules(supabase, tenantId, normalizedProgram, (rules ?? []) as LoyaltyEarnRule[], {
     clientId: appt.client_id,
     sourceType: "appointment_completed",
     sourceId: appt.id,
@@ -282,12 +293,11 @@ export async function processLoyaltyForPaidSale(
 
   const { data: program } = await supabase
     .from("inst_loyalty_programs")
-    .select(
-      "id, tenant_id, name, is_active, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled",
-    )
+    .select("*")
     .eq("tenant_id", tenantId)
     .maybeSingle();
   if (!program?.is_active) return;
+  const normalizedProgram = normalizeLoyaltyProgram(program);
 
   const { data: rules } = await supabase
     .from("inst_loyalty_earn_rules")
@@ -297,7 +307,7 @@ export async function processLoyaltyForPaidSale(
     .eq("is_active", true)
     .eq("source_type", sourceType);
 
-  await applyEarnRules(supabase, tenantId, program, (rules ?? []) as LoyaltyEarnRule[], {
+  await applyEarnRules(supabase, tenantId, normalizedProgram, (rules ?? []) as LoyaltyEarnRule[], {
     clientId: sale.client_id,
     sourceType,
     sourceId: sale.id,

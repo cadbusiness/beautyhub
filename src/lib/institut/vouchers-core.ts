@@ -128,10 +128,10 @@ export async function redeemVoucher(
     p_code: code,
     p_amount_cents: input.amountCents,
     p_source_channel: input.sourceChannel,
-    p_sale_id: input.saleId ?? null,
-    p_woo_order_id: input.wooOrderId ?? null,
-    p_woo_coupon_code: input.wooCouponCode ?? null,
-    p_idempotency_key: input.idempotencyKey?.trim() || null,
+    p_sale_id: input.saleId ?? undefined,
+    p_woo_order_id: input.wooOrderId ?? undefined,
+    p_woo_coupon_code: input.wooCouponCode ?? undefined,
+    p_idempotency_key: input.idempotencyKey?.trim() || undefined,
     p_metadata: input.metadata ?? {},
   });
   if (error || !data?.[0]) throw new Error(error?.message ?? "voucher_redeem_failed");

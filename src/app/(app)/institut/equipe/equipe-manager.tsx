@@ -157,7 +157,7 @@ export function EquipeManager({
                       <th className={dataTableHead}>{t("personnel.columns.name")}</th>
                       <th className={dataTableHead}>{t("personnel.columns.email")}</th>
                       <th className={dataTableHead}>{t("personnel.columns.access")}</th>
-                      <th className={`w-28 text-right ${dataTableHead}`}>
+                      <th className={`w-40 text-right ${dataTableHead}`}>
                         {t("personnel.columns.actions")}
                       </th>
                     </tr>

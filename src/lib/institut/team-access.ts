@@ -58,11 +58,14 @@ export type StaffWithAccess = {
   full_name: string;
   email: string | null;
   color: string | null;
+  avatar_url: string | null;
   schedule_id: string | null;
   user_id: string | null;
   access_status: StaffAccessStatus;
+  tenant_role_id: string | null;
   tenant_role_name: string | null;
   invitation_id: string | null;
+  invitation_token: string | null;
 };
 
 export function parsePermissionsJson(raw: unknown): InstitutPermissions {
@@ -225,7 +228,7 @@ export async function fetchStaffWithAccess(
   const [staffRes, invitations] = await Promise.all([
     supabase
       .from("inst_staff")
-      .select("id, full_name, email, color, schedule_id, user_id")
+      .select("id, full_name, email, color, avatar_url, schedule_id, user_id")
       .eq("tenant_id", tenantId)
       .order("full_name"),
     fetchTeamInvitations(supabase, tenantId),
@@ -270,12 +273,15 @@ export async function fetchStaffWithAccess(
 
   return (staffRes.data ?? []).map((s) => {
     let access_status: StaffAccessStatus = "none";
+    let tenant_role_id: string | null = null;
     let tenant_role_name: string | null = null;
     let invitation_id: string | null = null;
+    let invitation_token: string | null = null;
 
     if (s.user_id && activeUserIds.has(s.user_id)) {
       access_status = "active";
-      const roleId = membershipRoleByUser.get(s.user_id);
+      const roleId = membershipRoleByUser.get(s.user_id) ?? null;
+      tenant_role_id = roleId;
       tenant_role_name = roleId ? (roleNames.get(roleId) ?? null) : null;
     } else {
       const inv =
@@ -284,6 +290,8 @@ export async function fetchStaffWithAccess(
       if (inv) {
         access_status = "pending";
         invitation_id = inv.id;
+        invitation_token = inv.token;
+        tenant_role_id = inv.tenant_role_id;
         tenant_role_name = inv.tenant_role_name;
       }
     }
@@ -293,11 +301,14 @@ export async function fetchStaffWithAccess(
       full_name: s.full_name,
       email: s.email,
       color: s.color,
+      avatar_url: s.avatar_url,
       schedule_id: s.schedule_id,
       user_id: s.user_id,
       access_status,
+      tenant_role_id,
       tenant_role_name,
       invitation_id,
+      invitation_token,
     };
   });
 }

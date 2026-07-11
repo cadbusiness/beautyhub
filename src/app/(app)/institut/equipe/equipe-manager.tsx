@@ -157,7 +157,7 @@ export function EquipeManager({
                       <th className={dataTableHead}>{t("personnel.columns.name")}</th>
                       <th className={dataTableHead}>{t("personnel.columns.email")}</th>
                       <th className={dataTableHead}>{t("personnel.columns.access")}</th>
-                      <th className={`w-36 text-right ${dataTableHead}`}>
+                      <th className={`w-28 text-right ${dataTableHead}`}>
                         {t("personnel.columns.actions")}
                       </th>
                     </tr>
@@ -165,9 +165,20 @@ export function EquipeManager({
                   <tbody>
                     {filteredStaff.map((s) => {
                       return (
-                        <tr key={s.id} className={dataTableRow}>
+                        <tr
+                          key={s.id}
+                          className={`${dataTableRow} cursor-pointer`}
+                          onClick={() => {
+                            setEditingStaff(s);
+                            setStaffDialogOpen(true);
+                          }}
+                        >
                           <td className={dataTableCell}>
-                            <StaffAvatar name={s.full_name} color={s.color} />
+                            <StaffAvatar
+                              name={s.full_name}
+                              color={s.color}
+                              imageUrl={s.avatar_url}
+                            />
                           </td>
                           <td className={`font-medium text-slate-900 ${dataTableCell}`}>
                             {s.full_name}
@@ -195,10 +206,14 @@ export function EquipeManager({
                               <span className="ml-1.5 text-xs text-slate-500">{s.tenant_role_name}</span>
                             ) : null}
                           </td>
-                          <td className={`text-right ${dataTableCell}`}>
+                          <td
+                            className={`text-right ${dataTableCell}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <RowActions>
                               <RowActionButton
                                 type="button"
+                                iconOnly
                                 onClick={() => {
                                   setEditingStaff(s);
                                   setStaffDialogOpen(true);
@@ -210,6 +225,7 @@ export function EquipeManager({
                               {s.access_status !== "active" ? (
                                 <RowActionButton
                                   type="button"
+                                  iconOnly
                                   onClick={() => setInviteStaff(s)}
                                   icon={<MailPlus className="h-3.5 w-3.5" />}
                                 >
@@ -220,6 +236,7 @@ export function EquipeManager({
                                 <input type="hidden" name="id" value={s.id} />
                                 <RowActionButton
                                   type="submit"
+                                  iconOnly
                                   tone="danger"
                                   icon={<Trash2 className="h-3.5 w-3.5" />}
                                 >
@@ -366,14 +383,27 @@ export function EquipeManager({
           setEditingStaff(null);
         }}
         title={editingStaff ? t("personnel.dialogEditTitle") : t("personnel.dialogTitle")}
+        size="lg"
       >
-        <StaffForm
-          staff={editingStaff}
-          onSuccess={() => {
-            setStaffDialogOpen(false);
-            setEditingStaff(null);
-          }}
-        />
+        {staffDialogOpen ? (
+          <StaffForm
+            staff={editingStaff}
+            roles={roles}
+            onSuccess={() => {
+              setStaffDialogOpen(false);
+              setEditingStaff(null);
+            }}
+            onInviteRequest={
+              editingStaff && editingStaff.access_status !== "active"
+                ? () => {
+                    setInviteStaff(editingStaff);
+                    setStaffDialogOpen(false);
+                    setEditingStaff(null);
+                  }
+                : undefined
+            }
+          />
+        ) : null}
       </FormDialog>
 
       <FormDialog

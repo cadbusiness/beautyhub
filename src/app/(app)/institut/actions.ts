@@ -32,6 +32,8 @@ export interface ActionResult {
   warning?: string;
   ok?: boolean;
   serviceId?: string;
+  staffId?: string;
+  temporaryPassword?: string;
 }
 
 function eurosToCents(value: FormDataEntryValue | null): number {
@@ -679,16 +681,20 @@ export async function createStaffMember(
   if (!fullName) return { error: t("nameRequired") };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("inst_staff").insert({
-    tenant_id: session.tenant.id,
-    full_name: fullName,
-    email: String(formData.get("email") ?? "").trim() || null,
-    color: String(formData.get("color") ?? "").trim() || null,
-  });
+  const { data, error } = await supabase
+    .from("inst_staff")
+    .insert({
+      tenant_id: session.tenant.id,
+      full_name: fullName,
+      email: String(formData.get("email") ?? "").trim() || null,
+      color: String(formData.get("color") ?? "").trim() || null,
+    })
+    .select("id")
+    .single();
   if (error) return { error: error.message };
   revalidatePath("/institut/equipe");
   revalidatePath("/institut/rendez-vous");
-  return { ok: true };
+  return { ok: true, staffId: data.id };
 }
 
 export async function updateStaffMember(
@@ -701,7 +707,18 @@ export async function updateStaffMember(
   const fullName = String(formData.get("full_name") ?? "").trim();
   if (!id || !fullName) return { error: t("missingFields") };
 
+  const tenantRoleId = String(formData.get("tenant_role_id") ?? "").trim() || null;
   const supabase = await createClient();
+
+  const { data: staff, error: fetchErr } = await supabase
+    .from("inst_staff")
+    .select("id, user_id, email")
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", id)
+    .maybeSingle();
+  if (fetchErr) return { error: fetchErr.message };
+  if (!staff) return { error: t("missingFields") };
+
   const { error } = await supabase
     .from("inst_staff")
     .update({
@@ -712,9 +729,94 @@ export async function updateStaffMember(
     .eq("tenant_id", session.tenant.id)
     .eq("id", id);
   if (error) return { error: error.message };
+
+  if (tenantRoleId) {
+    if (staff.user_id) {
+      await supabase
+        .from("memberships")
+        .update({ tenant_role_id: tenantRoleId })
+        .eq("tenant_id", session.tenant.id)
+        .eq("user_id", staff.user_id);
+    } else {
+      const { data: byStaff } = await supabase
+        .from("team_invitations")
+        .select("id")
+        .eq("tenant_id", session.tenant.id)
+        .eq("status", "pending")
+        .eq("staff_id", id)
+        .maybeSingle();
+
+      if (byStaff) {
+        await supabase
+          .from("team_invitations")
+          .update({ tenant_role_id: tenantRoleId })
+          .eq("id", byStaff.id);
+      } else {
+        const email =
+          String(formData.get("email") ?? "").trim().toLowerCase() ||
+          staff.email?.toLowerCase() ||
+          "";
+        if (email) {
+          await supabase
+            .from("team_invitations")
+            .update({ tenant_role_id: tenantRoleId })
+            .eq("tenant_id", session.tenant.id)
+            .eq("status", "pending")
+            .eq("email", email);
+        }
+      }
+    }
+  }
+
   revalidatePath("/institut/equipe");
   revalidatePath("/institut/rendez-vous");
   return { ok: true };
+}
+
+function generateTempPassword(length = 12): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+}
+
+export async function resetStaffPassword(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+    return { error: t("teamInviteForbidden") };
+  }
+
+  const staffId = String(formData.get("staff_id") ?? "").trim();
+  if (!staffId) return { error: t("missingFields") };
+
+  const supabase = await createClient();
+  const { data: staff } = await supabase
+    .from("inst_staff")
+    .select("id, user_id")
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", staffId)
+    .maybeSingle();
+  if (!staff?.user_id) return { error: t("staffNoAccount") };
+
+  let service;
+  try {
+    const { createServiceClient } = await import("@/lib/supabase/service");
+    service = createServiceClient();
+  } catch {
+    return { error: t("serverConfigIncomplete") };
+  }
+
+  const temporaryPassword = generateTempPassword();
+  const { error } = await service.auth.admin.updateUserById(staff.user_id, {
+    password: temporaryPassword,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/institut/equipe");
+  return { ok: true, temporaryPassword };
 }
 
 export async function inviteTeamMember(

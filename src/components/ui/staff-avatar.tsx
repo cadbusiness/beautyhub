@@ -5,16 +5,18 @@ import { cn } from "@/lib/utils";
 
 const DEFAULT_STAFF_COLOR = "#64748b";
 
-type StaffAvatarSize = "sm" | "md";
+type StaffAvatarSize = "sm" | "md" | "lg";
 
 const sizeClassByVariant: Record<StaffAvatarSize, string> = {
   sm: "h-6 w-6 text-[10px]",
   md: "h-8 w-8 text-[11px]",
+  lg: "h-16 w-16 text-lg",
 };
 
 const iconClassByVariant: Record<StaffAvatarSize, string> = {
   sm: "h-3.5 w-3.5",
   md: "h-4 w-4",
+  lg: "h-7 w-7",
 };
 
 export function getStaffInitials(name: string | null | undefined): string {
@@ -30,15 +32,33 @@ export function getStaffInitials(name: string | null | undefined): string {
 export function StaffAvatar({
   name,
   color,
+  imageUrl,
   size = "md",
   className,
 }: {
   name: string | null | undefined;
   color?: string | null;
+  imageUrl?: string | null;
   size?: StaffAvatarSize;
   className?: string;
 }) {
   const initials = getStaffInitials(name);
+
+  if (imageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={imageUrl}
+        alt=""
+        className={cn(
+          "inline-block rounded-full border border-slate-200 object-cover",
+          sizeClassByVariant[size],
+          className,
+        )}
+        aria-hidden
+      />
+    );
+  }
 
   return (
     <span

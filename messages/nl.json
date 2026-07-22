@@ -680,6 +680,8 @@
           "birthdayAuto": "Automatische verjaardagsbonus",
           "portalVisible": "Zichtbaar op het klantenportaal (/client/compte)",
           "active": "Programma actief",
+          "activate": "Activeren",
+          "deactivate": "Deactiveren",
           "saved": "Programma opgeslagen.",
           "duplicateProgram": "Dupliceren",
           "duplicateProgramTitle": "Programma dupliceren",

@@ -1216,6 +1216,8 @@
         },
         "program": {
           "active": "Active program",
+          "activate": "Activate",
+          "deactivate": "Deactivate",
           "description": "Name, wording of points and activation of the program.",
           "selectorLabel": "Program",
           "newProgram": "New program",

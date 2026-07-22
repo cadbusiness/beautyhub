@@ -108,6 +108,34 @@ export async function saveLoyaltyProgramSettings(
   return { ok: true, message: tSaved("saved") };
 }
 
+export async function setLoyaltyProgramActive(
+  programId: string,
+  isActive: boolean,
+): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  const program = await ensureLoyaltyProgram(supabase, session.tenant.id, programId);
+
+  if (isActive) {
+    await supabase
+      .from("inst_loyalty_programs")
+      .update({ is_active: false })
+      .eq("tenant_id", session.tenant.id)
+      .neq("id", program.id);
+  }
+
+  const { error } = await supabase
+    .from("inst_loyalty_programs")
+    .update({ is_active: isActive })
+    .eq("id", program.id)
+    .eq("tenant_id", session.tenant.id);
+
+  if (error) return { error: error.message };
+  revalidatePath(LOYALTY_PATH);
+  const tSaved = await getTranslations("institut.marketing.loyalty.program");
+  return { ok: true, message: tSaved("saved") };
+}
+
 export async function saveLoyaltyEarnRule(
   _prev: ActionResult,
   formData: FormData,

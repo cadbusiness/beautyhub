@@ -1216,6 +1216,8 @@
         },
         "program": {
           "active": "programa activo",
+          "activate": "Activar",
+          "deactivate": "Desactivar",
           "description": "Nombre, redacción de puntos y activación del programa.",
           "selectorLabel": "Programa",
           "newProgram": "Nuevo programa",

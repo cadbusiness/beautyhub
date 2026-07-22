@@ -680,6 +680,8 @@
           "birthdayAuto": "Envoi automatique du bonus anniversaire",
           "portalVisible": "Visible sur le portail cliente (/client/compte)",
           "active": "Programme actif",
+          "activate": "Activer",
+          "deactivate": "Désactiver",
           "saved": "Programme enregistré.",
           "duplicateProgram": "Dupliquer",
           "duplicateProgramTitle": "Dupliquer le programme",

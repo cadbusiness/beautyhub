@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { CopyPlus, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, CopyPlus, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -14,6 +14,7 @@ import {
   saveLoyaltyEarnRule,
   saveLoyaltyProgramSettings,
   saveLoyaltyReward,
+  setLoyaltyProgramActive,
   type ActionResult,
 } from "./loyalty-actions";
 import { Button } from "@/components/ui/button";
@@ -156,6 +157,7 @@ export function LoyaltyManager({
   const [editingReward, setEditingReward] = useState<LoyaltyReward | null>(null);
   const [pendingDelete, startDelete] = useTransition();
   const [duplicatePending, startDuplicate] = useTransition();
+  const [activePending, startActive] = useTransition();
 
   const { program, rules, rewards } = snapshot;
 
@@ -215,6 +217,13 @@ export function LoyaltyManager({
     });
   }
 
+  function handleSetActive(nextActive: boolean) {
+    startActive(async () => {
+      await setLoyaltyProgramActive(snapshot.program.id, nextActive);
+      router.refresh();
+    });
+  }
+
   return (
     <>
       <ListToolbar
@@ -235,31 +244,49 @@ export function LoyaltyManager({
           </div>
         }
       >
-        <div className="w-full sm:max-w-xs">
-          <label htmlFor="loyalty_program_picker" className="mb-1 block text-xs uppercase tracking-wide text-slate-500">
-            {t("program.selectorLabel")}
-          </label>
-          <Select
-            id="loyalty_program_picker"
-            value={selectedProgramId}
-            onChange={(e) => router.replace(`${pathname}?program=${e.target.value}`)}
-            className="h-9"
-          >
-            {snapshot.programs.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </Select>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <div className="relative min-w-0 max-w-full sm:max-w-xs">
+            <label htmlFor="loyalty_program_picker" className="sr-only">
+              {t("program.selectorLabel")}
+            </label>
+            <select
+              id="loyalty_program_picker"
+              value={selectedProgramId}
+              onChange={(e) => router.replace(`${pathname}?program=${e.target.value}`)}
+              className="h-9 w-full max-w-full cursor-pointer appearance-none truncate rounded-md border-0 bg-transparent py-0 pr-7 text-sm font-medium text-slate-900 outline-none focus:ring-2 focus:ring-ring/20"
+            >
+              {snapshot.programs.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          </div>
+          <ProgramStatusBadge status={programStatus} label={t(`programStatus.${programStatus}`)} />
+          {programStatus === "ready" ? (
+            <Button
+              type="button"
+              className="h-8"
+              disabled={activePending}
+              onClick={() => handleSetActive(true)}
+            >
+              {activePending ? "…" : t("program.activate")}
+            </Button>
+          ) : null}
+          {programStatus === "live" ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-8"
+              disabled={activePending}
+              onClick={() => handleSetActive(false)}
+            >
+              {activePending ? "…" : t("program.deactivate")}
+            </Button>
+          ) : null}
         </div>
       </ListToolbar>
-
-      <div className="border-b border-slate-200 px-4 py-2.5 lg:px-6">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-slate-600">{program.name}</p>
-          <ProgramStatusBadge status={programStatus} label={t(`programStatus.${programStatus}`)} />
-        </div>
-      </div>
 
       <PageTabs
         tabs={[
@@ -532,6 +559,7 @@ export function LoyaltyManager({
 
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input
+                key={`is_active-${program.is_active ? "1" : "0"}`}
                 type="checkbox"
                 name="is_active"
                 value="1"

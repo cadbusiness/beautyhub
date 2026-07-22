@@ -1282,6 +1282,7 @@
       },
       "dialog": {
         "createTitle": "Nieuwe behandeling",
+        "createExtraTitle": "Nieuwe extra",
         "editTitle": "Behandeling bewerken",
         "tabs": {
           "general": "Algemeen",
@@ -1297,6 +1298,7 @@
         "visibility": "Cataloguszichtbaarheid",
         "visibilityCatalog": "Klantencatalogus (hoofdbehandeling)",
         "visibilityExtraOnly": "Alleen extra (verborgen in catalogus)",
+        "visibilityExtraLockedHint": "Aangemaakt vanuit het extras-overzicht: dit item blijft een dedicated extra.",
         "imageLabel": "Afbeelding",
         "imageAfterCreate": "Sla de behandeling op en voeg daarna een afbeelding toe via bewerken.",
         "durationMin": "Duur (min)",
@@ -1312,6 +1314,7 @@
         "bookingModeManual": "Contact / maatwerk",
         "bookingModeHint": "Bruiloft make-up, events: kies « Offerteaanvraag » in plaats van de publieke agenda.",
         "createSubmit": "Behandeling aanmaken",
+        "createExtraSubmit": "Extra aanmaken",
         "editSubmit": "Opslaan",
         "submitting": "Opslaan…",
         "wizard": {

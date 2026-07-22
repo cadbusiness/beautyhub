@@ -1779,6 +1779,8 @@
         "bufferHint": "Tampons block out time before and after each appointment.",
         "createSubmit": "Create the service",
         "createTitle": "New service",
+        "createExtraTitle": "New extra",
+        "createExtraSubmit": "Create extra",
         "descriptionPlaceholder": "Optional — visible internally",
         "durationMin": "Duration (min)",
         "editSubmit": "Save",
@@ -1822,6 +1824,7 @@
         "visibility": "Catalog visibility",
         "visibilityCatalog": "Customer catalog (main service)",
         "visibilityExtraOnly": "Extra only (hidden from catalog)",
+        "visibilityExtraLockedHint": "Created from the extras directory: this item stays a dedicated extra.",
         "visibleHint": "Disabled to hide from customers and checkout.",
         "visibleLabel": "Visible",
         "wizard": {

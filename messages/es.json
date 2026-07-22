@@ -1776,6 +1776,8 @@
         "bufferHint": "Los tampones bloquean el tiempo antes y después de cada cita.",
         "createSubmit": "Crear el servicio",
         "createTitle": "Nuevo servicio",
+        "createExtraTitle": "Nuevo extra",
+        "createExtraSubmit": "Crear extra",
         "descriptionPlaceholder": "Opcional: visible internamente",
         "durationMin": "Duración (min)",
         "editSubmit": "Ahorrar",
@@ -1819,6 +1821,7 @@
         "visibility": "Visibilidad del catálogo",
         "visibilityCatalog": "Catálogo de clientes (servicio principal)",
         "visibilityExtraOnly": "Solo extra (oculto del catálogo)",
+        "visibilityExtraLockedHint": "Creado desde el repertorio de extras: este elemento se mantiene como extra dedicado.",
         "visibleHint": "Deshabilitado para ocultarse de los clientes y realizar el pago.",
         "visibleLabel": "Visible",
         "wizard": {

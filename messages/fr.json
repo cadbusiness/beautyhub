@@ -1282,6 +1282,7 @@
       },
       "dialog": {
         "createTitle": "Nouvelle prestation",
+        "createExtraTitle": "Nouvel extra",
         "editTitle": "Modifier prestation",
         "tabs": {
           "general": "Général",
@@ -1297,6 +1298,7 @@
         "visibility": "Visibilité catalogue",
         "visibilityCatalog": "Catalogue client (prestation principale)",
         "visibilityExtraOnly": "Extra uniquement (masquée du catalogue)",
+        "visibilityExtraLockedHint": "Création depuis le répertoire extras : ce type reste un extra dédié.",
         "imageLabel": "Image",
         "imageAfterCreate": "Enregistrez la prestation, puis ajoutez une image en la modifiant.",
         "durationMin": "Durée (min)",
@@ -1312,6 +1314,7 @@
         "bookingModeManual": "Contact / sur mesure",
         "bookingModeHint": "Make-up mariage, événements : choisissez « Demande de devis » pour remplacer le calendrier public.",
         "createSubmit": "Créer la prestation",
+        "createExtraSubmit": "Créer l'extra",
         "editSubmit": "Enregistrer",
         "submitting": "Enregistrement…",
         "wizard": {

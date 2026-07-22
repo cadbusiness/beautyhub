@@ -149,6 +149,7 @@ export function ServiceDialog({
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [stepError, setStepError] = useState<string | null>(null);
   const isEdit = Boolean(service);
+  const isCreatingExtra = !isEdit && createVisibility === "extra_only";
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "general", label: t("tabs.general") },
@@ -221,6 +222,18 @@ export function ServiceDialog({
   }
 
   const visibilityValue = service?.visibility === "extra_only" ? "extra_only" : createVisibility;
+  const title = isEdit
+    ? t("editTitle")
+    : isCreatingExtra
+      ? t("createExtraTitle")
+      : t("createTitle");
+  const submitLabel = pending
+    ? t("submitting")
+    : isEdit
+      ? t("editSubmit")
+      : isCreatingExtra
+        ? t("createExtraSubmit")
+        : t("createSubmit");
 
   return (
     <dialog
@@ -239,9 +252,7 @@ export function ServiceDialog({
         <input type="hidden" name="extras_step_position" value={extrasStepPosition} />
 
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 className="text-base font-semibold text-slate-900">
-            {isEdit ? t("editTitle") : t("createTitle")}
-          </h2>
+          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -341,18 +352,28 @@ export function ServiceDialog({
               </span>
             </label>
 
-            <Field label={t("visibility")} htmlFor="visibility">
-              <select
-                key={`visibility-${service?.id ?? createVisibility}`}
-                id="visibility"
-                name="visibility"
-                defaultValue={visibilityValue}
-                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
-              >
-                <option value="catalog">{t("visibilityCatalog")}</option>
-                <option value="extra_only">{t("visibilityExtraOnly")}</option>
-              </select>
-            </Field>
+            {isCreatingExtra ? (
+              <Field label={t("visibility")} htmlFor="visibility">
+                <input type="hidden" id="visibility" name="visibility" value="extra_only" />
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                  <span className="font-medium">{t("visibilityExtraOnly")}</span>
+                  <p className="mt-0.5 text-xs text-slate-500">{t("visibilityExtraLockedHint")}</p>
+                </div>
+              </Field>
+            ) : (
+              <Field label={t("visibility")} htmlFor="visibility">
+                <select
+                  key={`visibility-${service?.id ?? createVisibility}`}
+                  id="visibility"
+                  name="visibility"
+                  defaultValue={visibilityValue}
+                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
+                >
+                  <option value="catalog">{t("visibilityCatalog")}</option>
+                  <option value="extra_only">{t("visibilityExtraOnly")}</option>
+                </select>
+              </Field>
+            )}
 
             <Field label={t("imageLabel")} htmlFor="service_image">
               <ServiceImageField
@@ -455,11 +476,7 @@ export function ServiceDialog({
             {tCommon("cancel")}
           </Button>
           <Button type="submit" disabled={pending}>
-            {pending
-              ? t("submitting")
-              : isEdit
-                ? t("editSubmit")
-                : t("createSubmit")}
+            {submitLabel}
           </Button>
         </div>
       </form>

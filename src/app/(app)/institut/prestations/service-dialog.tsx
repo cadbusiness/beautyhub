@@ -151,12 +151,14 @@ export function ServiceDialog({
   const isEdit = Boolean(service);
   const isCreatingExtra = !isEdit && createVisibility === "extra_only";
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "general", label: t("tabs.general") },
-    { id: "time", label: t("tabs.time") },
-    { id: "advanced", label: t("tabs.advanced") },
-    { id: "extras", label: t("tabs.extras") },
-  ];
+  const tabs: { id: Tab; label: string }[] = isCreatingExtra
+    ? [{ id: "general", label: t("tabs.general") }]
+    : [
+        { id: "general", label: t("tabs.general") },
+        { id: "time", label: t("tabs.time") },
+        { id: "advanced", label: t("tabs.advanced") },
+        { id: "extras", label: t("tabs.extras") },
+      ];
 
   const action = isEdit ? updateService : createService;
   const [state, formAction, pending] = useActionState(action, initial);
@@ -215,7 +217,7 @@ export function ServiceDialog({
     if (!Number.isFinite(duration) || duration < 1) {
       e.preventDefault();
       setStepError(t("wizard.durationRequired"));
-      setTab("time");
+      setTab(isCreatingExtra ? "general" : "time");
       return;
     }
     setStepError(null);
@@ -281,7 +283,7 @@ export function ServiceDialog({
               </button>
             ))}
           </div>
-        ) : (
+        ) : isCreatingExtra ? null : (
           <ServiceStepNav
             steps={tabs}
             current={tab}
@@ -307,6 +309,19 @@ export function ServiceDialog({
                 defaultValue={service?.name ?? ""}
               />
             </Field>
+
+            {isCreatingExtra ? (
+              <Field label={t("durationMin")} htmlFor="duration_min">
+                <Input
+                  id="duration_min"
+                  name="duration_min"
+                  type="number"
+                  min={1}
+                  defaultValue={service?.duration_min ?? 15}
+                  required
+                />
+              </Field>
+            ) : null}
 
             <div className="grid grid-cols-[72px_1fr] gap-4">
               <Field label={tCommon("color")} htmlFor="color">

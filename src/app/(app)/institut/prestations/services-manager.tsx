@@ -94,7 +94,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
   const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [scope, setScope] = useState<Scope>("extra_only");
+  const [scope, setScope] = useState<Scope>("all");
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceRow | null>(null);

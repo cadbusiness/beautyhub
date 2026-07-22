@@ -68,7 +68,7 @@ function ProgramStatusBadge({ status, label }: { status: ProgramStatus; label: s
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
+        "inline-flex h-6 shrink-0 items-center rounded-full px-2 text-xs font-medium leading-none",
         status === "live" && "bg-green-100 text-green-700",
         status === "ready" && "bg-amber-100 text-amber-800",
         status === "draft" && "bg-slate-100 text-slate-600",
@@ -120,12 +120,14 @@ function ProgramPicker({
         aria-haspopup="listbox"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "inline-flex max-w-full items-center gap-1 rounded-md py-1 pl-1.5 pr-1 text-left transition-colors",
+          "-ml-1.5 inline-flex h-9 max-w-full items-center gap-1 rounded-md px-1.5 text-left transition-colors",
           "hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20",
           open && "bg-slate-100",
         )}
       >
-        <span className="truncate text-sm font-medium text-slate-900">{selected?.name}</span>
+        <span className="truncate text-sm font-medium leading-none text-slate-900">
+          {selected?.name}
+        </span>
         <ChevronDown
           className={cn(
             "h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform",
@@ -336,7 +338,7 @@ export function LoyaltyManager({
           </div>
         }
       >
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
           <ProgramPicker
             programs={snapshot.programs}
             selectedId={selectedProgramId}
@@ -349,7 +351,7 @@ export function LoyaltyManager({
               type="button"
               disabled={activePending}
               onClick={() => handleSetActive(true)}
-              className="shrink-0 text-xs font-medium text-amber-800 underline-offset-2 hover:underline disabled:opacity-50"
+              className="inline-flex h-6 shrink-0 items-center text-xs font-medium text-amber-800 underline-offset-2 hover:underline disabled:opacity-50"
             >
               {activePending ? "…" : t("program.activate")}
             </button>
@@ -359,7 +361,7 @@ export function LoyaltyManager({
               type="button"
               disabled={activePending}
               onClick={() => handleSetActive(false)}
-              className="shrink-0 text-xs font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline disabled:opacity-50"
+              className="inline-flex h-6 shrink-0 items-center text-xs font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline disabled:opacity-50"
             >
               {activePending ? "…" : t("program.deactivate")}
             </button>
@@ -379,22 +381,19 @@ export function LoyaltyManager({
 
       {section === "rules" ? (
         <>
-      {!hasRules ? (
-        <div className="flex justify-end border-b border-slate-200 px-4 py-2 lg:px-6">
-          <StarterPackButton label={t("starterPack")} programId={snapshot.program.id} />
-        </div>
-      ) : null}
       <ListToolbar
+        trailing={
+          !hasRules ? (
+            <StarterPackButton label={t("starterPack")} programId={snapshot.program.id} />
+          ) : undefined
+        }
         action={
           <Button onClick={openCreateRule} className="h-9 w-full sm:w-auto">
             + {t("rules.add")}
           </Button>
         }
       >
-        <div>
-          <p className="text-sm font-medium text-slate-700">{t("rules.title")}</p>
-          <p className="text-xs text-slate-500">{t("rules.hint")}</p>
-        </div>
+        <p className="text-xs text-slate-500">{t("rules.hint")}</p>
       </ListToolbar>
       <DataTable>
         <table className="w-full text-sm">
@@ -464,10 +463,7 @@ export function LoyaltyManager({
               </Button>
             }
           >
-            <div>
-              <p className="text-sm font-medium text-slate-700">{t("rewards.title")}</p>
-              <p className="text-xs text-slate-500">{t("rewards.hint")}</p>
-            </div>
+            <p className="text-xs text-slate-500">{t("rewards.hint")}</p>
           </ListToolbar>
           <DataTable>
             <table className="w-full text-sm">
@@ -541,21 +537,12 @@ export function LoyaltyManager({
 
       {section === "program" ? (
         <>
-          <div className="border-t border-slate-200 px-4 py-3 lg:px-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-medium text-slate-700">{t("program.title")}</p>
-              <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                {t("program.scopeBadge")}
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-slate-500">{t("program.globalHint")}</p>
+          <div className="border-b border-slate-200 px-4 py-2.5 lg:px-6">
+            <p className="text-xs text-slate-500">{t("program.globalHint")}</p>
           </div>
           <form
             action={programAction}
-            className={cn(
-              "space-y-4 border-t border-slate-200 px-4 py-4 lg:px-6",
-              "bg-slate-50/50",
-            )}
+            className="space-y-4 px-4 py-4 lg:px-6"
           >
             <input type="hidden" name="program_id" value={snapshot.program.id} />
             {programState.error ? (

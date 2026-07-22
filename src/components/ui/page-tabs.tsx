@@ -18,11 +18,12 @@ export type PageTabLinkItem = {
   count?: number;
 };
 
-const tabBarClass = "flex gap-1 overflow-x-auto border-b border-slate-200 px-4 lg:px-6";
+/** Même inset que ListToolbar / DataTable (`px-4 lg:px-6`) — pas de padding horizontal sur l’item. */
+const tabBarClass = "flex gap-5 overflow-x-auto border-b border-slate-200 px-4 lg:px-6";
 
 function tabItemClass(active: boolean) {
   return cn(
-    "-mb-px shrink-0 border-b-2 px-4 py-2.5 text-sm transition-colors",
+    "-mb-px shrink-0 border-b-2 py-2.5 text-sm transition-colors",
     active
       ? "border-slate-900 font-medium text-slate-900"
       : "border-transparent text-slate-600 hover:text-slate-900",

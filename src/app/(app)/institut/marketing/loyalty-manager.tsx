@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, CopyPlus, Pencil, Trash2 } from "lucide-react";
+import { Check, ChevronDown, CopyPlus, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -32,6 +32,7 @@ import {
   type LoyaltyCalcMode,
   type LoyaltyEarnRule,
   type LoyaltyIntegrations,
+  type LoyaltyProgramListItem,
   type LoyaltyProgramSnapshot,
   type LoyaltyReward,
   type LoyaltyRewardType,
@@ -75,6 +76,97 @@ function ProgramStatusBadge({ status, label }: { status: ProgramStatus; label: s
     >
       {label}
     </span>
+  );
+}
+
+function ProgramPicker({
+  programs,
+  selectedId,
+  label,
+  onSelect,
+}: {
+  programs: LoyaltyProgramListItem[];
+  selectedId: string;
+  label: string;
+  onSelect: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selected = programs.find((p) => p.id === selectedId) ?? programs[0];
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: MouseEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative min-w-0">
+      <button
+        type="button"
+        id="loyalty_program_picker"
+        aria-label={label}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "inline-flex max-w-full items-center gap-1 rounded-md py-1 pl-1.5 pr-1 text-left transition-colors",
+          "hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20",
+          open && "bg-slate-100",
+        )}
+      >
+        <span className="truncate text-sm font-medium text-slate-900">{selected?.name}</span>
+        <ChevronDown
+          className={cn(
+            "h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+
+      {open ? (
+        <div
+          role="listbox"
+          aria-labelledby="loyalty_program_picker"
+          className="absolute left-0 top-full z-50 mt-1 min-w-[14rem] max-w-[min(100vw-2rem,20rem)] overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+        >
+          {programs.map((p) => {
+            const isSelected = p.id === selectedId;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                onClick={() => {
+                  setOpen(false);
+                  if (p.id !== selectedId) onSelect(p.id);
+                }}
+                className={cn(
+                  "flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors",
+                  isSelected
+                    ? "bg-slate-50 font-medium text-slate-900"
+                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-900",
+                )}
+              >
+                <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                {isSelected ? <Check className="h-3.5 w-3.5 shrink-0 text-slate-500" /> : null}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -244,46 +336,33 @@ export function LoyaltyManager({
           </div>
         }
       >
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <div className="relative min-w-0 max-w-full sm:max-w-xs">
-            <label htmlFor="loyalty_program_picker" className="sr-only">
-              {t("program.selectorLabel")}
-            </label>
-            <select
-              id="loyalty_program_picker"
-              value={selectedProgramId}
-              onChange={(e) => router.replace(`${pathname}?program=${e.target.value}`)}
-              className="h-9 w-full max-w-full cursor-pointer appearance-none truncate rounded-md border-0 bg-transparent py-0 pr-7 text-sm font-medium text-slate-900 outline-none focus:ring-2 focus:ring-ring/20"
-            >
-              {snapshot.programs.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          </div>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          <ProgramPicker
+            programs={snapshot.programs}
+            selectedId={selectedProgramId}
+            label={t("program.selectorLabel")}
+            onSelect={(id) => router.replace(`${pathname}?program=${id}`)}
+          />
           <ProgramStatusBadge status={programStatus} label={t(`programStatus.${programStatus}`)} />
           {programStatus === "ready" ? (
-            <Button
+            <button
               type="button"
-              className="h-8"
               disabled={activePending}
               onClick={() => handleSetActive(true)}
+              className="shrink-0 text-xs font-medium text-amber-800 underline-offset-2 hover:underline disabled:opacity-50"
             >
               {activePending ? "…" : t("program.activate")}
-            </Button>
+            </button>
           ) : null}
           {programStatus === "live" ? (
-            <Button
+            <button
               type="button"
-              variant="outline"
-              className="h-8"
               disabled={activePending}
               onClick={() => handleSetActive(false)}
+              className="shrink-0 text-xs font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline disabled:opacity-50"
             >
               {activePending ? "…" : t("program.deactivate")}
-            </Button>
+            </button>
           ) : null}
         </div>
       </ListToolbar>

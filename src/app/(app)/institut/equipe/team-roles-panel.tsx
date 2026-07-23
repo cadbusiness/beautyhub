@@ -12,6 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { FormDialog } from "@/components/ui/form-dialog";
+import {
+  DataTable,
+  dataTableCell,
+  dataTableHead,
+  dataTableRow,
+} from "@/components/ui/data-table";
+import { ListPanelFooter } from "@/components/ui/list-panel";
+import { ListToolbar } from "@/components/ui/list-toolbar";
 import { RowActionButton, RowActions } from "@/components/ui/row-actions";
 import {
   INSTITUT_PERMISSION_SECTIONS,
@@ -124,6 +132,7 @@ function RoleForm({
 
 export function TeamRolesPanel({ roles }: { roles: TenantRole[] }) {
   const t = useTranslations("institut.team.roles");
+  const tCommon = useTranslations("common");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TenantRole | null>(null);
 
@@ -139,44 +148,73 @@ export function TeamRolesPanel({ roles }: { roles: TenantRole[] }) {
 
   return (
     <>
-      <div className="px-4 py-4 lg:px-6">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <p className="text-sm text-slate-600">{t("description")}</p>
+      <ListToolbar
+        action={
           <Button onClick={openCreate} className="h-9 shrink-0">
             + {t("create")}
           </Button>
-        </div>
-        <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
-          {roles.map((role) => (
-            <li key={role.id} className="flex items-start justify-between gap-3 px-4 py-3">
-              <div className="min-w-0">
-                <p className="font-medium text-slate-900">
-                  {role.name}
-                  {role.is_system ? (
-                    <span className="ml-2 text-xs font-normal text-slate-400">{t("systemBadge")}</span>
-                  ) : null}
-                </p>
-                {role.description ? (
-                  <p className="mt-0.5 text-sm text-slate-500">{role.description}</p>
-                ) : null}
-              </div>
-              <RowActions className="shrink-0">
-                <RowActionButton type="button" onClick={() => openEdit(role)} icon={<Pencil className="h-3.5 w-3.5" />}>
-                  {t("edit")}
-                </RowActionButton>
-                {!role.is_system ? (
-                  <form action={deleteTenantRole}>
-                    <input type="hidden" name="role_id" value={role.id} />
-                    <RowActionButton type="submit" tone="danger" icon={<Trash2 className="h-3.5 w-3.5" />}>
-                      {t("delete")}
-                    </RowActionButton>
-                  </form>
-                ) : null}
-              </RowActions>
-            </li>
-          ))}
-        </ul>
-      </div>
+        }
+      >
+        <p className="text-sm text-slate-600">{t("description")}</p>
+      </ListToolbar>
+
+      <DataTable empty={roles.length === 0 ? t("empty") : undefined}>
+        {roles.length > 0 ? (
+          <table className="w-full text-sm">
+            <thead className="border-b border-slate-200">
+              <tr>
+                <th className={dataTableHead}>{t("name")}</th>
+                <th className={dataTableHead}>{t("roleDescription")}</th>
+                <th className={`w-36 text-right ${dataTableHead}`}>{t("columns.actions")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roles.map((role) => (
+                <tr key={role.id} className={dataTableRow}>
+                  <td className={`font-medium text-slate-900 ${dataTableCell}`}>
+                    {role.name}
+                    {role.is_system ? (
+                      <span className="ml-2 text-xs font-normal text-slate-400">
+                        {t("systemBadge")}
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className={`text-slate-500 ${dataTableCell}`}>
+                    {role.description ?? tCommon("dash")}
+                  </td>
+                  <td className={`text-right ${dataTableCell}`}>
+                    <RowActions className="justify-end">
+                      <RowActionButton
+                        type="button"
+                        onClick={() => openEdit(role)}
+                        icon={<Pencil className="h-3.5 w-3.5" />}
+                      >
+                        {t("edit")}
+                      </RowActionButton>
+                      {!role.is_system ? (
+                        <form action={deleteTenantRole}>
+                          <input type="hidden" name="role_id" value={role.id} />
+                          <RowActionButton
+                            type="submit"
+                            tone="danger"
+                            icon={<Trash2 className="h-3.5 w-3.5" />}
+                          >
+                            {t("delete")}
+                          </RowActionButton>
+                        </form>
+                      ) : null}
+                    </RowActions>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : null}
+      </DataTable>
+
+      {roles.length > 0 ? (
+        <ListPanelFooter>{t("footer", { count: roles.length })}</ListPanelFooter>
+      ) : null}
 
       <FormDialog
         open={dialogOpen}

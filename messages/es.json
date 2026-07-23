@@ -2099,29 +2099,34 @@
       "roles": {
         "create": "Nuevo rol",
         "createTitle": "Crear un rol",
-        "delete": "BORRAR",
+        "delete": "Eliminar",
         "description": "Defina lo que cada rol puede ver y modificar en el espacio del instituto.",
-        "edit": "para modificar",
+        "edit": "Editar",
         "editTitle": "Editar rol",
+        "empty": "Ningún rol configurado.",
+        "footer": "{count, plural, one {# rol} other {# roles}}",
+        "columns": {
+          "actions": "Acciones"
+        },
         "fullAccess": "Acceso completo",
         "name": "Nombre del rol",
         "permissions": "Permisos",
         "read": "Lectura",
         "roleDescription": "Descripción",
         "sections": {
-          "appointments": "Cita",
+          "appointments": "Citas",
           "clients": "Clientes",
-          "dashboard": "Bienvenido",
+          "dashboard": "Inicio",
           "marketing": "Marketing",
           "pos": "Caja",
           "services": "Servicios",
           "team": "Equipo"
         },
         "submitCreate": "Crear el rol",
-        "submitEdit": "Ahorrar",
-        "submitting": "Registro…",
+        "submitEdit": "Guardar",
+        "submitting": "Guardando…",
         "systemBadge": "Sistema",
-        "write": "Escribiendo"
+        "write": "Escritura"
       },
       "schedules": {
         "addBlock": "Playa",

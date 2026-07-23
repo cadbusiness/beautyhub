@@ -22,6 +22,7 @@ Après **toute** livraison (feature, fix, refactor, migration), committer et `gi
 
 Pages dans `src/app/(app)/` : réutiliser `ListPanel`, `ListToolbar`, `DataTable`, `FormDialog`.
 
+- **Bord à bord** : listes, grilles, calendriers flush dans `ListPanel` — **jamais** de padding externe ni carte inset (`p-4` + `rounded-* border` / `Card`) autour du contenu.
 - **Sous `SectionPanel`** (tabs marketing/caisse) : ne **pas** imbriquer `ListPanel` (double `-mx` → contenu qui touche les bords). Voir `products-manager.tsx`, `loyalty-manager.tsx`.
 - Stats compactes (label xs + chiffre), pas de grosses tuiles KPI.
 - Référence : `.cursor/rules/ui-list-pages.mdc` et `.cursor/rules/ui-shell-design.mdc`.

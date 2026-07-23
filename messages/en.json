@@ -2102,29 +2102,34 @@
       "roles": {
         "create": "New role",
         "createTitle": "Create a role",
-        "delete": "DELETE",
+        "delete": "Delete",
         "description": "Define what each role can see and modify in the institute space.",
-        "edit": "To modify",
+        "edit": "Edit",
         "editTitle": "Edit role",
+        "empty": "No roles configured.",
+        "footer": "{count, plural, one {# role} other {# roles}}",
+        "columns": {
+          "actions": "Actions"
+        },
         "fullAccess": "Full access",
         "name": "Role name",
         "permissions": "Permissions",
-        "read": "Reading",
+        "read": "Read",
         "roleDescription": "Description",
         "sections": {
-          "appointments": "Appointment",
-          "clients": "Customers",
-          "dashboard": "Welcome",
+          "appointments": "Appointments",
+          "clients": "Clients",
+          "dashboard": "Home",
           "marketing": "Marketing",
-          "pos": "Box",
+          "pos": "POS",
           "services": "Services",
           "team": "Team"
         },
-        "submitCreate": "Create the role",
+        "submitCreate": "Create role",
         "submitEdit": "Save",
-        "submitting": "Registration…",
+        "submitting": "Saving…",
         "systemBadge": "System",
-        "write": "Writing"
+        "write": "Write"
       },
       "schedules": {
         "addBlock": "Beach",

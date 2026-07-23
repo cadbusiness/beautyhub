@@ -1525,6 +1525,11 @@
         "systemBadge": "Système",
         "name": "Nom du rôle",
         "roleDescription": "Description",
+        "empty": "Aucun rôle configuré.",
+        "footer": "{count, plural, one {# rôle} other {# rôles}}",
+        "columns": {
+          "actions": "Actions"
+        },
         "permissions": "Permissions",
         "fullAccess": "Accès complet",
         "read": "Lecture",

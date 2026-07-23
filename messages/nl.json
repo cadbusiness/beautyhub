@@ -1525,6 +1525,11 @@
         "systemBadge": "Systeem",
         "name": "Rolnaam",
         "roleDescription": "Beschrijving",
+        "empty": "Geen rollen geconfigureerd.",
+        "footer": "{count, plural, one {# rol} other {# rollen}}",
+        "columns": {
+          "actions": "Acties"
+        },
         "permissions": "Rechten",
         "fullAccess": "Volledige toegang",
         "read": "Lezen",

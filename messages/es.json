@@ -2646,7 +2646,13 @@
       "giftForm": {
         "amount": "Importe (€)",
         "recipient": "Destinatario (opcional)",
-        "submit": "Emitir el bono"
+        "submit": "Emitir el bono",
+        "message": "Mensaje (opcional)",
+        "messagePlaceholder": "Feliz cumpleaños…",
+        "template": "Plantilla PDF",
+        "templateDefault": "Plantilla por defecto",
+        "defaultTag": "defecto",
+        "downloadPdf": "Descargar PDF"
       },
       "voucherForm": {
         "typeVoucher": "Voucher estándar",
@@ -2666,6 +2672,38 @@
         "cancelled": "Cancelado",
         "depleted": "Exhausto",
         "expired": "Caducado"
+      },
+      "downloadPdf": "Descargar PDF",
+      "templates": {
+        "description": "Fondo y textos de las tarjetas regalo PDF.",
+        "new": "Nueva plantilla",
+        "empty": "Sin plantillas. Cree una para generar los PDF.",
+        "defaultBadge": "Por defecto",
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "dialogNew": "Nueva plantilla",
+        "dialogEdit": "Editar plantilla",
+        "columns": {
+          "name": "Nombre",
+          "title": "Título",
+          "status": "Estado",
+          "actions": "Acciones"
+        },
+        "form": {
+          "name": "Nombre",
+          "title": "Título",
+          "subtitle": "Subtítulo",
+          "footer": "Pie de página",
+          "placeholdersHint": "Marcadores: {code}, {amount}, {recipient}, {message}, {expires}",
+          "background": "Imagen de fondo",
+          "default": "Plantilla por defecto",
+          "active": "Activo"
+        },
+        "actions": {
+          "nameRequired": "El nombre es obligatorio.",
+          "invalidImage": "Imagen no válida (JPEG, PNG o WebP).",
+          "saved": "Plantilla guardada."
+        }
       }
     }
   },

@@ -1,10 +1,9 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
-import { PrintVoucherButton } from "./print-button";
-
 export default async function VoucherDocumentPage({
   params,
 }: {
@@ -12,7 +11,6 @@ export default async function VoucherDocumentPage({
 }) {
   const { id } = await params;
   const t = await getTranslations("pos.vouchers");
-  const tTicket = await getTranslations("pos.ticket");
   const format = await getFormatter();
   const session = await requireModule("institut");
   const supabase = await createClient();
@@ -36,16 +34,23 @@ export default async function VoucherDocumentPage({
   if (!voucher) notFound();
 
   return (
-    <div className="mx-auto max-w-xl bg-white p-8 print:p-4">
-      <div className="mb-6 flex items-start justify-between border-b border-dashed border-slate-300 pb-3">
+    <div className="mx-auto max-w-xl space-y-5 bg-white p-8">
+      <div className="flex items-start justify-between border-b border-slate-200 pb-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-slate-500">{t("vouchersTitle")}</p>
           <h1 className="font-mono text-xl font-semibold text-slate-900">{voucher.code}</h1>
           <p className="text-sm text-slate-500">
-            {t(`types.${voucher.voucher_type as "voucher"}`)} · {t(`status.${voucher.status as "active"}`)}
+            {t(`types.${voucher.voucher_type as "voucher"}`)} ·{" "}
+            {t(`status.${voucher.status as "active"}`)}
           </p>
         </div>
-        <PrintVoucherButton label={tTicket("print")} />
+        <Link
+          href={`/api/institut/vouchers/${voucher.id}/pdf`}
+          target="_blank"
+          className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-sm text-slate-700 hover:bg-slate-50"
+        >
+          {t("downloadPdf")}
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
@@ -54,9 +59,7 @@ export default async function VoucherDocumentPage({
           <p className="mt-1 text-lg font-semibold text-slate-900">
             {formatPrice(voucher.current_balance_cents)}
           </p>
-          <p className="text-xs text-slate-500">
-            / {formatPrice(voucher.initial_amount_cents)}
-          </p>
+          <p className="text-xs text-slate-500">/ {formatPrice(voucher.initial_amount_cents)}</p>
         </div>
         <div className="rounded border border-slate-200 p-3">
           <p className="text-xs uppercase tracking-wide text-slate-500">{t("columns.date")}</p>
@@ -66,47 +69,31 @@ export default async function VoucherDocumentPage({
               timeStyle: "short",
             })}
           </p>
-          {voucher.expires_at ? (
-            <p className="mt-1 text-xs text-slate-500">
-              Exp:{" "}
-              {format.dateTime(new Date(voucher.expires_at), {
-                dateStyle: "short",
-              })}
-            </p>
-          ) : null}
         </div>
       </div>
 
-      <div className="mt-5">
-        <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-          {t("columns.lastEvent")}
-        </h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-              <th className="py-2">{t("columns.date")}</th>
-              <th className="py-2">{t("columns.type")}</th>
-              <th className="py-2 text-right">{t("columns.balance")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(events ?? []).map((event) => (
-              <tr key={event.id} className="border-b border-slate-100">
-                <td className="py-2 text-xs text-slate-500">
-                  {format.dateTime(new Date(event.created_at), {
+      {(events ?? []).length > 0 ? (
+        <div>
+          <p className="mb-2 text-xs uppercase tracking-wide text-slate-500">
+            {t("columns.lastEvent")}
+          </p>
+          <ul className="divide-y divide-slate-100 text-sm">
+            {(events ?? []).map((ev) => (
+              <li key={ev.id} className="flex justify-between py-2">
+                <span className="text-slate-700">
+                  {t(`events.${ev.event_type as "issue"}`)} · {formatPrice(ev.amount_cents)}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {format.dateTime(new Date(ev.created_at), {
                     dateStyle: "short",
                     timeStyle: "short",
                   })}
-                </td>
-                <td className="py-2 text-slate-800">{t(`events.${event.event_type as "issue"}`)}</td>
-                <td className="py-2 text-right tabular-nums text-slate-700">
-                  {formatPrice(event.balance_after_cents)}
-                </td>
-              </tr>
+                </span>
+              </li>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }

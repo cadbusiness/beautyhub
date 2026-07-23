@@ -215,3 +215,163 @@ export async function listVouchers(
   if (error) throw new Error(error.message);
   return data ?? [];
 }
+
+export interface IssueGiftCardWithPdfInput {
+  amountCents: number;
+  recipientName?: string | null;
+  message?: string | null;
+  templateId?: string | null;
+  sourceChannel?: VoucherSource;
+  clientId?: string | null;
+  expiresAt?: string | null;
+  wooOrderId?: number | null;
+  wooProductId?: number | null;
+  saleId?: string | null;
+  idempotencyKey?: string | null;
+  codePrefix?: string;
+  currency?: string;
+}
+
+export async function issueGiftCardWithPdf(
+  supabase: Db,
+  tenantId: string,
+  input: IssueGiftCardWithPdfInput,
+): Promise<{
+  id: string;
+  code: string;
+  current_balance_cents: number;
+  pdfPath: string | null;
+}> {
+  const { generateGiftCardCode } = await import("@/lib/institut/pos-session");
+  const {
+    ensureDefaultVoucherTemplate,
+    generateAndStoreGiftCardPdf,
+    getVoucherTemplateById,
+  } = await import("@/lib/institut/voucher-pdf");
+
+  if (input.amountCents <= 0) throw new Error("invalid_amount");
+
+  if (input.idempotencyKey?.trim()) {
+    const { data: existingEvent } = await supabase
+      .from("inst_voucher_events")
+      .select("voucher_id")
+      .eq("tenant_id", tenantId)
+      .eq("event_type", "issue")
+      .eq("idempotency_key", input.idempotencyKey.trim())
+      .maybeSingle();
+    if (existingEvent?.voucher_id) {
+      const { data: voucher } = await supabase
+        .from("inst_vouchers")
+        .select("id, code, current_balance_cents, metadata")
+        .eq("tenant_id", tenantId)
+        .eq("id", existingEvent.voucher_id)
+        .maybeSingle();
+      if (voucher) {
+        const meta =
+          voucher.metadata && typeof voucher.metadata === "object" && !Array.isArray(voucher.metadata)
+            ? (voucher.metadata as Record<string, unknown>)
+            : {};
+        return {
+          id: voucher.id,
+          code: voucher.code,
+          current_balance_cents: voucher.current_balance_cents,
+          pdfPath: typeof meta.pdf_path === "string" ? meta.pdf_path : null,
+        };
+      }
+    }
+  }
+
+  const template = input.templateId
+    ? ((await getVoucherTemplateById(supabase, tenantId, input.templateId)) ??
+      (await ensureDefaultVoucherTemplate(supabase, tenantId)))
+    : await ensureDefaultVoucherTemplate(supabase, tenantId);
+
+  const prefix = (input.codePrefix?.trim() || "GC").toUpperCase();
+  let code = generateGiftCardCode(prefix);
+  let voucher: { id: string; code: string; current_balance_cents: number } | null = null;
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      voucher = await issueVoucher(supabase, tenantId, {
+        code,
+        voucherType: "gift_card",
+        sourceChannel: input.sourceChannel ?? "pos",
+        amountCents: input.amountCents,
+        currency: input.currency,
+        recipientName: input.recipientName ?? null,
+        clientId: input.clientId ?? null,
+        expiresAt: input.expiresAt ?? null,
+        saleId: input.saleId ?? null,
+        wooOrderId: input.wooOrderId ?? null,
+        metadata: {
+          template_id: template?.id ?? null,
+          message: input.message?.trim() || null,
+          woo_product_id: input.wooProductId ?? null,
+          woo_order_id: input.wooOrderId ?? null,
+        },
+        idempotencyKey: input.idempotencyKey ?? null,
+      });
+      break;
+    } catch (e) {
+      const msg = (e as Error).message.toLowerCase();
+      if (msg.includes("duplicate") || msg.includes("unique")) {
+        code = generateGiftCardCode(prefix);
+        continue;
+      }
+      throw e;
+    }
+  }
+  if (!voucher) throw new Error("gift_card_create_failed");
+
+  let pdfPath: string | null = null;
+  if (template) {
+    try {
+      pdfPath = await generateAndStoreGiftCardPdf(
+        supabase,
+        tenantId,
+        voucher.id,
+        template,
+        {
+          code: voucher.code,
+          amountCents: input.amountCents,
+          recipientName: input.recipientName,
+          message: input.message,
+          expiresAt: input.expiresAt,
+          currency: input.currency,
+        },
+      );
+      const { data: current } = await supabase
+        .from("inst_vouchers")
+        .select("metadata")
+        .eq("id", voucher.id)
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      const prev =
+        current?.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+          ? (current.metadata as Record<string, unknown>)
+          : {};
+      await supabase
+        .from("inst_vouchers")
+        .update({
+          metadata: {
+            ...prev,
+            template_id: template.id,
+            message: input.message?.trim() || null,
+            pdf_path: pdfPath,
+            pdf_generated_at: new Date().toISOString(),
+          },
+        })
+        .eq("id", voucher.id)
+        .eq("tenant_id", tenantId);
+    } catch (e) {
+      console.error("[issueGiftCardWithPdf] pdf generation failed", e);
+    }
+  }
+
+  return {
+    id: voucher.id,
+    code: voucher.code,
+    current_balance_cents: voucher.current_balance_cents,
+    pdfPath,
+  };
+}

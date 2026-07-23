@@ -2852,7 +2852,13 @@
       "giftForm": {
         "amount": "Bedrag (€)",
         "recipient": "Ontvanger (optioneel)",
-        "submit": "Bon uitgeven"
+        "submit": "Bon uitgeven",
+        "message": "Bericht (optioneel)",
+        "messagePlaceholder": "Gefeliciteerd…",
+        "template": "PDF-sjabloon",
+        "templateDefault": "Standaardsjabloon",
+        "defaultTag": "standaard",
+        "downloadPdf": "PDF downloaden"
       },
       "creditForm": {
         "selectSale": "Bronverkoop",
@@ -2860,6 +2866,38 @@
         "amount": "Creditnota-bedrag (€)",
         "reason": "Reden",
         "submit": "Creditnota aanmaken"
+      },
+      "downloadPdf": "PDF downloaden",
+      "templates": {
+        "description": "Achtergrond en teksten voor cadeaubon-PDF's.",
+        "new": "Nieuw sjabloon",
+        "empty": "Geen sjablonen. Maak er een om PDF's te genereren.",
+        "defaultBadge": "Standaard",
+        "active": "Actief",
+        "inactive": "Inactief",
+        "dialogNew": "Nieuw sjabloon",
+        "dialogEdit": "Sjabloon bewerken",
+        "columns": {
+          "name": "Naam",
+          "title": "Titel",
+          "status": "Status",
+          "actions": "Acties"
+        },
+        "form": {
+          "name": "Naam",
+          "title": "Titel",
+          "subtitle": "Ondertitel",
+          "footer": "Voettekst",
+          "placeholdersHint": "Placeholders: {code}, {amount}, {recipient}, {message}, {expires}",
+          "background": "Achtergrondafbeelding",
+          "default": "Standaardsjabloon",
+          "active": "Actief"
+        },
+        "actions": {
+          "nameRequired": "Naam is verplicht.",
+          "invalidImage": "Ongeldige afbeelding (JPEG, PNG of WebP).",
+          "saved": "Sjabloon opgeslagen."
+        }
       }
     },
     "balance": {

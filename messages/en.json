@@ -2902,7 +2902,13 @@
       "giftForm": {
         "amount": "Amount (€)",
         "recipient": "Recipient (optional)",
-        "submit": "Issue the voucher"
+        "submit": "Issue the voucher",
+        "message": "Message (optional)",
+        "messagePlaceholder": "Happy birthday…",
+        "template": "PDF template",
+        "templateDefault": "Default template",
+        "defaultTag": "default",
+        "downloadPdf": "Download PDF"
       },
       "voucherForm": {
         "typeVoucher": "Standard voucher",
@@ -2922,6 +2928,38 @@
         "cancelled": "Canceled",
         "depleted": "Exhausted",
         "expired": "Expired"
+      },
+      "downloadPdf": "Download PDF",
+      "templates": {
+        "description": "Background and texts for gift card PDFs.",
+        "new": "New template",
+        "empty": "No templates. Create one to generate PDFs.",
+        "defaultBadge": "Default",
+        "active": "Active",
+        "inactive": "Inactive",
+        "dialogNew": "New template",
+        "dialogEdit": "Edit template",
+        "columns": {
+          "name": "Name",
+          "title": "Title",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "form": {
+          "name": "Name",
+          "title": "Title",
+          "subtitle": "Subtitle",
+          "footer": "Footer",
+          "placeholdersHint": "Placeholders: {code}, {amount}, {recipient}, {message}, {expires}",
+          "background": "Background image",
+          "default": "Default template",
+          "active": "Active"
+        },
+        "actions": {
+          "nameRequired": "Name is required.",
+          "invalidImage": "Invalid image (JPEG, PNG or WebP).",
+          "saved": "Template saved."
+        }
       }
     }
   },

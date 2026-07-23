@@ -39,16 +39,9 @@ export function getWooConnectorRelease(): ConnectorReleaseInfo {
     changelog: `
       <h4>${version}</h4>
       <ul>
-        <li>Filtre catégories Woo en caisse + pagination compacte</li>
-        <li>Webhooks produits envoient désormais les catégories Woo</li>
-        <li>Message d'erreur de connexion détaillé (fini le « Array » : cause réelle + code HTTP)</li>
-        <li>Nouvelle interface : header avec logo, bouton « Se connecter » en un clic, design pleine largeur</li>
-        <li>Protection anti-double-déclaration + garde version PHP (fin des erreurs fatales à l'activation)</li>
-        <li>Compatibilité PHP 7.1+ (correctif erreur fatale à l'activation)</li>
-        <li>Mises à jour automatiques depuis BeautyHub (comme Bruce Pilot)</li>
-        <li>Menu BeautyHub visible dans la barre latérale WordPress</li>
-        <li>Connexion en un clic sans clés API manuelles</li>
-        <li>Synchronisation stock bidirectionnelle boutique ↔ caisse</li>
+        <li>Cartes cadeaux BeautyHub : case produit, émission PDF à la commande, liens thank-you / e-mail</li>
+        <li>Webhooks order.completed enrichis (line items gift + billing)</li>
+        <li>Promos multi-canal (1.3.x) + vouchers redeem inchangés</li>
       </ul>
     `.trim(),
   };

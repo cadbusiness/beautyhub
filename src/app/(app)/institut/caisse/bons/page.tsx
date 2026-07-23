@@ -8,6 +8,7 @@ import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/compone
 import { GiftCardForm } from "./gift-card-form";
 import { CreditNoteForm } from "./credit-note-form";
 import { VoucherForm } from "./voucher-form";
+import { VoucherTemplatesManager } from "./voucher-templates-manager";
 import { voidVoucherDirect } from "../../caisse-session-actions";
 
 export default async function CaisseBonsPage() {
@@ -17,7 +18,7 @@ export default async function CaisseBonsPage() {
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
-  const [giftCards, creditNotes, partialSales, vouchers] = await Promise.all([
+  const [giftCards, creditNotes, partialSales, vouchers, templates] = await Promise.all([
     supabase
       .from("inst_gift_cards")
       .select("id, code, balance_cents, initial_balance_cents, status, recipient_name, created_at")
@@ -46,6 +47,11 @@ export default async function CaisseBonsPage() {
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(80),
+    supabase
+      .from("inst_voucher_templates")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false }),
   ]);
 
   const voucherIds = (vouchers.data ?? []).map((row) => row.id);
@@ -75,6 +81,8 @@ export default async function CaisseBonsPage() {
 
   return (
     <div className="space-y-6 px-4 py-4 lg:px-6">
+      <VoucherTemplatesManager templates={templates.data ?? []} />
+
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="space-y-4">
           <h2 className="text-sm font-medium text-slate-900">{t("issueVoucher")}</h2>
@@ -82,7 +90,7 @@ export default async function CaisseBonsPage() {
         </Card>
         <Card className="space-y-4">
           <h2 className="text-sm font-medium text-slate-900">{t("issueGiftCard")}</h2>
-          <GiftCardForm />
+          <GiftCardForm templates={templates.data ?? []} />
         </Card>
         <Card className="space-y-4">
           <h2 className="text-sm font-medium text-slate-900">{t("issueCreditNote")}</h2>

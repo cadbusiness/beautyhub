@@ -2862,6 +2862,7 @@
       "noGiftCards": "Aucun bon-cadeau.",
       "noCreditNotes": "Aucun avoir.",
       "openVoucher": "Document",
+      "downloadPdf": "Télécharger le PDF",
       "voidVoucher": "Annuler",
       "columns": {
         "code": "Code",
@@ -2905,7 +2906,44 @@
       "giftForm": {
         "amount": "Montant (€)",
         "recipient": "Destinataire (optionnel)",
+        "message": "Message (optionnel)",
+        "messagePlaceholder": "Joyeux anniversaire…",
+        "template": "Template PDF",
+        "templateDefault": "Template par défaut",
+        "defaultTag": "défaut",
+        "downloadPdf": "Télécharger le PDF",
         "submit": "Émettre le bon"
+      },
+      "templates": {
+        "description": "Fond et textes des cartes cadeaux PDF.",
+        "new": "Nouveau template",
+        "empty": "Aucun template. Créez-en un pour générer les PDF.",
+        "defaultBadge": "Défaut",
+        "active": "Actif",
+        "inactive": "Inactif",
+        "dialogNew": "Nouveau template",
+        "dialogEdit": "Modifier le template",
+        "columns": {
+          "name": "Nom",
+          "title": "Titre",
+          "status": "Statut",
+          "actions": "Actions"
+        },
+        "form": {
+          "name": "Nom",
+          "title": "Titre",
+          "subtitle": "Sous-titre",
+          "footer": "Pied de page",
+          "placeholdersHint": "Placeholders : {code}, {amount}, {recipient}, {message}, {expires}",
+          "background": "Image de fond",
+          "default": "Template par défaut",
+          "active": "Actif"
+        },
+        "actions": {
+          "nameRequired": "Le nom est requis.",
+          "invalidImage": "Image invalide (JPEG, PNG ou WebP).",
+          "saved": "Template enregistré."
+        }
       },
       "creditForm": {
         "selectSale": "Vente source",

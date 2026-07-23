@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { issueGiftCardsForWooOrder } from "@/lib/institut/woo-gift-cards";
 import { redeemVoucher } from "@/lib/institut/vouchers-core";
 import {
   applyWooStockUpdate,
@@ -148,8 +149,12 @@ export async function POST(
         );
         break;
       }
-      case "order.completed":
-        if (typeof payload.id === "number" && Array.isArray(payload.coupon_lines)) {
+      case "order.completed": {
+        if (typeof payload.id !== "number") {
+          return NextResponse.json({ error: "invalid_order" }, { status: 400 });
+        }
+
+        if (Array.isArray(payload.coupon_lines)) {
           for (const line of payload.coupon_lines) {
             if (
               typeof line === "object" &&
@@ -177,7 +182,30 @@ export async function POST(
             }
           }
         }
+
+        const billing =
+          typeof payload.billing === "object" && payload.billing !== null
+            ? (payload.billing as Record<string, unknown>)
+            : null;
+        const recipientName = [billing?.first_name, billing?.last_name]
+          .map((v) => (typeof v === "string" ? v.trim() : ""))
+          .filter(Boolean)
+          .join(" ");
+
+        await issueGiftCardsForWooOrder(
+          supabase,
+          connection.tenantId,
+          payload.id,
+          Array.isArray(payload.line_items)
+            ? (payload.line_items as Array<Record<string, unknown>>)
+            : [],
+          {
+            recipientName: recipientName || null,
+            currency: typeof payload.currency === "string" ? payload.currency : null,
+          },
+        );
         break;
+      }
       default:
         return NextResponse.json({ error: "unknown_event" }, { status: 400 });
     }

@@ -2521,6 +2521,59 @@ export type Database = {
           },
         ]
       }
+      inst_voucher_templates: {
+        Row: {
+          background_path: string | null
+          created_at: string
+          footer_text: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          layout: Json
+          name: string
+          subtitle: string
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          background_path?: string | null
+          created_at?: string
+          footer_text?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          layout?: Json
+          name: string
+          subtitle?: string
+          tenant_id: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          background_path?: string | null
+          created_at?: string
+          footer_text?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          layout?: Json
+          name?: string
+          subtitle?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_voucher_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_vouchers: {
         Row: {
           client_id: string | null

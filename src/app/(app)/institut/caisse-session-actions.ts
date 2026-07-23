@@ -204,15 +204,26 @@ export async function issueGiftCardAction(
   const amount = parseEurosCents(formData.get("amount"));
   if (amount <= 0) return { error: t("invalidAmount") };
 
-  const { issueGiftCard } = await import("@/lib/institut/pos-vouchers");
+  const { issueGiftCardWithPdf } = await import("@/lib/institut/vouchers-core");
+  const { getPosSettings } = await import("@/lib/institut/pos-settings");
   try {
-    const card = await issueGiftCard(supabase, session.tenant.id, {
+    const settings = await getPosSettings(supabase, session.tenant.id);
+    const card = await issueGiftCardWithPdf(supabase, session.tenant.id, {
       amountCents: amount,
       clientId: String(formData.get("client_id") ?? "") || null,
-      recipientName: String(formData.get("recipient_name") ?? "").trim() || undefined,
+      recipientName: String(formData.get("recipient_name") ?? "").trim() || null,
+      message: String(formData.get("message") ?? "").trim() || null,
+      templateId: String(formData.get("template_id") ?? "").trim() || null,
+      sourceChannel: "pos",
+      codePrefix: settings.gift_card_prefix || "GC",
+      currency: settings.currency,
     });
     revalidateSession();
-    return { ok: true, message: `${t("giftCardIssued")} · ${card.code}` };
+    return {
+      ok: true,
+      message: `${t("giftCardIssued")} · ${card.code}`,
+      voucherId: card.id,
+    };
   } catch (e) {
     return { error: (e as Error).message };
   }

@@ -152,11 +152,14 @@ class BeautyHub_Webhooks
 
         $line_items = [];
         foreach ($order->get_items() as $item) {
+            $product_id = (int) $item->get_product_id();
+            $is_gift = get_post_meta($product_id, '_beautyhub_gift_card', true) === 'yes';
             $line_items[] = [
-                'product_id' => $item->get_product_id(),
-                'variation_id' => $item->get_variation_id(),
-                'quantity' => $item->get_quantity(),
+                'product_id' => $product_id,
+                'variation_id' => (int) $item->get_variation_id(),
+                'quantity' => (int) $item->get_quantity(),
                 'total' => (float) $item->get_total(),
+                'is_gift_card' => $is_gift,
             ];
         }
 
@@ -167,6 +170,11 @@ class BeautyHub_Webhooks
             'currency' => $order->get_currency(),
             'coupon_lines' => $coupon_lines,
             'line_items' => $line_items,
+            'billing' => [
+                'first_name' => (string) $order->get_billing_first_name(),
+                'last_name' => (string) $order->get_billing_last_name(),
+                'email' => (string) $order->get_billing_email(),
+            ],
             'meta' => [
                 'payment_method' => $order->get_payment_method(),
             ],

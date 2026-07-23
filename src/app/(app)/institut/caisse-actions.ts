@@ -27,6 +27,7 @@ export interface ActionResult {
   message?: string;
   saleId?: string;
   ticketNumber?: string;
+  voucherId?: string;
 }
 
 function parseEurosCents(value: FormDataEntryValue | null): number {

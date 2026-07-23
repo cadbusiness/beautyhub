@@ -13,11 +13,15 @@ export interface WooProduct {
   status: string;
   images?: Array<{ src: string }>;
   categories?: Array<{ id: number; name: string; slug: string }>;
+  meta_data?: Array<{ key: string; value: unknown }>;
 }
 
 export interface WooOrderLineItem {
   product_id: number;
   quantity: number;
+  total?: string | number;
+  variation_id?: number;
+  is_gift_card?: boolean;
 }
 
 export interface WooOrder {
@@ -115,6 +119,16 @@ export class WooClient {
         manage_stock: manageStock,
         stock_quantity: stockQuantity,
       }),
+    });
+  }
+
+  async updateOrderMeta(
+    orderId: number,
+    metaData: Array<{ key: string; value: unknown }>,
+  ): Promise<WooOrder> {
+    return this.request<WooOrder>(`/orders/${orderId}`, {
+      method: "PUT",
+      body: JSON.stringify({ meta_data: metaData }),
     });
   }
 }

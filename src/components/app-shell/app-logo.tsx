@@ -1,14 +1,17 @@
+import Image from "next/image";
 import Link from "next/link";
 
-export function AppLogo() {
+export function AppLogo({ href = "/dashboard" }: { href?: string }) {
   return (
-    <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-        B
-      </span>
-      <span className="hidden text-base font-semibold text-slate-900 sm:inline">
-        BeautyHub
-      </span>
+    <Link href={href} className="flex shrink-0 items-center">
+      <Image
+        src="/brand/logo-header.png"
+        alt="Beauty Hub"
+        width={148}
+        height={34}
+        className="h-8 w-auto"
+        priority
+      />
     </Link>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { AppLogo } from "@/components/app-shell/app-logo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -23,14 +24,7 @@ export async function LandingPage() {
     <div className="min-h-dvh bg-white text-slate-900">
       <header className="border-b border-slate-200 bg-white/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-              B
-            </span>
-            <span className="text-lg font-semibold tracking-tight text-slate-900">
-              {t("brand")}
-            </span>
-          </div>
+          <AppLogo href="/" />
           <nav className="flex items-center gap-3">
             <Link href="/reserver">
               <Button variant="ghost">{t("nav.book")}</Button>

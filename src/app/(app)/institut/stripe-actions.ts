@@ -143,6 +143,7 @@ export async function createStripePaymentIntent(
   cartDiscountEuros = "0",
   clientId: string | null = null,
   loyaltyRewardId: string | null = null,
+  promoCode: string | null = null,
 ): Promise<PaymentIntentResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
@@ -167,6 +168,7 @@ export async function createStripePaymentIntent(
       cartDiscountCents: parseCartDiscountCents(cartDiscountEuros),
       clientId,
       loyaltyRewardId,
+      promoCode,
     });
   } catch (e) {
     return { error: (e as Error).message };
@@ -203,6 +205,7 @@ export async function finalizeStripeCheckout(
   clientId: string | null,
   cartDiscountEuros = "0",
   loyaltyRewardId: string | null = null,
+  promoCode: string | null = null,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
@@ -227,6 +230,7 @@ export async function finalizeStripeCheckout(
       cartDiscountCents: parseCartDiscountCents(cartDiscountEuros),
       clientId,
       loyaltyRewardId,
+      promoCode,
     });
   } catch (e) {
     return { error: (e as Error).message };
@@ -239,8 +243,9 @@ export async function finalizeStripeCheckout(
 
   return processPosCheckout(cartJson, clientId, "stripe", {
     stripePaymentIntentId: paymentIntentId,
-    cartDiscountCents: totals.cart_discount_cents,
+    cartDiscountCents: parseCartDiscountCents(cartDiscountEuros),
     totalCents: totals.total_cents,
     loyaltyRewardId,
+    promoCode,
   });
 }

@@ -24,6 +24,7 @@ import {
   previewLoyaltyDiscountCents,
   redeemLoyaltyAtSale,
 } from "./loyalty-redeem";
+import { normalizePromoCode, redeemPromo, validatePromo } from "./promos-core";
 
 type Db = SupabaseClient<Database>;
 
@@ -57,6 +58,8 @@ export interface PosCheckoutInput {
   saleKind?: "sale" | "balance";
   /** Récompense fidélité à échanger sur cette vente (réduction appliquée avant paiement). */
   loyaltyRewardId?: string | null;
+  /** Code promo marketing (désactive la remise manuelle côté UI). */
+  promoCode?: string | null;
 }
 
 export interface PosCheckoutResult {
@@ -155,11 +158,14 @@ export interface ResolvedPosCartTotals {
   totals: ReturnType<typeof computeCartTotals>;
   preSubtotalCents: number;
   loyaltyDiscountCents: number;
+  promoDiscountCents: number;
+  promoCode: string | null;
+  manualDiscountCents: number;
   cartDiscountCents: number;
   settings: PosSettings;
 }
 
-/** Calcule les totaux panier avec remise manuelle et récompense fidélité éventuelle. */
+/** Calcule les totaux panier avec promo, remise manuelle et récompense fidélité. */
 export async function resolvePosCartTotals(
   supabase: Db,
   tenantId: string,
@@ -168,6 +174,7 @@ export async function resolvePosCartTotals(
     cartDiscountCents?: number;
     clientId?: string | null;
     loyaltyRewardId?: string | null;
+    promoCode?: string | null;
   },
 ): Promise<ResolvedPosCartTotals> {
   let cart: Record<string, number>;
@@ -180,12 +187,39 @@ export async function resolvePosCartTotals(
 
   const settings = await getPosSettings(supabase, tenantId);
   const lines = await resolveCartLines(supabase, tenantId, cart);
-  const baseCartDiscountCents = input.cartDiscountCents ?? 0;
 
-  const preTotals = computeCartTotals(lines, {
+  const baseTotals = computeCartTotals(lines, {
     priceDisplay: settings.price_display,
     vatRateForType: (type) => vatRateForLineType(settings, type),
-    cartDiscountCents: baseCartDiscountCents,
+    cartDiscountCents: 0,
+  });
+
+  let promoDiscountCents = 0;
+  let promoCode: string | null = null;
+  const requestedPromo = normalizePromoCode(input.promoCode ?? "");
+  if (requestedPromo) {
+    const validated = await validatePromo(supabase, tenantId, {
+      code: requestedPromo,
+      channel: "pos",
+      subtotalCents: baseTotals.gross_cents,
+      clientId: input.clientId,
+    });
+    if (!validated.valid) {
+      throw new Error(validated.error ?? "promo_invalid");
+    }
+    promoDiscountCents = validated.discount_cents;
+    promoCode = requestedPromo;
+  }
+
+  const manualDiscountCents = promoCode
+    ? 0
+    : Math.max(0, input.cartDiscountCents ?? 0);
+
+  const afterPromoDiscount = promoDiscountCents + manualDiscountCents;
+  const preLoyaltyTotals = computeCartTotals(lines, {
+    priceDisplay: settings.price_display,
+    vatRateForType: (type) => vatRateForLineType(settings, type),
+    cartDiscountCents: afterPromoDiscount,
   });
 
   let loyaltyDiscountCents = 0;
@@ -196,7 +230,7 @@ export async function resolvePosCartTotals(
         tenantId,
         input.clientId,
         input.loyaltyRewardId,
-        preTotals.subtotal_cents,
+        preLoyaltyTotals.subtotal_cents,
       );
     } catch (e) {
       if (e instanceof LoyaltyRedeemError) throw new Error(e.message);
@@ -204,7 +238,7 @@ export async function resolvePosCartTotals(
     }
   }
 
-  const cartDiscountCents = baseCartDiscountCents + loyaltyDiscountCents;
+  const cartDiscountCents = afterPromoDiscount + loyaltyDiscountCents;
   const totals = computeCartTotals(lines, {
     priceDisplay: settings.price_display,
     vatRateForType: (type) => vatRateForLineType(settings, type),
@@ -214,8 +248,11 @@ export async function resolvePosCartTotals(
   return {
     lines,
     totals,
-    preSubtotalCents: preTotals.subtotal_cents,
+    preSubtotalCents: preLoyaltyTotals.subtotal_cents,
     loyaltyDiscountCents,
+    promoDiscountCents,
+    promoCode,
+    manualDiscountCents,
     cartDiscountCents,
     settings,
   };
@@ -237,16 +274,20 @@ export async function executePosCheckout(
   const baseCartDiscountCents =
     input.cartDiscountCents ?? parseCartDiscountCents(null);
 
-  const { lines, totals, preSubtotalCents, settings } = await resolvePosCartTotals(
-    supabase,
-    tenantId,
-    {
-      cartJson: input.cartJson,
-      cartDiscountCents: baseCartDiscountCents,
-      clientId: input.clientId,
-      loyaltyRewardId: input.loyaltyRewardId,
-    },
-  );
+  const {
+    lines,
+    totals,
+    preSubtotalCents,
+    settings,
+    promoCode,
+    promoDiscountCents,
+  } = await resolvePosCartTotals(supabase, tenantId, {
+    cartJson: input.cartJson,
+    cartDiscountCents: baseCartDiscountCents,
+    clientId: input.clientId,
+    loyaltyRewardId: input.loyaltyRewardId,
+    promoCode: input.promoCode,
+  });
 
   if (totals.total_cents <= 0) throw new Error("invalid_amount");
 
@@ -420,6 +461,17 @@ export async function executePosCheckout(
     })),
   );
   if (payErr) throw new Error(payErr.message);
+
+  if (status === "paid" && promoCode && promoDiscountCents > 0) {
+    await redeemPromo(supabase, tenantId, {
+      code: promoCode,
+      channel: "pos",
+      amountCents: promoDiscountCents,
+      clientId: input.clientId,
+      saleId: sale.id,
+      idempotencyKey: `pos:sale:${sale.id}:promo:${promoCode}`,
+    });
+  }
 
   if (status === "paid" && input.loyaltyRewardId && input.clientId) {
     await redeemLoyaltyAtSale(

@@ -88,6 +88,17 @@ async function translateCheckoutError(error: unknown): Promise<string> {
   if (code === "reward_not_pos_eligible") return t("loyaltyRewardNotPos");
   if (code === "new_service_only") return t("loyaltyNewServiceOnly");
   if (code === "program_inactive") return t("loyaltyProgramInactive");
+  if (code === "promo_code_required") return t("promoCodeRequired");
+  if (code === "promo_not_found") return t("promoNotFound");
+  if (code === "promo_inactive") return t("promoInactive");
+  if (code === "promo_not_started") return t("promoNotStarted");
+  if (code === "promo_expired") return t("promoExpired");
+  if (code === "promo_exhausted") return t("promoExhausted");
+  if (code === "promo_channel_disabled") return t("promoChannelDisabled");
+  if (code === "promo_min_order") return t("promoMinOrder");
+  if (code === "promo_client_limit") return t("promoClientLimit");
+  if (code === "promo_no_discount") return t("promoNoDiscount");
+  if (code === "promo_invalid") return t("promoInvalid");
   return code;
 }
 
@@ -233,6 +244,7 @@ export async function checkoutPos(
         String(formData.get("cart_discount") ?? "0"),
       ),
       loyaltyRewardId: String(formData.get("loyalty_reward_id") ?? "") || null,
+      promoCode: String(formData.get("promo_code") ?? "") || null,
       payments,
     });
 
@@ -265,6 +277,7 @@ export async function processPosCheckout(
     cartDiscountCents?: number;
     totalCents?: number;
     loyaltyRewardId?: string | null;
+    promoCode?: string | null;
   },
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
@@ -296,6 +309,7 @@ export async function processPosCheckout(
       cartDiscountCents: options?.cartDiscountCents ?? 0,
       stripePaymentIntentId: options?.stripePaymentIntentId,
       loyaltyRewardId: options?.loyaltyRewardId ?? null,
+      promoCode: options?.promoCode ?? null,
       payments: [
         {
           method: paymentMethod,

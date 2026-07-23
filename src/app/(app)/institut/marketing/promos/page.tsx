@@ -1,16 +1,12 @@
-import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
-import { MarketingPlaceholder } from "../marketing-placeholder";
+import { createClient } from "@/lib/supabase/server";
+import { listPromos } from "@/lib/institut/promos-core";
+import { PromosManager } from "../promos-manager";
 
 export default async function MarketingPromosPage() {
-  const t = await getTranslations("institut.marketing.promos");
-  await requireModule("institut");
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  const promos = await listPromos(supabase, session.tenant.id);
 
-  return (
-    <MarketingPlaceholder
-      title={t("title")}
-      description={t("description")}
-      hint={t("hint")}
-    />
-  );
+  return <PromosManager promos={promos} />;
 }

@@ -25,6 +25,7 @@ interface CheckoutPanelProps {
   notes: string;
   cartDiscountEuros: string;
   loyaltyRewardId?: string;
+  promoCode?: string;
   totals: {
     subtotal_cents: number;
     vat_cents: number;
@@ -65,6 +66,7 @@ export function CheckoutPanel({
   notes,
   cartDiscountEuros,
   loyaltyRewardId = "",
+  promoCode = "",
   totals,
   settings,
   stripeEnabled,
@@ -294,6 +296,7 @@ export function CheckoutPanel({
         <input type="hidden" name="notes" value={notes} />
         <input type="hidden" name="cart_discount" value={cartDiscountEuros} />
         <input type="hidden" name="loyalty_reward_id" value={loyaltyRewardId} />
+        <input type="hidden" name="promo_code" value={promoCode} />
         <input type="hidden" name="payments" value={paymentsJson} />
         <Button
           type="submit"
@@ -322,6 +325,7 @@ export function CheckoutPanel({
           totalCents={totals.total_cents}
           cartDiscountEuros={cartDiscountEuros}
           loyaltyRewardId={loyaltyRewardId}
+          promoCode={promoCode}
           publishableKey={stripePublishableKey}
           stripeAccountId={stripeAccountId}
           disabled={disabled || totals.total_cents <= 0}

@@ -72,6 +72,11 @@ export function PosTerminal({
   const [appointmentId, setAppointmentId] = useState(() => initialPrefill?.appointmentId ?? "");
   const [loyaltyRewardId, setLoyaltyRewardId] = useState("");
   const [loyaltyPreviewCents, setLoyaltyPreviewCents] = useState(0);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [promoDiscountCents, setPromoDiscountCents] = useState(0);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoPending, setPromoPending] = useState(false);
   const [notes, setNotes] = useState("");
   const [cartDiscountEuros, setCartDiscountEuros] = useState("0");
   const [pageSize, setPageSize] = useState(24);
@@ -95,6 +100,10 @@ export function PosTerminal({
       setCartDiscountEuros("0");
       setLoyaltyRewardId("");
       setLoyaltyPreviewCents(0);
+      setPromoInput("");
+      setPromoCode("");
+      setPromoDiscountCents(0);
+      setPromoError(null);
       setAppointmentId("");
     }
   }, [checkoutState]);
@@ -202,20 +211,74 @@ export function PosTerminal({
   }, [cart, catalog]);
 
   const discountCents = useMemo(() => {
+    if (promoCode) return 0;
     const n = Number.parseFloat(cartDiscountEuros.replace(",", "."));
     return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0;
-  }, [cartDiscountEuros]);
+  }, [cartDiscountEuros, promoCode]);
+
+  const grossCents = useMemo(() => {
+    if (resolvedForTotals.length === 0) return 0;
+    return computeCartTotals(resolvedForTotals, {
+      priceDisplay: settings.price_display,
+      vatRateForType: (type) => vatRateForLineType(settings, type),
+      cartDiscountCents: 0,
+    }).gross_cents;
+  }, [resolvedForTotals, settings]);
 
   const subtotalForLoyalty = useMemo(() => {
     if (resolvedForTotals.length === 0) return 0;
     return computeCartTotals(resolvedForTotals, {
       priceDisplay: settings.price_display,
       vatRateForType: (type) => vatRateForLineType(settings, type),
-      cartDiscountCents: discountCents,
+      cartDiscountCents: discountCents + promoDiscountCents,
     }).subtotal_cents;
-  }, [resolvedForTotals, settings, discountCents]);
+  }, [resolvedForTotals, settings, discountCents, promoDiscountCents]);
 
-  const totalDiscountCents = discountCents + loyaltyPreviewCents;
+  const totalDiscountCents = discountCents + promoDiscountCents + loyaltyPreviewCents;
+
+  async function applyPromoCode() {
+    const code = promoInput.trim();
+    if (!code || cartEmpty) return;
+    setPromoPending(true);
+    setPromoError(null);
+    try {
+      const params = new URLSearchParams({
+        code,
+        subtotal_cents: String(grossCents),
+      });
+      if (clientId) params.set("client_id", clientId);
+      const res = await fetch(`/api/institut/pos/promo-validate?${params}`);
+      const data = (await res.json()) as {
+        valid?: boolean;
+        error?: string | null;
+        discount_cents?: number;
+        code?: string | null;
+      };
+      if (!data.valid) {
+        setPromoCode("");
+        setPromoDiscountCents(0);
+        setPromoError(data.error ?? "promo_invalid");
+        return;
+      }
+      setPromoCode(data.code ?? code.toUpperCase());
+      setPromoDiscountCents(data.discount_cents ?? 0);
+      setCartDiscountEuros("0");
+      setPromoError(null);
+    } catch {
+      setPromoError("promo_invalid");
+      setPromoCode("");
+      setPromoDiscountCents(0);
+    } finally {
+      setPromoPending(false);
+    }
+  }
+
+  function clearPromoCode() {
+    setPromoInput("");
+    setPromoCode("");
+    setPromoDiscountCents(0);
+    setPromoError(null);
+  }
 
   const totals = useMemo(() => {
     if (resolvedForTotals.length === 0) {
@@ -507,18 +570,69 @@ export function PosTerminal({
 
         {!cartEmpty ? (
           <div className="space-y-2">
-            <label className="block text-xs text-slate-500" htmlFor="cart-discount">
-              {t("cart.discount")}
+            <label className="block text-xs text-slate-500" htmlFor="promo-code">
+              {t("cart.promoCode")}
             </label>
-            <Input
-              id="cart-discount"
-              type="number"
-              min={0}
-              step="0.01"
-              max={(catalogTotal / 100).toFixed(2)}
-              value={cartDiscountEuros}
-              onChange={(e) => setCartDiscountEuros(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="promo-code"
+                value={promoInput}
+                onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                placeholder={t("cart.promoPlaceholder")}
+                className="uppercase"
+                disabled={Boolean(promoCode)}
+              />
+              {promoCode ? (
+                <button
+                  type="button"
+                  onClick={clearPromoCode}
+                  className="shrink-0 rounded-lg border border-slate-300 px-3 text-xs text-slate-600 hover:bg-slate-50"
+                >
+                  {t("cart.promoClear")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={applyPromoCode}
+                  disabled={promoPending || !promoInput.trim()}
+                  className="shrink-0 rounded-lg border border-slate-300 px-3 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  {promoPending ? t("cart.promoApplying") : t("cart.promoApply")}
+                </button>
+              )}
+            </div>
+            {promoCode && promoDiscountCents > 0 ? (
+              <p className="text-xs text-emerald-700">
+                {t("cart.promoApplied", {
+                  code: promoCode,
+                  amount: formatPrice(promoDiscountCents),
+                })}
+              </p>
+            ) : null}
+            {promoError ? (
+              <p className="text-xs text-red-600">
+                {t(
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic error code from API
+                  `cart.promoErrors.${promoError}` as any,
+                )}
+              </p>
+            ) : null}
+            {!promoCode ? (
+              <>
+                <label className="block text-xs text-slate-500" htmlFor="cart-discount">
+                  {t("cart.discount")}
+                </label>
+                <Input
+                  id="cart-discount"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  max={(catalogTotal / 100).toFixed(2)}
+                  value={cartDiscountEuros}
+                  onChange={(e) => setCartDiscountEuros(e.target.value)}
+                />
+              </>
+            ) : null}
           </div>
         ) : null}
 
@@ -597,6 +711,7 @@ export function PosTerminal({
             notes={notes}
             cartDiscountEuros={cartDiscountEuros}
             loyaltyRewardId={loyaltyRewardId}
+            promoCode={promoCode}
             totals={totals}
             settings={settings}
             stripeEnabled={Boolean(stripeEnabled)}

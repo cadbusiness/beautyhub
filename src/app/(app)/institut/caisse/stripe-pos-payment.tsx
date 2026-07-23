@@ -21,6 +21,7 @@ function PaymentForm({
   clientId,
   cartDiscountEuros,
   loyaltyRewardId,
+  promoCode,
   totalCents,
   onSuccess,
   onCancel,
@@ -29,6 +30,7 @@ function PaymentForm({
   clientId: string;
   cartDiscountEuros: string;
   loyaltyRewardId: string;
+  promoCode: string;
   totalCents: number;
   onSuccess: (message: string) => void;
   onCancel: () => void;
@@ -67,6 +69,7 @@ function PaymentForm({
       clientId || null,
       cartDiscountEuros,
       loyaltyRewardId || null,
+      promoCode || null,
     );
     if (result.error) {
       setError(result.error);
@@ -99,6 +102,7 @@ export function StripePosPayment({
   totalCents,
   cartDiscountEuros = "0",
   loyaltyRewardId = "",
+  promoCode = "",
   publishableKey,
   stripeAccountId,
   disabled,
@@ -109,6 +113,7 @@ export function StripePosPayment({
   totalCents: number;
   cartDiscountEuros?: string;
   loyaltyRewardId?: string;
+  promoCode?: string;
   publishableKey: string;
   stripeAccountId: string;
   disabled: boolean;
@@ -133,6 +138,7 @@ export function StripePosPayment({
       cartDiscountEuros,
       initialClientId || null,
       loyaltyRewardId || null,
+      promoCode || null,
     );
     if (result.error || !result.clientSecret) {
       setError(result.error ?? t("startFailed"));
@@ -151,6 +157,7 @@ export function StripePosPayment({
           clientId={initialClientId}
           cartDiscountEuros={cartDiscountEuros}
           loyaltyRewardId={loyaltyRewardId}
+          promoCode={promoCode}
           totalCents={totalCents}
           onSuccess={onSuccess}
           onCancel={() => setClientSecret(null)}

@@ -87,6 +87,11 @@ export function BookingWizard({
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [promoInput, setPromoInput] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [promoDiscountCents, setPromoDiscountCents] = useState(0);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoPending, setPromoPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const deepLinked = useRef(false);
@@ -216,6 +221,57 @@ export function BookingWizard({
     setStep("details");
   }
 
+  const totalMin = selectedService
+    ? totalDurationMin(selectedService.duration_min, extras, extraCatalog)
+    : 0;
+  const totalPrice = selectedService
+    ? totalPriceCents(selectedService.price_cents, extras, extraCatalog)
+    : 0;
+  const netPrice = Math.max(0, totalPrice - promoDiscountCents);
+  const slotsByDate = useMemo(() => groupSlotsByDate(slots), [slots]);
+
+  async function applyPromo() {
+    const code = promoInput.trim();
+    if (!code || totalPrice <= 0) return;
+    setPromoPending(true);
+    setPromoError(null);
+    try {
+      const params = new URLSearchParams({
+        code,
+        subtotal_cents: String(totalPrice),
+      });
+      const res = await fetch(`/api/public/promos/validate?${params}`);
+      const data = (await res.json()) as {
+        valid?: boolean;
+        error?: string | null;
+        discount_cents?: number;
+        code?: string | null;
+      };
+      if (!data.valid) {
+        setPromoCode("");
+        setPromoDiscountCents(0);
+        setPromoError(data.error ?? "promo_invalid");
+        return;
+      }
+      setPromoCode(data.code ?? code.toUpperCase());
+      setPromoDiscountCents(data.discount_cents ?? 0);
+      setPromoError(null);
+    } catch {
+      setPromoCode("");
+      setPromoDiscountCents(0);
+      setPromoError("promo_invalid");
+    } finally {
+      setPromoPending(false);
+    }
+  }
+
+  function clearPromo() {
+    setPromoInput("");
+    setPromoCode("");
+    setPromoDiscountCents(0);
+    setPromoError(null);
+  }
+
   function confirmBooking() {
     if (!slot || !selectedService) return;
     startTransition(async () => {
@@ -227,6 +283,7 @@ export function BookingWizard({
         fullName,
         phone: phone || undefined,
         extras,
+        promoCode: promoCode || undefined,
       });
       if (res.error) setError(res.error);
       else {
@@ -241,14 +298,6 @@ export function BookingWizard({
     if (idx <= 0) return;
     setStep(stepFlow[idx - 1]!);
   }
-
-  const totalMin = selectedService
-    ? totalDurationMin(selectedService.duration_min, extras, extraCatalog)
-    : 0;
-  const totalPrice = selectedService
-    ? totalPriceCents(selectedService.price_cents, extras, extraCatalog)
-    : 0;
-  const slotsByDate = useMemo(() => groupSlotsByDate(slots), [slots]);
 
   if (step === "done") {
     return (
@@ -453,6 +502,17 @@ export function BookingWizard({
                 ? ` · ${t("extras.durationHint", { min: totalMin, price: formatPrice(totalPrice) })}`
                 : null}
             </p>
+            <p className="mt-2 text-sm text-slate-700">
+              {promoDiscountCents > 0 ? (
+                <>
+                  <span className="text-slate-400 line-through">{formatPrice(totalPrice)}</span>
+                  {" · "}
+                  <span className="font-medium">{formatPrice(netPrice)}</span>
+                </>
+              ) : (
+                <span className="font-medium">{formatPrice(totalPrice)}</span>
+              )}
+            </p>
           </div>
           <Field label={t("step5.fullName")} htmlFor="full_name">
             <Input
@@ -479,6 +539,48 @@ export function BookingWizard({
               required={requirePhone}
             />
           </Field>
+          <Field label={t("step5.promoCode")} htmlFor="booking_promo">
+            <div className="flex gap-2">
+              <Input
+                id="booking_promo"
+                value={promoInput}
+                onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                placeholder={t("step5.promoPlaceholder")}
+                className="uppercase"
+                disabled={Boolean(promoCode)}
+              />
+              {promoCode ? (
+                <Button type="button" variant="outline" onClick={clearPromo}>
+                  {t("step5.promoClear")}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={applyPromo}
+                  disabled={promoPending || !promoInput.trim()}
+                >
+                  {promoPending ? t("step5.promoApplying") : t("step5.promoApply")}
+                </Button>
+              )}
+            </div>
+          </Field>
+          {promoCode && promoDiscountCents > 0 ? (
+            <p className="text-xs text-emerald-700">
+              {t("step5.promoApplied", {
+                code: promoCode,
+                amount: formatPrice(promoDiscountCents),
+              })}
+            </p>
+          ) : null}
+          {promoError ? (
+            <p className="text-xs text-red-600">
+              {t(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic error code from API
+                `step5.promoErrors.${promoError}` as any,
+              )}
+            </p>
+          ) : null}
           <div className="flex justify-between gap-2 pt-2">
             <Button variant="outline" onClick={() => setStep("slots")}>
               {tCommon("back")}

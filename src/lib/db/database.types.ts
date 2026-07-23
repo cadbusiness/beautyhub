@@ -439,6 +439,8 @@ export type Database = {
           id: string
           notes: string | null
           price_cents: number | null
+          promo_discount_cents: number | null
+          promo_id: string | null
           resource_id: string | null
           service_id: string | null
           staff_id: string | null
@@ -454,6 +456,8 @@ export type Database = {
           id?: string
           notes?: string | null
           price_cents?: number | null
+          promo_discount_cents?: number | null
+          promo_id?: string | null
           resource_id?: string | null
           service_id?: string | null
           staff_id?: string | null
@@ -469,6 +473,8 @@ export type Database = {
           id?: string
           notes?: string | null
           price_cents?: number | null
+          promo_discount_cents?: number | null
+          promo_id?: string | null
           resource_id?: string | null
           service_id?: string | null
           staff_id?: string | null
@@ -483,6 +489,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_appointments_promo_id_fkey"
+            columns: ["promo_id"]
+            isOneToOne: false
+            referencedRelation: "inst_promos"
             referencedColumns: ["id"]
           },
           {
@@ -992,6 +1005,167 @@ export type Database = {
             foreignKeyName: "inst_pos_settings_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_promo_redemptions: {
+        Row: {
+          amount_cents: number
+          appointment_id: string | null
+          channel: string
+          client_id: string | null
+          created_at: string
+          id: string
+          idempotency_key: string | null
+          metadata: Json
+          promo_id: string
+          sale_id: string | null
+          tenant_id: string
+          woo_order_id: number | null
+        }
+        Insert: {
+          amount_cents: number
+          appointment_id?: string | null
+          channel: string
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json
+          promo_id: string
+          sale_id?: string | null
+          tenant_id: string
+          woo_order_id?: number | null
+        }
+        Update: {
+          amount_cents?: number
+          appointment_id?: string | null
+          channel?: string
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json
+          promo_id?: string
+          sale_id?: string | null
+          tenant_id?: string
+          woo_order_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_promo_redemptions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "inst_appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_promo_redemptions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_promo_redemptions_promo_id_fkey"
+            columns: ["promo_id"]
+            isOneToOne: false
+            referencedRelation: "inst_promos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_promo_redemptions_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "inst_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_promo_redemptions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inst_promos: {
+        Row: {
+          channel_booking: boolean
+          channel_pos: boolean
+          channel_woo: boolean
+          code: string
+          created_at: string
+          description: string | null
+          discount_cents: number | null
+          discount_percent: number | null
+          discount_type: string
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          metadata: Json
+          min_order_cents: number
+          name: string
+          starts_at: string | null
+          tenant_id: string
+          updated_at: string
+          usage_count: number
+          usage_limit: number | null
+          usage_limit_per_client: number | null
+        }
+        Insert: {
+          channel_booking?: boolean
+          channel_pos?: boolean
+          channel_woo?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_cents?: number | null
+          discount_percent?: number | null
+          discount_type: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          min_order_cents?: number
+          name: string
+          starts_at?: string | null
+          tenant_id: string
+          updated_at?: string
+          usage_count?: number
+          usage_limit?: number | null
+          usage_limit_per_client?: number | null
+        }
+        Update: {
+          channel_booking?: boolean
+          channel_pos?: boolean
+          channel_woo?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_cents?: number | null
+          discount_percent?: number | null
+          discount_type?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          min_order_cents?: number
+          name?: string
+          starts_at?: string | null
+          tenant_id?: string
+          updated_at?: string
+          usage_count?: number
+          usage_limit?: number | null
+          usage_limit_per_client?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_promos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
@@ -3145,6 +3319,27 @@ export type Database = {
       inst_booking_price_cents: {
         Args: { p_service_id: string; p_extras?: Json }
         Returns: number
+      }
+      inst_redeem_promo: {
+        Args: {
+          p_tenant_id: string
+          p_code: string
+          p_channel: string
+          p_amount_cents: number
+          p_client_id?: string
+          p_sale_id?: string
+          p_appointment_id?: string
+          p_woo_order_id?: number
+          p_idempotency_key?: string
+          p_metadata?: Json
+        }
+        Returns: {
+          redemption_id: string
+          promo_id: string
+          code: string
+          amount_cents: number
+          usage_count: number
+        }[]
       }
       inst_redeem_voucher: {
         Args: {

@@ -15,7 +15,7 @@ export function FormDialog({
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: "md" | "lg";
+  size?: "md" | "lg" | "xl";
 }) {
   const t = useTranslations("ui.formDialog");
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -33,7 +33,11 @@ export function FormDialog({
       onClose={onClose}
       className={cn(
         "fixed inset-0 z-50 m-auto max-h-[min(90vh,720px)] overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-xl backdrop:bg-slate-900/40",
-        size === "lg" ? "w-[min(100vw-2rem,640px)]" : "w-[min(100vw-2rem,520px)]",
+        size === "xl"
+          ? "w-[min(100vw-2rem,920px)]"
+          : size === "lg"
+            ? "w-[min(100vw-2rem,640px)]"
+            : "w-[min(100vw-2rem,520px)]",
       )}
     >
       <div className="flex max-h-[min(90vh,720px)] flex-col">

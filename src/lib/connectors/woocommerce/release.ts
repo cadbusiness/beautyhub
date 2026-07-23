@@ -39,9 +39,9 @@ export function getWooConnectorRelease(): ConnectorReleaseInfo {
     changelog: `
       <h4>${version}</h4>
       <ul>
-        <li>Cartes cadeaux BeautyHub : case produit, émission PDF à la commande, liens thank-you / e-mail</li>
-        <li>Webhooks order.completed enrichis (line items gift + billing)</li>
-        <li>Promos multi-canal (1.3.x) + vouchers redeem inchangés</li>
+        <li>Page Mon compte « Cartes cadeaux » + templates PDF par produit/variation</li>
+        <li>Sync meta gift card vers BeautyHub + sélection template Woo</li>
+        <li>QR code sur PDF + éditeur de positions drag-and-drop</li>
       </ul>
     `.trim(),
   };

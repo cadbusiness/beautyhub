@@ -13,6 +13,7 @@ export type WooGiftLineItem = {
   quantity?: unknown;
   total?: unknown;
   is_gift_card?: unknown;
+  gift_template_id?: unknown;
 };
 
 function metaYes(value: unknown): boolean {
@@ -23,22 +24,70 @@ function metaYes(value: unknown): boolean {
   return s === "yes" || s === "1" || s === "true";
 }
 
-async function productIsGiftCard(
+function asTemplateId(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const id = value.trim();
+  return id || null;
+}
+
+async function resolveGiftContext(
+  supabase: Db,
   tenantId: string,
   productId: number,
-  flaggedInPayload: boolean,
-): Promise<boolean> {
-  if (flaggedInPayload) return true;
+  variationId: number | null,
+  payload: { isGift?: boolean; templateId?: string | null },
+): Promise<{ isGift: boolean; templateId: string | null }> {
+  const { data: local } = await supabase
+    .from("inst_products")
+    .select("is_gift_card, gift_template_id, gift_variation_templates")
+    .eq("tenant_id", tenantId)
+    .eq("woo_id", productId)
+    .maybeSingle();
+
+  let isGift = Boolean(local?.is_gift_card) || Boolean(payload.isGift);
+  let templateId =
+    (variationId &&
+      local?.gift_variation_templates &&
+      typeof local.gift_variation_templates === "object" &&
+      !Array.isArray(local.gift_variation_templates) &&
+      typeof (local.gift_variation_templates as Record<string, unknown>)[String(variationId)] ===
+        "string"
+      ? String(
+          (local.gift_variation_templates as Record<string, unknown>)[String(variationId)],
+        )
+      : null) ||
+    local?.gift_template_id ||
+    payload.templateId ||
+    null;
+
+  if (isGift && templateId) {
+    return { isGift, templateId };
+  }
+
   const client = await getWooClientForTenant(tenantId);
-  if (!client) return false;
+  if (!client) return { isGift, templateId };
+
   try {
+    if (variationId && variationId > 0) {
+      const variations = await client.listProductVariations(productId);
+      const variation = variations.find((v) => v.id === variationId);
+      const varTpl = variation?.meta_data?.find((m) => m.key === "_beautyhub_gift_template_id");
+      if (!templateId) templateId = asTemplateId(varTpl?.value);
+    }
+
     const product = await client.getProduct(productId);
     const meta = product.meta_data ?? [];
-    const hit = meta.find((m) => m.key === "_beautyhub_gift_card");
-    return hit ? metaYes(hit.value) : false;
+    const giftMeta = meta.find((m) => m.key === "_beautyhub_gift_card");
+    if (giftMeta && metaYes(giftMeta.value)) isGift = true;
+    if (!templateId) {
+      const tplMeta = meta.find((m) => m.key === "_beautyhub_gift_template_id");
+      templateId = asTemplateId(tplMeta?.value);
+    }
   } catch {
-    return false;
+    // keep local/payload resolution
   }
+
+  return { isGift, templateId };
 }
 
 /**
@@ -68,6 +117,13 @@ export async function issueGiftCardsForWooOrder(
         : Number.parseInt(String(line.product_id ?? ""), 10);
     if (!Number.isFinite(productId) || productId <= 0) continue;
 
+    const variationRaw =
+      typeof line.variation_id === "number"
+        ? line.variation_id
+        : Number.parseInt(String(line.variation_id ?? "0"), 10);
+    const variationId =
+      Number.isFinite(variationRaw) && variationRaw > 0 ? Math.floor(variationRaw) : null;
+
     const qtyRaw =
       typeof line.quantity === "number"
         ? line.quantity
@@ -81,8 +137,16 @@ export async function issueGiftCardsForWooOrder(
     const lineTotal = Number.isFinite(totalRaw) ? totalRaw : 0;
     const amountCents = Math.max(1, Math.round((lineTotal / qty) * 100));
 
-    const flagged = metaYes(line.is_gift_card);
-    const isGift = await productIsGiftCard(tenantId, productId, flagged);
+    const { isGift, templateId } = await resolveGiftContext(
+      supabase,
+      tenantId,
+      productId,
+      variationId,
+      {
+        isGift: metaYes(line.is_gift_card),
+        templateId: asTemplateId(line.gift_template_id),
+      },
+    );
     if (!isGift) continue;
 
     for (let index = 0; index < qty; index++) {
@@ -92,9 +156,10 @@ export async function issueGiftCardsForWooOrder(
         sourceChannel: "woo",
         wooOrderId: orderId,
         wooProductId: productId,
+        templateId,
         currency,
         codePrefix: settings.gift_card_prefix || "GC",
-        idempotencyKey: `woo:order:${orderId}:gift:${productId}:${index}`,
+        idempotencyKey: `woo:order:${orderId}:gift:${productId}:${variationId ?? 0}:${index}`,
       });
 
       let pdfUrl: string | null = null;

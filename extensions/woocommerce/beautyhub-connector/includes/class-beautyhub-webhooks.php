@@ -89,6 +89,21 @@ class BeautyHub_Webhooks
             }
         }
 
+        $meta_data = [];
+        foreach ([
+            '_beautyhub_gift_card',
+            '_beautyhub_gift_template_id',
+            '_beautyhub_gift_variation_templates',
+        ] as $meta_key) {
+            $value = get_post_meta($product->get_id(), $meta_key, true);
+            if ($value !== '' && $value !== null) {
+                $meta_data[] = [
+                    'key' => $meta_key,
+                    'value' => $value,
+                ];
+            }
+        }
+
         return [
             'id' => $product->get_id(),
             'name' => $product->get_name(),
@@ -100,6 +115,7 @@ class BeautyHub_Webhooks
             'status' => $product->get_status() === 'publish' ? 'publish' : $product->get_status(),
             'images' => $images,
             'categories' => $categories,
+            'meta_data' => $meta_data,
         ];
     }
 
@@ -153,13 +169,22 @@ class BeautyHub_Webhooks
         $line_items = [];
         foreach ($order->get_items() as $item) {
             $product_id = (int) $item->get_product_id();
+            $variation_id = (int) $item->get_variation_id();
             $is_gift = get_post_meta($product_id, '_beautyhub_gift_card', true) === 'yes';
+            $template_id = '';
+            if ($variation_id > 0) {
+                $template_id = (string) get_post_meta($variation_id, '_beautyhub_gift_template_id', true);
+            }
+            if ($template_id === '') {
+                $template_id = (string) get_post_meta($product_id, '_beautyhub_gift_template_id', true);
+            }
             $line_items[] = [
                 'product_id' => $product_id,
-                'variation_id' => (int) $item->get_variation_id(),
+                'variation_id' => $variation_id,
                 'quantity' => (int) $item->get_quantity(),
                 'total' => (float) $item->get_total(),
                 'is_gift_card' => $is_gift,
+                'gift_template_id' => $template_id,
             ];
         }
 

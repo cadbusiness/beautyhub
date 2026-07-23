@@ -131,4 +131,33 @@ export class WooClient {
       body: JSON.stringify({ meta_data: metaData }),
     });
   }
+
+  async updateProductMeta(
+    productId: number,
+    metaData: Array<{ key: string; value: unknown }>,
+  ): Promise<WooProduct> {
+    return this.request<WooProduct>(`/products/${productId}`, {
+      method: "PUT",
+      body: JSON.stringify({ meta_data: metaData }),
+    });
+  }
+
+  async listProductVariations(
+    productId: number,
+  ): Promise<Array<{ id: number; name: string; sku: string; meta_data?: Array<{ key: string; value: unknown }> }>> {
+    return this.request(`/products/${productId}/variations`, {
+      query: { per_page: 100 },
+    });
+  }
+
+  async updateVariationMeta(
+    productId: number,
+    variationId: number,
+    metaData: Array<{ key: string; value: unknown }>,
+  ): Promise<unknown> {
+    return this.request(`/products/${productId}/variations/${variationId}`, {
+      method: "PUT",
+      body: JSON.stringify({ meta_data: metaData }),
+    });
+  }
 }

@@ -2959,6 +2959,45 @@
           "nameRequired": "Name is required.",
           "invalidImage": "Invalid image (JPEG, PNG or WebP).",
           "saved": "Template saved."
+        },
+        "layout": {
+          "hint": "Drag blocks to position content (WYSIWYG preview).",
+          "sampleTitle": "Gift card",
+          "sampleRecipient": "Alex Martin",
+          "sampleAmount": "€50.00",
+          "sampleMessage": "With all our love",
+          "blocks": {
+            "recipient": "Title / recipient",
+            "amount": "Amount",
+            "code": "Code",
+            "message": "Message",
+            "qr": "QR code"
+          }
+        },
+        "previewPdf": "PDF preview",
+        "previewLoading": "Generating…"
+      },
+      "giftProducts": {
+        "description": "WooCommerce products marked as gift cards — meta syncs to the store.",
+        "empty": "No synced Woo products. Run a catalogue sync first.",
+        "yes": "Yes",
+        "no": "No",
+        "defaultTemplate": "Default template",
+        "dialogTitle": "Gift card product",
+        "markGift": "BeautyHub gift card",
+        "template": "PDF template",
+        "variations": "Templates per variation",
+        "inheritTemplate": "Inherit from product",
+        "columns": {
+          "product": "Product",
+          "gift": "Gift card",
+          "template": "Template",
+          "actions": "Actions"
+        },
+        "actions": {
+          "productRequired": "Product not found.",
+          "wooPushFailed": "Saved locally, but Woo push failed.",
+          "saved": "Gift card settings saved."
         }
       }
     }

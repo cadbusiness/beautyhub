@@ -5,7 +5,11 @@ import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/db/database.types";
-import { VOUCHER_ASSETS_BUCKET } from "@/lib/institut/voucher-pdf";
+import {
+  DEFAULT_VOUCHER_LAYOUT,
+  normalizeVoucherLayout,
+  VOUCHER_ASSETS_BUCKET,
+} from "@/lib/institut/voucher-pdf";
 
 const BON_PATH = "/institut/caisse/bons";
 
@@ -16,6 +20,15 @@ export type ActionResult = {
 };
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+function parseLayout(raw: FormDataEntryValue | null): Json {
+  if (typeof raw !== "string" || !raw.trim()) return DEFAULT_VOUCHER_LAYOUT as unknown as Json;
+  try {
+    return normalizeVoucherLayout(JSON.parse(raw) as Json) as unknown as Json;
+  } catch {
+    return DEFAULT_VOUCHER_LAYOUT as unknown as Json;
+  }
+}
 
 export async function saveVoucherTemplate(
   _prev: ActionResult,
@@ -32,6 +45,7 @@ export async function saveVoucherTemplate(
   const footerText = String(formData.get("footer_text") ?? "").trim();
   const isActive = formData.get("is_active") === "1";
   const isDefault = formData.get("is_default") === "1";
+  const layout = parseLayout(formData.get("layout_json"));
 
   if (!name) return { error: t("nameRequired") };
 
@@ -64,6 +78,7 @@ export async function saveVoucherTemplate(
     footer_text: footerText,
     is_active: isActive,
     is_default: isDefault,
+    layout,
     ...(backgroundPath !== undefined ? { background_path: backgroundPath } : {}),
   };
 
@@ -77,12 +92,6 @@ export async function saveVoucherTemplate(
   } else {
     const { error } = await supabase.from("inst_voucher_templates").insert({
       tenant_id: session.tenant.id,
-      layout: {
-        code: { x: 50, y: 62 },
-        amount: { x: 50, y: 42 },
-        recipient: { x: 50, y: 28 },
-        message: { x: 50, y: 78 },
-      } as Json,
       ...payload,
     });
     if (error) return { error: error.message };

@@ -78,6 +78,21 @@ function priceToCents(value: string): number {
   return Number.isFinite(n) ? Math.round(n * 100) : 0;
 }
 
+function metaValue(
+  meta: Array<{ key: string; value: unknown }> | undefined,
+  key: string,
+): unknown {
+  return meta?.find((m) => m.key === key)?.value;
+}
+
+function metaYes(value: unknown): boolean {
+  if (value === true || value === 1) return true;
+  const s = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  return s === "yes" || s === "1" || s === "true";
+}
+
 export function mapWooProductToRow(
   tenantId: string,
   connectionId: string,
@@ -88,6 +103,35 @@ export function mapWooProductToRow(
         .map((c) => (typeof c?.name === "string" ? c.name.trim() : ""))
         .filter((name): name is string => name.length > 0)
     : [];
+
+  const giftFlag = metaValue(product.meta_data, "_beautyhub_gift_card");
+  const templateRaw = metaValue(product.meta_data, "_beautyhub_gift_template_id");
+  const templateId =
+    typeof templateRaw === "string" && templateRaw.trim().length > 0
+      ? templateRaw.trim()
+      : null;
+  const variationsRaw = metaValue(product.meta_data, "_beautyhub_gift_variation_templates");
+  let giftVariationTemplates: Record<string, string> = {};
+  if (typeof variationsRaw === "string" && variationsRaw.trim()) {
+    try {
+      const parsed = JSON.parse(variationsRaw) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        giftVariationTemplates = Object.fromEntries(
+          Object.entries(parsed as Record<string, unknown>)
+            .filter(([, v]) => typeof v === "string" && v.trim())
+            .map(([k, v]) => [String(k), String(v).trim()]),
+        );
+      }
+    } catch {
+      giftVariationTemplates = {};
+    }
+  } else if (variationsRaw && typeof variationsRaw === "object" && !Array.isArray(variationsRaw)) {
+    giftVariationTemplates = Object.fromEntries(
+      Object.entries(variationsRaw as Record<string, unknown>)
+        .filter(([, v]) => typeof v === "string" && v.trim())
+        .map(([k, v]) => [String(k), String(v).trim()]),
+    );
+  }
 
   return {
     tenant_id: tenantId,
@@ -102,6 +146,9 @@ export function mapWooProductToRow(
     status: product.status === "publish" ? "active" : product.status,
     source: "woocommerce" as const,
     synced_at: new Date().toISOString(),
+    is_gift_card: metaYes(giftFlag),
+    gift_template_id: templateId,
+    gift_variation_templates: giftVariationTemplates,
   };
 }
 
@@ -113,9 +160,16 @@ export async function upsertWooProduct(
   product: WooProduct,
 ): Promise<void> {
   const row = mapWooProductToRow(tenantId, connectionId, product);
-  const { error } = await supabase
+  let { error } = await supabase
     .from("inst_products")
     .upsert(row, { onConflict: "tenant_id,connection_id,woo_id" });
+  // Invalid remote template UUID must not block catalogue sync.
+  if (error?.message?.toLowerCase().includes("gift_template")) {
+    ({ error } = await supabase.from("inst_products").upsert(
+      { ...row, gift_template_id: null },
+      { onConflict: "tenant_id,connection_id,woo_id" },
+    ));
+  }
   if (error) throw new Error(error.message);
 }
 

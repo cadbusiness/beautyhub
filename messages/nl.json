@@ -2897,6 +2897,45 @@
           "nameRequired": "Naam is verplicht.",
           "invalidImage": "Ongeldige afbeelding (JPEG, PNG of WebP).",
           "saved": "Sjabloon opgeslagen."
+        },
+        "layout": {
+          "hint": "Sleep blokken om de inhoud te positioneren (WYSIWYG-voorbeeld).",
+          "sampleTitle": "Cadeaubon",
+          "sampleRecipient": "Alex Martin",
+          "sampleAmount": "€ 50,00",
+          "sampleMessage": "Met heel veel liefde",
+          "blocks": {
+            "recipient": "Titel / ontvanger",
+            "amount": "Bedrag",
+            "code": "Code",
+            "message": "Bericht",
+            "qr": "QR-code"
+          }
+        },
+        "previewPdf": "PDF-voorbeeld",
+        "previewLoading": "Genereren…"
+      },
+      "giftProducts": {
+        "description": "WooCommerce-producten gemarkeerd als cadeaubon — meta synchroniseert naar de winkel.",
+        "empty": "Geen gesynchroniseerde Woo-producten. Voer eerst een catalogs-sync uit.",
+        "yes": "Ja",
+        "no": "Nee",
+        "defaultTemplate": "Standaardsjabloon",
+        "dialogTitle": "Cadeaubonproduct",
+        "markGift": "BeautyHub-cadeaubon",
+        "template": "PDF-sjabloon",
+        "variations": "Sjablonen per variatie",
+        "inheritTemplate": "Overerven van product",
+        "columns": {
+          "product": "Product",
+          "gift": "Cadeaubon",
+          "template": "Sjabloon",
+          "actions": "Acties"
+        },
+        "actions": {
+          "productRequired": "Product niet gevonden.",
+          "wooPushFailed": "Lokaal opgeslagen, maar Woo-push mislukt.",
+          "saved": "Cadeauboninstellingen opgeslagen."
         }
       }
     },

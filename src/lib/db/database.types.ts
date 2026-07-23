@@ -1176,8 +1176,11 @@ export type Database = {
           connection_id: string | null
           created_at: string
           currency: string
+          gift_template_id: string | null
+          gift_variation_templates: Json
           id: string
           image_url: string | null
+          is_gift_card: boolean
           name: string
           price_cents: number
           sku: string | null
@@ -1194,8 +1197,11 @@ export type Database = {
           connection_id?: string | null
           created_at?: string
           currency?: string
+          gift_template_id?: string | null
+          gift_variation_templates?: Json
           id?: string
           image_url?: string | null
+          is_gift_card?: boolean
           name: string
           price_cents?: number
           sku?: string | null
@@ -1212,8 +1218,11 @@ export type Database = {
           connection_id?: string | null
           created_at?: string
           currency?: string
+          gift_template_id?: string | null
+          gift_variation_templates?: Json
           id?: string
           image_url?: string | null
+          is_gift_card?: boolean
           name?: string
           price_cents?: number
           sku?: string | null

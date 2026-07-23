@@ -2943,7 +2943,23 @@
           "nameRequired": "Le nom est requis.",
           "invalidImage": "Image invalide (JPEG, PNG ou WebP).",
           "saved": "Template enregistré."
-        }
+        },
+        "layout": {
+          "hint": "Glissez les blocs pour positionner le contenu (aperçu WYSIWYG).",
+          "sampleTitle": "Carte cadeau",
+          "sampleRecipient": "Alex Martin",
+          "sampleAmount": "50,00 €",
+          "sampleMessage": "Avec toute notre affection",
+          "blocks": {
+            "recipient": "Titre / destinataire",
+            "amount": "Montant",
+            "code": "Code",
+            "message": "Message",
+            "qr": "QR code"
+          }
+        },
+        "previewPdf": "Aperçu PDF",
+        "previewLoading": "Génération…"
       },
       "creditForm": {
         "selectSale": "Vente source",
@@ -2951,6 +2967,29 @@
         "amount": "Montant avoir (€)",
         "reason": "Motif",
         "submit": "Créer l'avoir"
+      },
+      "giftProducts": {
+        "description": "Produits WooCommerce marqués carte cadeau — sync meta vers la boutique.",
+        "empty": "Aucun produit Woo synchronisé. Lancez une sync catalogue d’abord.",
+        "yes": "Oui",
+        "no": "Non",
+        "defaultTemplate": "Template par défaut",
+        "dialogTitle": "Produit carte cadeau",
+        "markGift": "Carte cadeau BeautyHub",
+        "template": "Template PDF",
+        "variations": "Templates par variation",
+        "inheritTemplate": "Hériter du produit",
+        "columns": {
+          "product": "Produit",
+          "gift": "Carte cadeau",
+          "template": "Template",
+          "actions": "Actions"
+        },
+        "actions": {
+          "productRequired": "Produit introuvable.",
+          "wooPushFailed": "Enregistrement local OK, mais échec du push Woo.",
+          "saved": "Paramètres carte cadeau enregistrés."
+        }
       }
     },
     "balance": {

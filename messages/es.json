@@ -2703,6 +2703,45 @@
           "nameRequired": "El nombre es obligatorio.",
           "invalidImage": "Imagen no válida (JPEG, PNG o WebP).",
           "saved": "Plantilla guardada."
+        },
+        "layout": {
+          "hint": "Arrastre los bloques para posicionar el contenido (vista previa).",
+          "sampleTitle": "Tarjeta regalo",
+          "sampleRecipient": "Alex Martin",
+          "sampleAmount": "50,00 €",
+          "sampleMessage": "Con todo nuestro cariño",
+          "blocks": {
+            "recipient": "Título / destinatario",
+            "amount": "Importe",
+            "code": "Código",
+            "message": "Mensaje",
+            "qr": "Código QR"
+          }
+        },
+        "previewPdf": "Vista previa PDF",
+        "previewLoading": "Generando…"
+      },
+      "giftProducts": {
+        "description": "Productos WooCommerce marcados como tarjeta regalo — meta sincronizada.",
+        "empty": "No hay productos Woo sincronizados. Ejecute primero la sync del catálogo.",
+        "yes": "Sí",
+        "no": "No",
+        "defaultTemplate": "Plantilla por defecto",
+        "dialogTitle": "Producto tarjeta regalo",
+        "markGift": "Tarjeta regalo BeautyHub",
+        "template": "Plantilla PDF",
+        "variations": "Plantillas por variación",
+        "inheritTemplate": "Heredar del producto",
+        "columns": {
+          "product": "Producto",
+          "gift": "Tarjeta regalo",
+          "template": "Plantilla",
+          "actions": "Acciones"
+        },
+        "actions": {
+          "productRequired": "Producto no encontrado.",
+          "wooPushFailed": "Guardado local OK, pero falló el push a Woo.",
+          "saved": "Ajustes de tarjeta regalo guardados."
         }
       }
     }

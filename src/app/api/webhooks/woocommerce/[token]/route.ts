@@ -71,6 +71,16 @@ function asWooProduct(payload: Record<string, unknown>): WooProduct | null {
               cat !== null && cat.name.trim().length > 0,
           )
       : undefined,
+    meta_data: Array.isArray(payload.meta_data)
+      ? payload.meta_data
+          .filter(
+            (m): m is { key: string; value: unknown } =>
+              typeof m === "object" &&
+              m !== null &&
+              typeof (m as { key?: unknown }).key === "string",
+          )
+          .map((m) => ({ key: m.key, value: (m as { value?: unknown }).value }))
+      : undefined,
   };
 }
 

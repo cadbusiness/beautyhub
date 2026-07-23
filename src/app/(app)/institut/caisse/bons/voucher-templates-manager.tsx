@@ -1,7 +1,7 @@
 "use client";
 
 import { Pencil, Trash2 } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
@@ -9,7 +9,8 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { Field, Input } from "@/components/ui/input";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { RowActionButton } from "@/components/ui/row-actions";
-import type { VoucherTemplateRow } from "@/lib/institut/voucher-pdf";
+import type { VoucherLayout, VoucherTemplateRow } from "@/lib/institut/voucher-pdf";
+import { VoucherLayoutEditor } from "./voucher-layout-editor";
 import {
   deleteVoucherTemplate,
   saveVoucherTemplate,
@@ -131,53 +132,144 @@ function TemplateFormDialog({
   const t = useTranslations("pos.vouchers.templates");
   const tCommon = useTranslations("common");
   const [state, action, pending] = useActionState(saveVoucherTemplate, initial);
-  const preview = publicBgUrl(template?.background_path ?? null);
+  const [title, setTitle] = useState(template?.title ?? "Carte cadeau");
+  const [subtitle, setSubtitle] = useState(template?.subtitle ?? "");
+  const [footer, setFooter] = useState(template?.footer_text ?? "");
+  const [layout, setLayout] = useState<VoucherLayout | null>(null);
+  const [localBg, setLocalBg] = useState<string | null>(null);
+  const [previewPending, setPreviewPending] = useState(false);
+  const storedBg = publicBgUrl(template?.background_path ?? null);
+  const previewBg = localBg ?? storedBg;
 
   useEffect(() => {
     if (state.ok) onClose();
   }, [state.ok, onClose]);
+
+  useEffect(() => {
+    return () => {
+      if (localBg) URL.revokeObjectURL(localBg);
+    };
+  }, [localBg]);
+
+  const layoutValue = useMemo(() => layout, [layout]);
+
+  async function openPdfPreview() {
+    setPreviewPending(true);
+    try {
+      const res = await fetch("/api/institut/voucher-templates/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          subtitle,
+          footer_text: footer,
+          layout: layoutValue,
+          background_path: template?.background_path ?? null,
+          background_url: previewBg,
+        }),
+      });
+      if (!res.ok) throw new Error("preview_failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      // ignore — UI stays usable
+    } finally {
+      setPreviewPending(false);
+    }
+  }
 
   return (
     <FormDialog
       open={open}
       onClose={onClose}
       title={template ? t("dialogEdit") : t("dialogNew")}
-      size="lg"
+      size="xl"
     >
       <form action={action} className="space-y-4">
         {template ? <input type="hidden" name="id" value={template.id} /> : null}
-        <Field label={t("form.name")} htmlFor="name">
-          <Input id="name" name="name" required defaultValue={template?.name ?? ""} />
-        </Field>
-        <Field label={t("form.title")} htmlFor="title">
-          <Input id="title" name="title" defaultValue={template?.title ?? "Carte cadeau"} />
-        </Field>
-        <Field label={t("form.subtitle")} htmlFor="subtitle">
-          <Input id="subtitle" name="subtitle" defaultValue={template?.subtitle ?? ""} />
-        </Field>
-        <Field label={t("form.footer")} htmlFor="footer_text">
-          <Input
-            id="footer_text"
-            name="footer_text"
-            defaultValue={template?.footer_text ?? ""}
-            placeholder={t("form.placeholdersHint")}
-          />
-        </Field>
-        <Field label={t("form.background")} htmlFor="background">
-          <Input id="background" name="background" type="file" accept="image/jpeg,image/png,image/webp" />
-        </Field>
-        {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="" className="h-28 w-full rounded-lg object-cover" />
-        ) : null}
-        <label className="flex items-center gap-2 text-sm text-slate-700">
-          <input type="checkbox" name="is_default" value="1" defaultChecked={template?.is_default ?? false} />
-          {t("form.default")}
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
-          <input type="checkbox" name="is_active" value="1" defaultChecked={template?.is_active ?? true} />
-          {t("form.active")}
-        </label>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-4">
+            <Field label={t("form.name")} htmlFor="name">
+              <Input id="name" name="name" required defaultValue={template?.name ?? ""} />
+            </Field>
+            <Field label={t("form.title")} htmlFor="title">
+              <Input
+                id="title"
+                name="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </Field>
+            <Field label={t("form.subtitle")} htmlFor="subtitle">
+              <Input
+                id="subtitle"
+                name="subtitle"
+                value={subtitle}
+                onChange={(e) => setSubtitle(e.target.value)}
+              />
+            </Field>
+            <Field label={t("form.footer")} htmlFor="footer_text">
+              <Input
+                id="footer_text"
+                name="footer_text"
+                value={footer}
+                onChange={(e) => setFooter(e.target.value)}
+                placeholder={t("form.placeholdersHint")}
+              />
+            </Field>
+            <Field label={t("form.background")} htmlFor="background">
+              <Input
+                id="background"
+                name="background"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (localBg) URL.revokeObjectURL(localBg);
+                  setLocalBg(file ? URL.createObjectURL(file) : null);
+                }}
+              />
+            </Field>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                name="is_default"
+                value="1"
+                defaultChecked={template?.is_default ?? false}
+              />
+              {t("form.default")}
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                name="is_active"
+                value="1"
+                defaultChecked={template?.is_active ?? true}
+              />
+              {t("form.active")}
+            </label>
+          </div>
+          <div className="space-y-3">
+            <VoucherLayoutEditor
+              initialLayout={template?.layout}
+              backgroundUrl={previewBg}
+              title={title}
+              subtitle={subtitle}
+              onChange={setLayout}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={previewPending}
+              onClick={() => void openPdfPreview()}
+              className="w-full"
+            >
+              {previewPending ? t("previewLoading") : t("previewPdf")}
+            </Button>
+          </div>
+        </div>
         {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>

@@ -8,6 +8,7 @@ import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/compone
 import { GiftCardForm } from "./gift-card-form";
 import { CreditNoteForm } from "./credit-note-form";
 import { VoucherForm } from "./voucher-form";
+import { GiftProductsManager } from "./gift-products-manager";
 import { VoucherTemplatesManager } from "./voucher-templates-manager";
 import { voidVoucherDirect } from "../../caisse-session-actions";
 
@@ -18,7 +19,8 @@ export default async function CaisseBonsPage() {
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
-  const [giftCards, creditNotes, partialSales, vouchers, templates] = await Promise.all([
+  const [giftCards, creditNotes, partialSales, vouchers, templates, wooProducts] =
+    await Promise.all([
     supabase
       .from("inst_gift_cards")
       .select("id, code, balance_cents, initial_balance_cents, status, recipient_name, created_at")
@@ -52,6 +54,15 @@ export default async function CaisseBonsPage() {
       .select("*")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("inst_products")
+      .select(
+        "id, name, woo_id, is_gift_card, gift_template_id, gift_variation_templates",
+      )
+      .eq("tenant_id", tenantId)
+      .eq("source", "woocommerce")
+      .order("name")
+      .limit(200),
   ]);
 
   const voucherIds = (vouchers.data ?? []).map((row) => row.id);
@@ -79,9 +90,24 @@ export default async function CaisseBonsPage() {
     }
   }
 
+  const giftProducts = (wooProducts.data ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    woo_id: p.woo_id,
+    is_gift_card: Boolean(p.is_gift_card),
+    gift_template_id: p.gift_template_id,
+    gift_variation_templates:
+      p.gift_variation_templates &&
+      typeof p.gift_variation_templates === "object" &&
+      !Array.isArray(p.gift_variation_templates)
+        ? (p.gift_variation_templates as Record<string, string>)
+        : {},
+  }));
+
   return (
     <div className="space-y-6 px-4 py-4 lg:px-6">
       <VoucherTemplatesManager templates={templates.data ?? []} />
+      <GiftProductsManager products={giftProducts} templates={templates.data ?? []} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="space-y-4">

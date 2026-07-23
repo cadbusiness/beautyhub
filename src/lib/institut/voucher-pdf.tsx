@@ -8,6 +8,7 @@ import {
   pdf,
 } from "@react-pdf/renderer";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import QRCode from "qrcode";
 import type { Database, Json } from "@/lib/db/database.types";
 
 type Db = SupabaseClient<Database>;
@@ -16,6 +17,18 @@ export const VOUCHER_ASSETS_BUCKET = "voucher-assets";
 export const VOUCHER_PDFS_BUCKET = "voucher-pdfs";
 
 export type VoucherTemplateRow = Database["public"]["Tables"]["inst_voucher_templates"]["Row"];
+
+export type LayoutKey = "code" | "amount" | "recipient" | "message" | "qr";
+
+export type VoucherLayout = Record<LayoutKey, { x: number; y: number; enabled?: boolean }>;
+
+export const DEFAULT_VOUCHER_LAYOUT: VoucherLayout = {
+  recipient: { x: 50, y: 22 },
+  amount: { x: 50, y: 40 },
+  code: { x: 50, y: 58 },
+  message: { x: 50, y: 74 },
+  qr: { x: 86, y: 78, enabled: true },
+};
 
 export interface GiftCardPdfData {
   code: string;
@@ -58,16 +71,43 @@ function pct(value: unknown, fallback: number): number {
   return Math.min(95, Math.max(5, n));
 }
 
-function layoutPoint(
+export function layoutPoint(
   layout: Json,
-  key: string,
-  fallback: { x: number; y: number },
-): { x: number; y: number } {
-  if (!layout || typeof layout !== "object" || Array.isArray(layout)) return fallback;
+  key: LayoutKey,
+  fallback: { x: number; y: number; enabled?: boolean } = DEFAULT_VOUCHER_LAYOUT[key],
+): { x: number; y: number; enabled: boolean } {
+  if (!layout || typeof layout !== "object" || Array.isArray(layout)) {
+    return { x: fallback.x, y: fallback.y, enabled: fallback.enabled !== false };
+  }
   const node = (layout as Record<string, unknown>)[key];
-  if (!node || typeof node !== "object" || Array.isArray(node)) return fallback;
+  if (!node || typeof node !== "object" || Array.isArray(node)) {
+    return { x: fallback.x, y: fallback.y, enabled: fallback.enabled !== false };
+  }
   const obj = node as Record<string, unknown>;
-  return { x: pct(obj.x, fallback.x), y: pct(obj.y, fallback.y) };
+  return {
+    x: pct(obj.x, fallback.x),
+    y: pct(obj.y, fallback.y),
+    enabled: obj.enabled === false ? false : true,
+  };
+}
+
+export function normalizeVoucherLayout(layout: Json | null | undefined): VoucherLayout {
+  return {
+    recipient: layoutPoint(layout ?? null, "recipient"),
+    amount: layoutPoint(layout ?? null, "amount"),
+    code: layoutPoint(layout ?? null, "code"),
+    message: layoutPoint(layout ?? null, "message"),
+    qr: layoutPoint(layout ?? null, "qr"),
+  };
+}
+
+export async function giftCardQrDataUrl(code: string): Promise<string> {
+  return QRCode.toDataURL(code, {
+    errorCorrectionLevel: "M",
+    margin: 1,
+    width: 256,
+    color: { dark: "#0f172a", light: "#ffffff" },
+  });
 }
 
 const styles = StyleSheet.create({
@@ -139,21 +179,30 @@ const styles = StyleSheet.create({
     color: "#475569",
     textAlign: "center",
   },
+  qr: {
+    position: "absolute",
+    width: 64,
+    height: 64,
+    marginLeft: -32,
+  },
 });
 
 function GiftCardDocument({
   template,
   data,
   backgroundUrl,
+  qrDataUrl,
 }: {
-  template: VoucherTemplateRow;
+  template: Pick<VoucherTemplateRow, "title" | "subtitle" | "footer_text" | "layout">;
   data: GiftCardPdfData;
   backgroundUrl?: string | null;
+  qrDataUrl?: string | null;
 }) {
-  const amountPos = layoutPoint(template.layout, "amount", { x: 50, y: 42 });
-  const recipientPos = layoutPoint(template.layout, "recipient", { x: 50, y: 28 });
-  const codePos = layoutPoint(template.layout, "code", { x: 50, y: 62 });
-  const messagePos = layoutPoint(template.layout, "message", { x: 50, y: 78 });
+  const amountPos = layoutPoint(template.layout, "amount");
+  const recipientPos = layoutPoint(template.layout, "recipient");
+  const codePos = layoutPoint(template.layout, "code");
+  const messagePos = layoutPoint(template.layout, "message");
+  const qrPos = layoutPoint(template.layout, "qr");
 
   const title = applyPlaceholders(template.title, data);
   const subtitle = applyPlaceholders(template.subtitle, data);
@@ -167,25 +216,38 @@ function GiftCardDocument({
           <Image src={backgroundUrl} style={styles.bg} />
         ) : null}
         <View style={styles.overlay}>
-          <View style={[styles.block, { left: `${recipientPos.x}%`, top: `${recipientPos.y}%` }]}>
-            <Text style={styles.title}>{title}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-            {data.recipientName?.trim() ? (
-              <Text style={styles.recipient}>{data.recipientName.trim()}</Text>
-            ) : null}
-          </View>
-          <View style={[styles.block, { left: `${amountPos.x}%`, top: `${amountPos.y}%` }]}>
-            <Text style={styles.amount}>
-              {formatAmount(data.amountCents, data.currency)}
-            </Text>
-          </View>
-          <View style={[styles.block, { left: `${codePos.x}%`, top: `${codePos.y}%` }]}>
-            <Text style={styles.code}>{data.code}</Text>
-          </View>
-          {data.message?.trim() ? (
+          {recipientPos.enabled ? (
+            <View style={[styles.block, { left: `${recipientPos.x}%`, top: `${recipientPos.y}%` }]}>
+              <Text style={styles.title}>{title}</Text>
+              {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+              {data.recipientName?.trim() ? (
+                <Text style={styles.recipient}>{data.recipientName.trim()}</Text>
+              ) : null}
+            </View>
+          ) : null}
+          {amountPos.enabled ? (
+            <View style={[styles.block, { left: `${amountPos.x}%`, top: `${amountPos.y}%` }]}>
+              <Text style={styles.amount}>
+                {formatAmount(data.amountCents, data.currency)}
+              </Text>
+            </View>
+          ) : null}
+          {codePos.enabled ? (
+            <View style={[styles.block, { left: `${codePos.x}%`, top: `${codePos.y}%` }]}>
+              <Text style={styles.code}>{data.code}</Text>
+            </View>
+          ) : null}
+          {messagePos.enabled && data.message?.trim() ? (
             <View style={[styles.block, { left: `${messagePos.x}%`, top: `${messagePos.y}%` }]}>
               <Text style={styles.message}>{data.message.trim()}</Text>
             </View>
+          ) : null}
+          {qrPos.enabled && qrDataUrl ? (
+            // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image
+            <Image
+              src={qrDataUrl}
+              style={[styles.qr, { left: `${qrPos.x}%`, top: `${qrPos.y}%` }]}
+            />
           ) : null}
           {footer ? <Text style={styles.footer}>{footer}</Text> : null}
         </View>
@@ -236,12 +298,7 @@ export async function ensureDefaultVoucherTemplate(
       footer_text: "Code : {code}",
       is_default: true,
       is_active: true,
-      layout: {
-        code: { x: 50, y: 62 },
-        amount: { x: 50, y: 42 },
-        recipient: { x: 50, y: 28 },
-        message: { x: 50, y: 78 },
-      },
+      layout: DEFAULT_VOUCHER_LAYOUT,
     })
     .select("*")
     .single();
@@ -270,17 +327,23 @@ function publicAssetUrl(path: string): string {
 }
 
 export async function renderGiftCardPdfBuffer(
-  template: VoucherTemplateRow,
+  template: Pick<VoucherTemplateRow, "title" | "subtitle" | "footer_text" | "layout" | "background_path"> & {
+    background_path?: string | null;
+  },
   data: GiftCardPdfData,
+  opts?: { backgroundUrl?: string | null },
 ): Promise<Buffer> {
-  const backgroundUrl = template.background_path
-    ? publicAssetUrl(template.background_path)
-    : null;
+  const backgroundUrl =
+    opts?.backgroundUrl ??
+    (template.background_path ? publicAssetUrl(template.background_path) : null);
+  const qrPos = layoutPoint(template.layout, "qr");
+  const qrDataUrl = qrPos.enabled ? await giftCardQrDataUrl(data.code) : null;
   const instance = pdf(
     <GiftCardDocument
       template={template}
       data={data}
       backgroundUrl={backgroundUrl}
+      qrDataUrl={qrDataUrl}
     />,
   );
   // Node: toBuffer returns a ReadableStream; browser/runtime: toBlob is available.

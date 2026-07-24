@@ -9,7 +9,13 @@ import {
 } from "../schedule-actions";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/input";
-import { dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
+import {
+  DataTable,
+  dataTableCellCompact,
+  dataTableHeadCompact,
+  dataTableRow,
+} from "@/components/ui/data-table";
+import { ListToolbar } from "@/components/ui/list-toolbar";
 
 const initial: ActionResult = {};
 
@@ -101,14 +107,14 @@ function AssignmentRowInner({
 
   return (
     <tr className={dataTableRow}>
-      <td className={`font-medium text-slate-900 ${dataTableCell}`}>{entityName}</td>
-      <td className={dataTableCell}>
+      <td className={`font-medium text-slate-900 ${dataTableCellCompact}`}>{entityName}</td>
+      <td className={dataTableCellCompact}>
         <form action={action} className="flex flex-wrap items-center gap-2">
           <input type="hidden" name={fieldName} value={entityId} />
           <Select
             name="schedule_id"
             defaultValue={currentScheduleId ?? ""}
-            className="!w-auto min-w-48 max-w-xs"
+            className="!h-8 !w-auto min-w-48 max-w-xs"
           >
             <option value="">{defaultLabel}</option>
             {schedules.map((s) => (
@@ -122,7 +128,7 @@ function AssignmentRowInner({
             {pending ? t("saving") : t("save")}
           </Button>
           {state.error ? <span className="text-xs text-red-600">{state.error}</span> : null}
-          {state.ok ? <span className="text-xs text-green-600">{t("saved")}</span> : null}
+          {state.ok ? <span className="text-xs text-emerald-600">{t("saved")}</span> : null}
         </form>
       </td>
     </tr>
@@ -142,76 +148,70 @@ export function ScheduleAssignmentsPanel({
   const defaultSchedule = schedules.find((s) => s.is_default);
 
   return (
-    <div className="space-y-8">
-      <p className="text-sm text-slate-600">
-        {t("description", { defaultName: defaultSchedule?.name ?? t("noneDefault") })}
-      </p>
+    <>
+      <ListToolbar>
+        <p className="text-sm text-slate-600">
+          {t("description", { defaultName: defaultSchedule?.name ?? t("noneDefault") })}
+        </p>
+      </ListToolbar>
 
-      <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-slate-900">{t("staffTitle")}</h3>
-        <div className="overflow-hidden rounded-lg border border-slate-200">
+      <div className="border-b border-slate-200 px-4 py-2.5 lg:px-6">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          {t("staffTitle")}
+        </h2>
+      </div>
+      <DataTable empty={staff.length === 0 ? t("noStaff") : undefined}>
+        {staff.length > 0 ? (
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+            <thead className="border-b border-slate-200">
               <tr>
-                <th className={`w-48 ${dataTableHead}`}>{t("columns.name")}</th>
-                <th className={dataTableHead}>{t("columns.schedule")}</th>
+                <th className={`w-48 ${dataTableHeadCompact}`}>{t("columns.name")}</th>
+                <th className={dataTableHeadCompact}>{t("columns.schedule")}</th>
               </tr>
             </thead>
             <tbody>
-              {staff.length === 0 ? (
-                <tr>
-                  <td colSpan={2} className="px-4 py-6 text-center text-slate-500">
-                    {t("noStaff")}
-                  </td>
-                </tr>
-              ) : (
-                staff.map((s) => (
-                  <StaffAssignmentRow
-                    key={s.id}
-                    staffId={s.id}
-                    name={s.full_name}
-                    currentScheduleId={s.schedule_id}
-                    schedules={schedules}
-                  />
-                ))
-              )}
+              {staff.map((s) => (
+                <StaffAssignmentRow
+                  key={s.id}
+                  staffId={s.id}
+                  name={s.full_name}
+                  currentScheduleId={s.schedule_id}
+                  schedules={schedules}
+                />
+              ))}
             </tbody>
           </table>
-        </div>
-      </section>
+        ) : null}
+      </DataTable>
 
-      <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-slate-900">{t("resourcesTitle")}</h3>
-        <div className="overflow-hidden rounded-lg border border-slate-200">
+      <div className="border-b border-t border-slate-200 px-4 py-2.5 lg:px-6">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          {t("resourcesTitle")}
+        </h2>
+      </div>
+      <DataTable empty={resources.length === 0 ? t("noResources") : undefined}>
+        {resources.length > 0 ? (
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+            <thead className="border-b border-slate-200">
               <tr>
-                <th className={`w-48 ${dataTableHead}`}>{t("columns.name")}</th>
-                <th className={dataTableHead}>{t("columns.schedule")}</th>
+                <th className={`w-48 ${dataTableHeadCompact}`}>{t("columns.name")}</th>
+                <th className={dataTableHeadCompact}>{t("columns.schedule")}</th>
               </tr>
             </thead>
             <tbody>
-              {resources.length === 0 ? (
-                <tr>
-                  <td colSpan={2} className="px-4 py-6 text-center text-slate-500">
-                    {t("noResources")}
-                  </td>
-                </tr>
-              ) : (
-                resources.map((r) => (
-                  <ResourceAssignmentRow
-                    key={r.id}
-                    resourceId={r.id}
-                    name={r.name}
-                    currentScheduleId={r.schedule_id}
-                    schedules={schedules}
-                  />
-                ))
-              )}
+              {resources.map((r) => (
+                <ResourceAssignmentRow
+                  key={r.id}
+                  resourceId={r.id}
+                  name={r.name}
+                  currentScheduleId={r.schedule_id}
+                  schedules={schedules}
+                />
+              ))}
             </tbody>
           </table>
-        </div>
-      </section>
-    </div>
+        ) : null}
+      </DataTable>
+    </>
   );
 }

@@ -326,35 +326,19 @@ export function EquipeManager({
         ) : null}
 
         {tab === "horaires" ? (
-          <div className="px-4 py-4 lg:px-6">
-            <div className="mb-4 flex flex-wrap gap-2 border-b border-slate-200 pb-3">
-              {(
-                [
-                  { id: "grilles", label: t("horairesTabs.grilles") },
-                  { id: "assignations", label: t("horairesTabs.assignations") },
-                  { id: "absences", label: t("horairesTabs.absences") },
-                ] as const
-              ).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setHorairesTab(item.id)}
-                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                    horairesTab === item.id
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+          <>
+            <PageTabs
+              tabs={[
+                { id: "grilles", label: t("horairesTabs.grilles") },
+                { id: "assignations", label: t("horairesTabs.assignations") },
+                { id: "absences", label: t("horairesTabs.absences") },
+              ]}
+              active={horairesTab}
+              onChange={setHorairesTab}
+            />
 
             {horairesTab === "grilles" ? (
-              <div className="space-y-4">
-                <p className="text-sm text-slate-600">{t("schedules.description")}</p>
-                <SchedulesPanel schedules={schedules} />
-              </div>
+              <SchedulesPanel schedules={schedules} />
             ) : null}
 
             {horairesTab === "assignations" ? (
@@ -372,7 +356,7 @@ export function EquipeManager({
                 resources={resources}
               />
             ) : null}
-          </div>
+          </>
         ) : null}
       </ListPanel>
 

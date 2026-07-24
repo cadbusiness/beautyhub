@@ -7,8 +7,14 @@ import { createTimeOff, deleteTimeOff, type ActionResult } from "../schedule-act
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { Field } from "@/components/ui/input";
-import { dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
-import { RowActionButton } from "@/components/ui/row-actions";
+import {
+  DataTable,
+  dataTableCellCompact,
+  dataTableHeadCompact,
+  dataTableRow,
+} from "@/components/ui/data-table";
+import { ListToolbar } from "@/components/ui/list-toolbar";
+import { RowActionButton, RowActions } from "@/components/ui/row-actions";
 import { formatDateTime } from "@/lib/utils";
 
 const initial: ActionResult = {};
@@ -43,18 +49,24 @@ export function TimeOffPanel({
   resources: ResourceOption[];
 }) {
   const t = useTranslations("institut.team.absences");
+  const tCommon = useTranslations("common");
   const [state, action, pending] = useActionState(createTimeOff, initial);
   const [scope, setScope] = useState("tenant");
 
   return (
-    <div className="space-y-8">
-      <section className="max-w-xl space-y-4">
+    <>
+      <ListToolbar>
         <div>
-          <h3 className="text-sm font-semibold text-slate-900">{t("formTitle")}</h3>
-          <p className="mt-1 text-sm text-slate-600">{t("formDescription")}</p>
+          <p className="text-sm font-medium text-slate-900">{t("formTitle")}</p>
+          <p className="text-sm text-slate-600">{t("formDescription")}</p>
         </div>
+      </ListToolbar>
 
-        <form action={action} className="space-y-4 rounded-lg border border-slate-200 p-4">
+      <form
+        action={action}
+        className="grid max-w-3xl gap-4 border-b border-slate-200 px-4 py-4 sm:grid-cols-2 lg:px-6"
+      >
+        <div className="sm:col-span-2">
           <Field label={t("scope")} htmlFor="absence-scope">
             <Select
               id="absence-scope"
@@ -68,8 +80,10 @@ export function TimeOffPanel({
               <option value="resource">{t("scopeResource")}</option>
             </Select>
           </Field>
+        </div>
 
-          {scope === "staff" && staff.length > 0 ? (
+        {scope === "staff" && staff.length > 0 ? (
+          <div className="sm:col-span-2">
             <Field label={t("staff")} htmlFor="absence-staff">
               <Select id="absence-staff" name="staff_id" defaultValue="" className="!w-full">
                 <option value="">{t("chooseStaff")}</option>
@@ -80,9 +94,11 @@ export function TimeOffPanel({
                 ))}
               </Select>
             </Field>
-          ) : null}
+          </div>
+        ) : null}
 
-          {scope === "resource" && resources.length > 0 ? (
+        {scope === "resource" && resources.length > 0 ? (
+          <div className="sm:col-span-2">
             <Field label={t("resource")} htmlFor="absence-resource">
               <Select id="absence-resource" name="resource_id" defaultValue="" className="!w-full">
                 <option value="">{t("chooseResource")}</option>
@@ -93,29 +109,29 @@ export function TimeOffPanel({
                 ))}
               </Select>
             </Field>
-          ) : null}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("startsAt")} htmlFor="absence-start">
-              <Input
-                id="absence-start"
-                type="datetime-local"
-                name="starts_at"
-                required
-                className="!w-full"
-              />
-            </Field>
-            <Field label={t("endsAt")} htmlFor="absence-end">
-              <Input
-                id="absence-end"
-                type="datetime-local"
-                name="ends_at"
-                required
-                className="!w-full"
-              />
-            </Field>
           </div>
+        ) : null}
 
+        <Field label={t("startsAt")} htmlFor="absence-start">
+          <Input
+            id="absence-start"
+            type="datetime-local"
+            name="starts_at"
+            required
+            className="!w-full"
+          />
+        </Field>
+        <Field label={t("endsAt")} htmlFor="absence-end">
+          <Input
+            id="absence-end"
+            type="datetime-local"
+            name="ends_at"
+            required
+            className="!w-full"
+          />
+        </Field>
+
+        <div className="sm:col-span-2">
           <Field label={t("reason")} htmlFor="absence-reason">
             <Textarea
               id="absence-reason"
@@ -124,62 +140,68 @@ export function TimeOffPanel({
               className="!w-full min-h-16"
             />
           </Field>
+        </div>
 
-          {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
-          {state.ok ? <p className="text-sm text-green-600">{t("saved")}</p> : null}
-
+        <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
           <Button type="submit" disabled={pending}>
             {pending ? t("submitting") : t("submit")}
           </Button>
-        </form>
-      </section>
+          {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
+          {state.ok ? <p className="text-sm text-emerald-600">{t("saved")}</p> : null}
+        </div>
+      </form>
 
-      <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-slate-900">{t("listTitle")}</h3>
-        <div className="overflow-hidden rounded-lg border border-slate-200">
+      <div className="border-b border-slate-200 px-4 py-2.5 lg:px-6">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          {t("listTitle")}
+        </h2>
+      </div>
+      <DataTable empty={timeOffs.length === 0 ? t("empty") : undefined}>
+        {timeOffs.length > 0 ? (
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+            <thead className="border-b border-slate-200">
               <tr>
-                <th className={dataTableHead}>{t("columns.scope")}</th>
-                <th className={dataTableHead}>{t("columns.period")}</th>
-                <th className={dataTableHead}>{t("columns.reason")}</th>
-                <th className={`w-24 text-right ${dataTableHead}`}>{t("columns.actions")}</th>
+                <th className={dataTableHeadCompact}>{t("columns.scope")}</th>
+                <th className={dataTableHeadCompact}>{t("columns.period")}</th>
+                <th className={dataTableHeadCompact}>{t("columns.reason")}</th>
+                <th className={`w-24 text-right ${dataTableHeadCompact}`}>
+                  {t("columns.actions")}
+                </th>
               </tr>
             </thead>
             <tbody>
-              {timeOffs.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-slate-500">
-                    {t("empty")}
+              {timeOffs.map((row) => (
+                <tr key={row.id} className={dataTableRow}>
+                  <td className={`font-medium text-slate-900 ${dataTableCellCompact}`}>
+                    {scopeLabel(row, t)}
                   </td>
-                </tr>
-              ) : (
-                timeOffs.map((row) => (
-                  <tr key={row.id} className={dataTableRow}>
-                    <td className={`font-medium text-slate-900 ${dataTableCell}`}>
-                      {scopeLabel(row, t)}
-                    </td>
-                    <td className={`text-slate-600 ${dataTableCell}`}>
-                      {formatDateTime(row.starts_at)} → {formatDateTime(row.ends_at)}
-                    </td>
-                    <td className={`text-slate-600 ${dataTableCell}`}>
-                      {row.reason ?? "—"}
-                    </td>
-                    <td className={`text-right ${dataTableCell}`}>
+                  <td className={`text-slate-600 ${dataTableCellCompact}`}>
+                    {formatDateTime(row.starts_at)} → {formatDateTime(row.ends_at)}
+                  </td>
+                  <td className={`text-slate-600 ${dataTableCellCompact}`}>
+                    {row.reason ?? tCommon("dash")}
+                  </td>
+                  <td className={`text-right ${dataTableCellCompact}`}>
+                    <RowActions className="justify-end">
                       <form action={deleteTimeOff}>
                         <input type="hidden" name="id" value={row.id} />
-                        <RowActionButton type="submit" tone="danger" icon={<Trash2 className="h-3.5 w-3.5" />}>
+                        <RowActionButton
+                          type="submit"
+                          iconOnly
+                          tone="danger"
+                          icon={<Trash2 className="h-3.5 w-3.5" />}
+                        >
                           {t("delete")}
                         </RowActionButton>
                       </form>
-                    </td>
-                  </tr>
-                ))
-              )}
+                    </RowActions>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
-        </div>
-      </section>
-    </div>
+        ) : null}
+      </DataTable>
+    </>
   );
 }

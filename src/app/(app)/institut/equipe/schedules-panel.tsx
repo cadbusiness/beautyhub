@@ -1,11 +1,15 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createSchedule, deleteSchedule, type ActionResult } from "../schedule-actions";
 import { ScheduleBlocksEditor } from "./schedule-blocks-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ListToolbar } from "@/components/ui/list-toolbar";
+import { RowActionButton } from "@/components/ui/row-actions";
+import { cn } from "@/lib/utils";
 
 const initial: ActionResult = {};
 
@@ -27,67 +31,98 @@ export function SchedulesPanel({ schedules }: { schedules: Schedule[] }) {
 
   if (schedules.length === 0) {
     return (
-      <div className="space-y-4">
-        <p className="text-sm text-slate-600">{t("empty")}</p>
-        <CreateScheduleForm action={createAction} pending={createPending} state={createState} />
-      </div>
+      <>
+        <ListToolbar>
+          <p className="text-sm text-slate-600">{t("empty")}</p>
+        </ListToolbar>
+        <div className="max-w-md px-4 py-4 lg:px-6">
+          <CreateScheduleForm action={createAction} pending={createPending} state={createState} />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
-      <aside className="w-full shrink-0 space-y-3 lg:w-56">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-          {t("listTitle")}
-        </p>
-        <ul className="space-y-1">
-          {schedules.map((s) => (
-            <li key={s.id} className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setSelectedId(s.id)}
-                className={`flex-1 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                  selected?.id === s.id
-                    ? "bg-slate-900 font-medium text-white"
-                    : "text-slate-700 hover:bg-slate-100"
-                }`}
-              >
-                {s.name}
-                {s.is_default ? (
-                  <span className="ml-1 text-xs opacity-70">· {t("defaultShort")}</span>
-                ) : null}
-              </button>
-              {!s.is_default ? (
-                <form action={deleteSchedule}>
-                  <input type="hidden" name="id" value={s.id} />
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    className="h-8 w-8 p-0 text-red-600"
-                    title={t("delete")}
-                  >
-                    ×
-                  </Button>
-                </form>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-        <CreateScheduleForm action={createAction} pending={createPending} state={createState} />
-      </aside>
+    <>
+      <ListToolbar>
+        <p className="text-sm text-slate-600">{t("description")}</p>
+      </ListToolbar>
 
-      {selected ? (
-        <div className="min-w-0 flex-1">
-          <ScheduleBlocksEditor
-            key={selected.id}
-            scheduleId={selected.id}
-            scheduleName={selected.name}
-            isDefault={selected.is_default}
-            initialBlocks={selected.blocks}
-          />
-        </div>
-      ) : null}
-    </div>
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <aside className="w-full shrink-0 border-b border-slate-200 lg:w-60 lg:border-b-0 lg:border-r">
+          <p className="px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-slate-500 lg:px-4">
+            {t("listTitle")}
+          </p>
+          <ul className="border-t border-slate-100">
+            {schedules.map((s) => {
+              const active = selected?.id === s.id;
+              return (
+                <li
+                  key={s.id}
+                  className={cn(
+                    "flex items-stretch border-b border-slate-100",
+                    active && "bg-slate-50",
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(s.id)}
+                    className={cn(
+                      "min-w-0 flex-1 px-4 py-2.5 text-left text-sm transition-colors",
+                      active
+                        ? "border-l-2 border-slate-900 font-medium text-slate-900"
+                        : "border-l-2 border-transparent text-slate-700 hover:bg-slate-50",
+                    )}
+                  >
+                    <span className="block truncate">{s.name}</span>
+                    {s.is_default ? (
+                      <span className="mt-0.5 block text-xs text-slate-400">
+                        {t("defaultShort")}
+                      </span>
+                    ) : null}
+                  </button>
+                  {!s.is_default ? (
+                    <form
+                      action={deleteSchedule}
+                      className="flex items-center border-l border-slate-100 px-1"
+                    >
+                      <input type="hidden" name="id" value={s.id} />
+                      <RowActionButton
+                        type="submit"
+                        iconOnly
+                        tone="danger"
+                        icon={<Trash2 className="h-3.5 w-3.5" />}
+                      >
+                        {t("delete")}
+                      </RowActionButton>
+                    </form>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+          <div className="px-4 py-3">
+            <CreateScheduleForm
+              action={createAction}
+              pending={createPending}
+              state={createState}
+            />
+          </div>
+        </aside>
+
+        {selected ? (
+          <div className="min-w-0 flex-1">
+            <ScheduleBlocksEditor
+              key={selected.id}
+              scheduleId={selected.id}
+              scheduleName={selected.name}
+              isDefault={selected.is_default}
+              initialBlocks={selected.blocks}
+            />
+          </div>
+        ) : null}
+      </div>
+    </>
   );
 }
 
@@ -103,14 +138,9 @@ function CreateScheduleForm({
   const t = useTranslations("institut.team.schedules");
 
   return (
-    <form action={action} className="space-y-2 border-t border-slate-200 pt-3">
+    <form action={action} className="space-y-2">
       <p className="text-xs font-medium text-slate-600">{t("createTitle")}</p>
-      <Input
-        name="name"
-        placeholder={t("createPlaceholder")}
-        className="!w-full"
-        required
-      />
+      <Input name="name" placeholder={t("createPlaceholder")} className="!w-full" required />
       {state.error ? <p className="text-xs text-red-600">{state.error}</p> : null}
       <Button type="submit" variant="outline" className="h-8 w-full text-sm" disabled={pending}>
         {pending ? t("creating") : t("create")}

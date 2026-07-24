@@ -8,10 +8,14 @@ import { weekdayMessageKey } from "@/lib/i18n/nav";
 import { WEEKDAYS } from "./constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
+import {
+  dataTableCellCompact,
+  dataTableHeadCompact,
+  dataTableRow,
+} from "@/components/ui/data-table";
 
 const initial: ActionResult = {};
-const timeInputClass = "!w-[7.25rem] shrink-0";
+const timeInputClass = "!h-8 !w-[7rem] shrink-0";
 
 interface Block {
   start: string;
@@ -34,7 +38,9 @@ function groupBlocks(
   return map;
 }
 
-function flattenBlocks(map: DayBlocks): Array<{ weekday: number; start_time: string; end_time: string }> {
+function flattenBlocks(
+  map: DayBlocks,
+): Array<{ weekday: number; start_time: string; end_time: string }> {
   const out: Array<{ weekday: number; start_time: string; end_time: string }> = [];
   for (const day of WEEKDAYS) {
     for (const block of map[day.value] ?? []) {
@@ -71,8 +77,8 @@ function DayEditor({
 
   return (
     <tr className={dataTableRow}>
-      <td className={`font-medium text-slate-900 ${dataTableCell}`}>{dayLabel}</td>
-      <td className={`text-center ${dataTableCell}`}>
+      <td className={`font-medium text-slate-900 ${dataTableCellCompact}`}>{dayLabel}</td>
+      <td className={`text-center ${dataTableCellCompact}`}>
         <input
           type="checkbox"
           checked={open}
@@ -81,11 +87,11 @@ function DayEditor({
           aria-label={dayLabel}
         />
       </td>
-      <td className={dataTableCell}>
+      <td className={dataTableCellCompact}>
         {!open ? (
           <span className="text-sm text-slate-400">{closedLabel}</span>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5 py-0.5">
             {blocks.map((block, index) => (
               <div key={index} className="flex flex-wrap items-center gap-2">
                 <Input
@@ -123,16 +129,13 @@ function DayEditor({
                 ) : null}
               </div>
             ))}
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              className="h-8 px-2 text-sm text-slate-600"
-              onClick={() =>
-                onChange(weekday, [...blocks, { start: "14:00", end: "18:00" }])
-              }
+              className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-800"
+              onClick={() => onChange(weekday, [...blocks, { start: "14:00", end: "18:00" }])}
             >
               + {addBlockLabel}
-            </Button>
+            </button>
           </div>
         )}
       </td>
@@ -172,13 +175,13 @@ export function ScheduleBlocksEditor({
   }
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="flex flex-col">
       <input type="hidden" name="schedule_id" value={scheduleId} />
       <input type="hidden" name="blocks" value={blocksJson} />
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="min-w-48 flex-1 space-y-1">
-          <label htmlFor="schedule-name" className="text-sm font-medium text-slate-700">
+      <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-2.5 lg:px-6">
+        <div className="min-w-0 flex-1">
+          <label htmlFor="schedule-name" className="sr-only">
             {t("nameLabel")}
           </label>
           <Input
@@ -186,26 +189,32 @@ export function ScheduleBlocksEditor({
             name="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="!w-full max-w-md"
+            className="!h-9 !w-full max-w-sm"
             disabled={isDefault}
+            aria-label={t("nameLabel")}
           />
         </div>
         {isDefault ? (
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+          <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
             {t("defaultBadge")}
           </span>
         ) : null}
+        <Button type="submit" className="h-9" disabled={pending}>
+          {pending ? t("submitting") : t("submit")}
+        </Button>
       </div>
 
-      <p className="text-sm text-slate-500">{t("blocksHint")}</p>
+      <p className="border-b border-slate-100 px-4 py-2 text-xs text-slate-500 lg:px-6">
+        {t("blocksHint")}
+      </p>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200">
+      <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50">
+          <thead className="border-b border-slate-200">
             <tr>
-              <th className={`w-36 ${dataTableHead}`}>{t("columns.day")}</th>
-              <th className={`w-24 text-center ${dataTableHead}`}>{t("columns.open")}</th>
-              <th className={dataTableHead}>{t("columns.hours")}</th>
+              <th className={`w-36 ${dataTableHeadCompact}`}>{t("columns.day")}</th>
+              <th className={`w-24 text-center ${dataTableHeadCompact}`}>{t("columns.open")}</th>
+              <th className={dataTableHeadCompact}>{t("columns.hours")}</th>
             </tr>
           </thead>
           <tbody>
@@ -224,14 +233,16 @@ export function ScheduleBlocksEditor({
         </table>
       </div>
 
-      {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
-      {state.ok ? <p className="text-sm text-green-600">{t("saved")}</p> : null}
-
-      <div className="flex justify-end">
-        <Button type="submit" disabled={pending}>
-          {pending ? t("submitting") : t("submit")}
-        </Button>
-      </div>
+      {state.error ? (
+        <p className="border-t border-slate-100 px-4 py-2 text-sm text-red-600 lg:px-6">
+          {state.error}
+        </p>
+      ) : null}
+      {state.ok ? (
+        <p className="border-t border-slate-100 px-4 py-2 text-sm text-emerald-600 lg:px-6">
+          {t("saved")}
+        </p>
+      ) : null}
     </form>
   );
 }

@@ -39,7 +39,8 @@ void main() {
       ),
     );
 
-    expect(find.text('BeautyHub Pro'), findsOneWidget);
+    expect(find.text('BeautyHub Pro'), findsWidgets);
+    expect(find.text('Connexion équipe'), findsOneWidget);
     expect(find.text('Se connecter'), findsOneWidget);
   });
 }

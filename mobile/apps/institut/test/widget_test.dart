@@ -1,10 +1,13 @@
-import 'package:beautyhub_institut/home_screen.dart';
+import 'package:beautyhub_institut/features/auth/login_screen.dart';
 import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:beautyhub_institut/state/session_providers.dart';
+
 void main() {
-  testWidgets('InstitutHomeScreen affiche le nom de l app', (tester) async {
+  testWidgets('LoginScreen affiche le titre app', (tester) async {
     const bootstrap = MobileBootstrap(
       appId: '00000000-0000-4000-8000-000000000001',
       audience: 'institut',
@@ -28,10 +31,15 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(home: InstitutHomeScreen(bootstrap: bootstrap)),
+      ProviderScope(
+        overrides: [
+          bootstrapProvider.overrideWithValue(bootstrap),
+        ],
+        child: const MaterialApp(home: LoginScreen()),
+      ),
     );
 
     expect(find.text('BeautyHub Pro'), findsOneWidget);
-    expect(find.text('Espace équipe'), findsOneWidget);
+    expect(find.text('Se connecter'), findsOneWidget);
   });
 }

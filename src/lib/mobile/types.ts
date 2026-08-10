@@ -58,6 +58,7 @@ export const MOBILE_HEADERS = {
   bundleId: "x-beautyhub-bundle-id",
   appVersion: "x-beautyhub-app-version",
   platform: "x-beautyhub-platform",
+  tenantId: "x-tenant-id",
 } as const;
 
 export type MobilePlatform = "ios" | "android";

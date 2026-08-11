@@ -700,6 +700,8 @@
     "backToHome": "← BeautyHub",
     "email": "E-mail",
     "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "setupRequired": "Database not connected on this deployment. ",
     "submit": "Log in",
     "submitting": "Connection…",

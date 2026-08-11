@@ -2089,6 +2089,8 @@
     "setupRequired": "Database niet gekoppeld op deze omgeving. Configureer de Supabase-variabelen op Vercel en deploy opnieuw.",
     "email": "E-mail",
     "password": "Wachtwoord",
+    "showPassword": "Wachtwoord tonen",
+    "hidePassword": "Wachtwoord verbergen",
     "submit": "Aanmelden",
     "submitting": "Aanmelden…",
     "supabaseNotConfigured": "Dienst niet beschikbaar: Supabase niet geconfigureerd op deze omgeving.",

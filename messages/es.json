@@ -700,6 +700,8 @@
     "backToHome": "← Centro de belleza",
     "email": "Correo electrónico",
     "password": "Contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "setupRequired": "La base de datos no está conectada en esta implementación. Configure las variables de Supabase en Vercel y luego vuelva a implementarlas.",
     "submit": "Acceso",
     "submitting": "Conexión…",

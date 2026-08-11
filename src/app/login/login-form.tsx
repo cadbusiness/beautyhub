@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { signIn, type AuthState } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export function LoginForm({ setupRequired }: { setupRequired?: boolean }) {
   const [state, formAction, pending] = useActionState(signIn, initialState);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   function fillAccount(accountEmail: string) {
     setEmail(accountEmail);
@@ -64,16 +66,28 @@ export function LoginForm({ setupRequired }: { setupRequired?: boolean }) {
             />
           </Field>
           <Field label={tCommon("password")} htmlFor="password">
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              disabled={setupRequired}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                autoComplete="current-password"
+                disabled={setupRequired}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                disabled={setupRequired}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-700 disabled:opacity-50"
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </Field>
 
           {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}

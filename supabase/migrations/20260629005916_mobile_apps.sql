@@ -1,0 +1,1 @@
+-- Migration placeholder (CLI-generated). Schema applied in 0040_mobile_apps.sql.

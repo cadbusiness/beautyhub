@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/ops_models.dart';
+import '../models/pos_models.dart';
 
 class MobileApiException implements Exception {
   MobileApiException(this.message, {this.statusCode, this.code});
@@ -126,6 +127,42 @@ class MobileApiClient {
     final raw = body['session'];
     if (raw is! Map) return null;
     return CashSessionSummary.fromJson(Map<String, dynamic>.from(raw));
+  }
+
+  Future<PosContext> fetchPosContext({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/pos-context'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return PosContext.fromJson(body);
+  }
+
+  Future<PosCheckoutResult> checkout({
+    required String accessToken,
+    required String tenantId,
+    required Map<String, int> cart,
+    required List<Map<String, dynamic>> payments,
+    String? clientId,
+    String? staffId,
+    String? notes,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/checkout'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'cart': cart,
+        'payments': payments,
+        if (clientId != null) 'clientId': clientId,
+        if (staffId != null) 'staffId': staffId,
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+      }),
+    );
+    final body = await _decode(response);
+    return PosCheckoutResult.fromJson(body);
   }
 
   void close() => _http.close();

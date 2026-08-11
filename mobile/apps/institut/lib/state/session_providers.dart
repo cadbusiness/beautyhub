@@ -79,3 +79,13 @@ final cashSessionProvider =
   final api = ref.watch(mobileApiProvider);
   return api.fetchCashSession(accessToken: token, tenantId: tenantId);
 });
+
+final posContextProvider = FutureProvider.autoDispose<PosContext>((ref) async {
+  final token = ref.watch(accessTokenProvider);
+  final tenantId = ref.watch(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  final api = ref.watch(mobileApiProvider);
+  return api.fetchPosContext(accessToken: token, tenantId: tenantId);
+});

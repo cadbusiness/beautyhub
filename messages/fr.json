@@ -177,12 +177,13 @@
   },
   "account": {
     "title": "Mon compte",
-    "subtitle": "Profil, sécurité, identité visuelle et paramètres de l'institut.",
+    "subtitle": "Profil, sécurité, identité visuelle, domaine et paramètres de l'institut.",
     "nav": {
       "ariaLabel": "Sections du compte",
       "profile": "Profil",
       "security": "Sécurité",
       "branding": "Branding",
+      "domain": "Domaine",
       "institut": "Institut",
       "woocommerce": "WooCommerce",
       "stripe": "Stripe Connect",
@@ -229,6 +230,27 @@
       "logoImagesOnly": "Seules les images sont acceptées.",
       "unsupportedFormat": "Format non supporté.",
       "imageTooLarge": "Image trop volumineuse (max 5 Mo)."
+    },
+    "domain": {
+      "sectionTitle": "Domaine",
+      "sectionDescription": "Sous-domaine BeautyHub et domaine personnalisé pour votre site et vos liens publics.",
+      "description": "Le domaine personnalisé remplace le sous-domaine dans tous les liens partagés (site, réservation, portail cliente).",
+      "subdomain": "Sous-domaine BeautyHub",
+      "subdomainHint": "Toujours actif — idéal pour démarrer sans configurer DNS.",
+      "customDomain": "Domaine personnalisé",
+      "customDomainPlaceholder": "mon-institut.fr",
+      "customDomainHint": "Sans https:// — laissez vide pour n'utiliser que le sous-domaine.",
+      "dnsTitle": "Configuration DNS",
+      "dnsBody": "Chez votre registrar, créez un enregistrement CNAME vers Vercel puis ajoutez le domaine dans Vercel → Settings → Domains.",
+      "linksTitle": "Liens publics",
+      "links": {
+        "site": "Site vitrine",
+        "booking": "Réservation en ligne",
+        "clientLogin": "Portail cliente"
+      },
+      "saved": "Domaine enregistré.",
+      "invalidDomain": "Domaine invalide. Exemple : mon-institut.fr",
+      "domainTaken": "Ce domaine est déjà utilisé par un autre institut."
     }
   },
   "dashboard": {

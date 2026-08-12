@@ -53,6 +53,12 @@ export async function getTenantPublicBaseUrl(
   slug: string,
   tenantFromContext?: TenantContext | null,
 ): Promise<string> {
+  if (tenantFromContext?.id) {
+    const supabase = await createClient();
+    const { resolveTenantPublicBaseUrl } = await import("@/lib/institut/tenant-domain");
+    return resolveTenantPublicBaseUrl(supabase, tenantFromContext.id, slug);
+  }
+
   const headerList = await headers();
   const host = headerList.get("host") ?? "";
   const rootDomain =

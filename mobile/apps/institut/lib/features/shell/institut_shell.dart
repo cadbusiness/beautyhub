@@ -20,6 +20,7 @@ class InstitutShell extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: _onTap,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),

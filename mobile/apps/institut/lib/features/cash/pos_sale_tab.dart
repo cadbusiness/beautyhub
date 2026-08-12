@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/pos_cart_provider.dart';
 import '../../state/session_providers.dart';
+import '../shared/catalog_item_thumb.dart';
 import '../shared/money.dart';
 
 class PosSaleTab extends ConsumerStatefulWidget {
@@ -158,8 +159,17 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                             final item = items[index];
                             final qty = cart[item.key] ?? 0;
                             return ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(item.name),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                              leading: CatalogItemThumb(
+                                imageUrl: item.imageUrl,
+                                colorHex: item.color,
+                                category: item.category,
+                              ),
+                              title: Text(
+                                item.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                               subtitle: Text(
                                 [
                                   formatEuros(item.priceCents),
@@ -271,6 +281,12 @@ class _CartSheet extends ConsumerWidget {
       lines.add(
         ListTile(
           dense: true,
+          leading: CatalogItemThumb(
+            imageUrl: item.imageUrl,
+            colorHex: item.color,
+            category: item.category,
+            size: 36,
+          ),
           title: Text('${item.name} × ${entry.value}'),
           trailing: Text(formatEuros(lineTotal)),
         ),

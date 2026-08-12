@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'app_theme.dart';
 import 'features/agenda/agenda_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/cash/cash_screen.dart';
@@ -151,7 +152,7 @@ class _InstitutRouterAppState extends ConsumerState<_InstitutRouterApp> {
 
     return MaterialApp.router(
       title: bootstrap.appName,
-      theme: themeFromBranding(bootstrap.branding),
+      theme: institutAppTheme(bootstrap.branding),
       routerConfig: _router,
     );
   }

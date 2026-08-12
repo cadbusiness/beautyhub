@@ -6,6 +6,7 @@ const TAB_HREFS = [
   { href: "/institut/caisse", exact: true as const },
   { href: "/institut/caisse/session" },
   { href: "/institut/caisse/bons" },
+  { href: "/institut/caisse/ventes" },
   { href: "/institut/caisse/historique" },
   { href: "/institut/caisse/produits" },
 ];

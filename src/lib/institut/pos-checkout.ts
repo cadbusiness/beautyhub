@@ -25,6 +25,7 @@ import {
   redeemLoyaltyAtSale,
 } from "./loyalty-redeem";
 import { normalizePromoCode, redeemPromo, validatePromo } from "./promos-core";
+import { generateSaleDocuments, updateSaleDocumentStatuses } from "./sale-documents/generate";
 
 type Db = SupabaseClient<Database>;
 
@@ -511,6 +512,16 @@ export async function executePosCheckout(
       .in("status", ["booked", "confirmed"]);
   }
 
+  const hasProducts = totals.lines.some((line) => line.type === "product");
+  await generateSaleDocuments(supabase, tenantId, sale.id, {
+    ticketNumber,
+    saleStatus: status,
+    amountPaidCents: amountPaid,
+    totalCents: totals.total_cents,
+    hasProducts,
+    settings,
+  });
+
   return {
     saleId: sale.id,
     ticketNumber,
@@ -603,6 +614,15 @@ export async function executeBalancePayment(
   if (newStatus === "paid") {
     await processLoyaltyForPaidSale(supabase, tenantId, saleId);
   }
+
+  await updateSaleDocumentStatuses(
+    supabase,
+    tenantId,
+    saleId,
+    newStatus,
+    newPaid,
+    sale.total_cents,
+  );
 
   return {
     saleId,

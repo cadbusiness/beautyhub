@@ -7,6 +7,7 @@ const NAV_MESSAGE_KEYS = {
   "/institut/caisse": "institutPos",
   "/institut/caisse/session": "institutPosSession",
   "/institut/caisse/bons": "institutPosVouchers",
+  "/institut/caisse/ventes": "institutPosSales",
   "/institut/caisse/historique": "institutPosHistory",
   "/institut/caisse/produits": "institutPosProducts",
   "/institut/marketing": "institutMarketing",

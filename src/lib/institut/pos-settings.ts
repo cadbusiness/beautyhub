@@ -41,6 +41,13 @@ export interface PosSettings {
   default_opening_float_cents: number;
   credit_note_prefix: string;
   gift_card_prefix: string;
+  invoice_prefix: string;
+  delivery_note_prefix: string;
+  legal_email: string | null;
+  legal_mentions: string | null;
+  payment_terms_days: number;
+  late_payment_penalty_text: string | null;
+  fixed_recovery_fee_cents: number;
 }
 
 export const DEFAULT_POS_PAYMENT_METHODS: PosPaymentMethodsConfig = {
@@ -71,6 +78,13 @@ export const DEFAULT_POS_SETTINGS: Omit<PosSettings, "tenant_id"> = {
   default_opening_float_cents: 0,
   credit_note_prefix: "AV",
   gift_card_prefix: "GC",
+  invoice_prefix: "FAC",
+  delivery_note_prefix: "BLC",
+  legal_email: null,
+  legal_mentions: null,
+  payment_terms_days: 0,
+  late_payment_penalty_text: null,
+  fixed_recovery_fee_cents: 4000,
 };
 
 function parsePaymentMethods(raw: unknown): PosPaymentMethodsConfig {
@@ -113,6 +127,13 @@ export function rowToPosSettings(
     default_opening_float_cents: row.default_opening_float_cents ?? 0,
     credit_note_prefix: row.credit_note_prefix ?? "AV",
     gift_card_prefix: row.gift_card_prefix ?? "GC",
+    invoice_prefix: row.invoice_prefix ?? "FAC",
+    delivery_note_prefix: row.delivery_note_prefix ?? "BLC",
+    legal_email: row.legal_email ?? null,
+    legal_mentions: row.legal_mentions ?? null,
+    payment_terms_days: row.payment_terms_days ?? 0,
+    late_payment_penalty_text: row.late_payment_penalty_text ?? null,
+    fixed_recovery_fee_cents: row.fixed_recovery_fee_cents ?? 4000,
   };
 }
 
@@ -145,6 +166,10 @@ export function formatTicketNumber(
   const year = date.getFullYear();
   const num = String(seq).padStart(6, "0");
   return `${prefix}-${year}-${num}`;
+}
+
+export function formatDocumentNumber(prefix: string, seq: number): string {
+  return `${prefix}-${seq}`;
 }
 
 export function vatRateLabel(bps: number): string {

@@ -980,6 +980,13 @@ export type Database = {
           default_opening_float_cents: number
           credit_note_prefix: string
           gift_card_prefix: string
+          invoice_prefix: string
+          delivery_note_prefix: string
+          legal_email: string | null
+          legal_mentions: string | null
+          payment_terms_days: number
+          late_payment_penalty_text: string | null
+          fixed_recovery_fee_cents: number
         }
         Insert: {
           country_code?: string
@@ -1004,6 +1011,13 @@ export type Database = {
           default_opening_float_cents?: number
           credit_note_prefix?: string
           gift_card_prefix?: string
+          invoice_prefix?: string
+          delivery_note_prefix?: string
+          legal_email?: string | null
+          legal_mentions?: string | null
+          payment_terms_days?: number
+          late_payment_penalty_text?: string | null
+          fixed_recovery_fee_cents?: number
         }
         Update: {
           country_code?: string
@@ -1028,6 +1042,13 @@ export type Database = {
           default_opening_float_cents?: number
           credit_note_prefix?: string
           gift_card_prefix?: string
+          invoice_prefix?: string
+          delivery_note_prefix?: string
+          legal_email?: string | null
+          legal_mentions?: string | null
+          payment_terms_days?: number
+          late_payment_penalty_text?: string | null
+          fixed_recovery_fee_cents?: number
         }
         Relationships: [
           {
@@ -1396,6 +1417,70 @@ export type Database = {
           },
         ]
       }
+      inst_sale_documents: {
+        Row: {
+          created_at: string
+          credit_note_id: string | null
+          doc_number: string
+          doc_type: string
+          id: string
+          issued_at: string
+          sale_group_number: number | null
+          sale_id: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credit_note_id?: string | null
+          doc_number: string
+          doc_type: string
+          id?: string
+          issued_at?: string
+          sale_group_number?: number | null
+          sale_id?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credit_note_id?: string | null
+          doc_number?: string
+          doc_type?: string
+          id?: string
+          issued_at?: string
+          sale_group_number?: number | null
+          sale_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_sale_documents_credit_note_id_fkey"
+            columns: ["credit_note_id"]
+            isOneToOne: false
+            referencedRelation: "inst_credit_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_sale_documents_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "inst_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_sale_documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_sale_items: {
         Row: {
           appointment_id: string | null
@@ -1554,6 +1639,7 @@ export type Database = {
           parent_sale_id: string | null
           payment_method: string
           sale_kind: string
+          sale_group_number: number | null
           source_channel: string
           staff_id: string | null
           status: string
@@ -1579,6 +1665,7 @@ export type Database = {
           parent_sale_id?: string | null
           payment_method?: string
           sale_kind?: string
+          sale_group_number?: number | null
           source_channel?: string
           staff_id?: string | null
           status?: string
@@ -1604,6 +1691,7 @@ export type Database = {
           parent_sale_id?: string | null
           payment_method?: string
           sale_kind?: string
+          sale_group_number?: number | null
           source_channel?: string
           staff_id?: string | null
           status?: string

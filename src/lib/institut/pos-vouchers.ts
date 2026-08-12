@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db/database.types";
 import { formatTicketNumber, getPosSettings } from "./pos-settings";
 import { generateGiftCardCode } from "./pos-session";
 import { issueVoucher } from "./vouchers-core";
+import { generateCreditNoteDocument } from "./sale-documents/generate";
 
 type Db = SupabaseClient<Database>;
 
@@ -231,6 +232,14 @@ export async function createCreditNoteFromSale(
     .update({ status: newStatus })
     .eq("id", opts.saleId)
     .eq("tenant_id", tenantId);
+
+  await generateCreditNoteDocument(
+    supabase,
+    tenantId,
+    note.id,
+    creditNumber,
+    opts.saleId,
+  );
 
   return { id: note.id, creditNumber };
 }

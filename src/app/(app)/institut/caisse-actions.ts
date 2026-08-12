@@ -201,6 +201,18 @@ export async function savePosSettings(
     vat_number: String(formData.get("vat_number") ?? "").trim() || null,
     siret: String(formData.get("siret") ?? "").trim() || null,
     ticket_prefix: String(formData.get("ticket_prefix") ?? "TK").trim() || "TK",
+    invoice_prefix: String(formData.get("invoice_prefix") ?? "FAC").trim() || "FAC",
+    delivery_note_prefix:
+      String(formData.get("delivery_note_prefix") ?? "BLC").trim() || "BLC",
+    legal_email: String(formData.get("legal_email") ?? "").trim() || null,
+    legal_mentions: String(formData.get("legal_mentions") ?? "").trim() || null,
+    payment_terms_days: Math.max(
+      0,
+      Math.round(Number.parseFloat(String(formData.get("payment_terms_days") ?? "0"))),
+    ),
+    late_payment_penalty_text:
+      String(formData.get("late_payment_penalty_text") ?? "").trim() || null,
+    fixed_recovery_fee_cents: parseEurosCents(formData.get("fixed_recovery_fee")),
     fiscal_regime: validRegimes.includes(fiscalRegime as (typeof validRegimes)[number])
       ? fiscalRegime
       : "standard",

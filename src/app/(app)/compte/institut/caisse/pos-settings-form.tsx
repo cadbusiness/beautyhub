@@ -173,8 +173,8 @@ export function PosSettingsForm({ settings }: { settings: PosSettings }) {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-sm font-medium text-slate-900">{t("ticketTitle")}</h3>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <h3 className="text-sm font-medium text-slate-900">{t("documentsTitle")}</h3>
+        <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className="mb-1 block text-xs text-slate-500" htmlFor="ticket_prefix">
               {t("ticketPrefix")}
@@ -186,6 +186,34 @@ export function PosSettingsForm({ settings }: { settings: PosSettings }) {
               maxLength={8}
             />
           </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-500" htmlFor="invoice_prefix">
+              {t("invoicePrefix")}
+            </label>
+            <Input
+              id="invoice_prefix"
+              name="invoice_prefix"
+              defaultValue={settings.invoice_prefix}
+              maxLength={8}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-500" htmlFor="delivery_note_prefix">
+              {t("deliveryPrefix")}
+            </label>
+            <Input
+              id="delivery_note_prefix"
+              name="delivery_note_prefix"
+              defaultValue={settings.delivery_note_prefix}
+              maxLength={8}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-sm font-medium text-slate-900">{t("ticketTitle")}</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label className="mb-1 block text-xs text-slate-500" htmlFor="ticket_header">
               {t("ticketHeader")}
@@ -206,6 +234,73 @@ export function PosSettingsForm({ settings }: { settings: PosSettings }) {
               name="ticket_footer"
               rows={2}
               defaultValue={settings.ticket_footer ?? ""}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-sm font-medium text-slate-900">{t("legalDocsTitle")}</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs text-slate-500" htmlFor="legal_email">
+              {t("legalEmail")}
+            </label>
+            <Input
+              id="legal_email"
+              name="legal_email"
+              type="email"
+              defaultValue={settings.legal_email ?? ""}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-500" htmlFor="payment_terms_days">
+              {t("paymentTermsDays")}
+            </label>
+            <Input
+              id="payment_terms_days"
+              name="payment_terms_days"
+              type="number"
+              min={0}
+              defaultValue={settings.payment_terms_days}
+              className="w-32"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-500" htmlFor="fixed_recovery_fee">
+              {t("fixedRecoveryFee")}
+            </label>
+            <Input
+              id="fixed_recovery_fee"
+              name="fixed_recovery_fee"
+              type="number"
+              min={0}
+              step="0.01"
+              defaultValue={(settings.fixed_recovery_fee_cents / 100).toFixed(2)}
+              className="w-32"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs text-slate-500" htmlFor="late_payment_penalty_text">
+              {t("latePaymentPenalty")}
+            </label>
+            <Textarea
+              id="late_payment_penalty_text"
+              name="late_payment_penalty_text"
+              rows={2}
+              defaultValue={settings.late_payment_penalty_text ?? ""}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs text-slate-500" htmlFor="legal_mentions">
+              {t("legalMentionsOverride")}
+            </label>
+            <Textarea
+              id="legal_mentions"
+              name="legal_mentions"
+              rows={4}
+              placeholder={t("legalMentionsPlaceholder")}
+              defaultValue={settings.legal_mentions ?? ""}
             />
           </div>
         </div>

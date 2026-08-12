@@ -1,24 +1,40 @@
 import { NextResponse } from "next/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
+import { getTenantConnectionStatus } from "@/lib/connections";
+import { getAnalyticsSettings } from "@/lib/institut/analytics-settings";
 import {
   fetchDashboardSnapshot,
   parseDashboardPeriod,
+  parseSalesChannel,
 } from "@/lib/institut/dashboard-stats";
+import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { getLocale } from "next-intl/server";
 
 export async function GET(request: Request) {
-  const period = parseDashboardPeriod(new URL(request.url).searchParams.get("period"));
+  const params = new URL(request.url).searchParams;
+  const period = parseDashboardPeriod(params.get("period"));
+  const channel = parseSalesChannel(params.get("channel"));
 
   try {
     const session = await requireModule("institut");
     const supabase = await createClient();
     const locale = await getLocale();
+    const [analyticsSettings, woo] = await Promise.all([
+      getAnalyticsSettings(supabase, session.tenant.id),
+      getTenantConnectionStatus(session.tenant.id, WOO_PROVIDER),
+    ]);
+
     const snapshot = await fetchDashboardSnapshot(
       supabase,
       session.tenant.id,
       period,
       locale,
+      {
+        channel,
+        includeWooSales: analyticsSettings.include_woo_sales,
+        wooConnected: woo?.status === "connected",
+      },
     );
     return NextResponse.json(snapshot);
   } catch (error) {

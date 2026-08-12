@@ -11,6 +11,9 @@ import { getAppShellData } from "@/lib/auth/team-session";
 import { PosSessionBanner } from "@/components/app-shell/pos-session-status";
 import { DashboardAnalytics } from "@/components/institut/dashboard-analytics";
 import { fetchDashboardSnapshot } from "@/lib/institut/dashboard-stats";
+import { getAnalyticsSettings } from "@/lib/institut/analytics-settings";
+import { getTenantConnectionStatus } from "@/lib/connections";
+import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { ListPanel } from "@/components/ui/list-panel";
 
 const QUICK_ACTION_KEYS = [
@@ -102,11 +105,19 @@ export default async function DashboardPage() {
   if (tenant && hasInstitut) {
     const supabase = await createClient();
     const locale = await getLocale();
+    const [analyticsSettings, woo] = await Promise.all([
+      getAnalyticsSettings(supabase, tenant.id),
+      getTenantConnectionStatus(tenant.id, WOO_PROVIDER),
+    ]);
     dashboardSnapshot = await fetchDashboardSnapshot(
       supabase,
       tenant.id,
       "week",
       locale,
+      {
+        includeWooSales: analyticsSettings.include_woo_sales,
+        wooConnected: woo?.status === "connected",
+      },
     );
   }
 

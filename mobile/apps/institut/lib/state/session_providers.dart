@@ -70,15 +70,22 @@ final selectedAgendaDateProvider = StateProvider<DateTime>((ref) {
 
 final selectedStaffFilterProvider = StateProvider<String?>((ref) => null);
 
+final dashboardSalesChannelProvider = StateProvider<String>((ref) => 'all');
+
 final dashboardProvider =
     FutureProvider.autoDispose<MobileDashboard>((ref) async {
   final token = ref.watch(accessTokenProvider);
   final tenantId = ref.watch(selectedTenantIdProvider);
+  final channel = ref.watch(dashboardSalesChannelProvider);
   if (token == null || tenantId == null) {
     throw StateError('Session ou institut manquant');
   }
   final api = ref.watch(mobileApiProvider);
-  return api.fetchDashboard(accessToken: token, tenantId: tenantId);
+  return api.fetchDashboard(
+    accessToken: token,
+    tenantId: tenantId,
+    channel: channel,
+  );
 });
 
 final tenantBrandingProvider =

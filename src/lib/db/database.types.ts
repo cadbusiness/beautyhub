@@ -431,6 +431,35 @@ export type Database = {
           },
         ]
       }
+      inst_analytics_settings: {
+        Row: {
+          created_at: string
+          include_woo_sales: boolean
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          include_woo_sales?: boolean
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          include_woo_sales?: boolean
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_analytics_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_appointments: {
         Row: {
           client_id: string | null
@@ -1525,6 +1554,7 @@ export type Database = {
           parent_sale_id: string | null
           payment_method: string
           sale_kind: string
+          source_channel: string
           staff_id: string | null
           status: string
           stripe_payment_intent_id: string | null
@@ -1549,6 +1579,7 @@ export type Database = {
           parent_sale_id?: string | null
           payment_method?: string
           sale_kind?: string
+          source_channel?: string
           staff_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
@@ -1573,6 +1604,7 @@ export type Database = {
           parent_sale_id?: string | null
           payment_method?: string
           sale_kind?: string
+          source_channel?: string
           staff_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null

@@ -5,6 +5,14 @@ type Db = SupabaseClient<Database>;
 
 export type DashboardPeriod = "today" | "week" | "month" | "year";
 
+export type SalesChannelFilter = "all" | "pos" | "woo";
+
+export type DashboardStatsOptions = {
+  channel?: SalesChannelFilter;
+  includeWooSales?: boolean;
+  wooConnected?: boolean;
+};
+
 export type HealthMood = "great" | "good" | "ok" | "low";
 
 export type DashboardTodaySummary = {
@@ -49,6 +57,8 @@ export type DashboardPeriodStats = {
 export type DashboardSnapshot = {
   today: DashboardTodaySummary;
   analytics: DashboardPeriodStats;
+  salesChannel: SalesChannelFilter;
+  wooSalesAvailable: boolean;
 };
 
 type DateRange = { start: Date; end: Date };
@@ -287,15 +297,28 @@ async function fetchSalesInRange(
   supabase: Db,
   tenantId: string,
   range: DateRange,
+  options: DashboardStatsOptions = {},
 ) {
-  const { data } = await supabase
+  const channel = options.channel ?? "all";
+  const includeWooSales = options.includeWooSales ?? true;
+
+  let query = supabase
     .from("inst_sales")
-    .select("total_cents, created_at")
+    .select("total_cents, created_at, source_channel")
     .eq("tenant_id", tenantId)
     .neq("sale_kind", "refund")
     .gte("created_at", range.start.toISOString())
     .lte("created_at", range.end.toISOString());
 
+  if (channel === "pos") {
+    query = query.eq("source_channel", "pos");
+  } else if (channel === "woo") {
+    query = query.eq("source_channel", "woo");
+  } else if (!includeWooSales) {
+    query = query.eq("source_channel", "pos");
+  }
+
+  const { data } = await query;
   return data ?? [];
 }
 
@@ -449,7 +472,17 @@ export async function fetchDashboardSnapshot(
   tenantId: string,
   period: DashboardPeriod = "week",
   locale = "fr",
+  options: DashboardStatsOptions = {},
 ): Promise<DashboardSnapshot> {
+  const channel = parseSalesChannel(options.channel);
+  const includeWooSales = options.includeWooSales ?? true;
+  const wooConnected = options.wooConnected ?? false;
+  const statsOptions: DashboardStatsOptions = {
+    channel,
+    includeWooSales,
+    wooConnected,
+  };
+
   const now = new Date();
   const todayRange = getRange("today", now);
   const yesterdayRange = getPreviousRange("today", now);
@@ -467,10 +500,10 @@ export async function fetchDashboardSnapshot(
     todayClients,
     periodClients,
   ] = await Promise.all([
-    fetchSalesInRange(supabase, tenantId, todayRange),
-    fetchSalesInRange(supabase, tenantId, yesterdayRange),
-    fetchSalesInRange(supabase, tenantId, periodRange),
-    fetchSalesInRange(supabase, tenantId, previousPeriodRange),
+    fetchSalesInRange(supabase, tenantId, todayRange, statsOptions),
+    fetchSalesInRange(supabase, tenantId, yesterdayRange, statsOptions),
+    fetchSalesInRange(supabase, tenantId, periodRange, statsOptions),
+    fetchSalesInRange(supabase, tenantId, previousPeriodRange, statsOptions),
     fetchAppointmentsInRange(supabase, tenantId, todayRange),
     fetchAppointmentsInRange(supabase, tenantId, periodRange),
     fetchAppointmentsInRange(supabase, tenantId, previousPeriodRange),
@@ -496,7 +529,16 @@ export async function fetchDashboardSnapshot(
       previousPeriodAppointments,
       locale,
     ),
+    salesChannel: channel,
+    wooSalesAvailable: includeWooSales && wooConnected,
   };
+}
+
+export function parseSalesChannel(value: string | null | undefined): SalesChannelFilter {
+  if (value === "pos" || value === "woo" || value === "all") {
+    return value;
+  }
+  return "all";
 }
 
 export function parseDashboardPeriod(value: string | null): DashboardPeriod {

@@ -4,9 +4,14 @@ import { useCallback, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { cn, formatPrice } from "@/lib/utils";
-import type { DashboardPeriod, DashboardSnapshot } from "@/lib/institut/dashboard-stats";
+import type {
+  DashboardPeriod,
+  DashboardSnapshot,
+  SalesChannelFilter,
+} from "@/lib/institut/dashboard-stats";
 
 const PERIODS: DashboardPeriod[] = ["today", "week", "month", "year"];
+const CHANNELS: SalesChannelFilter[] = ["all", "pos", "woo"];
 
 function ChangeBadge({ value }: { value: number | null }) {
   const t = useTranslations("dashboard.analytics");
@@ -155,21 +160,44 @@ export function DashboardAnalytics({
   const locale = useLocale();
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [period, setPeriod] = useState<DashboardPeriod>(initialSnapshot.analytics.period);
+  const [channel, setChannel] = useState<SalesChannelFilter>(initialSnapshot.salesChannel);
   const [isPending, startTransition] = useTransition();
 
-  const loadPeriod = useCallback((next: DashboardPeriod) => {
-    setPeriod(next);
-    startTransition(async () => {
-      try {
-        const res = await fetch(`/api/institut/dashboard-stats?period=${next}`);
-        if (!res.ok) return;
-        const data = (await res.json()) as DashboardSnapshot;
-        setSnapshot(data);
-      } catch {
-        /* keep previous data */
-      }
-    });
-  }, []);
+  const loadStats = useCallback(
+    (nextPeriod: DashboardPeriod, nextChannel: SalesChannelFilter) => {
+      setPeriod(nextPeriod);
+      setChannel(nextChannel);
+      startTransition(async () => {
+        try {
+          const params = new URLSearchParams({
+            period: nextPeriod,
+            channel: nextChannel,
+          });
+          const res = await fetch(`/api/institut/dashboard-stats?${params.toString()}`);
+          if (!res.ok) return;
+          const data = (await res.json()) as DashboardSnapshot;
+          setSnapshot(data);
+        } catch {
+          /* keep previous data */
+        }
+      });
+    },
+    [],
+  );
+
+  const loadPeriod = useCallback(
+    (next: DashboardPeriod) => {
+      loadStats(next, channel);
+    },
+    [channel, loadStats],
+  );
+
+  const loadChannel = useCallback(
+    (next: SalesChannelFilter) => {
+      loadStats(period, next);
+    },
+    [loadStats, period],
+  );
 
   const { today, analytics } = snapshot;
   const scheduledInPeriod =
@@ -181,6 +209,13 @@ export function DashboardAnalytics({
   const periodTabs = PERIODS.map((p) => ({
     id: p,
     label: t(`periods.${p}`),
+  }));
+
+  const channelTabs = CHANNELS.filter(
+    (value) => value !== "woo" || snapshot.wooSalesAvailable,
+  ).map((value) => ({
+    id: value,
+    label: t(`channels.${value}`),
   }));
 
   const revenueChartData = analytics.series.map((point) => ({
@@ -230,6 +265,15 @@ export function DashboardAnalytics({
 
       {/* Période */}
       <div>
+        {channelTabs.length > 1 ? (
+          <PageTabs
+            tabs={channelTabs}
+            active={channel}
+            onChange={loadChannel}
+            className="-mx-4 mb-4 px-4 lg:-mx-6 lg:px-6"
+          />
+        ) : null}
+
         <PageTabs
           tabs={periodTabs}
           active={period}

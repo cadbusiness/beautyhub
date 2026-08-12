@@ -10,11 +10,14 @@ import {
 } from "@/lib/connectors/pairing";
 import { apiBaseUrl } from "@/lib/app-url";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
+import { getAnalyticsSettings } from "@/lib/institut/analytics-settings";
+import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { disconnectWoo } from "@/app/(app)/institut/woo-actions";
 import { WooConnectPanel } from "../woo-connect-panel";
 import { WooSetupGuide } from "../woo-setup-guide";
 import { SettingsSection } from "../settings-section";
+import { WooAnalyticsSettingsForm } from "../woo-analytics-settings-form";
 
 export default async function CompteInstitutWooPage({
   searchParams,
@@ -51,6 +54,9 @@ export default async function CompteInstitutWooPage({
   }
   const pairedAt =
     typeof woo?.config?.paired_at === "string" ? woo.config.paired_at : null;
+
+  const supabase = await createClient();
+  const analyticsSettings = await getAnalyticsSettings(supabase, session.tenant.id);
 
   return (
     <>
@@ -97,6 +103,15 @@ export default async function CompteInstitutWooPage({
           </aside>
         </div>
       </SettingsSection>
+
+      {wooConnected ? (
+        <SettingsSection
+          title={tWoo("analytics.title")}
+          description={tWoo("analytics.description")}
+        >
+          <WooAnalyticsSettingsForm settings={analyticsSettings} />
+        </SettingsSection>
+      ) : null}
 
       <p className="text-xs leading-relaxed text-slate-400">{tSettings("securityNote")}</p>
     </>

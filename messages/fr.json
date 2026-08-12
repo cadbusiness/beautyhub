@@ -291,6 +291,11 @@
         "month": "Mois",
         "year": "Année"
       },
+      "channels": {
+        "all": "Tout",
+        "pos": "Caisse",
+        "woo": "E-commerce"
+      },
       "revenue": "Chiffre d'affaires",
       "sales": "Ventes",
       "appointments": "Rendez-vous",
@@ -1831,6 +1836,13 @@
         "consumerSecretPlaceholder": "cs_…",
         "submit": "Connecter WooCommerce",
         "submitting": "Test et enregistrement…"
+      },
+      "analytics": {
+        "title": "Statistiques e-commerce",
+        "description": "Inclure les commandes WooCommerce dans le chiffre d'affaires du tableau de bord.",
+        "includeTitle": "Inclure les ventes e-commerce dans les statistiques",
+        "includeHint": "Les commandes en ligne terminées sur votre boutique alimentent le CA journalier. Désactivez pour ne compter que la caisse.",
+        "saved": "Réglages statistiques enregistrés."
       }
     }
   },

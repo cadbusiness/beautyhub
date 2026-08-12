@@ -389,6 +389,7 @@ export async function executePosCheckout(
       parent_sale_id: input.parentSaleId ?? null,
       sale_kind: input.saleKind ?? "sale",
       woo_order_id: wooOrderId,
+      source_channel: "pos",
       subtotal_cents: totals.subtotal_cents,
       discount_cents: totals.cart_discount_cents,
       vat_cents: totals.vat_cents,

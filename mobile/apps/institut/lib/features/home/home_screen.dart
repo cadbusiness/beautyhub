@@ -10,6 +10,7 @@ import '../shared/tenant_logo.dart';
 import 'widgets/dashboard_bar_chart.dart';
 import 'widgets/dashboard_kpi_strip.dart';
 import 'widgets/dashboard_quick_actions.dart';
+import 'widgets/dashboard_sales_channel_filter.dart';
 import 'widgets/next_appointment_hero.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -122,6 +123,12 @@ class HomeScreen extends ConsumerWidget {
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              sliver: SliverToBoxAdapter(
+                child: const DashboardSalesChannelFilter(),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               sliver: SliverToBoxAdapter(
                 child: dashboardAsync.when(
                   loading: () => const _LoadingBlock(height: 88),

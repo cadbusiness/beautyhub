@@ -277,6 +277,8 @@ class MobileDashboard {
     this.weekSalesChangePct,
     required this.weekAppointmentsTotal,
     required this.series,
+    this.salesChannel = 'all',
+    this.wooSalesAvailable = false,
   });
 
   final DashboardTodaySummary today;
@@ -286,6 +288,8 @@ class MobileDashboard {
   final double? weekSalesChangePct;
   final int weekAppointmentsTotal;
   final List<DashboardSeriesPoint> series;
+  final String salesChannel;
+  final bool wooSalesAvailable;
 
   factory MobileDashboard.fromJson(Map<String, dynamic> json) {
     final week = json['week'] as Map? ?? const {};
@@ -303,6 +307,8 @@ class MobileDashboard {
           .whereType<Map>()
           .map((e) => DashboardSeriesPoint.fromJson(Map<String, dynamic>.from(e)))
           .toList(),
+      salesChannel: json['salesChannel'] as String? ?? 'all',
+      wooSalesAvailable: json['wooSalesAvailable'] as bool? ?? false,
     );
   }
 }

@@ -193,6 +193,9 @@ class BeautyHub_Webhooks
             'total' => $order->get_total(),
             'status' => $order->get_status(),
             'currency' => $order->get_currency(),
+            'date_completed' => $order->get_date_completed()
+                ? $order->get_date_completed()->date('c')
+                : null,
             'coupon_lines' => $coupon_lines,
             'line_items' => $line_items,
             'billing' => [

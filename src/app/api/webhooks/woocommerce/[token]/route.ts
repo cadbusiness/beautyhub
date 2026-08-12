@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { issueGiftCardsForWooOrder } from "@/lib/institut/woo-gift-cards";
+import type { WooOrderWebhookPayload } from "@/lib/institut/woo-order-sales";
 import { redeemVoucher } from "@/lib/institut/vouchers-core";
 import {
   applyWooStockUpdate,
@@ -212,6 +213,31 @@ export async function POST(
           {
             recipientName: recipientName || null,
             currency: typeof payload.currency === "string" ? payload.currency : null,
+          },
+        );
+
+        const { ingestWooCompletedOrder } = await import("@/lib/institut/woo-order-sales");
+        await ingestWooCompletedOrder(
+          supabase,
+          connection.tenantId,
+          connection.connectionId,
+          {
+            id: payload.id,
+            total: payload.total as number | string | undefined,
+            currency: typeof payload.currency === "string" ? payload.currency : undefined,
+            date_completed:
+              typeof payload.date_completed === "string" ? payload.date_completed : null,
+            billing:
+              typeof payload.billing === "object" && payload.billing !== null
+                ? (payload.billing as WooOrderWebhookPayload["billing"])
+                : undefined,
+            line_items: Array.isArray(payload.line_items)
+              ? (payload.line_items as WooOrderWebhookPayload["line_items"])
+              : undefined,
+            meta:
+              typeof payload.meta === "object" && payload.meta !== null
+                ? (payload.meta as WooOrderWebhookPayload["meta"])
+                : undefined,
           },
         );
         break;

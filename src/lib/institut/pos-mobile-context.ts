@@ -27,10 +27,24 @@ export interface MobilePosContext {
   wooConnected: boolean;
 }
 
+type MobilePosContextLoaded = MobilePosContext & {
+  _services: Array<{
+    id: string;
+    description: string | null;
+    visibility?: string | null;
+  }>;
+  _products: Array<{
+    id: string;
+    stock_quantity: number | null;
+    woo_id: number | null;
+    source: string | null;
+  }>;
+};
+
 export async function loadMobilePosContext(
   supabase: Db,
   tenantId: string,
-): Promise<MobilePosContext> {
+): Promise<MobilePosContextLoaded> {
   const [servicesRes, productsRes, clientsRes, staffRes, posSettings, cashSession, wooRes] =
     await Promise.all([
       supabase
@@ -96,21 +110,7 @@ export async function loadMobilePosContext(
   };
 }
 
-export function serializeMobilePosContext(
-  ctx: MobilePosContext & {
-    _services?: Array<{
-      id: string;
-      description: string | null;
-      visibility?: string | null;
-    }>;
-    _products?: Array<{
-      id: string;
-      stock_quantity: number | null;
-      woo_id: number | null;
-      source: string | null;
-    }>;
-  },
-) {
+export function serializeMobilePosContext(ctx: MobilePosContextLoaded) {
   const serviceById = new Map((ctx._services ?? []).map((s) => [s.id, s]));
   const productById = new Map((ctx._products ?? []).map((p) => [p.id, p]));
 

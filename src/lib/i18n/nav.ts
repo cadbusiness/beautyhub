@@ -11,6 +11,7 @@ const NAV_MESSAGE_KEYS = {
   "/institut/caisse/produits": "institutPosProducts",
   "/institut/marketing": "institutMarketing",
   "/institut/marketing/fidelite": "institutMarketingLoyalty",
+  "/institut/marketing/branding": "institutMarketingBranding",
   "/institut/marketing/page-web": "institutMarketingWebsite",
   "/institut/marketing/promos": "institutMarketingPromos",
   "/institut/parametres": "institutSettings",

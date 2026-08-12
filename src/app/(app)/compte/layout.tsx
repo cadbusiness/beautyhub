@@ -47,6 +47,7 @@ export default async function CompteLayout({
   ];
 
   if (showInstitut) {
+    tabs.push({ href: "/compte/branding", label: t("nav.branding"), exact: true });
     tabs.push({ href: "/compte/institut", label: t("nav.institut") });
   }
 

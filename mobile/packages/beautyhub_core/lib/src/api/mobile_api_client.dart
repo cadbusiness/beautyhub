@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../models/ops_models.dart';
 import '../models/pos_models.dart';
@@ -84,19 +86,118 @@ class MobileApiClient {
         .toList();
   }
 
+  Future<MobileDashboard> fetchDashboard({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/dashboard'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return MobileDashboard.fromJson(body);
+  }
+
+  Future<TenantBranding> fetchTenantBranding({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/branding'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return TenantBranding.fromJson(body);
+  }
+
+  Future<String> uploadTenantLogo({
+    required String accessToken,
+    required String tenantId,
+    required Uint8List bytes,
+    required String filename,
+    required String mimeType,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      _uri('/api/mobile/institut/branding/logo'),
+    );
+    request.headers.addAll(
+      _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final subtype = mimeType.split('/').length > 1
+        ? mimeType.split('/')[1]
+        : 'octet-stream';
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: filename,
+        contentType: MediaType('image', subtype),
+      ),
+    );
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    final body = await _decode(response);
+    return body['logoUrl'] as String? ?? '';
+  }
+
   Future<DayAgenda> fetchDay({
     required String accessToken,
     required String tenantId,
     String? date,
+    bool includeWeek = true,
   }) async {
     final response = await _http.get(
       _uri('/api/mobile/institut/day', {
         if (date != null && date.isNotEmpty) 'date': date,
+        if (includeWeek) 'week': '1',
       }),
       headers: _headers(accessToken: accessToken, tenantId: tenantId),
     );
     final body = await _decode(response);
     return DayAgenda.fromJson(body);
+  }
+
+  Future<String> createAppointment({
+    required String accessToken,
+    required String tenantId,
+    required String serviceId,
+    required String startsAt,
+    String? clientId,
+    String? staffId,
+    String? notes,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/appointments'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'serviceId': serviceId,
+        'startsAt': startsAt,
+        if (clientId != null && clientId.isNotEmpty) 'clientId': clientId,
+        if (staffId != null && staffId.isNotEmpty) 'staffId': staffId,
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+      }),
+    );
+    final body = await _decode(response);
+    return body['id'] as String? ?? '';
+  }
+
+  Future<void> updateAppointment({
+    required String accessToken,
+    required String tenantId,
+    required String appointmentId,
+    String? status,
+    String? notes,
+  }) async {
+    final response = await _http.patch(
+      _uri('/api/mobile/institut/appointments/$appointmentId'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        if (status != null) 'status': status,
+        if (notes != null) 'notes': notes,
+      }),
+    );
+    await _decode(response);
   }
 
   Future<CashSessionSummary?> fetchCashSession({

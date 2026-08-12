@@ -11,6 +11,11 @@ class PosCatalogItem {
     this.durationMin,
     this.sku,
     this.wooCategories = const [],
+    this.description,
+    this.stockQuantity,
+    this.wooId,
+    this.source,
+    this.visibility,
   });
 
   final String key;
@@ -24,6 +29,11 @@ class PosCatalogItem {
   final int? durationMin;
   final String? sku;
   final List<String> wooCategories;
+  final String? description;
+  final int? stockQuantity;
+  final int? wooId;
+  final String? source;
+  final String? visibility;
 
   factory PosCatalogItem.fromJson(Map<String, dynamic> json) {
     return PosCatalogItem(
@@ -40,7 +50,25 @@ class PosCatalogItem {
       wooCategories: (json['wooCategories'] as List? ?? const [])
           .map((e) => e.toString())
           .toList(),
+      description: json['description'] as String?,
+      stockQuantity: json['stockQuantity'] as int?,
+      wooId: json['wooId'] as int?,
+      source: json['source'] as String?,
+      visibility: json['visibility'] as String?,
     );
+  }
+
+  String get categoryLabel {
+    switch (category) {
+      case 'service':
+        return 'Prestation';
+      case 'woocommerce':
+        return 'WooCommerce';
+      case 'internal':
+        return 'Produit interne';
+      default:
+        return category;
+    }
   }
 }
 

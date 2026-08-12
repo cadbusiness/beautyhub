@@ -35,7 +35,9 @@ export async function loadMobilePosContext(
     await Promise.all([
       supabase
         .from("inst_services")
-        .select("id, name, price_cents, color, duration_min, image_url, visibility")
+        .select(
+          "id, name, description, price_cents, color, duration_min, image_url, visibility",
+        )
         .eq("tenant_id", tenantId)
         .eq("is_active", true)
         .order("name"),
@@ -89,12 +91,33 @@ export async function loadMobilePosContext(
     sessionOpen: Boolean(cashSession),
     requireOpenSession: posSettings.require_open_session,
     wooConnected: wooRes.data?.status === "connected",
+    _services: servicesRes.data ?? [],
+    _products: productsRes.data ?? [],
   };
 }
 
-export function serializeMobilePosContext(ctx: MobilePosContext) {
+export function serializeMobilePosContext(
+  ctx: MobilePosContext & {
+    _services?: Array<{
+      id: string;
+      description: string | null;
+      visibility?: string | null;
+    }>;
+    _products?: Array<{
+      id: string;
+      stock_quantity: number | null;
+      woo_id: number | null;
+      source: string | null;
+    }>;
+  },
+) {
+  const serviceById = new Map((ctx._services ?? []).map((s) => [s.id, s]));
+  const productById = new Map((ctx._products ?? []).map((p) => [p.id, p]));
+
   return {
-    catalog: ctx.catalog.map(serializeCatalogItem),
+    catalog: ctx.catalog.map((item) =>
+      serializeCatalogItem(item, serviceById, productById),
+    ),
     settings: {
       currency: ctx.settings.currency,
       priceDisplay: ctx.settings.price_display,
@@ -109,8 +132,18 @@ export function serializeMobilePosContext(ctx: MobilePosContext) {
   };
 }
 
-function serializeCatalogItem(item: PosCatalogItem) {
-  return {
+function serializeCatalogItem(
+  item: PosCatalogItem,
+  serviceById: Map<
+    string,
+    { id: string; description: string | null; visibility?: string | null }
+  >,
+  productById: Map<
+    string,
+    { id: string; stock_quantity: number | null; woo_id: number | null; source: string | null }
+  >,
+) {
+  const base = {
     key: item.key,
     type: item.type,
     id: item.id,
@@ -122,5 +155,27 @@ function serializeCatalogItem(item: PosCatalogItem) {
     durationMin: item.duration_min ?? null,
     sku: item.sku ?? null,
     wooCategories: item.woo_categories ?? [],
+    description: null as string | null,
+    stockQuantity: null as number | null,
+    wooId: null as number | null,
+    source: null as string | null,
+    visibility: null as string | null,
+  };
+
+  if (item.type === "service") {
+    const s = serviceById.get(item.id);
+    return {
+      ...base,
+      description: s?.description ?? null,
+      visibility: s?.visibility ?? item.visibility ?? null,
+    };
+  }
+
+  const p = productById.get(item.id);
+  return {
+    ...base,
+    stockQuantity: p?.stock_quantity ?? null,
+    wooId: p?.woo_id ?? null,
+    source: p?.source ?? item.category,
   };
 }

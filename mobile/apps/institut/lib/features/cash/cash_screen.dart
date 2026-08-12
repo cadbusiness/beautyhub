@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../state/session_providers.dart';
 import '../shared/money.dart';
+import 'cash_header.dart';
 import 'pos_sale_tab.dart';
 
 class CashScreen extends ConsumerStatefulWidget {
@@ -14,23 +15,19 @@ class CashScreen extends ConsumerStatefulWidget {
   ConsumerState<CashScreen> createState() => _CashScreenState();
 }
 
-class _CashScreenState extends ConsumerState<CashScreen>
-    with SingleTickerProviderStateMixin {
+class _CashScreenState extends ConsumerState<CashScreen> {
   final _floatController = TextEditingController(text: '0');
   bool _opening = false;
   String? _error;
-  late final TabController _tabs;
+  int _tabIndex = 1;
 
-  @override
-  void initState() {
-    super.initState();
-    _tabs = TabController(length: 2, vsync: this);
-  }
+  static const _bg = Color(0xFFF5F5F5);
+  static const _black = Color(0xFF0A0A0A);
+  static const _muted = Color(0xFF737373);
 
   @override
   void dispose() {
     _floatController.dispose();
-    _tabs.dispose();
     super.dispose();
   }
 
@@ -72,131 +69,203 @@ class _CashScreenState extends ConsumerState<CashScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(cashInitialTabProvider, (prev, next) {
+      if (next != _tabIndex && mounted) {
+        setState(() => _tabIndex = next);
+      }
+    });
+
     final cashAsync = ref.watch(cashSessionProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Caisse'),
-        bottom: TabBar(
-          controller: _tabs,
-          tabs: const [
-            Tab(text: 'Session'),
-            Tab(text: 'Vente'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabs,
+      backgroundColor: _bg,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          RefreshIndicator(
-            onRefresh: _refresh,
-            child: cashAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                children: [Text('$e')],
-              ),
-              data: (session) {
-                if (session != null) {
-                  return ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      Text(
-                        'Session ouverte',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Depuis ${DateFormat.Hm().format(session.openedAt)}'),
-                      const SizedBox(height: 16),
-                      _StatRow(
-                        label: 'Fond de caisse',
-                        value: formatEuros(session.openingFloatCents),
-                      ),
-                      _StatRow(label: 'Ventes', value: '${session.salesCount}'),
-                      _StatRow(
-                        label: 'Total encaissé',
-                        value: formatEuros(session.totalCents),
-                      ),
-                      _StatRow(
-                        label: 'Cash attendu',
-                        value: formatEuros(session.expectedCashCents),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Clôture Z et bons avancés restent sur le web.',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  );
-                }
-
-                return ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    Text(
-                      'Ouvrir la caisse',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('Indiquez le fond de caisse en euros.'),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _floatController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                      ],
-                      decoration: const InputDecoration(
-                        labelText: 'Fond de caisse (€)',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        _error!,
-                        style: TextStyle(color: Theme.of(context).colorScheme.error),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: _opening ? null : _open,
-                      child: _opening
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Ouvrir la session'),
-                    ),
-                  ],
-                );
-              },
-            ),
+          CashScreenHeader(
+            selectedIndex: _tabIndex,
+            onChanged: (i) {
+              ref.read(cashInitialTabProvider.notifier).state = i;
+              setState(() => _tabIndex = i);
+            },
           ),
-          RefreshIndicator(
-            onRefresh: _refresh,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: SizedBox(
-                    height: constraints.maxHeight,
-                    child: const PosSaleTab(),
+          Expanded(
+            child: IndexedStack(
+              index: _tabIndex,
+              children: [
+                RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: cashAsync.when(
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, _) => ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(16),
+                      children: [Text('$e')],
+                    ),
+                    data: (session) {
+                      if (session != null) {
+                        return ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          children: [
+                            _SessionCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF22C55E),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        'Session ouverte',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: _black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Depuis ${DateFormat.Hm().format(session.openedAt)}',
+                                    style: const TextStyle(color: _muted, fontSize: 13),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _StatRow(
+                                    label: 'Fond de caisse',
+                                    value: formatEuros(session.openingFloatCents),
+                                  ),
+                                  _StatRow(label: 'Ventes', value: '${session.salesCount}'),
+                                  _StatRow(
+                                    label: 'Total encaissé',
+                                    value: formatEuros(session.totalCents),
+                                  ),
+                                  _StatRow(
+                                    label: 'Cash attendu',
+                                    value: formatEuros(session.expectedCashCents),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Clôture Z et bons avancés restent sur le web.',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: _muted,
+                                  ),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          _SessionCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Ouvrir la caisse',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: _black,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                const Text(
+                                  'Indiquez le fond de caisse en euros.',
+                                  style: TextStyle(color: _muted, fontSize: 13),
+                                ),
+                                const SizedBox(height: 16),
+                                TextField(
+                                  controller: _floatController,
+                                  keyboardType: const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp(r'[0-9.,]'),
+                                    ),
+                                  ],
+                                  decoration: const InputDecoration(
+                                    labelText: 'Fond de caisse (€)',
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                                if (_error != null) ...[
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _error!,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.error,
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: FilledButton(
+                                    onPressed: _opening ? null : _open,
+                                    child: _opening
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text('Ouvrir la session'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+                RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: const PosSaleTab(),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SessionCard extends StatelessWidget {
+  const _SessionCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFEBEBEB)),
+      ),
+      child: child,
     );
   }
 }
@@ -210,11 +279,19 @@ class _StatRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
-          Expanded(child: Text(label)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: Color(0xFF525252), fontSize: 14),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
         ],
       ),
     );

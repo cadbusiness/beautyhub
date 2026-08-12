@@ -16,11 +16,14 @@ ThemeData institutAppTheme(MobileBranding branding) {
       surface: Colors.white,
       onSurface: black,
     ),
+    scaffoldBackgroundColor: const Color(0xFFF5F5F5),
     appBarTheme: const AppBarTheme(
-      backgroundColor: black,
-      foregroundColor: Colors.white,
-      centerTitle: true,
+      backgroundColor: Colors.white,
+      foregroundColor: black,
+      centerTitle: false,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
     ),
     navigationBarTheme: NavigationBarThemeData(
       height: 64,

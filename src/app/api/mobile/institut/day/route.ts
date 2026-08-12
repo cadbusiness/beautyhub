@@ -18,7 +18,6 @@ function todayYmd(timeZone = "Europe/Paris") {
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
-/** Bornes UTC larges autour d'un jour civil Paris, filtrées ensuite. */
 function roughUtcWindow(dateYmd: string) {
   const start = new Date(`${dateYmd}T00:00:00.000Z`);
   start.setUTCHours(start.getUTCHours() - 14);
@@ -26,6 +25,23 @@ function roughUtcWindow(dateYmd: string) {
   end.setUTCDate(end.getUTCDate() + 2);
   end.setUTCHours(end.getUTCHours() + 14);
   return { start, end };
+}
+
+function mondayOfWeek(dateYmd: string) {
+  const anchor = new Date(`${dateYmd}T12:00:00.000Z`);
+  const weekday = anchor.getUTCDay();
+  const mondayOffset = weekday === 0 ? -6 : 1 - weekday;
+  return addDaysYmd(dateYmd, mondayOffset);
+}
+
+function weekUtcWindow(dateYmd: string) {
+  const monday = mondayOfWeek(dateYmd);
+  const start = new Date(`${monday}T00:00:00.000Z`);
+  start.setUTCHours(start.getUTCHours() - 14);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 7);
+  end.setUTCHours(end.getUTCHours() + 14);
+  return { start, end, monday };
 }
 
 function localYmd(iso: string, timeZone = "Europe/Paris") {
@@ -37,6 +53,51 @@ function localYmd(iso: string, timeZone = "Europe/Paris") {
   }).formatToParts(new Date(iso));
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
   return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
+function addDaysYmd(dateYmd: string, days: number) {
+  const d = new Date(`${dateYmd}T12:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function serializeMobileAppointment(a: ReturnType<typeof serializeCalendarAppointments>[number]) {
+  return {
+    id: a.id,
+    startsAt: a.starts_at,
+    endsAt: a.ends_at,
+    status: a.status,
+    notes: a.notes,
+    priceCents: a.price_cents,
+    clientId: a.client_id,
+    clientName: a.client?.full_name ?? a.client?.email ?? "Client",
+    clientPhone: a.client?.phone ?? null,
+    serviceId: a.service_id,
+    serviceName: a.service?.name ?? "Prestation",
+    serviceDurationMin: a.service?.duration_min ?? null,
+    staffId: a.staff_id,
+    staffName: a.staff?.full_name ?? null,
+    serviceColor: a.service?.color ?? null,
+    staffColor: a.staff?.color ?? null,
+  };
+}
+
+function computeDayStats(
+  appointments: ReturnType<typeof serializeMobileAppointment>[],
+) {
+  const active = appointments.filter(
+    (a) => a.status !== "cancelled" && a.status !== "no_show",
+  );
+  return {
+    total: appointments.length,
+    scheduled: active.length,
+    completed: appointments.filter((a) => a.status === "completed").length,
+    cancelled: appointments.filter((a) => a.status === "cancelled").length,
+    noShow: appointments.filter((a) => a.status === "no_show").length,
+    revenueCents: appointments
+      .filter((a) => a.status === "completed")
+      .reduce((sum, a) => sum + (a.priceCents ?? 0), 0),
+  };
 }
 
 export async function GET(request: Request) {
@@ -53,27 +114,34 @@ export async function GET(request: Request) {
       );
     }
 
+    const includeWeek = url.searchParams.get("week") === "1";
     const { start, end } = roughUtcWindow(date);
-    const rows = await fetchAppointmentsInRange(
-      session.supabase,
-      session.tenant.id,
-      start,
-      end,
-    );
-    const appointments = serializeCalendarAppointments(rows)
+    const weekWindow = weekUtcWindow(date);
+
+    const [dayRows, weekRows, staffRes] = await Promise.all([
+      fetchAppointmentsInRange(session.supabase, session.tenant.id, start, end),
+      includeWeek
+        ? fetchAppointmentsInRange(
+            session.supabase,
+            session.tenant.id,
+            weekWindow.start,
+            weekWindow.end,
+          )
+        : Promise.resolve([]),
+      session.supabase
+        .from("inst_staff")
+        .select("id, full_name, color")
+        .eq("tenant_id", session.tenant.id)
+        .order("full_name"),
+    ]);
+
+    const daySerialized = serializeCalendarAppointments(dayRows)
       .filter((a) => localYmd(a.starts_at) === date)
-      .map((a) => ({
-        id: a.id,
-        startsAt: a.starts_at,
-        endsAt: a.ends_at,
-        status: a.status,
-        notes: a.notes,
-        priceCents: a.price_cents,
-        clientName: a.client?.full_name ?? a.client?.email ?? "Client",
-        serviceName: a.service?.name ?? "Prestation",
-        staffName: a.staff?.full_name ?? null,
-        serviceColor: a.service?.color ?? null,
-      }));
+      .map(serializeMobileAppointment);
+
+    const appointments = daySerialized.sort(
+      (a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt),
+    );
 
     const now = Date.now();
     const next =
@@ -87,6 +155,25 @@ export async function GET(request: Request) {
         );
       }) ?? null;
 
+    const weekDays = includeWeek
+      ? Array.from({ length: 7 }, (_, i) => {
+          const dayDate = addDaysYmd(weekWindow.monday, i);
+          const count = serializeCalendarAppointments(weekRows).filter(
+            (a) =>
+              localYmd(a.starts_at) === dayDate &&
+              a.status !== "cancelled" &&
+              a.status !== "no_show",
+          ).length;
+          return { date: dayDate, count };
+        })
+      : [];
+
+    const staff = (staffRes.data ?? []).map((s) => ({
+      id: s.id,
+      name: s.full_name,
+      color: s.color,
+    }));
+
     return Response.json({
       date,
       tenant: {
@@ -94,6 +181,9 @@ export async function GET(request: Request) {
         name: session.tenant.name,
         slug: session.tenant.slug,
       },
+      stats: computeDayStats(appointments),
+      staff,
+      weekDays,
       nextAppointment: next,
       appointments,
     });

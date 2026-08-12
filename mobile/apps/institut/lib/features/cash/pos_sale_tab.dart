@@ -6,6 +6,8 @@ import '../../state/pos_cart_provider.dart';
 import '../../state/session_providers.dart';
 import '../shared/catalog_item_thumb.dart';
 import '../shared/money.dart';
+import 'catalog_item_detail_sheet.dart';
+import 'catalog_product_row.dart';
 
 class PosSaleTab extends ConsumerStatefulWidget {
   const PosSaleTab({super.key});
@@ -18,6 +20,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   String? _clientId;
   String _paymentMethod = 'cash';
   bool _checkingOut = false;
+
+  static const _black = Color(0xFF0A0A0A);
+  static const _muted = Color(0xFF737373);
 
   List<PosCatalogItem> _filtered(PosContext ctx, String filter) {
     if (filter == 'all') return ctx.catalog;
@@ -59,10 +64,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             cart: cart,
             clientId: _clientId,
             payments: [
-              {
-                'method': _paymentMethod,
-                'amountCents': totalCents,
-              },
+              {'method': _paymentMethod, 'amountCents': totalCents},
             ],
           );
       ref.read(posCartProvider.notifier).clear();
@@ -92,6 +94,10 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (context) => _CartSheet(
         ctx: ctx,
         clientId: _clientId,
@@ -125,94 +131,146 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         final items = _filtered(ctx, filter);
         return Stack(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (ctx.wooConnected)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Text(
-                      'WooCommerce connecté · ${items.length} article(s)',
-                      style: Theme.of(context).textTheme.bodySmall,
+            CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    child: Row(
+                      children: [
+                        if (ctx.wooConnected)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFECFDF3),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFFBBF7D0)),
+                            ),
+                            child: const Text(
+                              'WooCommerce',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF166534),
+                              ),
+                            ),
+                          ),
+                        if (ctx.wooConnected) const SizedBox(width: 8),
+                        Text(
+                          '${items.length} article${items.length > 1 ? 's' : ''}',
+                          style: const TextStyle(fontSize: 12, color: _muted),
+                        ),
+                      ],
                     ),
                   ),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Row(
-                    children: [
-                      _FilterChip(label: 'Tout', value: 'all', selected: filter),
-                      _FilterChip(label: 'Prestations', value: 'service', selected: filter),
-                      _FilterChip(label: 'Woo', value: 'woocommerce', selected: filter),
-                      _FilterChip(label: 'Internes', value: 'internal', selected: filter),
-                    ],
+                ),
+                SliverToBoxAdapter(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Row(
+                      children: [
+                        _FilterChip(label: 'Tout', value: 'all', selected: filter),
+                        _FilterChip(
+                          label: 'Prestations',
+                          value: 'service',
+                          selected: filter,
+                        ),
+                        _FilterChip(label: 'Woo', value: 'woocommerce', selected: filter),
+                        _FilterChip(label: 'Internes', value: 'internal', selected: filter),
+                      ],
+                    ),
                   ),
                 ),
-                Expanded(
-                  child: items.isEmpty
-                      ? const Center(child: Text('Aucun article dans cette catégorie.'))
-                      : ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 88),
-                          itemCount: items.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            final qty = cart[item.key] ?? 0;
-                            return ListTile(
-                              contentPadding: const EdgeInsets.symmetric(vertical: 4),
-                              leading: CatalogItemThumb(
-                                imageUrl: item.imageUrl,
-                                colorHex: item.color,
-                                category: item.category,
-                              ),
-                              title: Text(
-                                item.name,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                [
-                                  formatEuros(item.priceCents),
-                                  if (item.category == 'service' && item.durationMin != null)
-                                    '${item.durationMin} min',
-                                  if (item.sku != null && item.sku!.isNotEmpty) item.sku!,
-                                ].join(' · '),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (qty > 0) ...[
-                                    IconButton(
-                                      icon: const Icon(Icons.remove_circle_outline),
-                                      onPressed: () => ref
-                                          .read(posCartProvider.notifier)
-                                          .removeOne(item.key),
-                                    ),
-                                    Text('$qty'),
-                                  ],
-                                  IconButton(
-                                    icon: const Icon(Icons.add_circle_outline),
-                                    onPressed: () =>
-                                        ref.read(posCartProvider.notifier).add(item.key),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                ),
+                if (items.isEmpty)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Text(
+                        'Aucun article dans cette catégorie.',
+                        style: TextStyle(color: _muted),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final item = items[index];
+                          final qty = cart[item.key] ?? 0;
+                          return CatalogProductRow(
+                            item: item,
+                            quantity: qty,
+                            onTap: () => showCatalogItemDetailSheet(
+                              context,
+                              ref,
+                              item: item,
+                            ),
+                            onAdd: () =>
+                                ref.read(posCartProvider.notifier).add(item.key),
+                            onRemove: () => ref
+                                .read(posCartProvider.notifier)
+                                .removeOne(item.key),
+                          );
+                        },
+                        childCount: items.length,
+                      ),
+                    ),
+                  ),
               ],
             ),
             if (cartCount > 0)
               Positioned(
                 left: 16,
                 right: 16,
-                bottom: 16,
-                child: FilledButton.icon(
-                  onPressed: () => _openCartSheet(ctx),
-                  icon: const Icon(Icons.shopping_cart_outlined),
-                  label: Text(
-                    'Panier ($cartCount) · ${formatEuros(_cartTotalCents(ctx, cart))}',
+                bottom: 12,
+                child: Material(
+                  elevation: 8,
+                  shadowColor: Colors.black26,
+                  borderRadius: BorderRadius.circular(14),
+                  color: _black,
+                  child: InkWell(
+                    onTap: () => _openCartSheet(ctx),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.shopping_bag_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Panier · $cartCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            formatEuros(_cartTotalCents(ctx, cart)),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -234,16 +292,35 @@ class _FilterChip extends ConsumerWidget {
   final String value;
   final String selected;
 
+  static const _black = Color(0xFF0A0A0A);
+  static const _muted = Color(0xFF737373);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = selected == value;
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (_) =>
-            ref.read(posCategoryFilterProvider.notifier).state = value,
+      padding: const EdgeInsets.only(right: 6),
+      child: InkWell(
+        onTap: () => ref.read(posCategoryFilterProvider.notifier).state = value,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected ? _black : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected ? _black : const Color(0xFFE5E5E5),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? Colors.white : _muted,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -279,50 +356,77 @@ class _CartSheet extends ConsumerWidget {
       final lineTotal = item.priceCents * entry.value;
       total += lineTotal;
       lines.add(
-        ListTile(
-          dense: true,
-          leading: CatalogItemThumb(
-            imageUrl: item.imageUrl,
-            colorHex: item.color,
-            category: item.category,
-            size: 36,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              CatalogItemThumb(
+                imageUrl: item.imageUrl,
+                colorHex: item.color,
+                category: item.category,
+                size: 40,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '${item.name} × ${entry.value}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                formatEuros(lineTotal),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
-          title: Text('${item.name} × ${entry.value}'),
-          trailing: Text(formatEuros(lineTotal)),
         ),
       );
     }
 
     return Padding(
       padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        left: 20,
+        right: 20,
+        top: 12,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE5E5E5),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Text('Panier', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           ...lines,
-          const Divider(),
+          const Divider(height: 24),
           Row(
             children: [
-              const Text('Total'),
+              const Text('Total', style: TextStyle(fontSize: 15)),
               const Spacer(),
               Text(
                 formatEuros(total),
-                style: const TextStyle(fontWeight: FontWeight.w700),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           DropdownButtonFormField<String?>(
-            value: clientId,
+            initialValue: clientId,
             decoration: const InputDecoration(
               labelText: 'Client (optionnel)',
+              filled: true,
+              fillColor: Color(0xFFF9F9F9),
               border: OutlineInputBorder(),
             ),
             items: [

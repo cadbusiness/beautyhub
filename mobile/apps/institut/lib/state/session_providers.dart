@@ -61,14 +61,67 @@ final tenantsProvider = FutureProvider<List<TenantOption>>((ref) async {
   return api.fetchTenants(token);
 });
 
-final dayAgendaProvider = FutureProvider.autoDispose<DayAgenda>((ref) async {
+final cashInitialTabProvider = StateProvider<int>((ref) => 1);
+
+final selectedAgendaDateProvider = StateProvider<DateTime>((ref) {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day);
+});
+
+final selectedStaffFilterProvider = StateProvider<String?>((ref) => null);
+
+final dashboardProvider =
+    FutureProvider.autoDispose<MobileDashboard>((ref) async {
   final token = ref.watch(accessTokenProvider);
   final tenantId = ref.watch(selectedTenantIdProvider);
   if (token == null || tenantId == null) {
     throw StateError('Session ou institut manquant');
   }
   final api = ref.watch(mobileApiProvider);
-  return api.fetchDay(accessToken: token, tenantId: tenantId);
+  return api.fetchDashboard(accessToken: token, tenantId: tenantId);
+});
+
+final tenantBrandingProvider =
+    FutureProvider.autoDispose<TenantBranding>((ref) async {
+  final token = ref.watch(accessTokenProvider);
+  final tenantId = ref.watch(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  final api = ref.watch(mobileApiProvider);
+  return api.fetchTenantBranding(accessToken: token, tenantId: tenantId);
+});
+
+final todayAgendaProvider = FutureProvider.autoDispose<DayAgenda>((ref) async {
+  final token = ref.watch(accessTokenProvider);
+  final tenantId = ref.watch(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  final api = ref.watch(mobileApiProvider);
+  return api.fetchDay(
+    accessToken: token,
+    tenantId: tenantId,
+    includeWeek: false,
+  );
+});
+
+final dayAgendaProvider = FutureProvider.autoDispose<DayAgenda>((ref) async {
+  final token = ref.watch(accessTokenProvider);
+  final tenantId = ref.watch(selectedTenantIdProvider);
+  final selectedDate = ref.watch(selectedAgendaDateProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  final api = ref.watch(mobileApiProvider);
+  final date =
+      '${selectedDate.year.toString().padLeft(4, '0')}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+  return api.fetchDay(
+    accessToken: token,
+    tenantId: tenantId,
+    date: date,
+    includeWeek: true,
+  );
 });
 
 final cashSessionProvider =

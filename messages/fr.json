@@ -144,6 +144,7 @@
     "institutPosProducts": "Produits internes",
     "institutMarketing": "Marketing",
     "institutMarketingLoyalty": "Fidélité",
+    "institutMarketingBranding": "Branding",
     "institutMarketingWebsite": "Page web",
     "institutMarketingPromos": "Promos",
     "institutSettings": "Paramètres",
@@ -176,11 +177,12 @@
   },
   "account": {
     "title": "Mon compte",
-    "subtitle": "Profil, sécurité et paramètres de l'institut.",
+    "subtitle": "Profil, sécurité, identité visuelle et paramètres de l'institut.",
     "nav": {
       "ariaLabel": "Sections du compte",
       "profile": "Profil",
       "security": "Sécurité",
+      "branding": "Branding",
       "institut": "Institut",
       "woocommerce": "WooCommerce",
       "stripe": "Stripe Connect",
@@ -208,6 +210,25 @@
       "passwordSaved": "Mot de passe mis à jour.",
       "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
       "passwordMismatch": "Les mots de passe ne correspondent pas."
+    },
+    "branding": {
+      "sectionTitle": "Branding",
+      "sectionDescription": "Logo et nom affichés sur l’application mobile et votre page web.",
+      "description": "Votre logo apparaît sur le tableau de bord de l’app BeautyHub Pro et sur votre site public.",
+      "displayName": "Nom affiché",
+      "primaryColor": "Couleur principale",
+      "logo": "Logo",
+      "noLogo": "Aucun logo",
+      "uploadLogo": "Téléverser un logo",
+      "logoHint": "PNG, JPG, WebP ou GIF — max 5 Mo. Fond transparent recommandé.",
+      "previewTitle": "Aperçu app mobile",
+      "previewSubtitle": "Tableau de bord",
+      "saved": "Identité enregistrée.",
+      "logoUploaded": "Logo téléversé.",
+      "fileRequired": "Choisissez un fichier.",
+      "logoImagesOnly": "Seules les images sont acceptées.",
+      "unsupportedFormat": "Format non supporté.",
+      "imageTooLarge": "Image trop volumineuse (max 5 Mo)."
     }
   },
   "dashboard": {
@@ -627,6 +648,25 @@
             "description": "Emails et SMS pour relancer, informer ou remplir votre agenda."
           }
         }
+      },
+      "branding": {
+        "title": "Branding",
+        "pageDescription": "Logo et nom affichés sur l’application mobile et votre page web.",
+        "description": "Votre logo apparaît sur le tableau de bord de l’app BeautyHub Pro et sur votre site public.",
+        "displayName": "Nom affiché",
+        "primaryColor": "Couleur principale",
+        "logo": "Logo",
+        "noLogo": "Aucun logo",
+        "uploadLogo": "Téléverser un logo",
+        "logoHint": "PNG, JPG, WebP ou GIF — max 5 Mo. Fond transparent recommandé.",
+        "previewTitle": "Aperçu app mobile",
+        "previewSubtitle": "Tableau de bord",
+        "saved": "Identité enregistrée.",
+        "logoUploaded": "Logo téléversé.",
+        "fileRequired": "Choisissez un fichier.",
+        "logoImagesOnly": "Seules les images sont acceptées.",
+        "unsupportedFormat": "Format non supporté.",
+        "imageTooLarge": "Image trop volumineuse (max 5 Mo)."
       },
       "loyalty": {
         "title": "Programme de fidélité",

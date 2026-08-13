@@ -1,17 +1,3 @@
-<?php
-/**
- * Plugin Name: BeautyHub - Export Bookly (services & extras)
- * Description: Exporte les services et extras Bookly en CSV / JSON pour migration BeautyHub.
- * Version: 1.0.1
- * Author: BeautyHub
- * Requires at least: 5.8
- * Requires PHP: 7.4
- */
-
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
-
 if ( ! class_exists( 'BeautyHub_Bookly_Export' ) ) :
 
 final class BeautyHub_Bookly_Export {

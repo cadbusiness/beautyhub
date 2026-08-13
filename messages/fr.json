@@ -512,6 +512,7 @@
       "nameRequired": "Nom requis.",
       "durationInvalid": "Durée invalide.",
       "serviceNotFound": "Prestation introuvable.",
+      "serviceDeleteInUse": "Impossible de supprimer : cette prestation est liée à des rendez-vous (ou extras déjà réservés). Désactivez-la plutôt.",
       "serviceDateRequired": "Prestation et date/heure requises.",
       "missingFields": "Champs requis manquants.",
       "clientEmailExists": "Un client avec cet e-mail existe déjà.",

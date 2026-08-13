@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { deleteService, type ServiceCategoryRow } from "../actions";
 import { Button } from "@/components/ui/button";
@@ -17,9 +19,17 @@ import { PaginationControls } from "@/components/ui/pagination";
 import { ServiceThumbnail } from "@/components/institut/service-thumbnail";
 import { paginateItems } from "@/lib/ui/pagination";
 import { formatPrice } from "@/lib/utils";
-import { CategoriesDialog } from "./categories-dialog";
 import { ServiceDialog, type ServiceRow } from "./service-dialog";
-import { ServicesImportDialog } from "./services-import-dialog";
+
+const ServicesImportDialog = dynamic(
+  () => import("./services-import-dialog").then((mod) => mod.ServicesImportDialog),
+  { ssr: false },
+);
+
+const CategoriesDialog = dynamic(
+  () => import("./categories-dialog").then((mod) => mod.CategoriesDialog),
+  { ssr: false },
+);
 
 const LIST_PAGE_SIZE = 10;
 
@@ -31,19 +41,22 @@ function IconButton({
   onClick,
   children,
   className,
+  disabled,
 }: {
   label: string;
   onClick?: () => void;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-label={label}
       title={label}
-      className={`inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors ${className ?? "text-slate-500 hover:bg-slate-100 hover:text-slate-800"}`}
+      className={`inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-40 ${className ?? "text-slate-500 hover:bg-slate-100 hover:text-slate-800"}`}
     >
       {children}
     </button>
@@ -100,6 +113,8 @@ export function ServicesManager({
 }) {
   const t = useTranslations("institut.services");
   const tCommon = useTranslations("common");
+  const router = useRouter();
+  const [pendingDelete, startDelete] = useTransition();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [scope, setScope] = useState<Scope>("all");
@@ -109,6 +124,7 @@ export function ServicesManager({
   const [importOpen, setImportOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceRow | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -160,8 +176,17 @@ export function ServicesManager({
 
   function confirmDelete(service: ServiceRow) {
     if (!window.confirm(t("deleteConfirm", { name: service.name }))) return;
-    const form = document.getElementById(`delete-service-${service.id}`) as HTMLFormElement | null;
-    form?.requestSubmit();
+    setActionError(null);
+    startDelete(async () => {
+      const fd = new FormData();
+      fd.set("id", service.id);
+      const result = await deleteService(fd);
+      if (result?.error) {
+        setActionError(result.error);
+        return;
+      }
+      router.refresh();
+    });
   }
 
   const createVisibility = scope === "extra_only" ? "extra_only" : "catalog";
@@ -252,6 +277,12 @@ export function ServicesManager({
           </select>
         </ListToolbar>
 
+        {actionError ? (
+          <p className="border-b border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700 lg:px-6">
+            {actionError}
+          </p>
+        ) : null}
+
         <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
           <table className="w-full text-sm">
             <thead className="border-b border-slate-200">
@@ -307,16 +338,14 @@ export function ServicesManager({
                       <IconButton label={t("edit")} onClick={() => openEdit(s)}>
                         <EditIcon />
                       </IconButton>
-                      <form id={`delete-service-${s.id}`} action={deleteService}>
-                        <input type="hidden" name="id" value={s.id} />
-                        <IconButton
-                          label={tCommon("delete")}
-                          onClick={() => confirmDelete(s)}
-                          className="text-slate-400 hover:bg-red-50 hover:text-red-600"
-                        >
-                          <TrashIcon />
-                        </IconButton>
-                      </form>
+                      <IconButton
+                        label={tCommon("delete")}
+                        onClick={() => confirmDelete(s)}
+                        disabled={pendingDelete}
+                        className="text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <TrashIcon />
+                      </IconButton>
                     </div>
                   </td>
                 </tr>
@@ -326,20 +355,26 @@ export function ServicesManager({
         </DataTable>
       </ListPanel>
 
-      <ServiceDialog
-        open={dialogOpen}
-        service={editing}
-        allServices={services}
-        categories={categories}
-        createVisibility={createVisibility}
-        onClose={closeDialog}
-      />
-      <ServicesImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
-      <CategoriesDialog
-        open={categoriesOpen}
-        categories={categories}
-        onClose={() => setCategoriesOpen(false)}
-      />
+      {dialogOpen ? (
+        <ServiceDialog
+          open={dialogOpen}
+          service={editing}
+          allServices={services}
+          categories={categories}
+          createVisibility={createVisibility}
+          onClose={closeDialog}
+        />
+      ) : null}
+      {importOpen ? (
+        <ServicesImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
+      ) : null}
+      {categoriesOpen ? (
+        <CategoriesDialog
+          open={categoriesOpen}
+          categories={categories}
+          onClose={() => setCategoriesOpen(false)}
+        />
+      ) : null}
     </>
   );
 }

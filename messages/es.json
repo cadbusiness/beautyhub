@@ -1062,7 +1062,8 @@
       "wooConnected": "Tienda WooCommerce conectada.",
       "wooOrderFailed": "Error en el pedido de WooCommerce: {message}",
       "workingHoursEndBeforeStart": "{day}: La hora de finalización debe ser posterior al inicio.",
-      "workingHoursSaved": "Horarios registrados."
+      "workingHoursSaved": "Horarios registrados.",
+      "serviceDeleteInUse": "No se puede eliminar: este servicio está vinculado a citas (o extras ya reservados). Desactívelo en su lugar."
     },
     "clients": {
       "badgeAccount": "Cuenta activa",

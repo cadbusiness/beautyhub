@@ -1185,7 +1185,8 @@
       "wooConnected": "Connected WooCommerce store.",
       "wooOrderFailed": "WooCommerce order failed: {message}",
       "workingHoursEndBeforeStart": "{day}: End time must be after start.",
-      "workingHoursSaved": "Schedules recorded."
+      "workingHoursSaved": "Schedules recorded.",
+      "serviceDeleteInUse": "Cannot delete: this service is linked to appointments (or booked extras). Disable it instead."
     },
     "clients": {
       "badgeAccount": "Active account",

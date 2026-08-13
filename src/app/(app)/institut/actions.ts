@@ -231,15 +231,24 @@ export async function updateService(
   return { ok: true };
 }
 
-export async function deleteService(formData: FormData): Promise<void> {
+export async function deleteService(formData: FormData): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
   await requireModule("institut");
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: t("serviceNotFound") };
+
   const supabase = await createClient();
-  await supabase
-    .from("inst_services")
-    .delete()
-    .eq("id", String(formData.get("id")));
+  const { error } = await supabase.from("inst_services").delete().eq("id", id);
+  if (error) {
+    if (error.code === "23503") {
+      return { error: t("serviceDeleteInUse") };
+    }
+    return { error: error.message };
+  }
   revalidatePath("/institut/prestations");
   revalidatePath("/institut/caisse");
+  revalidatePath("/institut/rendez-vous");
+  return { ok: true };
 }
 
 // --- Clients ----------------------------------------------------------------

@@ -579,7 +579,8 @@
       "creditNoteInsufficient": "Onvoldoende creditnota-saldo.",
       "creditNoteExpired": "Creditnota verlopen.",
       "creditNoteRefRequired": "Creditnotanummer verplicht.",
-      "extrasInvalid": "Extras invalides."
+      "extrasInvalid": "Extras invalides.",
+      "serviceDeleteInUse": "Kan niet verwijderen: deze dienst is gekoppeld aan afspraken (of geboekte extras). Deactiveer ze liever."
     },
     "scheduling": {
       "conflict": {

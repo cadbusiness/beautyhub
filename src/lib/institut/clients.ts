@@ -1,7 +1,26 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import { OVERCACHE_IMPORT_TAG } from "@/lib/institut/client-import/overcache-csv";
 
 type Db = SupabaseClient<Database>;
+
+export type ClientsListFilter =
+  | "all"
+  | "upcoming"
+  | "withAccount"
+  | "ecommerce"
+  | "withPurchases"
+  | "imported";
+
+export type ClientsListPage = {
+  items: ClientListSummary[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+};
+
+export const CLIENTS_LIST_PAGE_SIZE = 12;
 
 export type ClientRow = {
   id: string;
@@ -131,39 +150,40 @@ function mapClient(row: Record<string, unknown>): ClientRow {
   };
 }
 
-export async function fetchClientsWithSummary(
+function escapeIlike(value: string): string {
+  return value.replace(/[%_\\]/g, "\\$&");
+}
+
+async function attachSummariesForClients(
   supabase: Db,
   tenantId: string,
+  clientRows: Record<string, unknown>[],
 ): Promise<ClientListSummary[]> {
-  const now = new Date().toISOString();
+  if (clientRows.length === 0) return [];
 
-  const [clientsRes, apptsRes, salesRes, loyaltyRes] = await Promise.all([
-    supabase
-      .from("clients")
-      .select(CLIENT_SELECT)
-      .eq("tenant_id", tenantId)
-      .order("created_at", { ascending: false }),
+  const now = new Date().toISOString();
+  const clientIds = clientRows.map((row) => String(row.id));
+
+  const [apptsRes, salesRes, loyaltyRes] = await Promise.all([
     supabase
       .from("inst_appointments")
       .select("client_id, status, starts_at")
       .eq("tenant_id", tenantId)
-      .not("client_id", "is", null),
+      .in("client_id", clientIds),
     supabase
       .from("inst_sales")
       .select("client_id, total_cents, status, woo_order_id")
       .eq("tenant_id", tenantId)
-      .not("client_id", "is", null)
+      .in("client_id", clientIds)
       .in("status", ["completed", "paid"]),
     supabase
       .from("inst_loyalty_balances")
       .select("client_id, points_balance")
-      .eq("tenant_id", tenantId),
+      .eq("tenant_id", tenantId)
+      .in("client_id", clientIds),
   ]);
 
-  const apptStats = new Map<
-    string,
-    { total: number; upcoming: number }
-  >();
+  const apptStats = new Map<string, { total: number; upcoming: number }>();
   for (const a of apptsRes.data ?? []) {
     if (!a.client_id) continue;
     const cur = apptStats.get(a.client_id) ?? { total: 0, upcoming: 0 };
@@ -178,10 +198,7 @@ export async function fetchClientsWithSummary(
     apptStats.set(a.client_id, cur);
   }
 
-  const saleStats = new Map<
-    string,
-    { total: number; ecommerce: boolean }
-  >();
+  const saleStats = new Map<string, { total: number; ecommerce: boolean }>();
   for (const s of salesRes.data ?? []) {
     if (!s.client_id) continue;
     const cur = saleStats.get(s.client_id) ?? { total: 0, ecommerce: false };
@@ -198,8 +215,8 @@ export async function fetchClientsWithSummary(
     );
   }
 
-  return (clientsRes.data ?? []).map((row) => {
-    const client = mapClient(row as Record<string, unknown>);
+  return clientRows.map((row) => {
+    const client = mapClient(row);
     const appt = apptStats.get(client.id);
     const sale = saleStats.get(client.id);
     return {
@@ -211,6 +228,180 @@ export async function fetchClientsWithSummary(
       loyalty_points: loyaltyMap.get(client.id) ?? 0,
     };
   });
+}
+
+async function fetchClientIdsForFilter(
+  supabase: Db,
+  tenantId: string,
+  filter: ClientsListFilter,
+): Promise<string[] | null> {
+  const now = new Date().toISOString();
+
+  if (filter === "all" || filter === "imported" || filter === "withAccount") {
+    return null;
+  }
+
+  if (filter === "upcoming") {
+    const { data } = await supabase
+      .from("inst_appointments")
+      .select("client_id")
+      .eq("tenant_id", tenantId)
+      .not("client_id", "is", null)
+      .gte("starts_at", now)
+      .not("status", "eq", "cancelled")
+      .not("status", "eq", "no_show");
+    return [...new Set((data ?? []).map((row) => row.client_id).filter(Boolean))] as string[];
+  }
+
+  let salesQuery = supabase
+    .from("inst_sales")
+    .select("client_id")
+    .eq("tenant_id", tenantId)
+    .not("client_id", "is", null)
+    .in("status", ["completed", "paid"]);
+
+  if (filter === "ecommerce") {
+    salesQuery = salesQuery.not("woo_order_id", "is", null);
+  }
+
+  const { data } = await salesQuery;
+  return [...new Set((data ?? []).map((row) => row.client_id).filter(Boolean))] as string[];
+}
+
+async function fetchClientRowsByIds(
+  supabase: Db,
+  tenantId: string,
+  ids: string[],
+): Promise<Record<string, unknown>[]> {
+  const rows: Record<string, unknown>[] = [];
+  for (let i = 0; i < ids.length; i += 500) {
+    const chunk = ids.slice(i, i + 500);
+    const { data, error } = await supabase
+      .from("clients")
+      .select(CLIENT_SELECT)
+      .eq("tenant_id", tenantId)
+      .in("id", chunk);
+    if (error) throw new Error(error.message);
+    rows.push(...((data ?? []) as Record<string, unknown>[]));
+  }
+  return rows;
+}
+
+function applyClientSearch<T extends { or: (filters: string) => T }>(
+  query: T,
+  search: string,
+): T {
+  const q = search.trim();
+  if (!q) return query;
+  const pattern = escapeIlike(q);
+  return query.or(
+    `full_name.ilike.%${pattern}%,email.ilike.%${pattern}%,phone.ilike.%${pattern}%`,
+  );
+}
+
+export async function fetchClientsListPage(
+  supabase: Db,
+  tenantId: string,
+  options: {
+    page?: number;
+    pageSize?: number;
+    query?: string;
+    filter?: ClientsListFilter;
+  } = {},
+): Promise<ClientsListPage> {
+  const pageSize = options.pageSize ?? CLIENTS_LIST_PAGE_SIZE;
+  const page = Math.max(1, options.page ?? 1);
+  const filter = options.filter ?? "all";
+  const search = options.query?.trim() ?? "";
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const filteredIds = await fetchClientIdsForFilter(supabase, tenantId, filter);
+
+  if (filteredIds && filteredIds.length === 0) {
+    return { items: [], page, pageSize, total: 0, totalPages: 1 };
+  }
+
+  if (filteredIds) {
+    const metaRows = await fetchClientRowsByIds(supabase, tenantId, filteredIds);
+    let scoped = metaRows.map((row) => mapClient(row as Record<string, unknown>));
+
+    if (search) {
+      const q = search.toLowerCase();
+      scoped = scoped.filter(
+        (client) =>
+          client.email.toLowerCase().includes(q) ||
+          (client.full_name?.toLowerCase().includes(q) ?? false) ||
+          (client.phone?.toLowerCase().includes(q) ?? false) ||
+          client.tags.some((tag) => tag.toLowerCase().includes(q)),
+      );
+    }
+
+    scoped.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const total = scoped.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const pageClients = scoped.slice(from, from + pageSize);
+    const pageRows = metaRows.filter((row) =>
+      pageClients.some((client) => client.id === String(row.id)),
+    );
+    pageRows.sort(
+      (a, b) =>
+        String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")),
+    );
+
+    return {
+      items: await attachSummariesForClients(supabase, tenantId, pageRows),
+      page: Math.min(page, totalPages),
+      pageSize,
+      total,
+      totalPages,
+    };
+  }
+
+  let clientsQuery = supabase
+    .from("clients")
+    .select(CLIENT_SELECT, { count: "exact" })
+    .eq("tenant_id", tenantId);
+
+  clientsQuery = applyClientSearch(clientsQuery, search);
+
+  if (filter === "imported") {
+    clientsQuery = clientsQuery.contains("tags", [OVERCACHE_IMPORT_TAG]);
+  } else if (filter === "withAccount") {
+    clientsQuery = clientsQuery.or("pin_hash.not.is.null,password_hash.not.is.null");
+  }
+
+  const { data, error, count } = await clientsQuery
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) throw new Error(error.message);
+
+  const total = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  return {
+    items: await attachSummariesForClients(
+      supabase,
+      tenantId,
+      (data ?? []) as Record<string, unknown>[],
+    ),
+    page: Math.min(page, totalPages),
+    pageSize,
+    total,
+    totalPages,
+  };
+}
+
+export async function fetchClientsWithSummary(
+  supabase: Db,
+  tenantId: string,
+): Promise<ClientListSummary[]> {
+  const { items } = await fetchClientsListPage(supabase, tenantId, {
+    page: 1,
+    pageSize: 1000,
+  });
+  return items;
 }
 
 export async function fetchClientOverview(

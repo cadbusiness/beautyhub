@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -16,16 +16,10 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { PaginationControls } from "@/components/ui/pagination";
-import type { ClientListSummary } from "@/lib/institut/clients";
-import { paginateItems } from "@/lib/ui/pagination";
+import type { ClientListSummary, ClientsListFilter, ClientsListPage } from "@/lib/institut/clients";
 import { formatPrice } from "@/lib/utils";
 import { ClientForm } from "./client-form";
 import { ClientsImportDialog } from "./clients-import-dialog";
-import { OVERCACHE_IMPORT_TAG } from "@/lib/institut/client-import/overcache-csv";
-
-const LIST_PAGE_SIZE = 12;
-
-type Filter = "all" | "upcoming" | "withAccount" | "ecommerce" | "withPurchases" | "imported";
 
 function ClientTag({ children }: { children: React.ReactNode }) {
   return (
@@ -43,47 +37,74 @@ function EditIcon() {
   );
 }
 
-export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
+export function ClientsManager({ initial }: { initial: ClientsListPage }) {
   const t = useTranslations("institut.clients");
   const tCommon = useTranslations("common");
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
-  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<ClientsListFilter>("all");
+  const [page, setPage] = useState(initial.page);
+  const [items, setItems] = useState(initial.items);
+  const [total, setTotal] = useState(initial.total);
+  const [totalPages, setTotalPages] = useState(initial.totalPages);
+  const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ClientListSummary | null>(null);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return clients.filter((c) => {
-      if (filter === "upcoming" && c.upcoming_count === 0) return false;
-      if (filter === "withAccount" && !c.has_portal_account) return false;
-      if (filter === "ecommerce" && !c.has_ecommerce) return false;
-      if (filter === "withPurchases" && c.total_spent_cents === 0) return false;
-      if (filter === "imported" && !c.tags.includes(OVERCACHE_IMPORT_TAG)) return false;
-      if (!q) return true;
-      return (
-        c.email.toLowerCase().includes(q) ||
-        (c.full_name?.toLowerCase().includes(q) ?? false) ||
-        (c.phone?.toLowerCase().includes(q) ?? false) ||
-        c.tags.some((tag) => tag.toLowerCase().includes(q))
-      );
-    });
-  }, [clients, query, filter]);
-
-  const slice = useMemo(
-    () => paginateItems(filtered, page, LIST_PAGE_SIZE),
-    [filtered, page],
-  );
+  const skipInitialFetch = useRef(true);
 
   useEffect(() => {
-    setPage(1);
-  }, [query, filter]);
+    setItems(initial.items);
+    setTotal(initial.total);
+    setTotalPages(initial.totalPages);
+    setPage(initial.page);
+  }, [initial]);
+
+  const loadPage = useCallback(async (signal: AbortSignal) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        filter,
+        q: query.trim(),
+      });
+      const res = await fetch(`/api/institut/clients?${params.toString()}`, { signal });
+      if (!res.ok) throw new Error("load_failed");
+      const data = (await res.json()) as ClientsListPage;
+      setItems(data.items);
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
+      setPage(data.page);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      console.error("[clients-manager]", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, page, query]);
 
   useEffect(() => {
-    if (page > slice.totalPages) setPage(slice.totalPages);
-  }, [page, slice.totalPages]);
+    if (
+      skipInitialFetch.current &&
+      page === initial.page &&
+      filter === "all" &&
+      !query.trim()
+    ) {
+      skipInitialFetch.current = false;
+      return;
+    }
+    skipInitialFetch.current = false;
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      void loadPage(controller.signal);
+    }, query.trim() ? 300 : 0);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [filter, page, query, loadPage, initial.page]);
 
   function openCreate() {
     setEditing(null);
@@ -100,21 +121,18 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
   function closeDialog() {
     setDialogOpen(false);
     setEditing(null);
+    router.refresh();
   }
 
-  const emptyMessage = clients.length === 0 ? t("empty") : t("noResults");
+  const emptyMessage = total === 0 && !query && filter === "all" ? t("empty") : t("noResults");
 
   return (
     <>
       <ListPanel>
         <ListToolbar
           trailing={
-            slice.totalPages > 1 ? (
-              <PaginationControls
-                page={slice.page}
-                totalPages={slice.totalPages}
-                onPageChange={setPage}
-              />
+            totalPages > 1 ? (
+              <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
             ) : undefined
           }
           action={
@@ -136,12 +154,18 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
             type="search"
             placeholder={t("searchPlaceholder")}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
             className="h-9 sm:max-w-xs"
           />
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as Filter)}
+            onChange={(e) => {
+              setFilter(e.target.value as ClientsListFilter);
+              setPage(1);
+            }}
             className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 sm:w-44"
           >
             <option value="all">{t("filterAll")}</option>
@@ -153,8 +177,8 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
           </select>
         </ListToolbar>
 
-        <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
-          <table className="w-full text-sm">
+        <DataTable empty={!loading && items.length === 0 ? emptyMessage : undefined}>
+          <table className={`w-full text-sm ${loading ? "opacity-60" : ""}`}>
             <thead className="border-b border-slate-200">
               <tr>
                 <th className={dataTableHeadCompact}>{t("columns.name")}</th>
@@ -174,7 +198,7 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
               </tr>
             </thead>
             <tbody>
-              {slice.items.map((c) => (
+              {items.map((c) => (
                 <tr
                   key={c.id}
                   className={`${dataTableRow} cursor-pointer`}
@@ -242,11 +266,11 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
           </table>
         </DataTable>
 
-        {filtered.length > 0 ? (
+        {total > 0 ? (
           <ListPanelFooter>
-            {t("footer", { count: filtered.length })}
+            {t("footer", { count: total })}
             {query || filter !== "all"
-              ? ` · ${tCommon("countOfTotal", { count: filtered.length, total: clients.length })}`
+              ? ` · ${tCommon("countOfTotal", { count: items.length, total })}`
               : ""}
           </ListPanelFooter>
         ) : null}
@@ -258,14 +282,7 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
         title={editing ? t("dialogEditTitle") : t("dialogTitle")}
         size={editing ? "lg" : "md"}
       >
-        <ClientForm
-          client={editing}
-          referrerOptions={clients.map((c) => ({
-            id: c.id,
-            label: c.full_name ? `${c.full_name} (${c.email})` : c.email,
-          }))}
-          onSuccess={closeDialog}
-        />
+        <ClientForm client={editing} onSuccess={closeDialog} />
       </FormDialog>
 
       {importOpen ? (

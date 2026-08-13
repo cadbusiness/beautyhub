@@ -1330,7 +1330,8 @@
         "confirm": "Lancer l'import",
         "progressTitle": "Import WooCommerce en cours",
         "quotaBlocked": "Quota clients dépassé. Passez à une formule supérieure ou contactez le support.",
-        "aborted": "Import interrompu."
+        "aborted": "Import interrompu.",
+        "retry": "Reprendre l'import"
       },
       "detail": {
         "backToList": "Retour aux clients",

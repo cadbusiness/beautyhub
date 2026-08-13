@@ -75,6 +75,24 @@ function fallbackEmail(source: string, externalId: string | null): string {
   return `${source}-${suffix}@no-email.local`;
 }
 
+/**
+ * Détecte les emails placeholder générés par les imports :
+ * - Rovercash / CSV import : `ref@import.<slug>.local`
+ * - Fallback dédup : `<source>-<id>@no-email.local`
+ * - Ancien code : `@overcache.local` (legacy Rovercash)
+ * Quand on rencontre un tel email et qu'on récupère un vrai email amont
+ * (Woo customer.email par exemple), on le remplace.
+ */
+function isPlaceholderEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const lower = email.toLowerCase();
+  return (
+    /@import\.[a-z0-9-]+\.local$/.test(lower) ||
+    lower.endsWith("@no-email.local") ||
+    lower.endsWith("@overcache.local")
+  );
+}
+
 type ExistingClient = {
   id: string;
   email: string;
@@ -198,8 +216,14 @@ async function updateExistingClient(
   if (fullName && (!softMerge || !client.full_name)) {
     patch.full_name = fullName;
   }
-  // Email : on ne l'écrase que si l'existant est un placeholder @no-email.local
-  if (normalizedEmail && client.email.endsWith("@no-email.local")) {
+  // Email : on ne l'écrase que si l'existant est un placeholder généré à
+  // l'import (Rovercash `c-XXX@import.<slug>.local`, fallback @no-email.local,
+  // legacy @overcache.local). Sinon on respecte l'email BH.
+  if (
+    normalizedEmail &&
+    !isPlaceholderEmail(normalizedEmail) &&
+    isPlaceholderEmail(client.email)
+  ) {
     patch.email = normalizedEmail;
   }
 
@@ -223,7 +247,7 @@ async function insertNewClient(supabase: Db, input: DedupInput): Promise<string>
 
   const insert: Database["public"]["Tables"]["clients"]["Insert"] = {
     tenant_id: input.tenantId,
-    email: normalizedEmail && !normalizedEmail.endsWith("@no-email.local")
+    email: normalizedEmail && !isPlaceholderEmail(normalizedEmail)
       ? normalizedEmail
       : fallbackEmail(input.source, input.externalId),
     full_name: fullName,
@@ -313,7 +337,7 @@ export async function findOrCreateClientFromExternal(
 
   // 3. Email exact
   const normalizedEmail = normalizeEmail(input.email);
-  if (normalizedEmail && !normalizedEmail.endsWith("@no-email.local")) {
+  if (normalizedEmail && !isPlaceholderEmail(normalizedEmail)) {
     const byEmail = await findByEmail(supabase, input.tenantId, normalizedEmail);
     if (byEmail) {
       await updateExistingClient(supabase, byEmail, input, "email");
@@ -375,7 +399,7 @@ export async function previewMatch(
     if (candidates.length > 0) return { kind: "phone", clientId: candidates[0].id };
   }
   const normalizedEmail = normalizeEmail(input.email);
-  if (normalizedEmail && !normalizedEmail.endsWith("@no-email.local")) {
+  if (normalizedEmail && !isPlaceholderEmail(normalizedEmail)) {
     const byEmail = await findByEmail(supabase, input.tenantId, normalizedEmail);
     if (byEmail) return { kind: "email", clientId: byEmail.id };
   }

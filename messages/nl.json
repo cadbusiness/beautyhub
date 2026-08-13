@@ -1211,7 +1211,8 @@
         "confirm": "Import starten",
         "progressTitle": "WooCommerce-import bezig",
         "quotaBlocked": "Klantquotum overschreden. Upgrade het plan of neem contact op met support.",
-        "aborted": "Import geannuleerd."
+        "aborted": "Import geannuleerd.",
+        "retry": "Import hervatten"
       },
       "importWooBtn": "WooCommerce importeren",
       "loadError": "Kan de klantenlijst niet laden.",

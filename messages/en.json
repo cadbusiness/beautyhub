@@ -1378,7 +1378,8 @@
         "confirm": "Start import",
         "progressTitle": "WooCommerce import in progress",
         "quotaBlocked": "Client quota exceeded. Upgrade the plan or contact support.",
-        "aborted": "Import cancelled."
+        "aborted": "Import cancelled.",
+        "retry": "Resume import"
       },
       "importWooBtn": "Import WooCommerce",
       "loadError": "Unable to load customer list.",

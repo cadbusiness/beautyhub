@@ -1205,7 +1205,8 @@
         "confirm": "Iniciar importación",
         "progressTitle": "Importación WooCommerce en curso",
         "quotaBlocked": "Cuota de clientes superada. Actualiza el plan o contacta con soporte.",
-        "aborted": "Importación cancelada."
+        "aborted": "Importación cancelada.",
+        "retry": "Reanudar importación"
       },
       "importWooBtn": "Importar WooCommerce",
       "loadError": "No se puede cargar la lista de clientes.",

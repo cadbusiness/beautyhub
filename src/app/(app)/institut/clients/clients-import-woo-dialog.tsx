@@ -6,29 +6,32 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
 
-type WooImportProgress = {
-  kind: "start" | "progress" | "done";
-  total?: number;
-  processed?: number;
-  created?: number;
-  matched?: {
-    external: number;
-    phone: number;
-    email: number;
-    name: number;
-  };
-  errors?: string[];
+const PAGE_SIZE = 100;
+
+type PageResponse = {
+  page: number;
+  batchSize: number;
+  hasMore: boolean;
+  created: number;
+  matched: { external: number; phone: number; email: number; name: number };
+  errors: string[];
   quotaBlocked?: boolean;
-  page?: number;
-  pagesProcessed?: number;
 };
 
-const emptyProgress = {
-  total: 0,
+type Progress = {
+  total: number | null;
+  processed: number;
+  created: number;
+  matched: { external: number; phone: number; email: number; name: number };
+  errors: string[];
+};
+
+const emptyProgress: Progress = {
+  total: null,
   processed: 0,
   created: 0,
   matched: { external: 0, phone: 0, email: 0, name: 0 },
-  errors: [] as string[],
+  errors: [],
 };
 
 function StatLine({ label, value }: { label: string; value: string | number }) {
@@ -59,14 +62,16 @@ export function ClientsImportWooDialog({
   const [storeUrl, setStoreUrl] = useState<string | null>(null);
 
   const [importing, setImporting] = useState(false);
-  const [progress, setProgress] = useState(emptyProgress);
+  const [progress, setProgress] = useState<Progress>(emptyProgress);
   const [done, setDone] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
 
-  const totalKnown = progress.total > 0;
-  const percent = totalKnown
-    ? Math.min(100, Math.round((progress.processed / progress.total) * 100))
-    : null;
+  const totalKnown = progress.total !== null && progress.total > 0;
+  const percent =
+    totalKnown && progress.total
+      ? Math.min(100, Math.round((progress.processed / progress.total) * 100))
+      : null;
 
   const fetchStatus = useCallback(async () => {
     setStatusLoading(true);
@@ -78,6 +83,7 @@ export function ClientsImportWooDialog({
     setProgress({ ...emptyProgress });
     setDone(false);
     setRunError(null);
+    setCurrentPage(0);
     try {
       const res = await fetch("/api/institut/clients/import-woo", {
         credentials: "include",
@@ -136,80 +142,128 @@ export function ClientsImportWooDialog({
     onClose();
   }
 
-  async function runImport() {
-    setImporting(true);
-    setDone(false);
-    setRunError(null);
-    setProgress({ ...emptyProgress, total: total ?? 0 });
-
+  async function fetchPage(
+    page: number,
+    signal: AbortSignal,
+  ): Promise<PageResponse | { error: string; hasMore: false }> {
     const controller = new AbortController();
-    abortRef.current = controller;
-
+    const onAbort = () => controller.abort();
+    signal.addEventListener("abort", onAbort);
     try {
       const res = await fetch("/api/institut/clients/import-woo", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ page }),
         signal: controller.signal,
       });
-
-      if (!res.ok || !res.body) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-        setRunError(data.error ?? `HTTP ${res.status}`);
-        setImporting(false);
-        return;
+      const data = (await res.json().catch(() => ({}))) as PageResponse & { error?: string };
+      if (!res.ok) {
+        return {
+          error:
+            (data.errors && data.errors.length > 0 ? data.errors[0] : data.error) ??
+            `HTTP ${res.status}`,
+          hasMore: false,
+        };
       }
+      return data;
+    } finally {
+      signal.removeEventListener("abort", onAbort);
+    }
+  }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
+  async function runImport() {
+    setImporting(true);
+    setDone(false);
+    setRunError(null);
+    setProgress({ ...emptyProgress, total });
 
-      while (true) {
-        const { value, done: streamDone } = await reader.read();
-        if (streamDone) break;
-        buffer += decoder.decode(value, { stream: true });
-        let newlineIndex = buffer.indexOf("\n");
-        while (newlineIndex >= 0) {
-          const line = buffer.slice(0, newlineIndex).trim();
-          buffer = buffer.slice(newlineIndex + 1);
-          newlineIndex = buffer.indexOf("\n");
-          if (!line) continue;
-          try {
-            const evt = JSON.parse(line) as WooImportProgress;
-            if (evt.kind === "start" && typeof evt.total === "number") {
-              setProgress((prev) => ({ ...prev, total: evt.total ?? prev.total }));
-            } else if (evt.kind === "progress" || evt.kind === "done") {
-              setProgress((prev) => ({
-                total: prev.total,
-                processed: evt.processed ?? prev.processed,
-                created: evt.created ?? prev.created,
-                matched: evt.matched ?? prev.matched,
-                errors: evt.errors ?? prev.errors,
-              }));
-              if (evt.quotaBlocked) {
-                setRunError(t("quotaBlocked"));
-              }
-              if (evt.kind === "done") {
-                setDone(true);
-              }
-            }
-          } catch (parseErr) {
-            console.warn("[clients-import-woo] parse error", parseErr, line);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const aggregate: Progress = {
+      total,
+      processed: 0,
+      created: 0,
+      matched: { external: 0, phone: 0, email: 0, name: 0 },
+      errors: [],
+    };
+
+    let page = 1;
+    let hasMore = true;
+    let quotaBlocked = false;
+    let hardStop = false;
+
+    while (hasMore && !controller.signal.aborted && !quotaBlocked && !hardStop) {
+      setCurrentPage(page);
+
+      let response: PageResponse | { error: string; hasMore: false } | null = null;
+      let attempt = 0;
+      const maxRetries = 2;
+      while (attempt <= maxRetries) {
+        if (controller.signal.aborted) break;
+        try {
+          response = await fetchPage(page, controller.signal);
+          break;
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "AbortError") break;
+          attempt += 1;
+          if (attempt > maxRetries) {
+            aggregate.errors.push(
+              `page ${page}: ${err instanceof Error ? err.message : String(err)}`,
+            );
+            hardStop = true;
+            break;
           }
+          await new Promise((r) => setTimeout(r, 1500 * attempt));
         }
       }
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") {
-        setRunError(t("aborted"));
-      } else {
-        console.error("[clients-import-woo]", err);
-        setRunError(err instanceof Error ? err.message : String(err));
+
+      if (!response || controller.signal.aborted) break;
+
+      if ("error" in response) {
+        aggregate.errors.push(`page ${page}: ${response.error}`);
+        hardStop = true;
+        break;
       }
-    } finally {
-      setImporting(false);
-      abortRef.current = null;
+
+      aggregate.processed += response.batchSize;
+      aggregate.created += response.created;
+      aggregate.matched.external += response.matched.external;
+      aggregate.matched.phone += response.matched.phone;
+      aggregate.matched.email += response.matched.email;
+      aggregate.matched.name += response.matched.name;
+      if (response.errors.length > 0) aggregate.errors.push(...response.errors);
+      quotaBlocked = Boolean(response.quotaBlocked);
+
+      // Bump total dynamically once we detect the end
+      if (!hasMore || response.batchSize < PAGE_SIZE) {
+        // Nothing to do — hasMore updated below
+      }
+      if (total === null || aggregate.processed > (total ?? 0)) {
+        aggregate.total = aggregate.processed + (response.hasMore ? PAGE_SIZE : 0);
+      }
+      setProgress({ ...aggregate });
+
+      hasMore = response.hasMore;
+      if (quotaBlocked) {
+        setRunError(t("quotaBlocked"));
+        break;
+      }
+      page += 1;
     }
+
+    // Finalize
+    aggregate.total = total ?? aggregate.processed;
+    setProgress({ ...aggregate });
+
+    if (controller.signal.aborted) {
+      setRunError(t("aborted"));
+    }
+
+    setImporting(false);
+    setDone(true);
+    abortRef.current = null;
   }
 
   function handleAbort() {
@@ -267,7 +321,10 @@ export function ClientsImportWooDialog({
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between text-sm text-slate-700">
-              <span className="font-medium">{t("progressTitle")}</span>
+              <span className="font-medium">
+                {t("progressTitle")}
+                {importing && currentPage > 0 ? ` · page ${currentPage}` : ""}
+              </span>
               <span className="tabular-nums">
                 {progress.processed}
                 {totalKnown ? ` / ${progress.total}` : ""}
@@ -355,15 +412,26 @@ export function ClientsImportWooDialog({
                 {tCommon("cancel")}
               </Button>
             ) : (
-              <Button
-                type="button"
-                onClick={() => {
-                  handleClose();
-                  router.refresh();
-                }}
-              >
-                {tCommon("close")}
-              </Button>
+              <>
+                {progress.errors.length > 0 || runError ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void runImport()}
+                  >
+                    {t("retry")}
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  onClick={() => {
+                    handleClose();
+                    router.refresh();
+                  }}
+                >
+                  {tCommon("close")}
+                </Button>
+              </>
             )}
           </div>
         </div>

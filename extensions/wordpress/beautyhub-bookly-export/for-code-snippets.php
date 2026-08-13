@@ -79,11 +79,27 @@ final class BeautyHub_Bookly_Export {
 
 		echo '<table class="widefat striped" style="max-width:640px;margin:16px 0;"><tbody>';
 		echo '<tr><th>Table services</th><td>' . esc_html( $data['services_table'] ? $data['services_table'] : 'introuvable' ) . '</td></tr>';
-		echo '<tr><th>Table extras</th><td>' . esc_html( $data['extras_table'] ? $data['extras_table'] : 'introuvable (addon Service Extras ?)' ) . '</td></tr>';
+		echo '<tr><th>Table extras</th><td>' . esc_html( $data['extras_table'] ? $data['extras_table'] : 'introuvable (voir diagnostic ci-dessous)' ) . '</td></tr>';
 		echo '<tr><th>Categories</th><td>' . esc_html( (string) $cat_n ) . '</td></tr>';
 		echo '<tr><th>Services</th><td><strong>' . esc_html( (string) $svc_n ) . '</strong></td></tr>';
 		echo '<tr><th>Extras</th><td><strong>' . esc_html( (string) $ext_n ) . '</strong></td></tr>';
 		echo '</tbody></table>';
+
+		if ( ! empty( $data['diagnostic'] ) ) {
+			echo '<h2 style="margin-top:24px;">Diagnostic - tables Bookly detectees</h2>';
+			echo '<p style="max-width:720px;">Si la table extras est marquee "introuvable" mais que le client a bien des extras dans Bookly, envoie-nous une capture de ce tableau. Le nom exact de la table depend de la version et des addons installes.</p>';
+			echo '<table class="widefat striped" style="max-width:720px;"><thead><tr>';
+			echo '<th>Table</th><th style="text-align:right;">Lignes</th>';
+			echo '</tr></thead><tbody>';
+			foreach ( $data['diagnostic'] as $row ) {
+				$highlight = ( stripos( $row['short'], 'extra' ) !== false ) ? ' style="background:#fff8c5;"' : '';
+				echo '<tr' . $highlight . '>';
+				echo '<td><code>' . esc_html( $row['table'] ) . '</code></td>';
+				echo '<td style="text-align:right;"><strong>' . esc_html( (string) $row['rows'] ) . '</strong></td>';
+				echo '</tr>';
+			}
+			echo '</tbody></table>';
+		}
 
 		if ( ! $data['services_table'] ) {
 			echo '<div class="notice notice-error"><p>Aucune table bookly_services trouvee. Verifie que Bookly est installe.</p></div>';
@@ -167,8 +183,16 @@ final class BeautyHub_Bookly_Export {
 		global $wpdb;
 
 		$services_table = self::find_table( array( 'bookly_services' ) );
-		$extras_table   = self::find_table( array( 'bookly_extras' ) );
+		$extras_table   = self::find_table(
+			array(
+				'bookly_service_extras',
+				'bookly_service_extra',
+				'bookly_extras',
+			)
+		);
 		$cats_table     = self::find_table( array( 'bookly_categories' ) );
+
+		$diagnostic = self::diagnostic_tables();
 
 		$categories = array();
 		if ( $cats_table ) {
@@ -275,7 +299,41 @@ final class BeautyHub_Bookly_Export {
 			'categories'     => array_values( $categories ),
 			'services'       => $services,
 			'extras'         => $extras,
+			'diagnostic'     => $diagnostic,
 		);
+	}
+
+	/**
+	 * Liste toutes les tables `%bookly%` et leur nombre de lignes.
+	 * Sert de diagnostic quand l'export extras est vide.
+	 */
+	private static function diagnostic_tables() {
+		global $wpdb;
+		$out = array();
+		$prefix = $wpdb->prefix;
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$tables = $wpdb->get_col( "SHOW TABLES LIKE '%bookly%'" );
+		foreach ( (array) $tables as $t ) {
+			$t = (string) $t;
+			$short = ( strpos( $t, $prefix ) === 0 ) ? substr( $t, strlen( $prefix ) ) : $t;
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$t}`" );
+			$out[] = array(
+				'table' => $t,
+				'short' => $short,
+				'rows'  => $count,
+			);
+		}
+		usort(
+			$out,
+			function ( $a, $b ) {
+				if ( $b['rows'] === $a['rows'] ) {
+					return strcmp( $a['short'], $b['short'] );
+				}
+				return $b['rows'] - $a['rows'];
+			}
+		);
+		return $out;
 	}
 
 	private static function find_table( $suffixes ) {

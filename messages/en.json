@@ -72,15 +72,57 @@
       "passwordTooShort": "The password must contain at least 8 characters.",
       "profileSaved": "Saved profile."
     },
+    "branding": {
+      "description": "Your logo appears on the BeautyHub Pro app dashboard and on your public site.",
+      "displayName": "Display Name",
+      "fileRequired": "Choose a file.",
+      "imageTooLarge": "Image too large (max 5 MB).",
+      "logo": "Logo",
+      "logoHint": "PNG, JPG, WebP or GIF — max 5 MB. Transparent background recommended.",
+      "logoImagesOnly": "Only images are accepted.",
+      "logoUploaded": "Logo uploaded.",
+      "noLogo": "No logo",
+      "previewSubtitle": "Dashboard",
+      "previewTitle": "Mobile app preview",
+      "primaryColor": "Main color",
+      "saved": "Registered identity.",
+      "sectionDescription": "Logo and name displayed on the mobile application and your web page.",
+      "sectionTitle": "Branding",
+      "unsupportedFormat": "Unsupported format.",
+      "uploadLogo": "Upload a logo"
+    },
+    "domain": {
+      "customDomain": "Custom domain",
+      "customDomainHint": "Without https:// — leave blank to use only the subdomain.",
+      "customDomainPlaceholder": "my-institut.fr",
+      "description": "The custom domain replaces the subdomain in all shared links (site, reservation, customer portal).",
+      "dnsBody": "At your registrar, create a CNAME record to Vercel then add the domain in Vercel → Settings → Domains.",
+      "dnsTitle": "DNS configuration",
+      "domainTaken": "This domain is already used by another institute.",
+      "invalidDomain": "Invalid domain. ",
+      "links": {
+        "booking": "Online reservation",
+        "clientLogin": "Customer portal",
+        "site": "Showcase site"
+      },
+      "linksTitle": "Public links",
+      "saved": "Registered domain.",
+      "sectionDescription": "BeautyHub subdomain and custom domain for your site and public links.",
+      "sectionTitle": "Domain",
+      "subdomain": "BeautyHub subdomain",
+      "subdomainHint": "Always on — ideal for getting started without configuring DNS."
+    },
     "nav": {
       "ariaLabel": "Account Sections",
+      "branding": "Branding",
+      "compliance": "Compliance",
+      "domain": "Domain",
       "institut": "Institute",
       "pos": "Box",
       "profile": "Profile",
       "security": "Security",
       "stripe": "StripeConnect",
-      "woocommerce": "WooCommerce",
-      "compliance": "Compliance"
+      "woocommerce": "WooCommerce"
     },
     "password": {
       "confirmPassword": "Confirm password",
@@ -97,7 +139,7 @@
       "sectionDescription": "Your personal information visible in the team.",
       "sectionTitle": "Profile"
     },
-    "subtitle": "Institute profile, security and settings.",
+    "subtitle": "Institute profile, security, visual identity, domain and settings.",
     "title": "My account"
   },
   "admin": {
@@ -401,7 +443,7 @@
       "defaultBadge": "By default",
       "defaultSlug": "/to book",
       "draft": "Draft",
-      "editTitle": "Edit route",
+      "editTitle": "Edit the route",
       "embedCode": "iframe code",
       "embedLink": "Embed URL",
       "empty": "No route configured.",
@@ -435,6 +477,7 @@
     "calendar": {
       "allServices": "All services",
       "allStaff": "The whole team",
+      "checkout": "Cash in",
       "columnMode": {
         "resource": "Cabins",
         "staff": "Practitioners"
@@ -469,6 +512,7 @@
     "form": {
       "addService": "New service",
       "anyStaff": "— Indifferent —",
+      "checkout": "Cash in on this appointment",
       "chooseService": "Choose a service",
       "client": "Customer",
       "create": "Create the appointment",
@@ -699,10 +743,10 @@
   "auth": {
     "backToHome": "← BeautyHub",
     "email": "E-mail",
-    "password": "Password",
-    "showPassword": "Show password",
     "hidePassword": "Hide password",
+    "password": "Password",
     "setupRequired": "Database not connected on this deployment. ",
+    "showPassword": "Show password",
     "submit": "Log in",
     "submitting": "Connection…",
     "subtitle": "Back office institute & platform.",
@@ -795,6 +839,7 @@
     "products": "Products",
     "published": "Published",
     "refresh": "Refresh",
+    "sales": "Sales",
     "save": "Save",
     "saved": "Registered",
     "saving": "Registration…",
@@ -824,12 +869,84 @@
     "yearly": "Annual",
     "yes": "Yes"
   },
+  "compliance": {
+    "actions": {
+      "clientNotFound": "Customer not found.",
+      "forbidden": "Action reserved for the head of the institute.",
+      "serverConfig": "Incomplete server configuration.",
+      "tenantNotFound": "Institute not found.",
+      "unauthorized": "Session expired."
+    },
+    "clientPanel": {
+      "alreadyAnonymized": "This file has already been anonymized.",
+      "anonymize": "Anonymize the file",
+      "cancel": "Cancel",
+      "confirmAction": "Confirm anonymization",
+      "confirmDescription": "Personal data will be deleted. ",
+      "confirmHint": "This action is irreversible.",
+      "confirmTitle": "Anonymize this customer?",
+      "description": "Export this customer's data or anonymize their file (conservation of accounting entries).",
+      "export": "Export (JSON)"
+    },
+    "institut": {
+      "checkedAt": "Validated on {date}",
+      "checklist": {
+        "client_notices": {
+          "hint": "Purpose, legal basis and link to your policy when making an appointment and customer files.",
+          "title": "Information on forms"
+        },
+        "dpa_signed": {
+          "hint": "Contract art. ",
+          "title": "Subcontracting agreement (DPA) signed"
+        },
+        "privacy_policy": {
+          "hint": "Inform your customers about the processing of their data (site, reception, online appointments).",
+          "title": "Published Privacy Policy"
+        },
+        "retention_policy": {
+          "hint": "Configure the retention of inactive customer files below.",
+          "title": "Defined retention periods"
+        },
+        "team_training": {
+          "hint": "Limited access, passwords, incident reporting.",
+          "title": "Aware team"
+        }
+      },
+      "checklistHint": "Check each step once completed. ",
+      "checklistTitle": "GDPR compliance checklist",
+      "documentsHint": "Templates provided by BeautyHub — to be completed with your legal counsel.",
+      "documentsTitle": "Documents",
+      "downloadDpa": "Download the DPA",
+      "platformPrivacy": "Platform policy",
+      "progress": "{done} / {total} steps completed",
+      "retentionHint": "Duration of retention of inactive customer files (automatic purge — coming soon). ",
+      "retentionInvalid": "Duration between 30 and 3650 days, or empty.",
+      "retentionLabel": "Days",
+      "retentionPlaceholder": "Ex. 1095",
+      "retentionSave": "Save",
+      "retentionTitle": "Data retention",
+      "subprocessors": "Subcontractors"
+    },
+    "portal": {
+      "description": "Download a copy of your data or request deletion of your customer file.",
+      "erase": "Request erasure",
+      "export": "Download my data",
+      "legalNote": "Certain data may be retained for accounting purposes. ",
+      "privacyLink": "Privacy Policy",
+      "title": "Your personal data"
+    }
+  },
   "dashboard": {
     "analytics": {
       "appointmentMix": "Distribution of appointments",
       "appointments": "Appointment",
       "appointmentsChart": "Appointments",
       "cancellationRate": "{rate} % of cancellations",
+      "channels": {
+        "all": "All",
+        "pos": "Box",
+        "woo": "E-commerce"
+      },
       "description": "Your business at a glance — today's numbers and trends.",
       "emptyAppointments": "No appointments during this period.",
       "emptyChart": "No data yet for this period.",
@@ -956,6 +1073,7 @@
       "cartAmountMismatch": "Cart amount incompatible with payment.",
       "clientEmailExists": "A customer with this email already exists.",
       "clientPinRegenerateFailed": "Unable to regenerate PIN code.",
+      "clientReferrerSelf": "A client cannot sponsor herself.",
       "clientSelfRegisterDisabled": "Account creation is done via your institute. ",
       "connectionFailed": "Connection failed: {message}",
       "courseNotFound": "Training not found.",
@@ -974,24 +1092,7 @@
       "giftCardExpired": "Gift voucher expired.",
       "giftCardInsufficient": "Insufficient gift voucher balance.",
       "giftCardInvalid": "Invalid gift voucher.",
-      "voucherCodeRequired": "Voucher code required.",
-      "voucherInvalid": "Invalid voucher.",
-      "voucherInsufficient": "Insufficient voucher balance.",
-      "voucherExpired": "Voucher expired.",
-      "promoCodeRequired": "Promo code required.",
-      "promoNotFound": "Promo code not found.",
-      "promoInactive": "Promo code disabled.",
-      "promoNotStarted": "Promo code not valid yet.",
-      "promoExpired": "Promo code expired.",
-      "promoExhausted": "Promo code exhausted.",
-      "promoChannelDisabled": "Promo code not usable at checkout.",
-      "promoMinOrder": "Minimum amount not reached for this promo code.",
-      "promoClientLimit": "Usage limit reached for this customer.",
-      "promoNoDiscount": "No applicable discount.",
-      "promoInvalid": "Invalid promo code.",
       "giftCardIssued": "Gift voucher issued",
-      "voucherIssued": "Voucher issued",
-      "voucherVoided": "Voucher voided",
       "invalidAmount": "Invalid amount.",
       "invalidCart": "Invalid basket.",
       "invalidCredentials": "Incorrect identifiers.",
@@ -1001,6 +1102,11 @@
       "invalidPayments": "Invalid payments.",
       "invalidPin": "The PIN code must be 4 digits long.",
       "loginIdPinRequired": "Customer ID and PIN required.",
+      "loyaltyInsufficientPoints": "Insufficient loyalty points.",
+      "loyaltyNewServiceOnly": "Reward reserved for new services.",
+      "loyaltyProgramInactive": "Loyalty program inactive.",
+      "loyaltyRewardInvalid": "Invalid loyalty reward.",
+      "loyaltyRewardNotPos": "This reward cannot be used at the cash register.",
       "missingFields": "Missing required fields.",
       "missingRequiredFields": "Missing required fields.",
       "movementRecorded": "Movement recorded.",
@@ -1020,6 +1126,17 @@
       "platformBrandNotFound": "Brand platform not found.",
       "posSettingsSaved": "Cash register settings saved.",
       "productNotFoundInCart": "Product not found: {id}",
+      "promoChannelDisabled": "Promo code not usable at checkout.",
+      "promoClientLimit": "Usage limit reached for this customer.",
+      "promoCodeRequired": "Promo code required.",
+      "promoExhausted": "Promo code sold out.",
+      "promoExpired": "Expired promo code.",
+      "promoInactive": "Promo code disabled.",
+      "promoInvalid": "Invalid promo code.",
+      "promoMinOrder": "Minimum amount not reached for this promo code.",
+      "promoNoDiscount": "No discounts applicable.",
+      "promoNotFound": "Promo code not found.",
+      "promoNotStarted": "Promo code not yet valid.",
       "reasonRequired": "Reason required.",
       "reportFailed": "Unable to generate report.",
       "saleAlreadyRecorded": "Sale already registered.",
@@ -1038,6 +1155,7 @@
       "sessionClosed": "Z fence completed",
       "sessionOpened": "Open checkout session.",
       "slugTaken": "The identifier \"{slug}\" is already taken.",
+      "staffNoAccount": "This member does not yet have an application account.",
       "stripeNotConfigured": "Stripe Connect not configured for this institute.",
       "stripeNotConfiguredShort": "Stripe Connect not configured.",
       "teamInviteAlreadyPending": "An invitation is already pending for this email.",
@@ -1046,7 +1164,6 @@
       "teamInviteInvalid": "Invalid or already used invitation.",
       "teamRoleForbidden": "Only the owner can manage roles.",
       "teamRoleNotFound": "Role not found.",
-      "staffNoAccount": "This member does not have an app account yet.",
       "teamRoleSlugTaken": "A role with this identifier already exists.",
       "tenantCreateError": "Institute creation error.",
       "tenantCreatedOwnerFailed": "Institute created, but owner not created: {message}.",
@@ -1059,6 +1176,12 @@
       "titleRequired": "Title required.",
       "urlKeySecretRequired": "URL, key and secret required.",
       "varianceNotesRequired": "A cash discrepancy requires an explanatory note.",
+      "voucherCodeRequired": "Voucher code required.",
+      "voucherExpired": "Voucher expired.",
+      "voucherInsufficient": "Insufficient voucher balance.",
+      "voucherInvalid": "Invalid voucher.",
+      "voucherIssued": "Voucher issued",
+      "voucherVoided": "Voucher canceled",
       "wooConnected": "Connected WooCommerce store.",
       "wooOrderFailed": "WooCommerce order failed: {message}",
       "workingHoursEndBeforeStart": "{day}: End time must be after start.",
@@ -1138,9 +1261,9 @@
           "access": "Access & emails",
           "appointments": "Appointment",
           "overview": "Overview",
+          "privacy": "Personal data",
           "quotes": "Estimate",
-          "sales": "Bills & purchases",
-          "privacy": "Personal data"
+          "sales": "Bills & purchases"
         },
         "topServices": "Most reserved services",
         "upcomingTitle": "Next meetings"
@@ -1151,6 +1274,7 @@
       "empty": "No customers at the moment.",
       "filterAll": "All",
       "filterEcommerce": "E-commerce",
+      "filterImported": "Import Overcache",
       "filterUpcoming": "Upcoming appointments",
       "filterWithAccount": "Online account",
       "filterWithPurchases": "With purchases",
@@ -1169,6 +1293,9 @@
         "notesPlaceholder": "Preferences, contraindications, remarks…",
         "phonePlaceholder": "06 12 34 56 78",
         "postalCode": "Postcode",
+        "referrer": "Sponsored by",
+        "referrerHint": "Points credited to the sponsor after the first visit is completed.",
+        "referrerNone": "— No sponsorship —",
         "submit": "Add customer",
         "submitEdit": "Save",
         "submitting": "Addition…",
@@ -1178,51 +1305,50 @@
         "tagsPlaceholder": "VIP, Allergy, New client…"
       },
       "import": {
-        "title": "Import Overcache clients",
-        "doneTitle": "Import complete",
-        "intro": "Overcache / Lundi Matin CSV export (semicolon delimiter). Clients without email get a placeholder address you can update later.",
-        "chooseFile": "Choose CSV file",
-        "fileHint": "Overcache custom config (.csv)",
-        "fileLabel": "File",
-        "analyzing": "Analyzing file…",
-        "previewIntro": "Review the summary before importing. Re-imports update existing records via C-xxxxx reference.",
-        "stats": {
-          "total": "Rows read",
-          "create": "New records",
-          "update": "Updates",
-          "skip": "Skipped",
-          "withPhone": "With phone"
-        },
-        "quotaWarning": "Client quota: {usage} / {limit} — this import needs {needed} more slots. Upgrade your plan or contact support.",
-        "samplesCreate": "Sample creates",
-        "samplesSkipped": "Sample skipped",
-        "skippedLine": "Line {line} ({ref}) — {reason}",
-        "skipReason": {
-          "missing_reference": "missing reference",
-          "missing_name": "missing name",
-          "professional": "business client (institute)",
-          "archived": "archived",
-          "duplicate_ref": "duplicate reference in file"
-        },
-        "emailHint": "Generated emails use ref@import.{tenant}.local. Overcache badge added. No online account is created automatically.",
-        "back": "Choose another file",
-        "confirmImport": "Start import",
-        "importing": "Importing…",
-        "doneMessage": "{created} created, {updated} updated, {skipped} skipped.",
+        "analyzing": "Analysis of the file…",
+        "back": "Change file",
+        "chooseFile": "Choose a CSV file",
+        "confirmImport": "Start the import",
+        "doneMessage": "{created} created, {updated} updated, {skipped} ignored.",
+        "doneTitle": "Import completed",
+        "emailHint": "Generated emails use the pattern ref@import.{tenant}.local. ",
         "errors": {
-          "emptyFile": "Empty file.",
-          "missingColumns": "Expected columns not found (Reference, Full name).",
-          "invalidFile": "Invalid CSV or no data.",
           "confirmRequired": "Confirmation required.",
-          "importFailed": "Import failed."
-        }
+          "emptyFile": "Empty file.",
+          "importFailed": "The import failed.",
+          "invalidFile": "Invalid or no data CSV file.",
+          "missingColumns": "Expected columns not found (Reference, Full Name)."
+        },
+        "fileHint": "Custom Overcache config (.csv)",
+        "fileLabel": "File",
+        "importing": "Import in progress…",
+        "intro": "Export CSV Overcache / Monday Morning (semicolon separator). ",
+        "previewIntro": "Check the summary before starting the import. ",
+        "quotaWarning": "Customer quota: {usage} / {limit} — this import requires {needed} additional places. ",
+        "samplesCreate": "Examples to create",
+        "samplesSkipped": "Examples ignored",
+        "skipReason": {
+          "archived": "archive",
+          "duplicate_ref": "duplicate reference in file",
+          "missing_name": "missing name",
+          "missing_reference": "missing reference",
+          "professional": "professional client (institute)"
+        },
+        "skippedLine": "Line {line} ({ref}) — {reason}",
+        "stats": {
+          "create": "New files",
+          "skip": "Ignored",
+          "total": "Lines read",
+          "update": "Updates",
+          "withPhone": "With telephone"
+        },
+        "title": "Import Overcache clients"
       },
-      "filterImported": "Overcache import",
       "importCsv": "Import CSV",
-      "loadError": "Unable to load the client list.",
-      "retry": "Retry",
+      "loadError": "Unable to load customer list.",
       "new": "New customer",
       "noResults": "No results for this search.",
+      "retry": "Try again",
       "searchPlaceholder": "Search for name, email, telephone, badge…"
     },
     "extras": {
@@ -1235,6 +1361,25 @@
       "total": "Total: {min} min · {price}"
     },
     "marketing": {
+      "branding": {
+        "description": "Your logo appears on the BeautyHub Pro app dashboard and on your public site.",
+        "displayName": "Display Name",
+        "fileRequired": "Choose a file.",
+        "imageTooLarge": "Image too large (max 5 MB).",
+        "logo": "Logo",
+        "logoHint": "PNG, JPG, WebP or GIF — max 5 MB. Transparent background recommended.",
+        "logoImagesOnly": "Only images are accepted.",
+        "logoUploaded": "Logo uploaded.",
+        "noLogo": "No logo",
+        "pageDescription": "Logo and name displayed on the mobile application and your web page.",
+        "previewSubtitle": "Dashboard",
+        "previewTitle": "Mobile app preview",
+        "primaryColor": "Main color",
+        "saved": "Registered identity.",
+        "title": "Branding",
+        "unsupportedFormat": "Unsupported format.",
+        "uploadLogo": "Upload a logo"
+      },
       "loyalty": {
         "actions": {
           "invalidAmount": "Invalid amount.",
@@ -1244,11 +1389,27 @@
           "missingFields": "Missing required fields.",
           "serviceRequired": "Service required.",
           "shopifyUnavailable": "Shopify is not yet available.",
+          "starterApplied": "Model applied: rule and reward created.",
+          "starterNotEmpty": "The model only applies to an empty program.",
           "wooRequired": "Connect WooCommerce to use this source."
         },
         "calcModes": {
           "fixed_per_event": "Fixed points per event",
           "per_euro_spent": "Points per euro spent"
+        },
+        "capabilities": {
+          "birthday": "Birthday bonus configured",
+          "earnPaid": "Points after completed appointment or purchase paid at checkout",
+          "portal": "Map visible on the customer portal",
+          "rebook": "Same day rebooking bonus",
+          "redeemPos": "Redeeming points at checkout",
+          "referral": "Sponsorship points",
+          "title": "Features",
+          "upsell": "Reward reserved for new services"
+        },
+        "clarity": {
+          "body": "The rules define how to earn points (you can create several with different points). ",
+          "title": "How to read this screen"
         },
         "clientsLabel": "{count, plural, one {cliente} other {clientes}}",
         "description": "Points for each visit or purchase, exchangeable for benefits.",
@@ -1262,35 +1423,35 @@
           "phase3Action": "Check “Active program” then save.",
           "phase3Title": "Step 3 — Upload"
         },
-        "clarity": {
-          "title": "How to read this screen",
-          "body": "Rules define how points are earned (you can create several with different amounts). Settings below are global and apply to the whole loyalty program."
-        },
         "integrations": {
           "comingSoon": "Soon",
           "connectHint": "Connect your store to activate this source:",
           "wooDisconnected": "not connected"
         },
         "program": {
+          "activate": "Enable",
           "active": "Active program",
-          "activate": "Activate",
-          "deactivate": "Deactivate",
+          "birthdayAuto": "Automatic sending of the birthday bonus",
+          "birthdayBonus": "Birthday bonus (points)",
+          "birthdayBonusHint": "Points offered on birthday if auto-shipping is enabled.",
+          "copySuffix": "(copy)",
+          "deactivate": "Disable",
           "description": "Name, wording of points and activation of the program.",
-          "selectorLabel": "Program",
-          "newProgram": "New program",
-          "newProgramTitle": "Create loyalty program",
-          "newProgramName": "Program name",
+          "duplicateProgram": "Duplicate",
+          "duplicateProgramName": "Copy Name",
+          "duplicateProgramTitle": "Duplicate the program",
           "globalHint": "These settings apply to all rules and rewards in this program.",
           "name": "Program name",
+          "newProgram": "New program",
+          "newProgramName": "Program name",
+          "newProgramTitle": "Create a loyalty program",
           "pointsLabel": "Point wording",
-          "pointsLabelHint": "Example: points, stars, credits (same label everywhere).",
+          "pointsLabelHint": "Example: points, stars, credits (same wording everywhere).",
+          "portalVisible": "Visible on the customer portal (/customer/account)",
           "saved": "Recorded program.",
-          "scopeBadge": "Global",
-          "title": "Settings",
-          "duplicateProgram": "Duplicate",
-          "duplicateProgramTitle": "Duplicate program",
-          "duplicateProgramName": "Copy name",
-          "copySuffix": "(copy)"
+          "scopeBadge": "Overall",
+          "selectorLabel": "Program",
+          "title": "Settings"
         },
         "programStatus": {
           "draft": "Draft",
@@ -1316,12 +1477,15 @@
             "discountEur": "Amount of reduction (€)",
             "discountPercent": "Discount percentage",
             "name": "Name",
+            "newServiceOnly": "New service only",
+            "newServiceOnlyHint": "The customer will only be able to use it for a service that she has never reserved (encourages her to try something else).",
             "pointsCost": "Cost in {label}",
             "service": "Service offered",
             "type": "Type of reward"
           },
-          "hint": "Define what customers can redeem with their points here.",
-          "redeemHint": "Using points at checkout is coming soon.",
+          "hint": "Define here what customers can get with their points.",
+          "newServiceOnlyShort": "new service",
+          "redeemHint": "Points can be exchanged at checkout during payment (reward to be selected).",
           "title": "Awards",
           "types": {
             "discountFixed": "−{amount}",
@@ -1331,6 +1495,13 @@
             "freeService": "Offered: {service}",
             "freeServiceLabel": "Service offered"
           }
+        },
+        "roadmap": {
+          "hint": "Sponsorship and rebooking: automatic credit as soon as a customer sponsors or rebooks an appointment the same day (0 = deactivated).",
+          "qrHint": "Display this QR in the salon: your clients access the program and their account.",
+          "qrTitle": "QR code home",
+          "rebookPoints": "Same day rebooking bonus",
+          "referralPoints": "Sponsorship points"
         },
         "rules": {
           "add": "New rule",
@@ -1358,7 +1529,7 @@
             "preview": "Example: €50 expense → {points} {label}",
             "source": "Based on"
           },
-          "hint": "Create multiple rules if you want different earning amounts by case.",
+          "hint": "Create multiple rules if you want different payouts in different cases.",
           "title": "Gain points"
         },
         "sources": {
@@ -1367,8 +1538,10 @@
           "shopify_order": "Shopify order",
           "woocommerce_order": "WooCommerce Order"
         },
+        "starterPack": "Institute model (10 pts / visit, −10% at 100 pts)",
         "stats": {
           "clientsWithPoints": "Participating clients",
+          "monthSummary": "This month: +{earned} {label} allocated · {redeemed} used",
           "pointsOutstanding": "{label} in circulation"
         },
         "status": {
@@ -1409,67 +1582,67 @@
         }
       },
       "promos": {
-        "title": "Promotions",
-        "description": "Create promo codes for e-commerce, online booking, and in-store checkout.",
-        "new": "New code",
-        "searchPlaceholder": "Search code or name…",
-        "empty": "No promo codes yet.",
-        "noResults": "No results for this search.",
-        "dialogTitle": "New promo code",
-        "dialogEditTitle": "Edit promo code",
-        "footer": "{count, plural, one {# promo code} other {# promo codes}}",
-        "columns": {
-          "code": "Code",
-          "name": "Name",
-          "discount": "Discount",
-          "channels": "Channels",
-          "usage": "Usage",
-          "status": "Status",
-          "actions": "Actions"
-        },
-        "channels": {
-          "woo": "E-commerce",
-          "booking": "Booking",
-          "pos": "In-store"
-        },
-        "status": {
-          "active": "Active",
-          "inactive": "Disabled",
-          "scheduled": "Scheduled",
-          "expired": "Expired",
-          "exhausted": "Exhausted"
-        },
-        "form": {
-          "code": "Code",
-          "codePlaceholder": "SUMMER20",
-          "name": "Name",
-          "description": "Description",
-          "discountType": "Discount type",
-          "percent": "Percentage",
-          "fixed": "Fixed amount",
-          "discountPercent": "Discount (%)",
-          "discountEuros": "Discount (€)",
-          "minOrder": "Minimum cart (€)",
-          "usageLimit": "Global limit",
-          "usageLimitPerClient": "Per-customer limit",
-          "unlimited": "Unlimited",
-          "startsAt": "Starts",
-          "endsAt": "Ends",
-          "channels": "Channels",
-          "active": "Active code",
-          "save": "Save",
-          "saving": "Saving…"
-        },
         "actions": {
-          "missingFields": "Code and name are required.",
-          "invalidDiscount": "Invalid discount type.",
-          "invalidPercent": "Invalid percentage (1–100).",
-          "invalidFixed": "Invalid fixed amount.",
-          "invalidPeriod": "End date must be after start date.",
           "channelRequired": "Select at least one channel.",
           "codeExists": "This code already exists.",
+          "invalidDiscount": "Invalid discount type.",
+          "invalidFixed": "Invalid fixed amount.",
+          "invalidPercent": "Invalid percentage (1–100).",
+          "invalidPeriod": "The end date must be after the start.",
+          "missingFields": "Code and name are required.",
           "saved": "Promo code saved."
-        }
+        },
+        "channels": {
+          "booking": "Reservation",
+          "pos": "Shop",
+          "woo": "E-commerce"
+        },
+        "columns": {
+          "actions": "Actions",
+          "channels": "Channels",
+          "code": "Code",
+          "discount": "Discount",
+          "name": "Name",
+          "status": "Status",
+          "usage": "Uses"
+        },
+        "description": "Create promotional codes that can be used in e-commerce, upon reservation and at checkout.",
+        "dialogEditTitle": "Edit promo code",
+        "dialogTitle": "New promo code",
+        "empty": "No promo codes at the moment.",
+        "footer": "{count, plural, one {# code promo} other {# codes promo}}",
+        "form": {
+          "active": "Active code",
+          "channels": "Channels",
+          "code": "Code",
+          "codePlaceholder": "SUMMER20",
+          "description": "Description",
+          "discountEuros": "Discount (€)",
+          "discountPercent": "Discount (%)",
+          "discountType": "Type of discount",
+          "endsAt": "END",
+          "fixed": "Fixed amount",
+          "minOrder": "Minimum basket (€)",
+          "name": "Name",
+          "percent": "Percentage",
+          "save": "Save",
+          "saving": "Registration…",
+          "startsAt": "Beginning",
+          "unlimited": "Unlimited",
+          "usageLimit": "Overall limit",
+          "usageLimitPerClient": "Limit per client"
+        },
+        "new": "New code",
+        "noResults": "No results for this search.",
+        "searchPlaceholder": "Search code or name…",
+        "status": {
+          "active": "Active",
+          "exhausted": "Exhausted",
+          "expired": "Expired",
+          "inactive": "Disabled",
+          "scheduled": "Planned"
+        },
+        "title": "Promotions"
       },
       "website": {
         "actions": {
@@ -1758,9 +1931,9 @@
       "linkSettings": "Settings",
       "settingsButton": "Cash register settings",
       "syncWoo": "Sync WooCommerce",
-      "syncWooPending": "Syncing…",
-      "syncWooDone": "{products} products synced ({shops} shop(s))",
-      "syncWooError": "Sync failed",
+      "syncWooDone": "{products} synchronized products ({shops} store(s))",
+      "syncWooError": "Sync Failed",
+      "syncWooPending": "Synchronization…",
       "wooNotConnected": "WooCommerce not connected — only internal services and products are available."
     },
     "posSettings": {
@@ -1771,9 +1944,18 @@
         "currency": "Currency",
         "defaultOpeningFloat": "Default cash base (€)",
         "defaultVat": "Default rate (%)",
+        "deliveryPrefix": "Delivery note prefix (BLC)",
+        "documentsTitle": "Document numbering",
         "fiscalRegime": "Tax regime",
+        "fixedRecoveryFee": "Lump sum recovery compensation (€)",
         "generalTitle": "General",
+        "invoicePrefix": "Invoice prefix (FAC)",
+        "latePaymentPenalty": "Late penalties (free text)",
         "legalAddress": "Address",
+        "legalDocsTitle": "Legal notices documents",
+        "legalEmail": "Legal email",
+        "legalMentionsOverride": "Personalized legal notices",
+        "legalMentionsPlaceholder": "Leave empty to use the automatic BE/FR mentions depending on the country.",
         "legalName": "Company name",
         "legalTitle": "Legal notices",
         "paymentMethods": {
@@ -1783,6 +1965,7 @@
           "stripe": "Stripe (online)",
           "transfer": "Payment"
         },
+        "paymentTermsDays": "Payment term (days)",
         "paymentsTitle": "Payment methods",
         "priceDisplay": "Price display",
         "priceHt": "Excl. VAT (VAT added to collection)",
@@ -1799,7 +1982,7 @@
         "siret": "SIRET / BCE",
         "ticketFooter": "Ticket foot",
         "ticketHeader": "Ticket header",
-        "ticketPrefix": "Dialing prefix",
+        "ticketPrefix": "Ticket prefix (TIC)",
         "ticketTitle": "Cash receipt",
         "vatNumber": "Intracommunity VAT number",
         "vatTitle": "VAT"
@@ -1873,8 +2056,21 @@
       }
     },
     "services": {
+      "categories": {
+        "add": "Add",
+        "deleteConfirm": "Delete category “{name}”? ",
+        "empty": "No categories at the moment.",
+        "intro": "Organize the catalog like on Bookly. ",
+        "name": "Name",
+        "namePlaceholder": "Facial care",
+        "saving": "Registration…",
+        "sortLabel": "Order {order}",
+        "sortOrder": "Order",
+        "title": "Benefit categories"
+      },
       "columns": {
         "actions": "Actions",
+        "category": "Category",
         "duration": "Duration",
         "price": "Price",
         "status": "Status",
@@ -1892,10 +2088,12 @@
         "bufferAfter": "Buffer after (min)",
         "bufferBefore": "Front buffer (min)",
         "bufferHint": "Tampons block out time before and after each appointment.",
+        "category": "Category",
+        "categoryNone": "Uncategorized",
+        "createExtraSubmit": "Create the extra",
+        "createExtraTitle": "New extra",
         "createSubmit": "Create the service",
         "createTitle": "New service",
-        "createExtraTitle": "New extra",
-        "createExtraSubmit": "Create extra",
         "descriptionPlaceholder": "Optional — visible internally",
         "durationMin": "Duration (min)",
         "editSubmit": "Save",
@@ -1904,13 +2102,13 @@
           "afterTime": "After choosing the niche",
           "beforeTime": "Before choosing the niche",
           "extraOnlyBadge": "Extra",
-          "hint": "Choose upsell extras: existing services or dedicated extra items.",
+          "hint": "Choose extras to offer as an upsell: existing services or dedicated extras. ",
           "maxQty": "Max",
           "minQty": "Min",
-          "noCandidates": "No extras available yet. Use an active service or create one in the extras catalog.",
-          "noSearchResults": "No service or extra matches.",
+          "noCandidates": "No extras available. ",
+          "noSearchResults": "No service or extra corresponds.",
           "saveExtras": "Save extras",
-          "searchPlaceholder": "Search for a service or extra…",
+          "searchPlaceholder": "Looking for a service or extra…",
           "selectedCount": "{count, plural, one {# extra sélectionné} other {# extras sélectionnés}}",
           "stepPosition": "Extras step in booking"
         },
@@ -1929,6 +2127,7 @@
         "minAdvanceHours": "Minimum delay (h)",
         "namePlaceholder": "Facial",
         "priceEur": "Price (EUR)",
+        "sortOrder": "Display order",
         "submitting": "Registration…",
         "tabs": {
           "advanced": "Advance",
@@ -1938,8 +2137,8 @@
         },
         "visibility": "Catalog visibility",
         "visibilityCatalog": "Customer catalog (main service)",
+        "visibilityExtraLockedHint": "Creation from the extras directory: this type remains a dedicated extra.",
         "visibilityExtraOnly": "Extra only (hidden from catalog)",
-        "visibilityExtraLockedHint": "Created from the extras directory: this item stays a dedicated extra.",
         "visibleHint": "Disabled to hide from customers and checkout.",
         "visibleLabel": "Visible",
         "wizard": {
@@ -1953,21 +2152,53 @@
       "durationMin": "{min} min",
       "edit": "To modify",
       "empty": "No services at the moment.",
+      "emptyExtras": "No extras at the moment.",
       "extraBadge": "Extra",
       "filterActive": "Visible",
       "filterAll": "All",
+      "filterCategoryAll": "All categories",
+      "filterCategoryNone": "Uncategorized",
       "filterInactive": "Masked",
-      "scopeCatalog": "Services",
-      "scopeExtras": "Extras catalog",
-      "scopeAll": "Services + extras",
       "footer": "{count, plural, one {# prestation} other {# prestations}}",
       "hidden": "Masked",
       "hiddenBadge": "Masked",
+      "import": {
+        "analyzing": "Analysis of the file…",
+        "back": "Choose another file",
+        "chooseFile": "Choose CSV file",
+        "confirmImport": "Start the import",
+        "doneMessage": "{created} created, {updated} updated · categories: {categoriesCreated} created, {categoriesUpdated} updated.",
+        "doneTitle": "Import completed",
+        "errors": {
+          "confirmRequired": "Confirmation required.",
+          "emptyFile": "Empty file.",
+          "importFailed": "The import failed.",
+          "invalidFile": "CSV file invalid or without services.",
+          "missingColumns": "Missing Bookly columns (bookly_id, title, duration_min, price_cents)."
+        },
+        "fileHint": "Export BeautyHub Bookly — separator;",
+        "fileLabel": "File",
+        "importing": "Import in progress…",
+        "intro": "Import the exported CSV from Tools → Export Bookly (bookly-services.csv). ",
+        "previewIntro": "Review the summary before importing.",
+        "samplesCategories": "Categories detected",
+        "samplesCreate": "Examples to create",
+        "stats": {
+          "categoriesCreate": "Categories to create",
+          "categoriesUpdate": "Categories to update",
+          "create": "Services to be created",
+          "skip": "Ignored (duplicates)",
+          "total": "Lines",
+          "update": "Services to be updated"
+        },
+        "title": "Import Bookly (services)"
+      },
+      "importCsv": "Import Bookly",
+      "manageCategories": "Categories",
       "new": "New service",
       "newExtra": "New extra",
-      "emptyExtras": "No extras yet.",
-      "noResults": "No results for this search.",
       "noExtraResults": "No extras match this search.",
+      "noResults": "No results for this search.",
       "quickForm": {
         "duration": "Duration (min)",
         "name": "Name",
@@ -1976,6 +2207,9 @@
         "submit": "Create the service",
         "title": "Create a service"
       },
+      "scopeAll": "Services + extras",
+      "scopeCatalog": "Services",
+      "scopeExtras": "Extras directory",
       "searchPlaceholder": "Search by name…",
       "visible": "Visible"
     },
@@ -2111,71 +2345,71 @@
         "empty": "No staff members.",
         "footer": "{count, plural, one {# membre} other {# membres}}",
         "form": {
+          "accessSection": "Application access",
+          "avatar": {
+            "hint": "JPEG, PNG, WebP or GIF — max. ",
+            "pendingUpload": "The photo will be added after creation.",
+            "remove": "DELETE",
+            "replace": "Change photo",
+            "upload": "Add a photo",
+            "uploading": "Sending…"
+          },
           "colorOptional": "Color (optional)",
+          "copyPassword": "Copy",
           "emailOptional": "Email (optional)",
           "emailPlaceholder": "sophie@institut.fr",
           "fullName": "Full name",
           "fullNamePlaceholder": "Sophie Martin",
-          "role": "Role",
-          "accessSection": "App access",
-          "inviteHint": "Create an invitation to grant access to the institute workspace.",
-          "openInviteDialog": "Detailed invitation",
-          "resendInvite": "Resend invitation",
-          "resending": "Resending…",
+          "inviteHint": "Create an invitation to give access to the institute space.",
           "linkCopied": "Link copied",
+          "openInviteDialog": "Detailed invitation",
+          "resendInvite": "Resend the invitation",
+          "resending": "Referral…",
           "resetPassword": "Regenerate password",
-          "resetPasswordSubmitting": "Generating…",
-          "resetPasswordHint": "Generates a temporary password to share with the member. Email delivery coming soon.",
-          "tempPasswordLabel": "Temporary password (copy it now)",
-          "copyPassword": "Copy",
-          "avatar": {
-            "upload": "Add photo",
-            "replace": "Change photo",
-            "remove": "Remove",
-            "uploading": "Uploading…",
-            "pendingUpload": "The photo will be added after creation.",
-            "hint": "JPEG, PNG, WebP or GIF — max 5 MB."
-          },
+          "resetPasswordHint": "Generates a temporary password to communicate to the member. ",
+          "resetPasswordSubmitting": "Generation…",
+          "role": "Role",
           "submit": "Add",
           "submitEdit": "Save",
           "submitting": "Addition…",
-          "submittingEdit": "Registration…"
+          "submittingEdit": "Registration…",
+          "tempPasswordLabel": "Temporary password (copy now)"
         },
         "invite": "Invite",
         "noResults": "No results.",
         "searchPlaceholder": "Personal research…"
       },
       "roles": {
-        "create": "New role",
-        "createTitle": "Create a role",
-        "delete": "Delete",
-        "description": "Define what each role can see and modify in the institute space.",
-        "edit": "Edit",
-        "editTitle": "Edit role",
-        "empty": "No roles configured.",
-        "footer": "{count, plural, one {# role} other {# roles}}",
         "columns": {
           "actions": "Actions"
         },
+        "create": "New role",
+        "createTitle": "Create a role",
+        "delete": "DELETE",
+        "description": "Define what each role can see and modify in the institute space.",
+        "edit": "To modify",
+        "editTitle": "Edit role",
+        "empty": "No roles configured.",
+        "footer": "{count, plural, one {# rôle} other {# rôles}}",
         "fullAccess": "Full access",
         "name": "Role name",
         "permissions": "Permissions",
-        "read": "Read",
+        "read": "Reading",
         "roleDescription": "Description",
         "sections": {
-          "appointments": "Appointments",
-          "clients": "Clients",
-          "dashboard": "Home",
+          "appointments": "Appointment",
+          "clients": "Customers",
+          "dashboard": "Welcome",
           "marketing": "Marketing",
-          "pos": "POS",
+          "pos": "Box",
           "services": "Services",
           "team": "Team"
         },
-        "submitCreate": "Create role",
+        "submitCreate": "Create the role",
         "submitEdit": "Save",
-        "submitting": "Saving…",
+        "submitting": "Registration…",
         "systemBadge": "System",
-        "write": "Write"
+        "write": "Writing"
       },
       "schedules": {
         "addBlock": "Beach",
@@ -2210,48 +2444,32 @@
       }
     },
     "woo": {
-      "connected": "Connected",
-      "description": "Product catalog, bidirectional stock and POS orders.",
-      "disconnect": "Disconnect",
-      "connectedBanner": "Store {shop} linked — stock syncs automatically.",
-      "pairedAt": "Connected on {date}",
-      "showManual": "Manual connection (API keys)",
-      "hideManual": "Hide manual connection",
-      "manualHint": "For advanced cases if the magic link does not work.",
+      "analytics": {
+        "description": "Include WooCommerce orders in dashboard revenue.",
+        "includeHint": "Online orders completed on your store contribute to daily turnover. ",
+        "includeTitle": "Include e-commerce sales in statistics",
+        "saved": "Saved statistical settings.",
+        "title": "E-commerce statistics"
+      },
       "auto": {
-        "title": "Automatic connection",
-        "description": "Logged into BeautyHub? Enter your store URL, click Connect, then open the link in WordPress admin.",
-        "shopUrl": "Store URL",
-        "shopUrlPlaceholder": "https://mystore.com",
-        "shopRequired": "Store URL is required.",
-        "shopInvalid": "Invalid store URL.",
         "connect": "Connect",
-        "generating": "Generating link…",
-        "waiting": "Waiting for store…",
-        "linkHint": "Open this link in a tab where you are logged into WordPress/WooCommerce admin:",
+        "description": "Logged in to BeautyHub? ",
+        "generating": "Generating the link…",
+        "linkHint": "Open this link in a tab where you are logged in to the WordPress/WooCommerce admin:",
         "openLink": "Open magic link",
-        "polling": "Waiting for confirmation from your store…"
+        "polling": "Waiting for confirmation from your store…",
+        "shopInvalid": "Invalid store URL.",
+        "shopRequired": "Store URL is required.",
+        "shopUrl": "Store URL",
+        "shopUrlPlaceholder": "https://maboutique.com",
+        "title": "Automatic connection",
+        "waiting": "Waiting for the store…"
       },
-      "setup": {
-        "heading": "Install the plugin",
-        "intro": "Download the plugin, install on WordPress, then one-click connect from BeautyHub.",
-        "download": "Download plugin v{version}",
-        "connectedHint": "Store connected — stock syncs automatically.",
-        "steps": {
-          "download": {
-            "title": "Download BeautyHub Connector",
-            "description": "WordPress extension for your WooCommerce store."
-          },
-          "install": {
-            "title": "Install and activate",
-            "description": "WordPress → Plugins → Upload ZIP → Activate."
-          },
-          "connect": {
-            "title": "One-click connect",
-            "description": "From BeautyHub, enter store URL and open the magic link in WordPress admin."
-          }
-        }
-      },
+      "connectSideTitle": "Connection",
+      "connected": "Connected",
+      "connectedBanner": "Store {shop} linked — stock automatically synchronized.",
+      "description": "Product catalog, two-way stock and cash orders.",
+      "disconnect": "Disconnect",
       "form": {
         "consumerKey": "Consumer key",
         "consumerKeyPlaceholder": "ck_…",
@@ -2262,9 +2480,32 @@
         "submit": "Connect WooCommerce",
         "submitting": "Testing and recording…"
       },
+      "hideManual": "Hide manual connection",
+      "manualHint": "Reserved for advanced cases if the magic link does not work.",
       "notConnected": "Not connected",
-      "connectSideTitle": "Connection",
+      "pairedAt": "Connected on {date}",
+      "setup": {
+        "connectedHint": "Connected store — stock syncs automatically.",
+        "download": "Download the v{version} plugin",
+        "heading": "Install the plugin",
+        "intro": "Download the plugin once: the following updates appear automatically in WordPress (Extensions → Update).",
+        "steps": {
+          "connect": {
+            "description": "From BeautyHub, enter the store URL and open the magic link in WordPress (side menu → BeautyHub).",
+            "title": "Connect in one click"
+          },
+          "download": {
+            "description": "WordPress extension to install on your WooCommerce store.",
+            "title": "Download BeautyHub Connector"
+          },
+          "install": {
+            "description": "WordPress → Plugins → Upload ZIP → Activate. ",
+            "title": "Install and activate the plugin"
+          }
+        }
+      },
       "shop": "Shop :",
+      "showManual": "Manual connection (API keys)",
       "title": "WooCommerce"
     }
   },
@@ -2286,9 +2527,9 @@
     },
     "footer": "BeautyHub · SaaS platform for beauty salons",
     "footerLinks": {
-      "privacy": "Privacy",
-      "terms": "Terms",
-      "security": "Security"
+      "privacy": "Confidentiality",
+      "security": "Security",
+      "terms": "CGU"
     },
     "hero": {
       "badge": "Multi-tenant SaaS · Institutes & academies",
@@ -2364,207 +2605,140 @@
       "title": "Quick start"
     }
   },
-  "compliance": {
-    "actions": {
-      "clientNotFound": "Customer not found.",
-      "forbidden": "Action restricted to institute owners.",
-      "tenantNotFound": "Institute not found.",
-      "unauthorized": "Session expired.",
-      "serverConfig": "Incomplete server configuration."
-    },
-    "clientPanel": {
-      "description": "Export this customer's data or anonymize their record (sales kept for legal obligations).",
-      "export": "Export (JSON)",
-      "anonymize": "Anonymize record",
-      "alreadyAnonymized": "This record has already been anonymized.",
-      "confirmTitle": "Anonymize this customer?",
-      "confirmDescription": "Personal data will be erased. Sales and appointments are kept where required by law.",
-      "confirmHint": "This action cannot be undone.",
-      "confirmAction": "Confirm anonymization",
-      "cancel": "Cancel"
-    },
-    "portal": {
-      "title": "Your personal data",
-      "description": "Download a copy of your data or request erasure of your customer record.",
-      "export": "Download my data",
-      "erase": "Request erasure",
-      "legalNote": "Some data may be kept for accounting obligations. See",
-      "privacyLink": "privacy policy"
-    },
-    "institut": {
-      "checklistTitle": "GDPR compliance checklist",
-      "checklistHint": "Check each step when done. You are the data controller for your end customers.",
-      "progress": "{done} / {total} steps completed",
-      "checkedAt": "Completed on {date}",
-      "checklist": {
-        "privacy_policy": {
-          "title": "Privacy policy published",
-          "hint": "Inform customers how their data is processed."
-        },
-        "client_notices": {
-          "title": "Form notices",
-          "hint": "Purpose, legal basis and policy link on booking forms."
-        },
-        "dpa_signed": {
-          "title": "DPA signed",
-          "hint": "Art. 28 GDPR agreement between your institute and BeautyHub."
-        },
-        "retention_policy": {
-          "title": "Retention periods set",
-          "hint": "Configure inactive client retention below."
-        },
-        "team_training": {
-          "title": "Team trained",
-          "hint": "Limited access, passwords, incident reporting."
-        }
-      },
-      "retentionTitle": "Data retention",
-      "retentionHint": "Retention for inactive client records (automatic purge — coming soon). Leave empty for no limit.",
-      "retentionLabel": "Days",
-      "retentionPlaceholder": "e.g. 1095",
-      "retentionSave": "Save",
-      "retentionInvalid": "Between 30 and 3650 days, or empty.",
-      "documentsTitle": "Documents",
-      "documentsHint": "Templates provided by BeautyHub — validate with legal counsel.",
-      "downloadDpa": "Download DPA",
-      "platformPrivacy": "Platform privacy",
-      "subprocessors": "Sub-processors"
-    }
-  },
   "legal": {
-    "nav": {
-      "privacy": "Privacy",
-      "terms": "Terms",
-      "subprocessors": "Sub-processors",
-      "security": "Security",
-      "dpa": "DPA"
-    },
     "cookies": {
-      "title": "Cookies",
-      "description": "We use essential cookies and, with your consent, analytics cookies.",
+      "acceptAll": "accept everything",
+      "description": "We use cookies essential to the operation of the service and, with your consent, audience measurement cookies.",
+      "essentialOnly": "Essentials only",
       "learnMore": "Learn more",
-      "essentialOnly": "Essential only",
-      "acceptAll": "Accept all"
-    },
-    "privacy": {
-      "title": "Privacy policy",
-      "intro": "How BeautyHub processes personal data when you use the platform.",
-      "updated": "Last updated: June 2026 — draft for legal review.",
-      "sections": {
-        "1": {
-          "title": "Data controller",
-          "body": "Institutes are controllers for their end customers. BeautyHub acts as processor."
-        },
-        "2": {
-          "title": "Data collected",
-          "body": "Identity, contact details, appointments, purchases, marketing preferences, access logs."
-        },
-        "3": {
-          "title": "Purposes",
-          "body": "Contract, booking, POS, support, security. Marketing: consent."
-        },
-        "4": {
-          "title": "Recipients",
-          "body": "See Sub-processors page. Data isolated per tenant (RLS)."
-        },
-        "5": {
-          "title": "Retention",
-          "body": "Contract duration plus legal periods. Export and anonymization in product."
-        },
-        "6": {
-          "title": "Your rights",
-          "body": "Access, rectification, erasure, portability, objection. Contact your institute or supervisory authority."
-        },
-        "7": {
-          "title": "Security",
-          "body": "TLS, AES-256-GCM for secrets, authentication, audit logs. See /legal/securite."
-        }
-      }
-    },
-    "terms": {
-      "title": "Terms of use",
-      "intro": "BeautyHub platform terms — draft.",
-      "sections": {
-        "1": {
-          "title": "Purpose",
-          "body": "SaaS for beauty institutes (appointments, clients, POS)."
-        },
-        "2": {
-          "title": "Accounts",
-          "body": "You are responsible for credentials and team access."
-        },
-        "3": {
-          "title": "Data",
-          "body": "Institute guarantees legal bases. BeautyHub processes on institute instructions."
-        },
-        "4": {
-          "title": "Availability",
-          "body": "Service as-is; planned maintenance."
-        },
-        "5": {
-          "title": "IP",
-          "body": "BeautyHub owns the software. Institute owns its data."
-        },
-        "6": {
-          "title": "Law",
-          "body": "French law unless mandatory otherwise."
-        }
-      }
-    },
-    "subprocessors": {
-      "title": "Sub-processors",
-      "intro": "Technical sub-processors used by hosted BeautyHub.",
-      "columns": {
-        "name": "Provider",
-        "purpose": "Purpose",
-        "location": "Location",
-        "safeguards": "Safeguards"
-      },
-      "purposes": {
-        "database": "Database, auth, storage",
-        "hosting": "Application hosting",
-        "payments": "Online payments",
-        "ai": "AI assistant (if enabled)"
-      },
-      "locations": {
-        "euUs": "EU / US",
-        "global": "Global",
-        "us": "United States"
-      },
-      "safeguards": {
-        "dpaScc": "DPA + SCCs",
-        "dpaOptIn": "DPA; configurable per institute"
-      },
-      "note": "Indicative list — update when adding providers."
-    },
-    "security": {
-      "title": "Security & trust",
-      "intro": "Documented technical measures. Not ISO 27001 or HIPAA certification.",
-      "metricsTitle": "Measures in place",
-      "metrics": {
-        "rls": "Row Level Security (multi-tenant)",
-        "encryption": "Secrets encryption",
-        "isolation": "Per-institute isolation",
-        "auth": "Authentication"
-      },
-      "yes": "Yes",
-      "no": "No",
-      "roadmapTitle": "Compliance roadmap",
-      "roadmapBody": "Operational GDPR (legal pages, export, anonymization, consent, audit).\nNext: pentest, public SLA, ISO 27001 (organization).\nHIPAA: US medical segment only.",
-      "certificationsNote": "For personal data, see",
-      "privacyLink": "privacy policy"
+      "title": "Cookies"
     },
     "dpa": {
-      "title": "Data Processing Agreement (DPA)",
-      "intro": "Art. 28 GDPR template between your institute (controller) and BeautyHub (processor).",
-      "points": {
-        "controller": "Institute is controller for end customers.",
-        "processor": "BeautyHub processes data only to provide the service.",
-        "signature": "Download, complete and keep a signed copy."
-      },
-      "download": "Download template (.md)",
+      "disclaimer": "Informative model — have it validated by your legal advisor.",
+      "download": "Download the template (.md)",
       "institutChecklist": "Institute checklist",
-      "disclaimer": "Informational template — validate with legal counsel."
+      "intro": "Model art. ",
+      "points": {
+        "controller": "The institute is responsible to its end customers.",
+        "processor": "BeautyHub processes data only to provide the service.",
+        "signature": "Download, complete and keep a signed version."
+      },
+      "title": "Subcontracting Agreement (DPA)"
+    },
+    "nav": {
+      "dpa": "DPA",
+      "privacy": "Confidentiality",
+      "security": "Security",
+      "subprocessors": "Subcontractors",
+      "terms": "CGU"
+    },
+    "privacy": {
+      "intro": "This policy describes how BeautyHub processes personal data when you use the platform (back-office team, customer portal, public institute site).",
+      "sections": {
+        "1": {
+          "body": "For the data of the institutes' end customers, the institute is responsible for processing. ",
+          "title": "Data controller"
+        },
+        "2": {
+          "body": "Identity and contact details, appointment and purchase history, marketing preferences, internal notes, customer portal login credentials, technical logs (IP address, timestamp).",
+          "title": "Data collected"
+        },
+        "3": {
+          "body": "Execution of the SaaS contract, management of appointments and cash register, support, security of the service. ",
+          "title": "Purposes and legal bases"
+        },
+        "4": {
+          "body": "See the Subcontractors page. ",
+          "title": "Recipients and subcontractors"
+        },
+        "5": {
+          "body": "Duration of the contract + legal deadlines. ",
+          "title": "Shelf life"
+        },
+        "6": {
+          "body": "Access, rectification, erasure, limitation, portability, opposition. ",
+          "title": "Your rights"
+        },
+        "7": {
+          "body": "TLS encryption, secrets encryption (AES-256-GCM), authentication, audit log. ",
+          "title": "Security"
+        }
+      },
+      "title": "Privacy Policy",
+      "updated": "Last update: June 2026 — working document to be validated with your legal advisor."
+    },
+    "security": {
+      "certificationsNote": "For the protection of personal data, see",
+      "intro": "Documented technical measures. ",
+      "metrics": {
+        "auth": "Authentication",
+        "encryption": "Encryption of secrets",
+        "isolation": "Insulation by institute",
+        "rls": "Row Level Security (multi-tenant)"
+      },
+      "metricsTitle": "Measures in place",
+      "no": "No",
+      "privacyLink": "Privacy Policy",
+      "roadmapBody": "Operational GDPR (legal pages, export, anonymization, consents, audit).\n",
+      "roadmapTitle": "Compliance roadmap",
+      "title": "Security & trust",
+      "yes": "Yes"
+    },
+    "subprocessors": {
+      "columns": {
+        "location": "Location",
+        "name": "Provider",
+        "purpose": "Purpose",
+        "safeguards": "Guarantees"
+      },
+      "intro": "List of technical subcontractors used by BeautyHub in hosted mode.",
+      "locations": {
+        "euUs": "EU/US",
+        "global": "International",
+        "us": "UNITED STATES"
+      },
+      "note": "Indicative list — update when new providers are added.",
+      "purposes": {
+        "ai": "AI Assistant (if enabled)",
+        "database": "Database, auth, storage",
+        "hosting": "Application hosting",
+        "payments": "Online payments"
+      },
+      "safeguards": {
+        "dpaOptIn": "DPA; ",
+        "dpaScc": "DPA + standard contractual clauses"
+      },
+      "title": "Subcontractors"
+    },
+    "terms": {
+      "intro": "CGU of the BeautyHub platform — working document.",
+      "sections": {
+        "1": {
+          "body": "BeautyHub provides SaaS management software for institutes (appointments, clients, cash register, marketing).",
+          "title": "Object"
+        },
+        "2": {
+          "body": "The user is responsible for the confidentiality of his identifiers and the access granted to his team.",
+          "title": "Accounts"
+        },
+        "3": {
+          "body": "The institute guarantees that it has the legal bases to process its clients' data. ",
+          "title": "Data"
+        },
+        "4": {
+          "body": "Service provided as is; ",
+          "title": "Availability"
+        },
+        "5": {
+          "body": "BeautyHub remains the owner of the software. ",
+          "title": "Intellectual property"
+        },
+        "6": {
+          "body": "French law. ",
+          "title": "Applicable law"
+        }
+      },
+      "title": "General conditions of use"
     }
   },
   "nav": {
@@ -2583,12 +2757,14 @@
     "institutAppointments": "Appointment",
     "institutClients": "Customers",
     "institutMarketing": "Marketing",
+    "institutMarketingBranding": "Branding",
     "institutMarketingLoyalty": "Loyalty",
     "institutMarketingPromos": "Promos",
     "institutMarketingWebsite": "Web page",
     "institutPos": "Box",
     "institutPosHistory": "Cash register history",
     "institutPosProducts": "Internal products",
+    "institutPosSales": "Sales",
     "institutPosSession": "Session",
     "institutPosVouchers": "Vouchers & credits",
     "institutServices": "Services",
@@ -2608,7 +2784,6 @@
       "addPayment": "Add a payment method",
       "amountAria": "Amount",
       "creditNotePlaceholder": "Asset number (AV-…)",
-      "voucherCodePlaceholder": "Voucher code",
       "discount": "Discount",
       "fillRemaining": "Pay",
       "giftCodePlaceholder": "Voucher code",
@@ -2618,8 +2793,8 @@
         "cash": "Species",
         "credit_note": "To have",
         "gift_card": "Gift voucher",
-        "voucher": "Voucher",
-        "transfer": "Payment"
+        "transfer": "Payment",
+        "voucher": "Voucher"
       },
       "overpaid": "Overpayment: {amount}",
       "payments": "Payments",
@@ -2632,7 +2807,62 @@
       "subtotalHt": "Subtotal excluding tax",
       "totalTtc": "Total including tax",
       "vat": "VAT",
-      "viewTicket": "View ticket"
+      "viewTicket": "View ticket",
+      "voucherCodePlaceholder": "Voucher code"
+    },
+    "documents": {
+      "attention": "To the attention of {name}",
+      "balanceInvoice": "Balance · {number}",
+      "client": "Customer",
+      "columns": {
+        "description": "Designation",
+        "discount": "Rem.",
+        "qty": "Qty",
+        "reference": "Reference",
+        "totalTtc": "Amount including tax",
+        "unitTtc": "PU incl. VAT",
+        "vat": "VAT"
+      },
+      "creditAgainst": "Credit note relating to invoice {number}",
+      "date": "Date",
+      "deliverySignature": "Handwritten note “good for agreement” + stamp & signature",
+      "invoiceSettled": "Invoice paid",
+      "methods": {
+        "card": "Bank card",
+        "cash": "Species",
+        "credit_note": "To have",
+        "gift_card": "Gift voucher",
+        "mixed": "Mixed",
+        "other": "Other",
+        "stripe": "stripe",
+        "transfer": "Payment",
+        "voucher": "Voucher"
+      },
+      "paymentLine": "Regulation {date} · {method}",
+      "paymentTerms": "Payment conditions",
+      "print": "Print",
+      "reference": "Our reference",
+      "register": "Box",
+      "seller": "Seller",
+      "subtotalHt": "Amount excluding tax",
+      "ticketSale": "SALE",
+      "ticketVatAmount": "VAT amount",
+      "ticketVatBase": "HT basis",
+      "ticketVatCode": "Code",
+      "ticketVatRate": "Rate",
+      "totalTtc": "Amount including tax",
+      "types": {
+        "credit_note": "CREDIT NOTE",
+        "delivery_note": "DELIVERY NOTE",
+        "invoice": "BILL",
+        "ticket": "Cash receipt"
+      },
+      "vatAmount": "VAT amount",
+      "vatTable": {
+        "amount": "Amount",
+        "base": "Base",
+        "rate": "VAT"
+      }
     },
     "history": {
       "columns": {
@@ -2653,17 +2883,27 @@
         "cash": "Species",
         "credit_note": "To have",
         "gift_card": "Gift voucher",
-        "voucher": "Voucher",
         "mixed": "Mixed",
         "other": "Other",
         "stripe": "stripe",
-        "transfer": "Payment"
+        "transfer": "Payment",
+        "voucher": "Voucher"
       },
       "status": {
         "paid": "Paid",
         "partial": "Deposit"
       },
+      "viewDocuments": "Documents",
       "viewTicket": "Ticket"
+    },
+    "loyalty": {
+      "balance": "{count} {label}",
+      "cost": "{count} {label}",
+      "loading": "Loading points…",
+      "noRewards": "No rewards available for this customer.",
+      "none": "Do not use points",
+      "pointsDefault": "points",
+      "title": "Loyalty"
     },
     "products": {
       "columns": {
@@ -2688,6 +2928,33 @@
       "new": "New product",
       "noResults": "No results for this search.",
       "searchPlaceholder": "Search name, SKU…"
+    },
+    "sales": {
+      "columns": {
+        "actions": "Actions",
+        "amount": "Amount including tax",
+        "client": "Contact",
+        "date": "Date",
+        "reference": "Reference",
+        "status": "State",
+        "type": "Document Type"
+      },
+      "empty": "No sales documents.",
+      "open": "Open",
+      "status": {
+        "cancelled": "Canceled",
+        "delivered": "Book",
+        "issued": "Issued",
+        "paid": "Cashed",
+        "partial": "Partial",
+        "settled": "Acquitted"
+      },
+      "types": {
+        "credit_note": "Credit rating",
+        "delivery_note": "Delivery note",
+        "invoice": "Customer invoice",
+        "ticket": "Cash receipt"
+      }
     },
     "session": {
       "backToPos": "Return to checkout",
@@ -2722,7 +2989,7 @@
       },
       "closeTitle": "End of day closing",
       "closedBadge": "Closed checkout",
-      "closedIntro": "Log in to record your sales, track cash on hand, and close out your day neatly.",
+      "closedIntro": "Log in to record your sales, track cash in hand, and close out your day neatly.",
       "generateX": "Generate the",
       "goToPos": "Cash in on a sale",
       "goToPosAfterOpen": "Go cash",
@@ -2733,7 +3000,8 @@
         "credit_note": "To have",
         "gift_card": "Gift voucher",
         "stripe": "stripe",
-        "transfer": "Payment"
+        "transfer": "Payment",
+        "voucher": "Voucher"
       },
       "movementForm": {
         "amountLabel": "Amount (€)",
@@ -2813,38 +3081,39 @@
       "startFailed": "Unable to start payment."
     },
     "terminal": {
+      "appointmentLinked": "Appointment linked",
       "cart": {
         "addToCheckout": "Adds items to cash out.",
         "appointmentAria": "Appointment",
         "clear": "Empty",
         "clientAria": "Customer",
         "discount": "Cart discount (€)",
-        "promoCode": "Promo code",
-        "promoPlaceholder": "SUMMER20",
-        "promoApply": "Apply",
-        "promoApplying": "…",
-        "promoClear": "Remove",
-        "promoApplied": "{code} · −{amount}",
-        "promoErrors": {
-          "promo_code_required": "Promo code required.",
-          "promo_not_found": "Promo code not found.",
-          "promo_inactive": "Promo code disabled.",
-          "promo_not_started": "Promo code not valid yet.",
-          "promo_expired": "Promo code expired.",
-          "promo_exhausted": "Promo code exhausted.",
-          "promo_channel_disabled": "Code not usable at checkout.",
-          "promo_min_order": "Minimum amount not reached.",
-          "promo_client_limit": "Usage limit reached for this customer.",
-          "promo_no_discount": "No applicable discount.",
-          "promo_invalid": "Invalid promo code.",
-          "load_failed": "Unable to verify the code."
-        },
         "empty": "No articles.",
         "extraBadge": "extra",
         "noAppointment": "— Without appointment —",
         "noClient": "— Without customers —",
         "noStaff": "— Without practitioner —",
         "notePlaceholder": "Internal note (optional)",
+        "promoApplied": "{code} · −{amount}",
+        "promoApply": "Apply",
+        "promoApplying": "…",
+        "promoClear": "Withdraw",
+        "promoCode": "Promo code",
+        "promoErrors": {
+          "load_failed": "Unable to verify code.",
+          "promo_channel_disabled": "Code not usable at checkout.",
+          "promo_client_limit": "Limit reached for this client.",
+          "promo_code_required": "Promo code required.",
+          "promo_exhausted": "Promo code sold out.",
+          "promo_expired": "Expired promo code.",
+          "promo_inactive": "Promo code disabled.",
+          "promo_invalid": "Invalid promo code.",
+          "promo_min_order": "Minimum amount not reached.",
+          "promo_no_discount": "No discounts applicable.",
+          "promo_not_found": "Promo code not found.",
+          "promo_not_started": "Promo code not yet valid."
+        },
+        "promoPlaceholder": "SUMMER20",
         "settingsLink": "Checkout settings →",
         "staffAria": "Practitioner",
         "title": "Basket",
@@ -2864,18 +3133,18 @@
       },
       "emptyCategory": "No articles in this category. ",
       "filters": {
-        "wooCategory": "Woo category",
+        "wooCategory": "Category Woo",
         "wooCategoryAll": "All categories"
-      },
-      "pagination": {
-        "showing": "{from}-{to} of {total} items",
-        "perPage": "Per page",
-        "page": "Page {current} / {total}",
-        "prev": "Previous",
-        "next": "Next"
       },
       "noSessionHint": "Session closed — open for cash tracking",
       "openSession": "Open checkout →",
+      "pagination": {
+        "next": "Following",
+        "page": "Page {current} / {total}",
+        "perPage": "Per page",
+        "prev": "Previous",
+        "showing": "{from}-{to} on {total} articles"
+      },
       "searchAria": "To research",
       "searchArticles": "Search for an article…",
       "sessionRequired": "Open the register to record this sale.",
@@ -2894,10 +3163,10 @@
         "cash": "Species",
         "credit_note": "To have",
         "gift_card": "Gift voucher",
-        "voucher": "Voucher",
         "other": "Other",
         "stripe": "stripe",
-        "transfer": "Payment"
+        "transfer": "Payment",
+        "voucher": "Voucher"
       },
       "noNumber": "Ticket",
       "paid": "Cashed",
@@ -2912,30 +3181,16 @@
       "vatAmount": "VAT"
     },
     "vouchers": {
-      "issueVoucher": "Issue voucher",
       "columns": {
+        "actions": "Actions",
         "balance": "Pay",
         "code": "Code",
         "date": "Date",
-        "type": "Type",
-        "lastEvent": "Last event",
-        "actions": "Actions",
+        "lastEvent": "Latest event",
         "number": "No.",
         "remaining": "Remaining",
-        "status": "Status"
-      },
-      "types": {
-        "voucher": "Voucher",
-        "gift_card": "Gift voucher",
-        "credit_note": "Credit note"
-      },
-      "events": {
-        "issue": "Issued",
-        "redeem": "Redeemed",
-        "refund": "Refunded",
-        "void": "Voided",
-        "sync": "Synced",
-        "adjustment": "Adjusted"
+        "status": "Status",
+        "type": "Kind"
       },
       "creditForm": {
         "amount": "Amount credit (€)",
@@ -2945,112 +3200,126 @@
         "submit": "Create the credit"
       },
       "creditNotesTitle": "Assets",
-      "vouchersTitle": "Vouchers",
+      "downloadPdf": "Download the PDF",
+      "events": {
+        "adjustment": "Adjustment",
+        "issue": "Emission",
+        "redeem": "Use",
+        "refund": "Refund",
+        "sync": "Synchronization",
+        "void": "Cancelation"
+      },
       "giftCardsTitle": "Gift vouchers",
-      "openVoucher": "Document",
-      "voidVoucher": "Void",
-      "noVouchers": "No vouchers.",
       "giftForm": {
         "amount": "Amount (€)",
-        "recipient": "Recipient (optional)",
-        "submit": "Issue the voucher",
+        "defaultTag": "default",
+        "downloadPdf": "Download the PDF",
         "message": "Message (optional)",
         "messagePlaceholder": "Happy birthday…",
+        "recipient": "Recipient (optional)",
+        "submit": "Issue the voucher",
         "template": "PDF template",
-        "templateDefault": "Default template",
-        "defaultTag": "default",
-        "downloadPdf": "Download PDF"
+        "templateDefault": "Default template"
       },
-      "voucherForm": {
-        "typeVoucher": "Standard voucher",
-        "typeGiftCard": "Gift voucher",
-        "typeCreditNote": "Credit note",
-        "amount": "Amount (€)",
-        "codeOptional": "Code (optional)",
-        "recipientOptional": "Recipient (optional)",
-        "submit": "Issue voucher"
+      "giftProducts": {
+        "actions": {
+          "productRequired": "Product not found.",
+          "saved": "Gift card settings saved.",
+          "wooPushFailed": "Local registration OK, but Woo push failed."
+        },
+        "columns": {
+          "actions": "Actions",
+          "gift": "Gift card",
+          "product": "Product",
+          "template": "Template"
+        },
+        "defaultTemplate": "Default template",
+        "description": "WooCommerce products marked gift card — meta sync to store.",
+        "dialogTitle": "Gift card product",
+        "empty": "No Woo products synced. ",
+        "inheritTemplate": "Inherit product",
+        "markGift": "BeautyHub gift card",
+        "no": "No",
+        "template": "PDF template",
+        "variations": "Templates by variation",
+        "yes": "Yes"
       },
       "issueCreditNote": "Create a credit",
       "issueGiftCard": "Issue a gift voucher",
+      "issueVoucher": "Issue a voucher",
       "noCreditNotes": "No assets.",
       "noGiftCards": "No gift certificate.",
+      "noVouchers": "No vouchers.",
+      "openVoucher": "Document",
       "status": {
         "active": "Active",
         "cancelled": "Canceled",
         "depleted": "Exhausted",
         "expired": "Expired"
       },
-      "downloadPdf": "Download PDF",
       "templates": {
-        "description": "Background and texts for gift card PDFs.",
-        "new": "New template",
-        "empty": "No templates. Create one to generate PDFs.",
-        "defaultBadge": "Default",
-        "active": "Active",
-        "inactive": "Inactive",
-        "dialogNew": "New template",
-        "dialogEdit": "Edit template",
-        "columns": {
-          "name": "Name",
-          "title": "Title",
-          "status": "Status",
-          "actions": "Actions"
+        "actions": {
+          "invalidImage": "Invalid image (JPEG, PNG or WebP).",
+          "nameRequired": "The name is required.",
+          "saved": "Saved template."
         },
-        "form": {
+        "active": "Active",
+        "columns": {
+          "actions": "Actions",
           "name": "Name",
-          "title": "Title",
-          "subtitle": "Subtitle",
-          "footer": "Footer",
-          "placeholdersHint": "Placeholders: {code}, {amount}, {recipient}, {message}, {expires}",
+          "status": "Status",
+          "title": "Title"
+        },
+        "defaultBadge": "Default",
+        "description": "Background and texts of PDF gift cards.",
+        "dialogEdit": "Edit template",
+        "dialogNew": "New template",
+        "empty": "No templates. ",
+        "form": {
+          "active": "Active",
           "background": "Background image",
           "default": "Default template",
-          "active": "Active"
+          "footer": "Footer",
+          "name": "Name",
+          "placeholdersHint": "Placeholders: {code}, {amount}, {recipient}, {message}, {expires}",
+          "subtitle": "Subtitle",
+          "title": "Title"
         },
-        "actions": {
-          "nameRequired": "Name is required.",
-          "invalidImage": "Invalid image (JPEG, PNG or WebP).",
-          "saved": "Template saved."
-        },
+        "inactive": "Inactive",
         "layout": {
-          "hint": "Drag blocks to position content (WYSIWYG preview).",
-          "sampleTitle": "Gift card",
-          "sampleRecipient": "Alex Martin",
-          "sampleAmount": "€50.00",
-          "sampleMessage": "With all our love",
           "blocks": {
-            "recipient": "Title / recipient",
             "amount": "Amount",
             "code": "Code",
             "message": "Message",
-            "qr": "QR code"
-          }
+            "qr": "QR code",
+            "recipient": "Title/recipient"
+          },
+          "hint": "Drag the blocks to position the content (WYSIWYG preview).",
+          "sampleAmount": "€50.00",
+          "sampleMessage": "With all our affection",
+          "sampleRecipient": "Alex Martin",
+          "sampleTitle": "Gift card"
         },
-        "previewPdf": "PDF preview",
-        "previewLoading": "Generating…"
+        "new": "New template",
+        "previewLoading": "Generation…",
+        "previewPdf": "PDF preview"
       },
-      "giftProducts": {
-        "description": "WooCommerce products marked as gift cards — meta syncs to the store.",
-        "empty": "No synced Woo products. Run a catalogue sync first.",
-        "yes": "Yes",
-        "no": "No",
-        "defaultTemplate": "Default template",
-        "dialogTitle": "Gift card product",
-        "markGift": "BeautyHub gift card",
-        "template": "PDF template",
-        "variations": "Templates per variation",
-        "inheritTemplate": "Inherit from product",
-        "columns": {
-          "product": "Product",
-          "gift": "Gift card",
-          "template": "Template",
-          "actions": "Actions"
-        },
-        "actions": {
-          "productRequired": "Product not found.",
-          "wooPushFailed": "Saved locally, but Woo push failed.",
-          "saved": "Gift card settings saved."
-        }
-      }
+      "types": {
+        "credit_note": "To have",
+        "gift_card": "Gift voucher",
+        "voucher": "Voucher"
+      },
+      "voidVoucher": "Cancel",
+      "voucherForm": {
+        "amount": "Amount (€)",
+        "codeOptional": "Code (optional)",
+        "recipientOptional": "Recipient (optional)",
+        "submit": "Issue the voucher",
+        "typeCreditNote": "To have",
+        "typeGiftCard": "Gift voucher",
+        "typeVoucher": "Standard voucher"
+      },
+      "vouchersTitle": "Vouchers"
     }
   },
   "public": {
@@ -3080,7 +3349,7 @@
         "withExtras": "Your additional options are included."
       },
       "extras": {
-        "durationHint": "Total estimated time: {min} min · {price}",
+        "durationHint": "Estimated total time: {min} min · {price}",
         "subtitle": "Personalize your session before choosing the time.",
         "title": "Additional options"
       },
@@ -3110,7 +3379,8 @@
         "staffPlaceholder": "Choose a practitioner",
         "staffRequired": "Please choose a practitioner.",
         "subtitle": "Please choose a service and indicate your availability.",
-        "title": "Reservation"
+        "title": "Reservation",
+        "uncategorized": "Other services"
       },
       "step2": {
         "title": "Choose a practitioner"
@@ -3135,27 +3405,27 @@
         "confirm": "Confirm appointment",
         "confirming": "Confirmation…",
         "fullName": "Full name",
-        "title": "Your contact details",
-        "promoCode": "Promo code",
-        "promoPlaceholder": "SUMMER20",
+        "promoApplied": "{code} · −{amount}",
         "promoApply": "Apply",
         "promoApplying": "…",
-        "promoClear": "Remove",
-        "promoApplied": "{code} · −{amount}",
+        "promoClear": "Withdraw",
+        "promoCode": "Promo code",
         "promoErrors": {
+          "promo_channel_disabled": "Code not usable when booking.",
+          "promo_client_limit": "Limit reached for this client.",
           "promo_code_required": "Promo code required.",
-          "promo_not_found": "Promo code not found.",
+          "promo_exhausted": "Promo code sold out.",
+          "promo_expired": "Expired promo code.",
           "promo_inactive": "Promo code disabled.",
-          "promo_not_started": "Promo code not valid yet.",
-          "promo_expired": "Promo code expired.",
-          "promo_exhausted": "Promo code exhausted.",
-          "promo_channel_disabled": "Code not usable for booking.",
-          "promo_min_order": "Minimum amount not reached.",
-          "promo_client_limit": "Usage limit reached for this customer.",
-          "promo_no_discount": "No applicable discount.",
           "promo_invalid": "Invalid promo code.",
+          "promo_min_order": "Minimum amount not reached.",
+          "promo_no_discount": "No discounts applicable.",
+          "promo_not_found": "Promo code not found.",
+          "promo_not_started": "Promo code not yet valid.",
           "tenant_not_found": "Institute not found."
-        }
+        },
+        "promoPlaceholder": "SUMMER20",
+        "title": "Your contact details"
       },
       "steps": {
         "details": "Contact details",
@@ -3179,6 +3449,12 @@
         },
         "empty": "No upcoming appointments.",
         "logout": "Disconnect",
+        "loyalty": {
+          "newServiceOnly": "new service",
+          "noRewards": "No rewards available at this time.",
+          "redeemSoon": "Online exchange is coming soon — ask at reception in the meantime.",
+          "subtitle": "Your loyalty card"
+        },
         "status": {
           "booked": "Reserve",
           "cancelled": "Canceled",
@@ -3202,6 +3478,15 @@
         "hasAccount": "Already have your login details? ",
         "title": "Create an account"
       }
+    },
+    "loyalty": {
+      "accountLink": "I already have an account",
+      "intro": "Earn points with every visit and redeem them for benefits.",
+      "loginCta": "View my balance",
+      "pointsCost": "{cost} {label}",
+      "rewardsTitle": "Awards",
+      "unavailableBody": "This program is not active at the moment.",
+      "unavailableTitle": "Loyalty program unavailable"
     },
     "quote": {
       "accept": "Accept quote",

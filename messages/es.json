@@ -1875,7 +1875,8 @@
         "duration": "Duración",
         "price": "Precio",
         "status": "Estado",
-        "title": "Título"
+        "title": "Título",
+        "category": "Categoría"
       },
       "deleteConfirm": "¿Eliminar “{name}”? Esta acción es irreversible.",
       "deleteShort": "Borrar",
@@ -1945,7 +1946,10 @@
           "navHint": "Haga clic en un paso para ir directamente a él.",
           "navLabel": "Pasos de creación",
           "stepOf": "Paso {current} a {total}"
-        }
+        },
+        "category": "Categoría",
+        "categoryNone": "Sin categoría",
+        "sortOrder": "Orden de visualización"
       },
       "durationMin": "__UCI0__ min",
       "edit": "para modificar",
@@ -1974,7 +1978,54 @@
         "title": "Crear un servicio"
       },
       "searchPlaceholder": "Buscar por nombre…",
-      "visible": "Visible"
+      "visible": "Visible",
+      "importCsv": "Importar Bookly",
+      "manageCategories": "Categorías",
+      "filterCategoryAll": "Todas las categorías",
+      "filterCategoryNone": "Sin categoría",
+      "categories": {
+        "title": "Categorías de servicios",
+        "intro": "Organice el catálogo como en Bookly. El orden define la reserva.",
+        "name": "Nombre",
+        "namePlaceholder": "Tratamientos faciales",
+        "sortOrder": "Orden",
+        "sortLabel": "Orden {order}",
+        "add": "Añadir",
+        "saving": "Guardando…",
+        "empty": "Ninguna categoría por ahora.",
+        "deleteConfirm": "¿Eliminar la categoría « {name} »? Los servicios quedarán sin categoría."
+      },
+      "import": {
+        "title": "Importar Bookly (servicios)",
+        "doneTitle": "Importación terminada",
+        "intro": "Importe el CSV de Herramientas → Export Bookly (bookly-services.csv). Categorías, descripciones, precios, duraciones y buffers se restauran. Reimportar actualiza por ID Bookly.",
+        "chooseFile": "Elegir archivo CSV",
+        "fileHint": "Export BeautyHub Bookly — separador ;",
+        "fileLabel": "Archivo",
+        "analyzing": "Analizando archivo…",
+        "previewIntro": "Revise el resumen antes de importar.",
+        "stats": {
+          "total": "Filas",
+          "categoriesCreate": "Categorías a crear",
+          "categoriesUpdate": "Categorías a actualizar",
+          "create": "Servicios a crear",
+          "update": "Servicios a actualizar",
+          "skip": "Omitidas (duplicados)"
+        },
+        "samplesCategories": "Categorías detectadas",
+        "samplesCreate": "Ejemplos a crear",
+        "back": "Elegir otro archivo",
+        "confirmImport": "Lanzar importación",
+        "importing": "Importando…",
+        "doneMessage": "{created} creados, {updated} actualizados · categorías: {categoriesCreated} creadas, {categoriesUpdated} actualizadas.",
+        "errors": {
+          "emptyFile": "Archivo vacío.",
+          "missingColumns": "Faltan columnas Bookly (bookly_id, title, duration_min, price_cents).",
+          "invalidFile": "CSV inválido o sin servicios.",
+          "confirmRequired": "Se requiere confirmación.",
+          "importFailed": "La importación falló."
+        }
+      }
     },
     "settings": {
       "securityNote": "Las claves de la API de WooCommerce se cifran (AES-256-GCM) antes del almacenamiento. Stripe Connect utiliza una cuenta Express por instituto; los pagos se envían a esta cuenta."
@@ -2854,7 +2905,8 @@
         "staffPlaceholder": "Elige un practicante",
         "staffRequired": "Por favor elija un practicante.",
         "subtitle": "Por favor elija un servicio e indique su disponibilidad.",
-        "title": "Reserva"
+        "title": "Reserva",
+        "uncategorized": "Otros servicios"
       },
       "step2": {
         "title": "Elige un practicante"

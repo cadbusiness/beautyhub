@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { deleteService } from "../actions";
+import { deleteService, type ServiceCategoryRow } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,7 +17,9 @@ import { PaginationControls } from "@/components/ui/pagination";
 import { ServiceThumbnail } from "@/components/institut/service-thumbnail";
 import { paginateItems } from "@/lib/ui/pagination";
 import { formatPrice } from "@/lib/utils";
+import { CategoriesDialog } from "./categories-dialog";
 import { ServiceDialog, type ServiceRow } from "./service-dialog";
+import { ServicesImportDialog } from "./services-import-dialog";
 
 const LIST_PAGE_SIZE = 10;
 
@@ -89,14 +91,23 @@ function ServiceBadge({
   );
 }
 
-export function ServicesManager({ services }: { services: ServiceRow[] }) {
+export function ServicesManager({
+  services,
+  categories,
+}: {
+  services: ServiceRow[];
+  categories: ServiceCategoryRow[];
+}) {
   const t = useTranslations("institut.services");
   const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [scope, setScope] = useState<Scope>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceRow | null>(null);
 
   const filtered = useMemo(() => {
@@ -106,13 +117,18 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
       if (filter === "inactive" && s.is_active) return false;
       if (scope === "catalog" && s.visibility === "extra_only") return false;
       if (scope === "extra_only" && s.visibility !== "extra_only") return false;
+      if (categoryFilter === "none" && s.category_id) return false;
+      if (categoryFilter !== "all" && categoryFilter !== "none" && s.category_id !== categoryFilter) {
+        return false;
+      }
       if (!q) return true;
       return (
         s.name.toLowerCase().includes(q) ||
-        (s.description?.toLowerCase().includes(q) ?? false)
+        (s.description?.toLowerCase().includes(q) ?? false) ||
+        (s.category_name?.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [services, query, filter, scope]);
+  }, [services, query, filter, scope, categoryFilter]);
 
   const slice = useMemo(
     () => paginateItems(filtered, page, LIST_PAGE_SIZE),
@@ -121,7 +137,7 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
 
   useEffect(() => {
     setPage(1);
-  }, [query, filter, scope]);
+  }, [query, filter, scope, categoryFilter]);
 
   useEffect(() => {
     if (page > slice.totalPages) setPage(slice.totalPages);
@@ -173,9 +189,27 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
             ) : undefined
           }
           action={
-            <Button onClick={openCreate} className="h-9 w-full sm:w-auto">
-              + {createLabel}
-            </Button>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setImportOpen(true)}
+                className="h-9 w-full sm:w-auto"
+              >
+                {t("importCsv")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCategoriesOpen(true)}
+                className="h-9 w-full sm:w-auto"
+              >
+                {t("manageCategories")}
+              </Button>
+              <Button onClick={openCreate} className="h-9 w-full sm:w-auto">
+                + {createLabel}
+              </Button>
+            </div>
           }
         >
           <Input
@@ -185,6 +219,19 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
             onChange={(e) => setQuery(e.target.value)}
             className="h-9 sm:max-w-xs"
           />
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 sm:w-48"
+          >
+            <option value="all">{t("filterCategoryAll")}</option>
+            <option value="none">{t("filterCategoryNone")}</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
           <select
             value={scope}
             onChange={(e) => setScope(e.target.value as Scope)}
@@ -211,6 +258,9 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
               <tr>
                 <th className={`w-12 ${dataTableHeadCompact}`} aria-hidden />
                 <th className={dataTableHeadCompact}>{t("columns.title")}</th>
+                <th className={`hidden w-40 md:table-cell ${dataTableHeadCompact}`}>
+                  {t("columns.category")}
+                </th>
                 <th className={`hidden w-24 sm:table-cell ${dataTableHeadCompact}`}>
                   {t("columns.duration")}
                 </th>
@@ -233,9 +283,6 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
                       >
                         {s.name}
                       </button>
-                      {s.description ? (
-                        <ServiceBadge tone="neutral">{s.description}</ServiceBadge>
-                      ) : null}
                       {s.visibility === "extra_only" ? (
                         <ServiceBadge tone="violet">{t("extraBadge")}</ServiceBadge>
                       ) : null}
@@ -243,6 +290,9 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
                         <ServiceBadge tone="slate">{t("hiddenBadge")}</ServiceBadge>
                       ) : null}
                     </div>
+                  </td>
+                  <td className={`hidden text-slate-600 md:table-cell ${dataTableCellCompact}`}>
+                    {s.category_name ?? "—"}
                   </td>
                   <td className={`hidden text-slate-600 sm:table-cell ${dataTableCellCompact}`}>
                     {t("durationMin", { min: s.duration_min })}
@@ -280,8 +330,15 @@ export function ServicesManager({ services }: { services: ServiceRow[] }) {
         open={dialogOpen}
         service={editing}
         allServices={services}
+        categories={categories}
         createVisibility={createVisibility}
         onClose={closeDialog}
+      />
+      <ServicesImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
+      <CategoriesDialog
+        open={categoriesOpen}
+        categories={categories}
+        onClose={() => setCategoriesOpen(false)}
       />
     </>
   );

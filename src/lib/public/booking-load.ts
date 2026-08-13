@@ -14,6 +14,10 @@ export interface PublicService {
   extras_step_position: string;
   image_url: string | null;
   booking_mode: string;
+  category_id: string | null;
+  category_name: string | null;
+  category_sort_order: number;
+  sort_order: number;
 }
 
 export interface PublicStaff {

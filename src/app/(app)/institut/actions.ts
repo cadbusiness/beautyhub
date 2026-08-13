@@ -53,6 +53,10 @@ async function parseServiceForm(formData: FormData) {
     return { error: t("durationInvalid") };
   }
 
+  const categoryRaw = String(formData.get("category_id") ?? "").trim();
+  const categoryId = categoryRaw && categoryRaw !== "__none__" ? categoryRaw : null;
+  const sortOrder = Number.parseInt(String(formData.get("sort_order") ?? "0"), 10);
+
   return {
     data: {
       name,
@@ -79,8 +83,72 @@ async function parseServiceForm(formData: FormData) {
         if (mode === "quote" || mode === "manual") return mode;
         return "instant";
       })(),
+      category_id: categoryId,
+      sort_order: Number.isFinite(sortOrder) ? sortOrder : 0,
     },
   };
+}
+
+export type ServiceCategoryRow = {
+  id: string;
+  name: string;
+  sort_order: number;
+  bookly_id: number | null;
+};
+
+export async function createServiceCategory(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: t("nameRequired") };
+
+  const sortOrder = Number.parseInt(String(formData.get("sort_order") ?? "0"), 10) || 0;
+  const supabase = await createClient();
+  const { error } = await supabase.from("inst_service_categories").insert({
+    tenant_id: session.tenant.id,
+    name,
+    sort_order: sortOrder,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/institut/prestations");
+  revalidatePath("/reserver");
+  return { ok: true };
+}
+
+export async function updateServiceCategory(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  await requireModule("institut");
+  const id = String(formData.get("id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  if (!id || !name) return { error: t("nameRequired") };
+
+  const sortOrder = Number.parseInt(String(formData.get("sort_order") ?? "0"), 10) || 0;
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("inst_service_categories")
+    .update({ name, sort_order: sortOrder })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/institut/prestations");
+  revalidatePath("/reserver");
+  return { ok: true };
+}
+
+export async function deleteServiceCategory(formData: FormData): Promise<void> {
+  await requireModule("institut");
+  const supabase = await createClient();
+  await supabase
+    .from("inst_service_categories")
+    .delete()
+    .eq("id", String(formData.get("id")));
+  revalidatePath("/institut/prestations");
+  revalidatePath("/reserver");
 }
 
 export async function createService(

@@ -2336,11 +2336,51 @@ export type Database = {
           },
         ]
       }
+      inst_service_categories: {
+        Row: {
+          bookly_id: number | null
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          bookly_id?: number | null
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          bookly_id?: number | null
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_service_categories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_services: {
         Row: {
+          bookly_id: number | null
           booking_mode: string
           buffer_after_min: number
           buffer_before_min: number
+          category_id: string | null
           color: string | null
           created_at: string
           currency: string
@@ -2354,14 +2394,17 @@ export type Database = {
           min_advance_hours: number
           name: string
           price_cents: number
+          sort_order: number
           tenant_id: string
           updated_at: string
           visibility: string
         }
         Insert: {
+          bookly_id?: number | null
           booking_mode?: string
           buffer_after_min?: number
           buffer_before_min?: number
+          category_id?: string | null
           color?: string | null
           created_at?: string
           currency?: string
@@ -2375,14 +2418,17 @@ export type Database = {
           min_advance_hours?: number
           name: string
           price_cents?: number
+          sort_order?: number
           tenant_id: string
           updated_at?: string
           visibility?: string
         }
         Update: {
+          bookly_id?: number | null
           booking_mode?: string
           buffer_after_min?: number
           buffer_before_min?: number
+          category_id?: string | null
           color?: string | null
           created_at?: string
           currency?: string
@@ -2396,11 +2442,19 @@ export type Database = {
           min_advance_hours?: number
           name?: string
           price_cents?: number
+          sort_order?: number
           tenant_id?: string
           updated_at?: string
           visibility?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "inst_services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "inst_service_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inst_services_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -3431,6 +3485,10 @@ export type Database = {
           extras_step_position: string
           image_url: string | null
           booking_mode: string
+          category_id: string | null
+          category_name: string | null
+          category_sort_order: number
+          sort_order: number
         }[]
       }
       get_public_quote_by_token: {

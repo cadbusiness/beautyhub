@@ -1374,7 +1374,8 @@
         "title": "Titel",
         "duration": "Duur",
         "price": "Prijs",
-        "actions": "Acties"
+        "actions": "Acties",
+        "category": "Categorie"
       },
       "durationMin": "{min} min",
       "visible": "Zichtbaar",
@@ -1459,6 +1460,56 @@
           "uploading": "Uploaden…",
           "hint": "JPEG, PNG, WebP of GIF — max 5 MB. Zichtbaar bij reservering en kassa.",
           "pendingUpload": "Afbeelding klaar — wordt geüpload bij aanmaken."
+        },
+        "category": "Categorie",
+        "categoryNone": "Geen categorie",
+        "sortOrder": "Weergavevolgorde"
+      },
+      "importCsv": "Bookly importeren",
+      "manageCategories": "Categorieën",
+      "filterCategoryAll": "Alle categorieën",
+      "filterCategoryNone": "Geen categorie",
+      "categories": {
+        "title": "Dienstcategorieën",
+        "intro": "Organiseer de catalogus zoals in Bookly. De volgorde bepaalt de boekingsweergave.",
+        "name": "Naam",
+        "namePlaceholder": "Gezichtsbehandelingen",
+        "sortOrder": "Volgorde",
+        "sortLabel": "Volgorde {order}",
+        "add": "Toevoegen",
+        "saving": "Opslaan…",
+        "empty": "Nog geen categorieën.",
+        "deleteConfirm": "Categorie « {name} » verwijderen? Gekoppelde diensten blijven zonder categorie."
+      },
+      "import": {
+        "title": "Bookly importeren (diensten)",
+        "doneTitle": "Import voltooid",
+        "intro": "Importeer de CSV van Extra → Export Bookly (bookly-services.csv). Categorieën, beschrijvingen, prijzen, duur en buffers worden overgenomen. Opnieuw importeren werkt bij via Bookly-ID.",
+        "chooseFile": "CSV-bestand kiezen",
+        "fileHint": "BeautyHub Bookly-export — scheidingsteken ;",
+        "fileLabel": "Bestand",
+        "analyzing": "Bestand analyseren…",
+        "previewIntro": "Controleer de samenvatting vóór import.",
+        "stats": {
+          "total": "Rijen",
+          "categoriesCreate": "Categorieën te maken",
+          "categoriesUpdate": "Categorieën bij te werken",
+          "create": "Diensten te maken",
+          "update": "Diensten bij te werken",
+          "skip": "Overgeslagen (duplicaten)"
+        },
+        "samplesCategories": "Gedetecteerde categorieën",
+        "samplesCreate": "Voorbeelden te maken",
+        "back": "Ander bestand kiezen",
+        "confirmImport": "Import starten",
+        "importing": "Bezig met importeren…",
+        "doneMessage": "{created} gemaakt, {updated} bijgewerkt · categorieën: {categoriesCreated} gemaakt, {categoriesUpdated} bijgewerkt.",
+        "errors": {
+          "emptyFile": "Leeg bestand.",
+          "missingColumns": "Ontbrekende Bookly-kolommen (bookly_id, title, duration_min, price_cents).",
+          "invalidFile": "Ongeldige CSV of geen diensten.",
+          "confirmRequired": "Bevestiging vereist.",
+          "importFailed": "Import mislukt."
         }
       }
     },
@@ -2209,7 +2260,8 @@
         "durationMin": "{min} min",
         "quoteBadge": "Offerte",
         "manualBadge": "Maatwerk",
-        "onRequest": "Op aanvraag"
+        "onRequest": "Op aanvraag",
+        "uncategorized": "Overige diensten"
       },
       "loadError": "Gegevens konden niet worden geladen. Probeer opnieuw.",
       "step2": {

@@ -101,6 +101,18 @@ export function BookingWizard({
     [services],
   );
 
+  const bookableByCategory = useMemo(() => {
+    const groups = new Map<string, { label: string; items: PublicService[] }>();
+    for (const s of bookableServices) {
+      const key = s.category_id ?? "__none__";
+      const label = s.category_name?.trim() || t("step1.uncategorized");
+      const group = groups.get(key);
+      if (group) group.items.push(s);
+      else groups.set(key, { label, items: [s] });
+    }
+    return [...groups.values()];
+  }, [bookableServices, t]);
+
   const selectedService = services.find((s) => s.id === serviceId);
   const showExtrasStep = cfg?.showExtrasStep !== false;
   const hasExtras = showExtrasStep && extraCatalog.length > 0;
@@ -343,11 +355,15 @@ export function BookingWizard({
                   onChange={(e) => onServiceChange(e.target.value)}
                 >
                   <option value="">{t("step1.servicePlaceholder")}</option>
-                  {bookableServices.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} · {t("step1.durationMin", { min: s.duration_min })} ·{" "}
-                      {formatPrice(s.price_cents)}
-                    </option>
+                  {bookableByCategory.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.items.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} · {t("step1.durationMin", { min: s.duration_min })} ·{" "}
+                          {formatPrice(s.price_cents)}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </Select>
               </Field>

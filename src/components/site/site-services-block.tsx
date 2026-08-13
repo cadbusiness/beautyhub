@@ -66,6 +66,11 @@ export function SiteServicesBlockView({
                 />
               ) : null}
               <div className="p-5">
+                {service.category_name ? (
+                  <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                    {service.category_name}
+                  </p>
+                ) : null}
                 <p className="font-medium text-slate-900">{service.name}</p>
                 {service.description ? (
                   <p className="mt-1 line-clamp-2 text-sm text-slate-500">{service.description}</p>

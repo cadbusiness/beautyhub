@@ -2,7 +2,12 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { createService, updateService, type ActionResult } from "../actions";
+import {
+  createService,
+  updateService,
+  type ActionResult,
+  type ServiceCategoryRow,
+} from "../actions";
 import { uploadServiceImage } from "./image-actions";
 import type { ServiceExtraLinkInput } from "@/lib/institut/service-extras-persist";
 import {
@@ -31,6 +36,10 @@ export type ServiceRow = {
   min_advance_hours: number;
   max_advance_days: number;
   booking_mode: string;
+  category_id: string | null;
+  category_name: string | null;
+  sort_order: number;
+  bookly_id: number | null;
 };
 
 type Tab = "general" | "time" | "advanced" | "extras";
@@ -130,12 +139,14 @@ export function ServiceDialog({
   open,
   service,
   allServices,
+  categories,
   createVisibility = "catalog",
   onClose,
 }: {
   open: boolean;
   service: ServiceRow | null;
   allServices: ServiceRow[];
+  categories: ServiceCategoryRow[];
   createVisibility?: "catalog" | "extra_only";
   onClose: () => void;
 }) {
@@ -351,6 +362,32 @@ export function ServiceDialog({
                 name="description"
                 placeholder={t("descriptionPlaceholder")}
                 defaultValue={service?.description ?? ""}
+              />
+            </Field>
+
+            <Field label={t("category")} htmlFor="category_id">
+              <select
+                key={`category-${service?.id ?? "new"}-${service?.category_id ?? ""}`}
+                id="category_id"
+                name="category_id"
+                defaultValue={service?.category_id ?? "__none__"}
+                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
+              >
+                <option value="__none__">{t("categoryNone")}</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label={t("sortOrder")} htmlFor="sort_order">
+              <Input
+                id="sort_order"
+                name="sort_order"
+                type="number"
+                defaultValue={service?.sort_order ?? 0}
               />
             </Field>
 

@@ -309,12 +309,14 @@ final class BeautyHub_Bookly_Export {
 	 */
 	private static function diagnostic_tables() {
 		global $wpdb;
-		$out = array();
+		$out    = array();
 		$prefix = $wpdb->prefix;
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$tables = $wpdb->get_col( "SHOW TABLES LIKE '%bookly%'" );
+		$like   = $wpdb->esc_like( 'bookly' );
+		$tables = $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', '%' . $like . '%' ) );
+		$rowses = array();
+		$names  = array();
 		foreach ( (array) $tables as $t ) {
-			$t = (string) $t;
+			$t     = (string) $t;
 			$short = ( strpos( $t, $prefix ) === 0 ) ? substr( $t, strlen( $prefix ) ) : $t;
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$t}`" );
@@ -323,16 +325,12 @@ final class BeautyHub_Bookly_Export {
 				'short' => $short,
 				'rows'  => $count,
 			);
+			$rowses[] = $count;
+			$names[]  = $short;
 		}
-		usort(
-			$out,
-			function ( $a, $b ) {
-				if ( $b['rows'] === $a['rows'] ) {
-					return strcmp( $a['short'], $b['short'] );
-				}
-				return $b['rows'] - $a['rows'];
-			}
-		);
+		if ( ! empty( $out ) ) {
+			array_multisort( $rowses, SORT_DESC, SORT_NUMERIC, $names, SORT_ASC, SORT_STRING, $out );
+		}
 		return $out;
 	}
 

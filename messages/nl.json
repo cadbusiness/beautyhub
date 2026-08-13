@@ -1377,6 +1377,8 @@
       "emptyExtras": "Nog geen extras.",
       "noResults": "Geen resultaten voor deze zoekopdracht.",
       "noExtraResults": "Geen extras gevonden voor deze zoekopdracht.",
+      "loadError": "Kan de diensten niet laden.",
+      "retry": "Opnieuw",
       "columns": {
         "status": "Status",
         "title": "Titel",

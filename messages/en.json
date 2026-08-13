@@ -2207,6 +2207,8 @@
       "newExtra": "New extra",
       "noExtraResults": "No extras match this search.",
       "noResults": "No results for this search.",
+      "loadError": "Unable to load services.",
+      "retry": "Try again",
       "quickForm": {
         "duration": "Duration (min)",
         "name": "Name",

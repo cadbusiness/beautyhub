@@ -1450,6 +1450,8 @@
       "emptyExtras": "Aucun extra pour le moment.",
       "noResults": "Aucun résultat pour cette recherche.",
       "noExtraResults": "Aucun extra ne correspond à cette recherche.",
+      "loadError": "Impossible de charger les prestations.",
+      "retry": "Réessayer",
       "columns": {
         "status": "Statut",
         "title": "Titre",

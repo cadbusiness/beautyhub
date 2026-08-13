@@ -1977,6 +1977,8 @@
       "emptyExtras": "Todavía no hay extras.",
       "noResults": "No hay resultados para esta búsqueda.",
       "noExtraResults": "Ningún extra coincide con esta búsqueda.",
+      "loadError": "No se pudieron cargar las prestaciones.",
+      "retry": "Reintentar",
       "quickForm": {
         "duration": "Duración (min)",
         "name": "Nombre",

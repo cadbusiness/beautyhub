@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -19,17 +18,9 @@ import { PaginationControls } from "@/components/ui/pagination";
 import { ServiceThumbnail } from "@/components/institut/service-thumbnail";
 import { paginateItems } from "@/lib/ui/pagination";
 import { formatPrice } from "@/lib/utils";
+import { CategoriesDialog } from "./categories-dialog";
 import { ServiceDialog, type ServiceRow } from "./service-dialog";
-
-const ServicesImportDialog = dynamic(
-  () => import("./services-import-dialog").then((mod) => mod.ServicesImportDialog),
-  { ssr: false },
-);
-
-const CategoriesDialog = dynamic(
-  () => import("./categories-dialog").then((mod) => mod.CategoriesDialog),
-  { ssr: false },
-);
+import { ServicesImportDialog } from "./services-import-dialog";
 
 const LIST_PAGE_SIZE = 10;
 

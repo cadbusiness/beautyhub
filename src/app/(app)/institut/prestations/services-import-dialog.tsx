@@ -1,18 +1,17 @@
 "use client";
 
-import { useActionState, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
 import {
-  importBooklyServicesAction,
-  previewBooklyServicesImportAction,
-  type ServiceImportActionResult,
-} from "../service-import-actions";
-import type { BooklyImportPreview } from "@/lib/institut/service-import/bookly-csv";
-
-const initial: ServiceImportActionResult = {};
+  parseBooklyServicesCsv,
+  previewBooklyImport,
+  type BooklyImportPreview,
+  type BooklyImportResult,
+  type BooklyServiceCsvRow,
+} from "@/lib/institut/service-import/bookly-csv";
 
 function StatLine({ label, value }: { label: string; value: string | number }) {
   return (
@@ -25,7 +24,6 @@ function StatLine({ label, value }: { label: string; value: string | number }) {
 
 function PreviewPanel({ preview }: { preview: BooklyImportPreview }) {
   const t = useTranslations("institut.services.import");
-
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-600">{t("previewIntro")}</p>
@@ -66,6 +64,21 @@ function PreviewPanel({ preview }: { preview: BooklyImportPreview }) {
   );
 }
 
+type CatalogSnapshot = {
+  categories: Array<{
+    id: string;
+    name: string;
+    bookly_id: number | null;
+    sort_order: number;
+  }>;
+  services: Array<{
+    id: string;
+    name: string;
+    bookly_id: number | null;
+    category_id: string | null;
+  }>;
+};
+
 export function ServicesImportDialog({
   open,
   onClose,
@@ -77,33 +90,24 @@ export function ServicesImportDialog({
   const tCommon = useTranslations("common");
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [csvContent, setCsvContent] = useState("");
+
+  const [csvRows, setCsvRows] = useState<BooklyServiceCsvRow[]>([]);
   const [fileName, setFileName] = useState("");
-  const [hasPreview, setHasPreview] = useState(false);
-  const [previewState, previewAction, previewPending] = useActionState(
-    previewBooklyServicesImportAction,
-    initial,
-  );
-  const [importState, importAction, importPending] = useActionState(
-    importBooklyServicesAction,
-    initial,
-  );
+  const [preview, setPreview] = useState<BooklyImportPreview | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<BooklyImportResult | null>(null);
 
-  const preview = previewState.preview ?? importState.preview;
-  const error = previewState.error ?? importState.error;
-  const isDone = Boolean(importState.ok && importState.result);
-
-  const canImport = useMemo(() => {
-    if (!preview) return false;
-    return preview.servicesToCreate > 0 || preview.servicesToUpdate > 0;
-  }, [preview]);
-
-  function reset() {
-    setCsvContent("");
+  const reset = useCallback(() => {
+    setCsvRows([]);
     setFileName("");
-    setHasPreview(false);
+    setPreview(null);
+    setError(null);
+    setResult(null);
+    setImporting(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
-  }
+  }, []);
 
   function handleClose() {
     reset();
@@ -111,30 +115,88 @@ export function ServicesImportDialog({
   }
 
   async function readFile(file: File) {
-    const text = await file.text();
-    setCsvContent(text);
+    setAnalyzing(true);
+    setError(null);
+    setPreview(null);
+    setResult(null);
     setFileName(file.name);
-    const fd = new FormData();
-    fd.set("csv_content", text);
-    previewAction(fd);
-    setHasPreview(true);
+
+    try {
+      const text = await file.text();
+      const { rows, errors: parseErrors } = parseBooklyServicesCsv(text);
+
+      if (parseErrors.includes("missing_columns")) {
+        setError(t("errors.missingColumns"));
+        return;
+      }
+      if (parseErrors.includes("empty_file") || rows.length === 0) {
+        setError(t("errors.invalidFile"));
+        return;
+      }
+
+      let catalog: CatalogSnapshot = { categories: [], services: [] };
+      try {
+        const res = await fetch("/api/institut/services/import-status", {
+          credentials: "include",
+        });
+        if (res.ok) {
+          catalog = (await res.json()) as CatalogSnapshot;
+        }
+      } catch {
+        // Preview still works without existing catalog (all rows will be creates).
+      }
+
+      setCsvRows(rows);
+      setPreview(previewBooklyImport(rows, catalog));
+    } catch (err) {
+      console.error("[services-import-dialog]", err);
+      setError(t("errors.invalidFile"));
+    } finally {
+      setAnalyzing(false);
+    }
   }
 
-  function handleImport() {
-    const fd = new FormData();
-    fd.set("csv_content", csvContent);
-    fd.set("confirm", "1");
-    importAction(fd);
+  async function handleImport() {
+    if (csvRows.length === 0) return;
+    setImporting(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/institut/services/import", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows: csvRows }),
+      });
+
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(payload.error ?? t("errors.importFailed"));
+        return;
+      }
+
+      const data = (await res.json()) as BooklyImportResult;
+      setResult(data);
+    } catch (err) {
+      console.error("[services-import-dialog]", err);
+      setError(t("errors.importFailed"));
+    } finally {
+      setImporting(false);
+    }
   }
+
+  const canImport =
+    preview !== null &&
+    (preview.servicesToCreate > 0 || preview.servicesToUpdate > 0);
 
   return (
     <FormDialog
       open={open}
       onClose={handleClose}
-      title={isDone ? t("doneTitle") : t("title")}
+      title={result ? t("doneTitle") : t("title")}
       size="lg"
     >
-      {!hasPreview && !isDone ? (
+      {!preview && !result ? (
         <div className="space-y-4">
           <p className="text-sm text-slate-600">{t("intro")}</p>
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center hover:border-slate-400">
@@ -151,14 +213,12 @@ export function ServicesImportDialog({
               }}
             />
           </label>
-          {previewPending ? (
-            <p className="text-sm text-slate-500">{t("analyzing")}</p>
-          ) : null}
+          {analyzing ? <p className="text-sm text-slate-500">{t("analyzing")}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
         </div>
       ) : null}
 
-      {hasPreview && preview && !isDone ? (
+      {preview && !result ? (
         <div className="space-y-4">
           {fileName ? (
             <p className="text-xs text-slate-500">
@@ -168,28 +228,43 @@ export function ServicesImportDialog({
           <PreviewPanel preview={preview} />
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={reset} disabled={importPending}>
+            <Button type="button" variant="outline" onClick={reset} disabled={importing}>
               {t("back")}
             </Button>
-            <Button type="button" onClick={handleImport} disabled={!canImport || importPending}>
-              {importPending ? t("importing") : t("confirmImport")}
+            <Button
+              type="button"
+              onClick={handleImport}
+              disabled={!canImport || importing}
+            >
+              {importing ? t("importing") : t("confirmImport")}
             </Button>
           </div>
         </div>
       ) : null}
 
-      {isDone && importState.result ? (
+      {result ? (
         <div className="space-y-4">
           <p className="text-sm text-slate-700">
             {t("doneMessage", {
-              created: importState.result.created,
-              updated: importState.result.updated,
-              categoriesCreated: importState.result.categoriesCreated,
-              categoriesUpdated: importState.result.categoriesUpdated,
+              created: result.created,
+              updated: result.updated,
+              categoriesCreated: result.categoriesCreated,
+              categoriesUpdated: result.categoriesUpdated,
             })}
           </p>
-          {importState.result.errors.length > 0 ? (
-            <p className="text-sm text-amber-700">{importState.result.errors[0]}</p>
+          {result.errors.length > 0 ? (
+            <details className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              <summary className="cursor-pointer font-medium">
+                Erreurs ({result.errors.length})
+              </summary>
+              <ul className="mt-2 max-h-40 overflow-y-auto space-y-1 text-xs">
+                {result.errors.slice(0, 20).map((message, idx) => (
+                  <li key={idx} className="truncate">
+                    · {message}
+                  </li>
+                ))}
+              </ul>
+            </details>
           ) : null}
           <Button
             type="button"

@@ -4,15 +4,12 @@ import { ServicesManager } from "./services-manager";
 import type { ServiceRow } from "./service-dialog";
 import type { ServiceCategoryRow } from "../actions";
 
-export const dynamic = "force-dynamic";
-
-export default async function PrestationsPage() {
-  const session = await requireModule("institut");
-
-  let services: ServiceRow[] = [];
-  let categories: ServiceCategoryRow[] = [];
-
+async function loadPrestationsData(): Promise<{
+  services: ServiceRow[];
+  categories: ServiceCategoryRow[];
+}> {
   try {
+    const session = await requireModule("institut");
     const supabase = await createClient();
 
     const [servicesRes, categoriesRes] = await Promise.all([
@@ -33,15 +30,15 @@ export default async function PrestationsPage() {
     ]);
 
     if (servicesRes.error) {
-      console.error("[prestations] services query", servicesRes.error.message);
+      console.error("[prestations] services query error:", servicesRes.error);
     }
     if (categoriesRes.error) {
-      console.error("[prestations] categories query", categoriesRes.error.message);
+      console.error("[prestations] categories query error:", categoriesRes.error);
     }
 
-    categories = (categoriesRes.data ?? []) as ServiceCategoryRow[];
+    const categories = (categoriesRes.data ?? []) as ServiceCategoryRow[];
     const categoryNameById = new Map(categories.map((c) => [c.id, c.name]));
-    services = ((servicesRes.data ?? []) as Array<Record<string, unknown>>).map(
+    const services = ((servicesRes.data ?? []) as Array<Record<string, unknown>>).map(
       (s) => ({
         ...(s as unknown as ServiceRow),
         category_name: s.category_id
@@ -49,9 +46,22 @@ export default async function PrestationsPage() {
           : null,
       }),
     );
-  } catch (error) {
-    console.error("[prestations] SSR fetch failed", error);
-  }
 
+    return { services, categories };
+  } catch (error) {
+    const digest =
+      typeof error === "object" && error !== null && "digest" in error
+        ? String((error as { digest?: string }).digest ?? "")
+        : "";
+    if (digest.startsWith("NEXT_REDIRECT") || digest.startsWith("NEXT_NOT_FOUND")) {
+      throw error;
+    }
+    console.error("[prestations] SSR load failed:", error);
+    return { services: [], categories: [] };
+  }
+}
+
+export default async function PrestationsPage() {
+  const { services, categories } = await loadPrestationsData();
   return <ServicesManager services={services} categories={categories} />;
 }

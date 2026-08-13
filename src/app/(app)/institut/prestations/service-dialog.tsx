@@ -17,6 +17,7 @@ import {
 import { ServiceImageField } from "@/components/institut/service-image-field";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/input";
+import { PageTabs } from "@/components/ui/page-tabs";
 import { cn } from "@/lib/utils";
 
 export type ServiceRow = {
@@ -277,23 +278,7 @@ export function ServiceDialog({
         </div>
 
         {isEdit ? (
-          <div className="flex gap-1 overflow-x-auto border-b border-slate-200 px-5">
-            {tabs.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => goToStep(item.id)}
-                className={cn(
-                  "shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
-                  tab === item.id
-                    ? "border-slate-900 text-slate-900"
-                    : "border-transparent text-slate-500 hover:text-slate-800",
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+          <PageTabs tabs={tabs} active={tab} onChange={goToStep} className="px-5" />
         ) : isCreatingExtra ? null : (
           <ServiceStepNav
             steps={tabs}

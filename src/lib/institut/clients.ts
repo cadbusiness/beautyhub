@@ -20,7 +20,8 @@ export type ClientsListPage = {
   totalPages: number;
 };
 
-export const CLIENTS_LIST_PAGE_SIZE = 12;
+/** Page size for clients list — sized for large imports (thousands of rows). */
+export const CLIENTS_LIST_PAGE_SIZE = 25;
 
 export type ClientRow = {
   id: string;

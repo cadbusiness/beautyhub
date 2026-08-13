@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireModule } from "@/lib/auth/guards";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import {
   CLIENTS_LIST_PAGE_SIZE,
   fetchClientsListPage,
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 
   try {
     const session = await requireModule("institut");
-    const supabase = await createClient();
+    const supabase = createServiceClient();
     const result = await fetchClientsListPage(supabase, session.tenant.id, {
       page: Number.isFinite(page) ? page : 1,
       pageSize: Number.isFinite(pageSize) ? Math.min(pageSize, 50) : CLIENTS_LIST_PAGE_SIZE,
@@ -54,7 +54,8 @@ export async function GET(request: Request) {
     if (digest.startsWith("NEXT_REDIRECT") || digest.startsWith("NEXT_NOT_FOUND")) {
       throw error;
     }
+    const message = error instanceof Error ? error.message : "load_failed";
     console.error("[institut-clients-list]", error);
-    return NextResponse.json({ error: "load_failed" }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

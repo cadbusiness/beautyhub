@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
 import {
   importOvercacheClientsAction,
-  previewOvercacheImportAction,
   type ClientImportActionResult,
 } from "../client-import-actions";
-import type { OvercacheImportPreview } from "@/lib/institut/client-import/overcache-csv";
+import {
+  parseOvercacheCsv,
+  previewOvercacheImport,
+  type OvercacheImportPreview,
+} from "@/lib/institut/client-import/overcache-csv";
 
 const initial: ClientImportActionResult = {};
 
@@ -101,12 +104,20 @@ function PreviewPanel({
   );
 }
 
+type ImportStatus = {
+  quotaLimit: number | null;
+  quotaUsage: number;
+  existingRefs: string[];
+};
+
 export function ClientsImportDialog({
   open,
   onClose,
+  tenantSlug,
 }: {
   open: boolean;
   onClose: () => void;
+  tenantSlug: string;
 }) {
   const t = useTranslations("institut.clients.import");
   const tCommon = useTranslations("common");
@@ -114,35 +125,34 @@ export function ClientsImportDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvContent, setCsvContent] = useState("");
   const [fileName, setFileName] = useState("");
-  const [hasPreview, setHasPreview] = useState(false);
-  const [previewState, previewAction, previewPending] = useActionState(
-    previewOvercacheImportAction,
-    initial,
-  );
+  const [preview, setPreview] = useState<OvercacheImportPreview | null>(null);
+  const [quotaLimit, setQuotaLimit] = useState<number | null>(null);
+  const [quotaUsage, setQuotaUsage] = useState<number | undefined>(undefined);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [importState, importAction, importPending] = useActionState(
     importOvercacheClientsAction,
     initial,
   );
 
-  const preview = previewState.preview ?? importState.preview;
-  const error = previewState.error ?? importState.error;
   const isDone = Boolean(importState.ok && importState.result);
 
   const canImport = useMemo(() => {
     if (!preview) return false;
     if (preview.toCreate === 0 && preview.toUpdate === 0) return false;
-    const limit = previewState.quotaLimit;
-    const usage = previewState.quotaUsage;
-    if (limit !== null && limit !== undefined && usage !== undefined) {
-      if (usage + preview.toCreate > limit) return false;
+    if (quotaLimit !== null && quotaUsage !== undefined) {
+      if (quotaUsage + preview.toCreate > quotaLimit) return false;
     }
     return true;
-  }, [preview, previewState.quotaLimit, previewState.quotaUsage]);
+  }, [preview, quotaLimit, quotaUsage]);
 
   function reset() {
     setCsvContent("");
     setFileName("");
-    setHasPreview(false);
+    setPreview(null);
+    setError(null);
+    setQuotaLimit(null);
+    setQuotaUsage(undefined);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -152,13 +162,45 @@ export function ClientsImportDialog({
   }
 
   async function readFile(file: File) {
-    const text = await file.text();
-    setCsvContent(text);
-    setFileName(file.name);
-    const fd = new FormData();
-    fd.set("csv_content", text);
-    previewAction(fd);
-    setHasPreview(true);
+    setAnalyzing(true);
+    setError(null);
+    setPreview(null);
+
+    try {
+      const text = await file.text();
+      setCsvContent(text);
+      setFileName(file.name);
+
+      const { rows, errors: parseErrors } = parseOvercacheCsv(text);
+      if (parseErrors.includes("missing_columns")) {
+        setError(t("errors.missingColumns"));
+        return;
+      }
+      if (rows.length === 0) {
+        setError(t("errors.invalidFile"));
+        return;
+      }
+
+      const statusRes = await fetch("/api/institut/clients/import-status", {
+        credentials: "include",
+      });
+      if (!statusRes.ok) {
+        setError(t("errors.invalidFile"));
+        return;
+      }
+
+      const status = (await statusRes.json()) as ImportStatus;
+      setQuotaLimit(status.quotaLimit);
+      setQuotaUsage(status.quotaUsage);
+
+      const existingRefs = new Set(status.existingRefs ?? []);
+      setPreview(previewOvercacheImport(rows, tenantSlug, existingRefs));
+    } catch (readError) {
+      console.error("[clients-import-dialog]", readError);
+      setError(t("errors.invalidFile"));
+    } finally {
+      setAnalyzing(false);
+    }
   }
 
   function handleImport() {
@@ -175,7 +217,7 @@ export function ClientsImportDialog({
       title={isDone ? t("doneTitle") : t("title")}
       size="lg"
     >
-      {!hasPreview && !isDone ? (
+      {!preview && !isDone ? (
         <div className="space-y-4">
           <p className="text-sm text-slate-600">{t("intro")}</p>
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center hover:border-slate-400">
@@ -192,14 +234,12 @@ export function ClientsImportDialog({
               }}
             />
           </label>
-          {previewPending ? (
-            <p className="text-sm text-slate-500">{t("analyzing")}</p>
-          ) : null}
+          {analyzing ? <p className="text-sm text-slate-500">{t("analyzing")}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
         </div>
       ) : null}
 
-      {hasPreview && preview && !isDone ? (
+      {preview && !isDone ? (
         <div className="space-y-4">
           {fileName ? (
             <p className="text-xs text-slate-500">
@@ -208,10 +248,10 @@ export function ClientsImportDialog({
           ) : null}
           <PreviewPanel
             preview={preview}
-            quotaLimit={previewState.quotaLimit}
-            quotaUsage={previewState.quotaUsage}
+            quotaLimit={quotaLimit}
+            quotaUsage={quotaUsage}
           />
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {importState.error ? <p className="text-sm text-red-600">{importState.error}</p> : null}
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={reset} disabled={importPending}>
               {t("back")}

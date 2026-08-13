@@ -42,7 +42,7 @@ function EditIcon() {
   );
 }
 
-export function ClientsManager() {
+export function ClientsManager({ tenantSlug }: { tenantSlug: string }) {
   const t = useTranslations("institut.clients");
   const tCommon = useTranslations("common");
   const router = useRouter();
@@ -67,7 +67,10 @@ export function ClientsManager() {
         filter,
         q: query.trim(),
       });
-      const res = await fetch(`/api/institut/clients?${params.toString()}`, { signal });
+      const res = await fetch(`/api/institut/clients?${params.toString()}`, {
+        signal,
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("load_failed");
       const data = (await res.json()) as ClientsListPage;
       setItems(data.items);
@@ -282,6 +285,7 @@ export function ClientsManager() {
       {importOpen ? (
         <ClientsImportDialog
           open={importOpen}
+          tenantSlug={tenantSlug}
           onClose={() => {
             setImportOpen(false);
             void loadPage(new AbortController().signal);

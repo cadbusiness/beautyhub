@@ -295,7 +295,7 @@ function buildImportRow(row: OvercacheCsvRow, tenantSlug: string): OvercacheImpo
 export function previewOvercacheImport(
   csvRows: OvercacheCsvRow[],
   tenantSlug: string,
-  existingByRef: Map<string, ExistingOvercacheClient>,
+  existingRefs: Set<string> | Map<string, ExistingOvercacheClient>,
 ): OvercacheImportPreview {
   const seenRefs = new Set<string>();
   let duplicateRefsInFile = 0;
@@ -339,7 +339,7 @@ export function previewOvercacheImport(
     const mapped = buildImportRow(row, tenantSlug);
     if (mapped.phone) withPhone += 1;
 
-    if (existingByRef.has(row.reference)) {
+    if (existingRefs.has(row.reference)) {
       toUpdate += 1;
       if (updateSamples.length < 5) updateSamples.push(mapped);
     } else {
@@ -404,7 +404,7 @@ export async function fetchExistingOvercacheClients(
     .from("clients")
     .select("id, email, phone, metadata, tags")
     .eq("tenant_id", tenantId)
-    .not("metadata->overcache_ref", "is", null);
+    .filter("metadata->>overcache_ref", "not.is", null);
 
   if (error) throw new Error(error.message);
   return mapExistingOvercacheClients(data ?? []);

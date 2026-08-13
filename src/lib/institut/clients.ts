@@ -363,7 +363,7 @@ export async function fetchClientsListPage(
 
   let clientsQuery = supabase
     .from("clients")
-    .select(CLIENT_LIST_SELECT, { count: "exact", head: false })
+    .select(CLIENT_LIST_SELECT, { count: "exact" })
     .eq("tenant_id", tenantId);
 
   clientsQuery = applyClientSearch(clientsQuery, search);

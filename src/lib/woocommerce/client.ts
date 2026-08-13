@@ -30,6 +30,37 @@ export interface WooOrder {
   status: string;
 }
 
+export interface WooCustomer {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  username?: string;
+  date_created?: string;
+  date_modified?: string;
+  billing?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    address_1?: string;
+    address_2?: string;
+    postcode?: string;
+    city?: string;
+    country?: string;
+  };
+  shipping?: {
+    first_name?: string;
+    last_name?: string;
+    address_1?: string;
+    address_2?: string;
+    postcode?: string;
+    city?: string;
+    country?: string;
+  };
+  meta_data?: Array<{ key: string; value: unknown }>;
+}
+
 /** Client minimal de l'API REST WooCommerce v3 (auth basic ck/cs sur HTTPS). */
 export class WooClient {
   private base: string;
@@ -159,5 +190,31 @@ export class WooClient {
       method: "PUT",
       body: JSON.stringify({ meta_data: metaData }),
     });
+  }
+
+  async listCustomers(page = 1, perPage = 100): Promise<WooCustomer[]> {
+    return this.request<WooCustomer[]>("/customers", {
+      query: { page, per_page: perPage, orderby: "id", order: "asc", role: "all" },
+    });
+  }
+
+  /**
+   * Retourne le total count via l'entête HTTP `X-WP-Total`.
+   * Utile pour la barre de progression de l'import.
+   */
+  async countCustomers(): Promise<number> {
+    const url = new URL(this.base + "/customers");
+    url.searchParams.set("per_page", "1");
+    url.searchParams.set("role", "all");
+    const res = await fetch(url, {
+      headers: { Authorization: this.authHeader, "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`WooCommerce ${res.status}: ${text.slice(0, 200) || res.statusText}`);
+    }
+    const header = res.headers.get("x-wp-total");
+    return header ? Number.parseInt(header, 10) || 0 : 0;
   }
 }

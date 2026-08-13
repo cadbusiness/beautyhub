@@ -1219,7 +1219,11 @@
       "filterWithPurchases": "Avec achats",
       "filterEcommerce": "E-commerce",
       "filterImported": "Import Rovercash",
+      "filterSourceRovercash": "Source : Rovercash",
+      "filterSourceWoo": "Source : WooCommerce",
+      "filterSourceManual": "Source : BeautyHub",
       "importCsv": "Importer CSV",
+      "importWooBtn": "Importer WooCommerce",
       "loadError": "Impossible de charger la liste des clients.",
       "retry": "Réessayer",
       "badgeUpcoming": "{count, plural, one {# RDV} other {# RDV}}",
@@ -1305,10 +1309,34 @@
           "importFailed": "L'import a échoué."
         }
       },
+      "importWoo": {
+        "title": "Importer les clientes WooCommerce",
+        "doneTitle": "Import WooCommerce terminé",
+        "intro": "Récupère toutes les clientes de la boutique WooCommerce connectée. Les doublons sont détectés automatiquement par téléphone, puis email, puis nom+prénom.",
+        "hint": "L'import ne duplique jamais une cliente Rovercash existante : elle est simplement enrichie avec l'identifiant WooCommerce.",
+        "loadingStatus": "Récupération de la boutique WooCommerce…",
+        "statusError": "Impossible de contacter la boutique WooCommerce.",
+        "noConnection": "Aucune connexion WooCommerce active pour cet institut. Configurez-la dans Réglages > Intégrations.",
+        "stats": {
+          "storeUrl": "Boutique",
+          "total": "Clientes WooCommerce",
+          "created": "Nouvelles fiches",
+          "matchedPhone": "Match téléphone",
+          "matchedEmail": "Match email",
+          "matchedName": "Match nom",
+          "matchedExternal": "Déjà liées",
+          "errors": "Erreurs"
+        },
+        "confirm": "Lancer l'import",
+        "progressTitle": "Import WooCommerce en cours",
+        "quotaBlocked": "Quota clients dépassé. Passez à une formule supérieure ou contactez le support.",
+        "aborted": "Import interrompu."
+      },
       "detail": {
         "backToList": "Retour aux clients",
         "edit": "Modifier",
         "editTitle": "Modifier la fiche client",
+        "openWoo": "Voir sur WooCommerce",
         "badgeAccount": "Compte en ligne",
         "badgeEcommerce": "Cliente e-commerce",
         "tabs": {

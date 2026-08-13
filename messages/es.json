@@ -1083,6 +1083,7 @@
         "address": "DIRECCIÓN",
         "backToList": "Volver a los clientes",
         "badgeAccount": "cuenta en línea",
+        "openWoo": "Ver en WooCommerce",
         "badgeEcommerce": "Cliente de comercio electrónico",
         "clientId": "ID de cliente",
         "columns": {
@@ -1179,7 +1180,34 @@
         "tagsPlaceholder": "VIP, Alergia, Nuevo cliente…"
       },
       "filterImported": "Importación Rovercash",
+      "filterSourceRovercash": "Origen: Rovercash",
+      "filterSourceWoo": "Origen: WooCommerce",
+      "filterSourceManual": "Origen: BeautyHub",
       "importCsv": "Importar CSV",
+      "importWoo": {
+        "title": "Importar clientes WooCommerce",
+        "doneTitle": "Importación WooCommerce finalizada",
+        "intro": "Recupera todos los clientes de la tienda WooCommerce conectada. Los duplicados se detectan automáticamente por teléfono, luego por correo, y por nombre+apellido.",
+        "hint": "Los clientes Rovercash existentes nunca se duplican: solo se enriquecen con su identificador WooCommerce.",
+        "loadingStatus": "Contactando con la tienda WooCommerce…",
+        "statusError": "No se puede contactar con la tienda WooCommerce.",
+        "noConnection": "No hay conexión WooCommerce activa para este instituto. Configúrala en Ajustes > Integraciones.",
+        "stats": {
+          "storeUrl": "Tienda",
+          "total": "Clientes WooCommerce",
+          "created": "Nuevas fichas",
+          "matchedPhone": "Coincidencia teléfono",
+          "matchedEmail": "Coincidencia email",
+          "matchedName": "Coincidencia nombre",
+          "matchedExternal": "Ya enlazados",
+          "errors": "Errores"
+        },
+        "confirm": "Iniciar importación",
+        "progressTitle": "Importación WooCommerce en curso",
+        "quotaBlocked": "Cuota de clientes superada. Actualiza el plan o contacta con soporte.",
+        "aborted": "Importación cancelada."
+      },
+      "importWooBtn": "Importar WooCommerce",
       "loadError": "No se puede cargar la lista de clientes.",
       "retry": "Reintentar",
       "import": {

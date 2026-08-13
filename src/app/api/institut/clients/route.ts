@@ -16,6 +16,9 @@ const FILTERS: ClientsListFilter[] = [
   "ecommerce",
   "withPurchases",
   "imported",
+  "source_rovercash",
+  "source_woo",
+  "source_manual",
 ];
 
 function parseFilter(value: string | null): ClientsListFilter {

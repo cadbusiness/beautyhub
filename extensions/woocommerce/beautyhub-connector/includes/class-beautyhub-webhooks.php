@@ -17,6 +17,13 @@ class BeautyHub_Webhooks
         add_action('woocommerce_product_set_stock', [self::class, 'on_stock_change'], 20, 1);
         add_action('before_delete_post', [self::class, 'on_product_delete'], 20, 1);
         add_action('woocommerce_order_status_completed', [self::class, 'on_order_completed'], 20, 1);
+
+        add_action('woocommerce_created_customer', [self::class, 'on_customer_created'], 20, 3);
+        add_action('woocommerce_new_customer', [self::class, 'on_customer_created'], 20, 3);
+        add_action('woocommerce_update_customer', [self::class, 'on_customer_updated'], 20, 1);
+        add_action('profile_update', [self::class, 'on_profile_updated'], 20, 2);
+        add_action('user_register', [self::class, 'on_user_register'], 20, 1);
+        add_action('delete_user', [self::class, 'on_user_delete'], 20, 1);
     }
 
     private static function endpoint(): ?string
@@ -196,12 +203,19 @@ class BeautyHub_Webhooks
             'date_completed' => $order->get_date_completed()
                 ? $order->get_date_completed()->date('c')
                 : null,
+            'customer_id' => (int) $order->get_customer_id(),
             'coupon_lines' => $coupon_lines,
             'line_items' => $line_items,
             'billing' => [
                 'first_name' => (string) $order->get_billing_first_name(),
                 'last_name' => (string) $order->get_billing_last_name(),
                 'email' => (string) $order->get_billing_email(),
+                'phone' => (string) $order->get_billing_phone(),
+                'address_1' => (string) $order->get_billing_address_1(),
+                'address_2' => (string) $order->get_billing_address_2(),
+                'postcode' => (string) $order->get_billing_postcode(),
+                'city' => (string) $order->get_billing_city(),
+                'country' => (string) $order->get_billing_country(),
             ],
             'meta' => [
                 'payment_method' => $order->get_payment_method(),
@@ -220,5 +234,135 @@ class BeautyHub_Webhooks
                     : null,
             ]);
         }
+    }
+
+    /**
+     * Vérifie qu'un user WP est bien un customer WooCommerce (a le rôle "customer"
+     * ou une commande passée). Utilisé pour éviter de synchroniser les admins.
+     */
+    private static function is_woo_customer(int $user_id): bool
+    {
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return false;
+        }
+        $roles = (array) ($user->roles ?? []);
+        if (in_array('customer', $roles, true)) {
+            return true;
+        }
+        // Fallback : l'utilisateur a au moins une commande
+        if (function_exists('wc_get_orders')) {
+            $orders = wc_get_orders([
+                'customer_id' => $user_id,
+                'limit' => 1,
+                'return' => 'ids',
+            ]);
+            if (!empty($orders)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static function customer_payload(int $user_id): ?array
+    {
+        $customer = null;
+        if (class_exists('WC_Customer')) {
+            try {
+                $customer = new WC_Customer($user_id);
+            } catch (Exception $e) {
+                $customer = null;
+            }
+        }
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return null;
+        }
+
+        $get = static function ($object, string $method, string $fallback = ''): string {
+            if ($object && method_exists($object, $method)) {
+                $value = $object->$method();
+                return is_string($value) ? $value : (string) $value;
+            }
+            return $fallback;
+        };
+
+        return [
+            'id' => $user_id,
+            'email' => (string) $user->user_email,
+            'first_name' => $get($customer, 'get_first_name', (string) get_user_meta($user_id, 'first_name', true)),
+            'last_name' => $get($customer, 'get_last_name', (string) get_user_meta($user_id, 'last_name', true)),
+            'username' => (string) $user->user_login,
+            'date_created' => $user->user_registered
+                ? mysql2date('c', $user->user_registered, false)
+                : null,
+            'billing' => [
+                'first_name' => $get($customer, 'get_billing_first_name'),
+                'last_name' => $get($customer, 'get_billing_last_name'),
+                'email' => $get($customer, 'get_billing_email', (string) $user->user_email),
+                'phone' => $get($customer, 'get_billing_phone'),
+                'address_1' => $get($customer, 'get_billing_address_1'),
+                'address_2' => $get($customer, 'get_billing_address_2'),
+                'postcode' => $get($customer, 'get_billing_postcode'),
+                'city' => $get($customer, 'get_billing_city'),
+                'country' => $get($customer, 'get_billing_country'),
+            ],
+        ];
+    }
+
+    public static function on_customer_created($user_id, $new_customer_data = null, $password_generated = null): void
+    {
+        $uid = (int) $user_id;
+        if ($uid <= 0) {
+            return;
+        }
+        if (!self::is_woo_customer($uid)) {
+            return;
+        }
+        $payload = self::customer_payload($uid);
+        if ($payload) {
+            self::send('customer.created', $payload);
+        }
+    }
+
+    public static function on_customer_updated($user_id): void
+    {
+        $uid = (int) $user_id;
+        if ($uid <= 0) {
+            return;
+        }
+        if (!self::is_woo_customer($uid)) {
+            return;
+        }
+        $payload = self::customer_payload($uid);
+        if ($payload) {
+            self::send('customer.updated', $payload);
+        }
+    }
+
+    /**
+     * WordPress hook `profile_update` : ne notifie que les customers Woo.
+     */
+    public static function on_profile_updated($user_id, $old_user_data = null): void
+    {
+        self::on_customer_updated($user_id);
+    }
+
+    /**
+     * WordPress hook `user_register` : couvre les créations de comptes WP qui
+     * n'ont pas déclenché `woocommerce_created_customer` (registrations custom).
+     */
+    public static function on_user_register($user_id): void
+    {
+        self::on_customer_created($user_id);
+    }
+
+    public static function on_user_delete($user_id): void
+    {
+        $uid = (int) $user_id;
+        if ($uid <= 0) {
+            return;
+        }
+        self::send('customer.deleted', ['id' => $uid]);
     }
 }

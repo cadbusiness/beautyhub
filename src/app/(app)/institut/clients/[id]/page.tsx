@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchClientOverview } from "@/lib/institut/clients";
 import { canManageInstitutSettings } from "@/lib/auth/institut-settings";
 import { isAnonymizedClientEmail } from "@/lib/compliance/anonymize";
+import { getWooCredentialsForTenant } from "@/lib/woocommerce";
 import { ClientDetail } from "./client-detail";
 
 export default async function ClientDetailPage({
@@ -44,12 +45,27 @@ export default async function ClientDetailPage({
     label: c.full_name ? `${c.full_name} (${c.email})` : c.email,
   }));
 
+  let wooShopUrl: string | null = null;
+  const hasWooLink =
+    overview.client.metadata &&
+    typeof overview.client.metadata === "object" &&
+    "woo_customer_id" in (overview.client.metadata as Record<string, unknown>);
+  if (hasWooLink) {
+    try {
+      const creds = await getWooCredentialsForTenant(session.tenant.id);
+      wooShopUrl = creds?.url ?? null;
+    } catch {
+      wooShopUrl = null;
+    }
+  }
+
   return (
     <ClientDetail
       overview={overview}
       canAnonymize={canManageInstitutSettings(session.role, session.enabledModuleIds)}
       isAnonymized={isAnonymizedClientEmail(overview.client.email)}
       referrerOptions={referrerOptions}
+      wooShopUrl={wooShopUrl}
     />
   );
 }

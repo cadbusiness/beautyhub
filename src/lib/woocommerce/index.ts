@@ -114,4 +114,4 @@ export {
   verifyWebhookSignature,
 } from "./sync";
 export { WooClient };
-export type { WooCredentials } from "./client";
+export type { WooCredentials, WooCustomer } from "./client";

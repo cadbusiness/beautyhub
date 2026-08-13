@@ -68,11 +68,13 @@ export function ClientDetail({
   canAnonymize,
   isAnonymized,
   referrerOptions = [],
+  wooShopUrl = null,
 }: {
   overview: ClientOverview;
   canAnonymize: boolean;
   isAnonymized: boolean;
   referrerOptions?: { id: string; label: string }[];
+  wooShopUrl?: string | null;
 }) {
   const t = useTranslations("institut.clients.detail");
   const tAppt = useTranslations("appointments.status");
@@ -88,6 +90,23 @@ export function ClientDetail({
 
   const { client, stats } = overview;
   const displayName = client.full_name ?? client.email;
+
+  const wooCustomerId =
+    client.metadata && typeof client.metadata === "object"
+      ? (() => {
+          const raw = (client.metadata as Record<string, unknown>).woo_customer_id;
+          if (typeof raw === "number" && raw > 0) return raw;
+          if (typeof raw === "string" && raw.trim() && !Number.isNaN(Number(raw))) {
+            return Number(raw);
+          }
+          return null;
+        })()
+      : null;
+
+  const wooProfileUrl =
+    wooShopUrl && wooCustomerId
+      ? `${wooShopUrl.replace(/\/+$/, "")}/wp-admin/user-edit.php?user_id=${wooCustomerId}`
+      : null;
 
   const addressParts = [
     client.address_line1,
@@ -182,9 +201,21 @@ export function ClientDetail({
               </div>
             )}
           </div>
-          <Button variant="outline" className="h-9" onClick={() => setEditOpen(true)}>
-            {t("edit")}
-          </Button>
+          <div className="flex items-center gap-2">
+            {wooProfileUrl ? (
+              <a
+                href={wooProfileUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex h-9 items-center rounded-md border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                {t("openWoo")}
+              </a>
+            ) : null}
+            <Button variant="outline" className="h-9" onClick={() => setEditOpen(true)}>
+              {t("edit")}
+            </Button>
+          </div>
         </div>
 
         <PageTabs tabs={tabs} active={tab} onChange={setTab} />

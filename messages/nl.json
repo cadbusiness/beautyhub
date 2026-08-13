@@ -1186,7 +1186,34 @@
         "submittingEdit": "Opslaan…"
       },
       "filterImported": "Rovercash-import",
+      "filterSourceRovercash": "Bron: Rovercash",
+      "filterSourceWoo": "Bron: WooCommerce",
+      "filterSourceManual": "Bron: BeautyHub",
       "importCsv": "CSV importeren",
+      "importWoo": {
+        "title": "WooCommerce-klanten importeren",
+        "doneTitle": "WooCommerce-import voltooid",
+        "intro": "Haalt alle klanten op uit de gekoppelde WooCommerce-winkel. Dubbels worden automatisch gedetecteerd via telefoon, dan e-mail, dan naam.",
+        "hint": "Bestaande Rovercash-klanten worden nooit gedupliceerd: ze worden alleen verrijkt met hun WooCommerce-ID.",
+        "loadingStatus": "Verbinding maken met de WooCommerce-winkel…",
+        "statusError": "Kan geen contact maken met de WooCommerce-winkel.",
+        "noConnection": "Geen actieve WooCommerce-verbinding voor dit instituut. Configureer via Instellingen > Integraties.",
+        "stats": {
+          "storeUrl": "Winkel",
+          "total": "WooCommerce-klanten",
+          "created": "Nieuwe fiches",
+          "matchedPhone": "Match telefoon",
+          "matchedEmail": "Match e-mail",
+          "matchedName": "Match naam",
+          "matchedExternal": "Al gekoppeld",
+          "errors": "Fouten"
+        },
+        "confirm": "Import starten",
+        "progressTitle": "WooCommerce-import bezig",
+        "quotaBlocked": "Klantquotum overschreden. Upgrade het plan of neem contact op met support.",
+        "aborted": "Import geannuleerd."
+      },
+      "importWooBtn": "WooCommerce importeren",
       "loadError": "Kan de klantenlijst niet laden.",
       "retry": "Opnieuw proberen",
       "import": {
@@ -1240,6 +1267,7 @@
         "backToList": "Terug naar klanten",
         "edit": "Bewerken",
         "editTitle": "Klantfiche bewerken",
+        "openWoo": "Bekijk op WooCommerce",
         "badgeAccount": "Online account",
         "badgeEcommerce": "E-commerce klant",
         "tabs": {

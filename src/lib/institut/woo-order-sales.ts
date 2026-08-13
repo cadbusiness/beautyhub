@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 import { getPosSettings } from "@/lib/institut/pos-settings";
+import { findOrCreateClientFromExternal } from "@/lib/institut/clients-dedup";
 
 type Db = SupabaseClient<Database>;
 
@@ -9,10 +10,17 @@ export type WooOrderWebhookPayload = {
   total?: number | string;
   currency?: string;
   date_completed?: string | null;
+  customer_id?: number;
   billing?: {
     first_name?: string;
     last_name?: string;
     email?: string;
+    phone?: string;
+    address_1?: string;
+    address_2?: string;
+    postcode?: string;
+    city?: string;
+    country?: string;
   };
   line_items?: Array<{
     product_id?: number;
@@ -82,17 +90,43 @@ export async function ingestWooCompletedOrder(
       ? payload.currency.toLowerCase()
       : posSettings.currency;
 
-  const billingEmail =
-    typeof payload.billing?.email === "string" ? payload.billing.email.trim().toLowerCase() : "";
+  const billing = payload.billing ?? {};
+  const billingEmail = typeof billing.email === "string" ? billing.email.trim().toLowerCase() : "";
+  const billingPhone = typeof billing.phone === "string" ? billing.phone.trim() : "";
+  const firstName = typeof billing.first_name === "string" ? billing.first_name.trim() : "";
+  const lastName = typeof billing.last_name === "string" ? billing.last_name.trim() : "";
+  const wooCustomerId =
+    typeof payload.customer_id === "number" && payload.customer_id > 0
+      ? String(payload.customer_id)
+      : null;
+
   let clientId: string | null = null;
-  if (billingEmail) {
-    const { data: client } = await supabase
-      .from("clients")
-      .select("id")
-      .eq("tenant_id", tenantId)
-      .ilike("email", billingEmail)
-      .maybeSingle();
-    clientId = client?.id ?? null;
+  // On tente la dédup uniquement si on a au moins un identifiant discriminant.
+  if (billingEmail || billingPhone || firstName || lastName || wooCustomerId) {
+    try {
+      const dedup = await findOrCreateClientFromExternal(supabase, {
+        tenantId,
+        source: "woo",
+        externalId: wooCustomerId,
+        phone: billingPhone || null,
+        email: billingEmail || null,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        extraTags: ["WooCommerce"],
+        metadata: {
+          woo_customer_id: wooCustomerId ? Number(wooCustomerId) : undefined,
+          woo_billing: {
+            city: billing.city ?? null,
+            postcode: billing.postcode ?? null,
+            country: billing.country ?? null,
+          },
+        },
+      });
+      clientId = dedup.clientId;
+    } catch (err) {
+      console.error("[woo-order-sales] dedup client failed", err);
+      clientId = null;
+    }
   }
 
   const completedAt =

@@ -10,7 +10,10 @@ export type ClientsListFilter =
   | "withAccount"
   | "ecommerce"
   | "withPurchases"
-  | "imported";
+  | "imported"
+  | "source_rovercash"
+  | "source_woo"
+  | "source_manual";
 
 export type ClientsListPage = {
   items: ClientListSummary[];
@@ -41,9 +44,14 @@ export type ClientRow = {
   login_id: string | null;
   pin_code: string | null;
   referred_by_client_id: string | null;
+  source: ClientSource;
+  external_id: string | null;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 };
+
+export type ClientSource = "manual" | "rovercash" | "woo" | "bookly" | "import";
 
 export type ClientListSummary = ClientRow & {
   appointment_count: number;
@@ -125,12 +133,18 @@ export type ClientProfile = ClientOverview & {
 };
 
 const CLIENT_SELECT =
-  "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_code, pin_hash, password_hash, referred_by_client_id, created_at, updated_at";
+  "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_code, pin_hash, password_hash, referred_by_client_id, source, external_id, metadata, created_at, updated_at";
 
 const CLIENT_LIST_SELECT =
-  "id, full_name, email, phone, notes, tags, marketing_opt_in, login_id, referred_by_client_id, created_at, updated_at";
+  "id, full_name, email, phone, notes, tags, marketing_opt_in, login_id, referred_by_client_id, source, external_id, metadata, created_at, updated_at";
 
 function mapClient(row: Record<string, unknown>): ClientRow {
+  const rawSource = typeof row.source === "string" ? row.source : "manual";
+  const source = (["manual", "rovercash", "woo", "bookly", "import"] as const).includes(
+    rawSource as ClientSource,
+  )
+    ? (rawSource as ClientSource)
+    : "manual";
   return {
     id: String(row.id),
     full_name: (row.full_name as string | null) ?? null,
@@ -149,6 +163,12 @@ function mapClient(row: Record<string, unknown>): ClientRow {
     login_id: (row.login_id as string | null) ?? null,
     pin_code: (row.pin_code as string | null) ?? null,
     referred_by_client_id: (row.referred_by_client_id as string | null) ?? null,
+    source,
+    external_id: (row.external_id as string | null) ?? null,
+    metadata:
+      row.metadata && typeof row.metadata === "object"
+        ? (row.metadata as Record<string, unknown>)
+        : {},
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
   };
@@ -241,7 +261,14 @@ async function fetchClientIdsForFilter(
 ): Promise<string[] | null> {
   const now = new Date().toISOString();
 
-  if (filter === "all" || filter === "imported" || filter === "withAccount") {
+  if (
+    filter === "all" ||
+    filter === "imported" ||
+    filter === "withAccount" ||
+    filter === "source_rovercash" ||
+    filter === "source_woo" ||
+    filter === "source_manual"
+  ) {
     return null;
   }
 
@@ -373,6 +400,12 @@ export async function fetchClientsListPage(
     clientsQuery = clientsQuery.contains("tags", [ROVERCASH_IMPORT_TAG]);
   } else if (filter === "withAccount") {
     clientsQuery = clientsQuery.or("pin_hash.not.is.null,password_hash.not.is.null");
+  } else if (filter === "source_rovercash") {
+    clientsQuery = clientsQuery.eq("source", "rovercash");
+  } else if (filter === "source_woo") {
+    clientsQuery = clientsQuery.eq("source", "woo");
+  } else if (filter === "source_manual") {
+    clientsQuery = clientsQuery.in("source", ["manual", "import", "bookly"]);
   }
 
   const { data, error, count } = await clientsQuery

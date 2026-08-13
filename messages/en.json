@@ -1206,6 +1206,7 @@
         "address": "Address",
         "backToList": "Return to customers",
         "badgeAccount": "Online account",
+        "openWoo": "View on WooCommerce",
         "badgeEcommerce": "E-commerce customer",
         "clientId": "Customer ID",
         "columns": {
@@ -1276,6 +1277,9 @@
       "filterAll": "All",
       "filterEcommerce": "E-commerce",
       "filterImported": "Import Rovercash",
+      "filterSourceRovercash": "Source: Rovercash",
+      "filterSourceWoo": "Source: WooCommerce",
+      "filterSourceManual": "Source: BeautyHub",
       "filterUpcoming": "Upcoming appointments",
       "filterWithAccount": "Online account",
       "filterWithPurchases": "With purchases",
@@ -1353,6 +1357,30 @@
         "title": "Import Rovercash clients"
       },
       "importCsv": "Import CSV",
+      "importWoo": {
+        "title": "Import WooCommerce customers",
+        "doneTitle": "WooCommerce import complete",
+        "intro": "Fetches every customer from the connected WooCommerce store. Duplicates are detected automatically by phone, then email, then first+last name.",
+        "hint": "Existing Rovercash customers are never duplicated: they are simply enriched with their WooCommerce identifier.",
+        "loadingStatus": "Contacting the WooCommerce store…",
+        "statusError": "Unable to contact the WooCommerce store.",
+        "noConnection": "No active WooCommerce connection for this institute. Set it up in Settings > Integrations.",
+        "stats": {
+          "storeUrl": "Store",
+          "total": "WooCommerce customers",
+          "created": "New records",
+          "matchedPhone": "Phone match",
+          "matchedEmail": "Email match",
+          "matchedName": "Name match",
+          "matchedExternal": "Already linked",
+          "errors": "Errors"
+        },
+        "confirm": "Start import",
+        "progressTitle": "WooCommerce import in progress",
+        "quotaBlocked": "Client quota exceeded. Upgrade the plan or contact support.",
+        "aborted": "Import cancelled."
+      },
+      "importWooBtn": "Import WooCommerce",
       "loadError": "Unable to load customer list.",
       "new": "New customer",
       "noResults": "No results for this search.",

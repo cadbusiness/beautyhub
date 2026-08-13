@@ -153,6 +153,7 @@ export type Database = {
           created_at: string
           date_of_birth: string | null
           email: string
+          external_id: string | null
           full_name: string | null
           id: string
           login_id: string | null
@@ -165,6 +166,7 @@ export type Database = {
           pin_hash: string | null
           postal_code: string | null
           referred_by_client_id: string | null
+          source: string
           tags: string[]
           tenant_id: string
           updated_at: string
@@ -177,6 +179,7 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           email: string
+          external_id?: string | null
           full_name?: string | null
           id?: string
           login_id?: string | null
@@ -189,6 +192,7 @@ export type Database = {
           pin_hash?: string | null
           postal_code?: string | null
           referred_by_client_id?: string | null
+          source?: string
           tags?: string[]
           tenant_id: string
           updated_at?: string
@@ -201,6 +205,7 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           email?: string
+          external_id?: string | null
           full_name?: string | null
           id?: string
           login_id?: string | null
@@ -213,6 +218,7 @@ export type Database = {
           pin_hash?: string | null
           postal_code?: string | null
           referred_by_client_id?: string | null
+          source?: string
           tags?: string[]
           tenant_id?: string
           updated_at?: string
@@ -3438,6 +3444,34 @@ export type Database = {
       auth_has_brand_access: { Args: { bid: string }; Returns: boolean }
       auth_has_tenant_access: { Args: { tid: string }; Returns: boolean }
       auth_is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      dedup_find_by_phone: {
+        Args: { p_tenant_id: string; p_normalized_phone: string }
+        Returns: Array<{
+          id: string
+          email: string
+          phone: string | null
+          full_name: string | null
+          updated_at: string
+          metadata: Json
+          tags: string[] | null
+        }>
+      }
+      dedup_find_by_name: {
+        Args: { p_tenant_id: string; p_normalized_full_name: string }
+        Returns: Array<{
+          id: string
+          email: string
+          phone: string | null
+          full_name: string | null
+          updated_at: string
+          metadata: Json
+          tags: string[] | null
+        }>
+      }
+      normalize_phone: {
+        Args: { raw: string | null }
+        Returns: string | null
+      }
       get_public_tenant: {
         Args: { p_host: string; p_slug: string | null }
         Returns: {

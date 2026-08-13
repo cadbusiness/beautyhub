@@ -26,6 +26,11 @@ const ClientsImportDialog = dynamic(
   { ssr: false },
 );
 
+const ClientsImportWooDialog = dynamic(
+  () => import("./clients-import-woo-dialog").then((mod) => mod.ClientsImportWooDialog),
+  { ssr: false },
+);
+
 function ClientTag({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex rounded bg-violet-50 px-1.5 py-0.5 text-[10px] font-medium text-violet-700">
@@ -56,6 +61,7 @@ export function ClientsManager({ tenantSlug }: { tenantSlug: string }) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [importWooOpen, setImportWooOpen] = useState(false);
   const [editing, setEditing] = useState<ClientListSummary | null>(null);
 
   const loadPage = useCallback(async (signal: AbortSignal) => {
@@ -141,6 +147,13 @@ export function ClientsManager({ tenantSlug }: { tenantSlug: string }) {
               >
                 {t("importCsv")}
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => setImportWooOpen(true)}
+                className="h-9 w-full sm:w-auto"
+              >
+                {t("importWooBtn")}
+              </Button>
               <Button onClick={openCreate} className="h-9 w-full sm:w-auto">
                 + {t("new")}
               </Button>
@@ -171,6 +184,9 @@ export function ClientsManager({ tenantSlug }: { tenantSlug: string }) {
             <option value="withPurchases">{t("filterWithPurchases")}</option>
             <option value="ecommerce">{t("filterEcommerce")}</option>
             <option value="imported">{t("filterImported")}</option>
+            <option value="source_rovercash">{t("filterSourceRovercash")}</option>
+            <option value="source_woo">{t("filterSourceWoo")}</option>
+            <option value="source_manual">{t("filterSourceManual")}</option>
           </select>
         </ListToolbar>
 
@@ -288,6 +304,16 @@ export function ClientsManager({ tenantSlug }: { tenantSlug: string }) {
           tenantSlug={tenantSlug}
           onClose={() => {
             setImportOpen(false);
+            void loadPage(new AbortController().signal);
+          }}
+        />
+      ) : null}
+
+      {importWooOpen ? (
+        <ClientsImportWooDialog
+          open={importWooOpen}
+          onClose={() => {
+            setImportWooOpen(false);
             void loadPage(new AbortController().signal);
           }}
         />

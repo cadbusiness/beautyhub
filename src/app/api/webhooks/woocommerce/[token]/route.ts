@@ -227,6 +227,8 @@ export async function POST(
             currency: typeof payload.currency === "string" ? payload.currency : undefined,
             date_completed:
               typeof payload.date_completed === "string" ? payload.date_completed : null,
+            customer_id:
+              typeof payload.customer_id === "number" ? payload.customer_id : undefined,
             billing:
               typeof payload.billing === "object" && payload.billing !== null
                 ? (payload.billing as WooOrderWebhookPayload["billing"])
@@ -240,6 +242,84 @@ export async function POST(
                 : undefined,
           },
         );
+        break;
+      }
+      case "customer.created":
+      case "customer.updated": {
+        const wooCustomerId = payload.id;
+        if (typeof wooCustomerId !== "number" || wooCustomerId <= 0) {
+          return NextResponse.json({ error: "invalid_customer" }, { status: 400 });
+        }
+        const billing =
+          typeof payload.billing === "object" && payload.billing !== null
+            ? (payload.billing as Record<string, unknown>)
+            : {};
+        const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+        const email = str(payload.email) || str(billing.email);
+        const firstName = str(payload.first_name) || str(billing.first_name);
+        const lastName = str(payload.last_name) || str(billing.last_name);
+        const phone = str(billing.phone);
+
+        // On ne dédup pas si on a strictement aucun identifiant discriminant.
+        if (!email && !phone && !firstName && !lastName) {
+          break;
+        }
+
+        const { findOrCreateClientFromExternal } = await import(
+          "@/lib/institut/clients-dedup"
+        );
+        await findOrCreateClientFromExternal(supabase, {
+          tenantId: connection.tenantId,
+          source: "woo",
+          externalId: String(wooCustomerId),
+          email: email || null,
+          phone: phone || null,
+          firstName: firstName || null,
+          lastName: lastName || null,
+          extraTags: ["WooCommerce"],
+          metadata: {
+            woo_customer_id: wooCustomerId,
+            woo_date_created:
+              typeof payload.date_created === "string" ? payload.date_created : null,
+            woo_billing: {
+              city: str(billing.city) || null,
+              postcode: str(billing.postcode) || null,
+              country: str(billing.country) || null,
+            },
+          },
+          softMerge: true,
+        });
+        break;
+      }
+      case "customer.deleted": {
+        const wooCustomerId = payload.id;
+        if (typeof wooCustomerId !== "number" || wooCustomerId <= 0) {
+          return NextResponse.json({ error: "invalid_customer" }, { status: 400 });
+        }
+        // On ne supprime jamais : on marque la fiche comme "supprimée côté Woo"
+        // pour audit + retirer le badge WooCommerce.
+        const { data: existing } = await supabase
+          .from("clients")
+          .select("id, tags, metadata")
+          .eq("tenant_id", connection.tenantId)
+          .eq("source", "woo")
+          .eq("external_id", String(wooCustomerId))
+          .maybeSingle();
+        if (existing) {
+          const filteredTags = ((existing.tags as string[] | null) ?? []).filter(
+            (t) => t !== "WooCommerce",
+          );
+          await supabase
+            .from("clients")
+            .update({
+              tags: filteredTags,
+              metadata: {
+                ...((existing.metadata as Record<string, unknown> | null) ?? {}),
+                woo_deleted_at: new Date().toISOString(),
+              } as never,
+            })
+            .eq("id", existing.id);
+        }
         break;
       }
       default:

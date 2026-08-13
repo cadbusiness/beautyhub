@@ -2201,6 +2201,31 @@
         },
         "title": "Import Bookly (services)"
       },
+      "importExtras": {
+        "title": "Import Bookly (extras)",
+        "doneTitle": "Extras imported",
+        "badge": "Bookly extras",
+        "hint": "Auto-detected: drop bookly-services.csv or bookly-extras.csv — the same dialog handles both.",
+        "previewIntro": "Each extra is created as a hidden 'extra' service and linked to its parent services via their Bookly ID.",
+        "stats": {
+          "total": "Rows",
+          "extrasCreate": "Extras to create",
+          "extrasReused": "Extras already present (reused)",
+          "linksCreate": "Links to create",
+          "linksUpdate": "Links to update",
+          "linksMissing": "Links without parent service"
+        },
+        "missingServiceHint": "Some extras reference Bookly services that were not found. Import bookly-services.csv first, then re-run the extras import.",
+        "samplesCreate": "Examples",
+        "confirmImport": "Start the extras import",
+        "importing": "Importing extras…",
+        "doneMessage": "{extrasCreated} extras created · {extrasReused} reused · {linksCreated} links created · {linksUpdated} links updated.",
+        "errors": {
+          "missingColumns": "Expected columns not found (bookly_extra_id, title, service_id).",
+          "invalidFile": "Invalid CSV or no extras.",
+          "importFailed": "The extras import failed."
+        }
+      },
       "importCsv": "Import Bookly",
       "manageCategories": "Categories",
       "new": "New service",

@@ -1503,6 +1503,31 @@
           "importFailed": "L’import a échoué."
         }
       },
+      "importExtras": {
+        "title": "Importer Bookly (extras)",
+        "doneTitle": "Extras importés",
+        "badge": "extras Bookly",
+        "hint": "Détection automatique : glisse bookly-services.csv (prestations) ou bookly-extras.csv (extras) — le même dialog gère les deux.",
+        "previewIntro": "Chaque extra est créé comme une prestation « extra » (invisible au catalogue) et lié aux prestations mères via leur ID Bookly.",
+        "stats": {
+          "total": "Lignes",
+          "extrasCreate": "Extras à créer",
+          "extrasReused": "Extras déjà présents (réutilisés)",
+          "linksCreate": "Liens à créer",
+          "linksUpdate": "Liens à mettre à jour",
+          "linksMissing": "Liens sans prestation mère"
+        },
+        "missingServiceHint": "Certains extras référencent des prestations Bookly non trouvées. Importe d’abord bookly-services.csv, puis relance l’import des extras.",
+        "samplesCreate": "Exemples",
+        "confirmImport": "Lancer l’import des extras",
+        "importing": "Import extras en cours…",
+        "doneMessage": "{extrasCreated} extras créés · {extrasReused} réutilisés · {linksCreated} liens créés · {linksUpdated} liens mis à jour.",
+        "errors": {
+          "missingColumns": "Colonnes attendues introuvables (bookly_extra_id, title, service_id).",
+          "invalidFile": "Fichier CSV invalide ou sans extras.",
+          "importFailed": "L’import des extras a échoué."
+        }
+      },
       "durationMin": "{min} min",
       "visible": "Visible",
       "hidden": "Masquée",

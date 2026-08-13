@@ -1521,6 +1521,31 @@
           "confirmRequired": "Bevestiging vereist.",
           "importFailed": "Import mislukt."
         }
+      },
+      "importExtras": {
+        "title": "Bookly extras importeren",
+        "doneTitle": "Extras geïmporteerd",
+        "badge": "Bookly extras",
+        "hint": "Automatische detectie: sleep bookly-services.csv of bookly-extras.csv — dezelfde dialog verwerkt beide.",
+        "previewIntro": "Elke extra wordt aangemaakt als 'extra'-dienst (niet zichtbaar in catalogus) en gekoppeld aan de ouder-diensten via hun Bookly ID.",
+        "stats": {
+          "total": "Regels",
+          "extrasCreate": "Aan te maken extras",
+          "extrasReused": "Al aanwezige extras (hergebruikt)",
+          "linksCreate": "Te maken koppelingen",
+          "linksUpdate": "Bij te werken koppelingen",
+          "linksMissing": "Koppelingen zonder ouder-dienst"
+        },
+        "missingServiceHint": "Sommige extras verwijzen naar Bookly-diensten die niet gevonden zijn. Importeer eerst bookly-services.csv en herhaal daarna de extras-import.",
+        "samplesCreate": "Voorbeelden",
+        "confirmImport": "Extras importeren",
+        "importing": "Bezig met importeren…",
+        "doneMessage": "{extrasCreated} aangemaakt · {extrasReused} hergebruikt · {linksCreated} koppelingen aangemaakt · {linksUpdated} koppelingen bijgewerkt.",
+        "errors": {
+          "missingColumns": "Verwachte kolommen niet gevonden (bookly_extra_id, title, service_id).",
+          "invalidFile": "Ongeldige CSV of geen extras.",
+          "importFailed": "Import van extras mislukt."
+        }
       }
     },
     "extras": {

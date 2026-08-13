@@ -2472,6 +2472,7 @@ export type Database = {
       }
       inst_staff: {
         Row: {
+          archived_at: string | null
           avatar_url: string | null
           color: string | null
           created_at: string
@@ -2485,6 +2486,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           avatar_url?: string | null
           color?: string | null
           created_at?: string
@@ -2498,6 +2500,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           avatar_url?: string | null
           color?: string | null
           created_at?: string

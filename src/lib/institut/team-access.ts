@@ -61,6 +61,8 @@ export type StaffWithAccess = {
   avatar_url: string | null;
   schedule_id: string | null;
   user_id: string | null;
+  is_active: boolean;
+  archived_at: string | null;
   access_status: StaffAccessStatus;
   tenant_role_id: string | null;
   tenant_role_name: string | null;
@@ -228,7 +230,7 @@ export async function fetchStaffWithAccess(
   const [staffRes, invitations] = await Promise.all([
     supabase
       .from("inst_staff")
-      .select("id, full_name, email, color, avatar_url, schedule_id, user_id")
+      .select("id, full_name, email, color, avatar_url, schedule_id, user_id, is_active, archived_at")
       .eq("tenant_id", tenantId)
       .order("full_name"),
     fetchTeamInvitations(supabase, tenantId),
@@ -304,6 +306,8 @@ export async function fetchStaffWithAccess(
       avatar_url: s.avatar_url,
       schedule_id: s.schedule_id,
       user_id: s.user_id,
+      is_active: s.is_active,
+      archived_at: s.archived_at,
       access_status,
       tenant_role_id,
       tenant_role_name,

@@ -56,7 +56,10 @@ function customerAsDedupInput(customer: WooCustomer, tenantId: string) {
 export async function GET() {
   try {
     const session = await requireModule("institut");
-    const creds = await getWooCredentialsForTenant(session.tenant.id);
+    // Utilise le client user-authenticated (RLS via `connections_access`)
+    // pour éviter de dépendre de SUPABASE_SERVICE_ROLE_KEY côté import.
+    const supabase = await createClient();
+    const creds = await getWooCredentialsForTenant(session.tenant.id, supabase);
     if (!creds) {
       return NextResponse.json({ error: "no_woo_connection" }, { status: 400 });
     }
@@ -100,7 +103,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await requireModule("institut");
   const supabase = await createClient();
-  const creds = await getWooCredentialsForTenant(session.tenant.id);
+  const creds = await getWooCredentialsForTenant(session.tenant.id, supabase);
   if (!creds) {
     return NextResponse.json({ error: "no_woo_connection" }, { status: 400 });
   }

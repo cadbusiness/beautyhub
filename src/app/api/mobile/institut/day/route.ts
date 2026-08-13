@@ -132,6 +132,7 @@ export async function GET(request: Request) {
         .from("inst_staff")
         .select("id, full_name, color")
         .eq("tenant_id", session.tenant.id)
+        .eq("is_active", true)
         .order("full_name"),
     ]);
 

@@ -58,6 +58,7 @@ export default async function CaissePage({
       .from("inst_staff")
       .select("id, full_name")
       .eq("tenant_id", tenantId)
+      .eq("is_active", true)
       .order("full_name"),
     supabase
       .from("inst_appointments")

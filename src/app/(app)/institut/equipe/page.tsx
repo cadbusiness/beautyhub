@@ -55,6 +55,37 @@ export default async function EquipePage() {
     })),
   }));
 
+  const archivedStaff = staff.filter((s) => !s.is_active);
+  const archivedIds = archivedStaff.map((s) => s.id);
+
+  const [apptRefsRes, saleRefsRes] = archivedIds.length
+    ? await Promise.all([
+        supabase
+          .from("inst_appointments")
+          .select("staff_id")
+          .eq("tenant_id", tenantId)
+          .in("staff_id", archivedIds),
+        supabase
+          .from("inst_sales")
+          .select("staff_id")
+          .eq("tenant_id", tenantId)
+          .in("staff_id", archivedIds),
+      ])
+    : [{ data: [] as Array<{ staff_id: string | null }> }, { data: [] as Array<{ staff_id: string | null }> }];
+
+  const withHistory = new Set<string>();
+  for (const row of apptRefsRes.data ?? []) {
+    if (row.staff_id) withHistory.add(row.staff_id);
+  }
+  for (const row of saleRefsRes.data ?? []) {
+    if (row.staff_id) withHistory.add(row.staff_id);
+  }
+
+  const canHardDeleteByStaffId: Record<string, boolean> = {};
+  for (const s of archivedStaff) {
+    canHardDeleteByStaffId[s.id] = !withHistory.has(s.id);
+  }
+
   return (
     <EquipeManager
       staff={staff}
@@ -64,6 +95,7 @@ export default async function EquipePage() {
       resources={resourcesRes.data ?? []}
       schedules={schedules}
       timeOffs={timeOffRes.data ?? []}
+      canHardDeleteByStaffId={canHardDeleteByStaffId}
     />
   );
 }

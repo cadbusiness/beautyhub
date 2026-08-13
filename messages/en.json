@@ -1156,6 +1156,9 @@
       "sessionOpened": "Open checkout session.",
       "slugTaken": "The identifier \"{slug}\" is already taken.",
       "staffNoAccount": "This member does not yet have an application account.",
+      "staffNotFound": "Member not found.",
+      "staffReassignInvalid": "Invalid reassignment.",
+      "staffDeleteBlocked": "This member has attached history (appointments or sales). Use archive instead.",
       "stripeNotConfigured": "Stripe Connect not configured for this institute.",
       "stripeNotConfiguredShort": "Stripe Connect not configured.",
       "teamInviteAlreadyPending": "An invitation is already pending for this email.",
@@ -2406,19 +2409,47 @@
         "accessNone": "Uninvited",
         "accessPending": "Pending invitation",
         "add": "Add staff",
+        "archivedBadge": "Archived",
+        "archive": "Archive",
+        "archiveDialog": {
+          "description": "Archive <strong>{name}</strong>. Appointment and sales history are preserved.",
+          "impact": {
+            "access": "App access",
+            "past": "Past appointments",
+            "sales": "Sales",
+            "upcoming": "Upcoming appointments"
+          },
+          "loading": "Loading…",
+          "loadFailed": "Impact preview failed to load.",
+          "reassignLabel": "Reassign upcoming appointments to",
+          "reassignNone": "Do not reassign",
+          "revokeAccessHint": "Removes membership and revokes pending invitations.",
+          "revokeAccessLabel": "Revoke application access",
+          "submit": "Archive",
+          "submitting": "Archiving…"
+        },
+        "archiveDialogTitle": "Archive member",
         "columns": {
           "access": "App access",
           "actions": "Actions",
           "color": "Color",
           "email": "E-mail",
-          "name": "Name"
+          "name": "Name",
+          "status": "Status"
         },
         "delete": "DELETE",
         "dialogEditTitle": "Edit staff",
         "dialogTitle": "Add staff",
         "edit": "To modify",
         "empty": "No staff members.",
+        "emptyArchived": "No archived members.",
         "footer": "{count, plural, one {# membre} other {# membres}}",
+        "hardDelete": "Delete permanently",
+        "hardDeleteBlockedTooltip": "History attached — archive only.",
+        "hardDeleteConfirm": "Permanently delete this member? This action is irreversible.",
+        "restore": "Restore",
+        "viewActive": "Active",
+        "viewArchived": "Archived",
         "form": {
           "accessSection": "Application access",
           "avatar": {

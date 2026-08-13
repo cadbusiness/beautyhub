@@ -236,11 +236,20 @@ export async function decrementLocalProductStock(
     .eq("id", productId);
 }
 
-/** Credentials déchiffrés pour opérations serveur (webhook, cron). */
+/**
+ * Credentials déchiffrés pour opérations serveur (webhook, cron).
+ *
+ * Par défaut passe par le service client (bypass RLS, requis pour webhooks
+ * anonymes). Passer `supabaseOverride` pour utiliser un client user-authenticated
+ * quand la route API est dans un contexte tenant : cela évite de dépendre de
+ * `SUPABASE_SERVICE_ROLE_KEY` et laisse la policy RLS `connections_access`
+ * gérer l'accès.
+ */
 export async function getWooCredentialsForTenant(
   tenantId: string,
+  supabaseOverride?: SupabaseClient<Database>,
 ): Promise<{ url: string; consumerKey: string; consumerSecret: string } | null> {
-  const supabase = createServiceClient();
+  const supabase = supabaseOverride ?? createServiceClient();
   const { data } = await supabase
     .from("connections")
     .select("credentials, status")

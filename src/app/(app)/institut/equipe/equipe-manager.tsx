@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { MailPlus, Pencil, Trash2 } from "lucide-react";
-import { deleteStaffMember, deleteResource } from "../actions";
+import { useRouter } from "next/navigation";
+import { Archive, MailPlus, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { deleteStaffMember, restoreStaffMember, deleteResource } from "../actions";
 import { Button } from "@/components/ui/button";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
@@ -20,6 +21,7 @@ import type {
 } from "@/lib/institut/team-access";
 import { StaffForm } from "./staff-form";
 import { StaffInviteDialog } from "./staff-invite-dialog";
+import { StaffArchiveDialog } from "./staff-archive-dialog";
 import { TeamAccessPanel } from "./team-access-panel";
 import { TeamRolesPanel } from "./team-roles-panel";
 import { ResourceForm } from "./resource-form";
@@ -29,6 +31,7 @@ import { TimeOffPanel } from "./time-off-panel";
 
 type Tab = "personnel" | "acces" | "roles" | "cabines" | "horaires";
 type HorairesTab = "grilles" | "assignations" | "absences";
+type PersonnelView = "active" | "archived";
 
 type StaffRow = StaffWithAccess;
 
@@ -70,6 +73,7 @@ export function EquipeManager({
   resources,
   schedules,
   timeOffs,
+  canHardDeleteByStaffId,
 }: {
   staff: StaffRow[];
   roles: TenantRole[];
@@ -78,35 +82,71 @@ export function EquipeManager({
   resources: ResourceRow[];
   schedules: ScheduleRow[];
   timeOffs: TimeOffRow[];
+  canHardDeleteByStaffId: Record<string, boolean>;
 }) {
   const t = useTranslations("institut.team");
   const tCommon = useTranslations("common");
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("personnel");
   const [horairesTab, setHorairesTab] = useState<HorairesTab>("grilles");
+  const [personnelView, setPersonnelView] = useState<PersonnelView>("active");
   const [staffQuery, setStaffQuery] = useState("");
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffRow | null>(null);
   const [inviteStaff, setInviteStaff] = useState<StaffRow | null>(null);
+  const [archiveStaff, setArchiveStaff] = useState<StaffRow | null>(null);
   const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
+  const [rowPending, startRowTransition] = useTransition();
 
   const pendingCount = invitations.filter((i) => i.status === "pending").length;
 
+  const activeStaff = useMemo(() => staff.filter((s) => s.is_active), [staff]);
+  const archivedStaff = useMemo(() => staff.filter((s) => !s.is_active), [staff]);
+  const sourceStaff = personnelView === "active" ? activeStaff : archivedStaff;
+
   const filteredStaff = useMemo(() => {
     const q = staffQuery.trim().toLowerCase();
-    if (!q) return staff;
-    return staff.filter(
+    if (!q) return sourceStaff;
+    return sourceStaff.filter(
       (s) =>
         s.full_name.toLowerCase().includes(q) ||
         (s.email?.toLowerCase().includes(q) ?? false),
     );
-  }, [staff, staffQuery]);
+  }, [sourceStaff, staffQuery]);
+
+  const isArchivedView = personnelView === "archived";
+
+  function runRestore(id: string) {
+    startRowTransition(async () => {
+      const fd = new FormData();
+      fd.set("id", id);
+      const res = await restoreStaffMember({}, fd);
+      if (res.error) alert(res.error);
+      else router.refresh();
+    });
+  }
+
+  function runHardDelete(id: string) {
+    if (!window.confirm(t("personnel.hardDeleteConfirm"))) return;
+    startRowTransition(async () => {
+      const fd = new FormData();
+      fd.set("id", id);
+      const res = await deleteStaffMember({}, fd);
+      if (res.error) alert(res.error);
+      else router.refresh();
+    });
+  }
 
   return (
     <>
       <ListPanel>
         <PageTabs
           tabs={[
-            { id: "personnel", label: t("tabs.personnel"), count: staff.length },
+            {
+              id: "personnel",
+              label: t("tabs.personnel"),
+              count: activeStaff.length,
+            },
             { id: "acces", label: t("tabs.acces"), count: pendingCount || undefined },
             { id: "roles", label: t("tabs.roles"), count: roles.length },
             { id: "cabines", label: t("tabs.cabines"), count: resources.length },
@@ -120,30 +160,68 @@ export function EquipeManager({
           <>
             <ListToolbar
               action={
-                <Button
-                  onClick={() => {
-                    setEditingStaff(null);
-                    setStaffDialogOpen(true);
-                  }}
-                  className="h-9 w-full sm:w-auto"
-                >
-                  + {t("personnel.add")}
-                </Button>
+                !isArchivedView ? (
+                  <Button
+                    onClick={() => {
+                      setEditingStaff(null);
+                      setStaffDialogOpen(true);
+                    }}
+                    className="h-9 w-full sm:w-auto"
+                  >
+                    + {t("personnel.add")}
+                  </Button>
+                ) : null
               }
             >
-              <input
-                type="search"
-                placeholder={t("personnel.searchPlaceholder")}
-                value={staffQuery}
-                onChange={(e) => setStaffQuery(e.target.value)}
-                className="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 sm:max-w-xs"
-              />
+              <div className="flex w-full flex-wrap items-center gap-2 sm:flex-nowrap">
+                <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPersonnelView("active");
+                      setStaffQuery("");
+                    }}
+                    className={`h-8 rounded-md px-3 font-medium transition-colors ${
+                      personnelView === "active"
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {t("personnel.viewActive")}{" "}
+                    <span className="tabular-nums opacity-70">{activeStaff.length}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPersonnelView("archived");
+                      setStaffQuery("");
+                    }}
+                    className={`h-8 rounded-md px-3 font-medium transition-colors ${
+                      personnelView === "archived"
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {t("personnel.viewArchived")}{" "}
+                    <span className="tabular-nums opacity-70">{archivedStaff.length}</span>
+                  </button>
+                </div>
+                <input
+                  type="search"
+                  placeholder={t("personnel.searchPlaceholder")}
+                  value={staffQuery}
+                  onChange={(e) => setStaffQuery(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 sm:max-w-xs"
+                />
+              </div>
             </ListToolbar>
 
             <DataTable
               empty={
-                staff.length === 0
-                  ? t("personnel.empty")
+                sourceStaff.length === 0
+                  ? isArchivedView
+                    ? t("personnel.emptyArchived")
+                    : t("personnel.empty")
                   : filteredStaff.length === 0
                     ? t("personnel.noResults")
                     : undefined
@@ -156,7 +234,11 @@ export function EquipeManager({
                       <th className={`w-14 ${dataTableHead}`} aria-label={t("personnel.columns.color")} />
                       <th className={dataTableHead}>{t("personnel.columns.name")}</th>
                       <th className={dataTableHead}>{t("personnel.columns.email")}</th>
-                      <th className={dataTableHead}>{t("personnel.columns.access")}</th>
+                      <th className={dataTableHead}>
+                        {isArchivedView
+                          ? t("personnel.columns.status")
+                          : t("personnel.columns.access")}
+                      </th>
                       <th className={`w-40 text-right ${dataTableHead}`}>
                         {t("personnel.columns.actions")}
                       </th>
@@ -164,11 +246,14 @@ export function EquipeManager({
                   </thead>
                   <tbody>
                     {filteredStaff.map((s) => {
+                      const archived = !s.is_active;
+                      const canHard = canHardDeleteByStaffId[s.id] ?? false;
                       return (
                         <tr
                           key={s.id}
-                          className={`${dataTableRow} cursor-pointer`}
+                          className={`${dataTableRow} cursor-pointer ${archived ? "opacity-60" : ""}`}
                           onClick={() => {
+                            if (archived) return;
                             setEditingStaff(s);
                             setStaffDialogOpen(true);
                           }}
@@ -187,62 +272,102 @@ export function EquipeManager({
                             {s.email ?? tCommon("dash")}
                           </td>
                           <td className={dataTableCell}>
-                            <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                                s.access_status === "active"
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : s.access_status === "pending"
-                                    ? "bg-amber-50 text-amber-700"
-                                    : "bg-slate-100 text-slate-600"
-                              }`}
-                            >
-                              {s.access_status === "active"
-                                ? t("personnel.accessActive")
-                                : s.access_status === "pending"
-                                  ? t("personnel.accessPending")
-                                  : t("personnel.accessNone")}
-                            </span>
-                            {s.tenant_role_name ? (
-                              <span className="ml-1.5 text-xs text-slate-500">{s.tenant_role_name}</span>
-                            ) : null}
+                            {archived ? (
+                              <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                                {t("personnel.archivedBadge")}
+                              </span>
+                            ) : (
+                              <>
+                                <span
+                                  className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                                    s.access_status === "active"
+                                      ? "bg-emerald-50 text-emerald-700"
+                                      : s.access_status === "pending"
+                                        ? "bg-amber-50 text-amber-700"
+                                        : "bg-slate-100 text-slate-600"
+                                  }`}
+                                >
+                                  {s.access_status === "active"
+                                    ? t("personnel.accessActive")
+                                    : s.access_status === "pending"
+                                      ? t("personnel.accessPending")
+                                      : t("personnel.accessNone")}
+                                </span>
+                                {s.tenant_role_name ? (
+                                  <span className="ml-1.5 text-xs text-slate-500">
+                                    {s.tenant_role_name}
+                                  </span>
+                                ) : null}
+                              </>
+                            )}
                           </td>
                           <td
                             className={`text-right ${dataTableCell}`}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <RowActions>
-                              <RowActionButton
-                                type="button"
-                                iconOnly
-                                onClick={() => {
-                                  setEditingStaff(s);
-                                  setStaffDialogOpen(true);
-                                }}
-                                icon={<Pencil className="h-3.5 w-3.5" />}
-                              >
-                                {t("personnel.edit")}
-                              </RowActionButton>
-                              {s.access_status !== "active" ? (
-                                <RowActionButton
-                                  type="button"
-                                  iconOnly
-                                  onClick={() => setInviteStaff(s)}
-                                  icon={<MailPlus className="h-3.5 w-3.5" />}
-                                >
-                                  {t("personnel.invite")}
-                                </RowActionButton>
-                              ) : null}
-                              <form action={deleteStaffMember}>
-                                <input type="hidden" name="id" value={s.id} />
-                                <RowActionButton
-                                  type="submit"
-                                  iconOnly
-                                  tone="danger"
-                                  icon={<Trash2 className="h-3.5 w-3.5" />}
-                                >
-                                  {t("personnel.delete")}
-                                </RowActionButton>
-                              </form>
+                              {archived ? (
+                                <>
+                                  <RowActionButton
+                                    type="button"
+                                    iconOnly
+                                    disabled={rowPending}
+                                    onClick={() => runRestore(s.id)}
+                                    icon={<RotateCcw className="h-3.5 w-3.5" />}
+                                  >
+                                    {t("personnel.restore")}
+                                  </RowActionButton>
+                                  <RowActionButton
+                                    type="button"
+                                    iconOnly
+                                    tone="danger"
+                                    disabled={!canHard || rowPending}
+                                    title={
+                                      canHard
+                                        ? t("personnel.hardDelete")
+                                        : t("personnel.hardDeleteBlockedTooltip")
+                                    }
+                                    aria-label={t("personnel.hardDelete")}
+                                    onClick={() => runHardDelete(s.id)}
+                                    icon={<Trash2 className="h-3.5 w-3.5" />}
+                                  >
+                                    {t("personnel.hardDelete")}
+                                  </RowActionButton>
+                                </>
+                              ) : (
+                                <>
+                                  <RowActionButton
+                                    type="button"
+                                    iconOnly
+                                    onClick={() => {
+                                      setEditingStaff(s);
+                                      setStaffDialogOpen(true);
+                                    }}
+                                    icon={<Pencil className="h-3.5 w-3.5" />}
+                                  >
+                                    {t("personnel.edit")}
+                                  </RowActionButton>
+                                  {s.access_status !== "active" ? (
+                                    <RowActionButton
+                                      type="button"
+                                      iconOnly
+                                      onClick={() => setInviteStaff(s)}
+                                      icon={<MailPlus className="h-3.5 w-3.5" />}
+                                    >
+                                      {t("personnel.invite")}
+                                    </RowActionButton>
+                                  ) : null}
+                                  <RowActionButton
+                                    type="button"
+                                    iconOnly
+                                    tone="danger"
+                                    onClick={() => setArchiveStaff(s)}
+                                    icon={<Archive className="h-3.5 w-3.5" />}
+                                  >
+                                    {t("personnel.archive")}
+                                  </RowActionButton>
+                                </>
+                              )}
                             </RowActions>
                           </td>
                         </tr>
@@ -253,11 +378,11 @@ export function EquipeManager({
               ) : null}
             </DataTable>
 
-            {staff.length > 0 ? (
+            {sourceStaff.length > 0 ? (
               <ListPanelFooter>
                 {t("personnel.footer", { count: filteredStaff.length })}
                 {staffQuery.trim()
-                  ? ` · ${tCommon("countOfTotal", { count: filteredStaff.length, total: staff.length })}`
+                  ? ` · ${tCommon("countOfTotal", { count: filteredStaff.length, total: sourceStaff.length })}`
                   : ""}
               </ListPanelFooter>
             ) : null}
@@ -343,7 +468,7 @@ export function EquipeManager({
 
             {horairesTab === "assignations" ? (
               <ScheduleAssignmentsPanel
-                staff={staff}
+                staff={activeStaff}
                 resources={resources}
                 schedules={schedules}
               />
@@ -352,7 +477,7 @@ export function EquipeManager({
             {horairesTab === "absences" ? (
               <TimeOffPanel
                 timeOffs={timeOffs}
-                staff={staff.map((s) => ({ id: s.id, full_name: s.full_name }))}
+                staff={activeStaff.map((s) => ({ id: s.id, full_name: s.full_name }))}
                 resources={resources}
               />
             ) : null}
@@ -400,6 +525,22 @@ export function EquipeManager({
             staff={inviteStaff}
             roles={roles}
             onSuccess={() => setInviteStaff(null)}
+          />
+        ) : null}
+      </FormDialog>
+
+      <FormDialog
+        open={Boolean(archiveStaff)}
+        onClose={() => setArchiveStaff(null)}
+        title={t("personnel.archiveDialogTitle")}
+      >
+        {archiveStaff ? (
+          <StaffArchiveDialog
+            staff={archiveStaff}
+            onSuccess={() => {
+              setArchiveStaff(null);
+              router.refresh();
+            }}
           />
         ) : null}
       </FormDialog>

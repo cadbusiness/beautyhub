@@ -1054,12 +1054,170 @@ export async function deleteTenantRole(formData: FormData): Promise<void> {
   revalidatePath("/institut/equipe");
 }
 
-export async function deleteStaffMember(formData: FormData): Promise<void> {
-  await requireModule("institut");
+export async function archiveStaffMember(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+    return { error: t("teamInviteForbidden") };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return { error: t("missingFields") };
+
+  const reassignTo = String(formData.get("reassign_to") ?? "").trim() || null;
+  const revokeAccess = formData.get("revoke_access") === "on";
+
   const supabase = await createClient();
-  await supabase.from("inst_staff").delete().eq("id", String(formData.get("id")));
+
+  const { data: staff, error: fetchErr } = await supabase
+    .from("inst_staff")
+    .select("id, user_id, email")
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", id)
+    .maybeSingle();
+  if (fetchErr) return { error: fetchErr.message };
+  if (!staff) return { error: t("staffNotFound") };
+
+  if (reassignTo) {
+    if (reassignTo === id) return { error: t("staffReassignInvalid") };
+    const { data: target } = await supabase
+      .from("inst_staff")
+      .select("id")
+      .eq("tenant_id", session.tenant.id)
+      .eq("id", reassignTo)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!target) return { error: t("staffReassignInvalid") };
+
+    const { error: reassignErr } = await supabase
+      .from("inst_appointments")
+      .update({ staff_id: reassignTo })
+      .eq("tenant_id", session.tenant.id)
+      .eq("staff_id", id)
+      .gt("starts_at", new Date().toISOString())
+      .in("status", ["booked", "confirmed"]);
+    if (reassignErr) return { error: reassignErr.message };
+  }
+
+  if (revokeAccess) {
+    if (staff.user_id) {
+      await supabase
+        .from("memberships")
+        .delete()
+        .eq("tenant_id", session.tenant.id)
+        .eq("user_id", staff.user_id);
+    }
+    await supabase
+      .from("team_invitations")
+      .update({ status: "revoked" })
+      .eq("tenant_id", session.tenant.id)
+      .eq("staff_id", id)
+      .eq("status", "pending");
+  }
+
+  const { error } = await supabase
+    .from("inst_staff")
+    .update({ is_active: false, archived_at: new Date().toISOString() })
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", id);
+  if (error) return { error: error.message };
+
   revalidatePath("/institut/equipe");
   revalidatePath("/institut/rendez-vous");
+  revalidatePath("/institut/caisse");
+  return { ok: true };
+}
+
+export async function restoreStaffMember(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+    return { error: t("teamInviteForbidden") };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return { error: t("missingFields") };
+
+  try {
+    await assertQuota(session.tenant.id, "staff");
+  } catch (e) {
+    if (e instanceof QuotaExceededError) return { error: await translateQuotaError(e) };
+    throw e;
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("inst_staff")
+    .update({ is_active: true, archived_at: null })
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/institut/equipe");
+  revalidatePath("/institut/rendez-vous");
+  revalidatePath("/institut/caisse");
+  return { ok: true };
+}
+
+export async function deleteStaffMember(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+    return { error: t("teamInviteForbidden") };
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return { error: t("missingFields") };
+
+  const supabase = await createClient();
+
+  const [{ count: apptCount, error: apptErr }, { count: saleCount, error: saleErr }] =
+    await Promise.all([
+      supabase
+        .from("inst_appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", session.tenant.id)
+        .eq("staff_id", id),
+      supabase
+        .from("inst_sales")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", session.tenant.id)
+        .eq("staff_id", id),
+    ]);
+  if (apptErr) return { error: apptErr.message };
+  if (saleErr) return { error: saleErr.message };
+
+  if ((apptCount ?? 0) > 0 || (saleCount ?? 0) > 0) {
+    return { error: t("staffDeleteBlocked") };
+  }
+
+  await supabase
+    .from("team_invitations")
+    .update({ status: "revoked" })
+    .eq("tenant_id", session.tenant.id)
+    .eq("staff_id", id)
+    .eq("status", "pending");
+
+  const { error } = await supabase
+    .from("inst_staff")
+    .delete()
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/institut/equipe");
+  revalidatePath("/institut/rendez-vous");
+  revalidatePath("/institut/caisse");
+  return { ok: true };
 }
 
 // --- Cabines / ressources ---------------------------------------------------

@@ -1543,7 +1543,8 @@
         "doneMessage": "{extrasCreated} aangemaakt · {extrasReused} hergebruikt · {linksCreated} koppelingen aangemaakt · {linksUpdated} koppelingen bijgewerkt.",
         "errors": {
           "missingColumns": "Verwachte kolommen niet gevonden (bookly_extra_id, title, service_id).",
-          "invalidFile": "Ongeldige CSV of geen extras.",
+          "invalidFile": "Ongeldig CSV-bestand.",
+          "emptyFile": "Het bestand bevat geen extras. Controleer in WordPress of de Bookly-add-on ‘Service Extras’ is geïnstalleerd en of de tabel wp_bookly_extras zichtbaar is op de pagina Export Bookly.",
           "importFailed": "Import van extras mislukt."
         }
       }

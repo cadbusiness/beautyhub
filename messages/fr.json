@@ -1524,7 +1524,8 @@
         "doneMessage": "{extrasCreated} extras créés · {extrasReused} réutilisés · {linksCreated} liens créés · {linksUpdated} liens mis à jour.",
         "errors": {
           "missingColumns": "Colonnes attendues introuvables (bookly_extra_id, title, service_id).",
-          "invalidFile": "Fichier CSV invalide ou sans extras.",
+          "invalidFile": "Fichier CSV invalide.",
+          "emptyFile": "Le fichier ne contient aucun extra. Vérifie côté WordPress que l’addon Bookly « Service Extras » est installé et que la table wp_bookly_extras est détectée sur la page Export Bookly.",
           "importFailed": "L’import des extras a échoué."
         }
       },

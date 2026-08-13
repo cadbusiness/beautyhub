@@ -204,8 +204,8 @@ export function ServicesImportDialog({
           setError(tExtras("errors.missingColumns"));
           return;
         }
-        if (parseErrors.includes("empty_file") || rows.length === 0) {
-          setError(tExtras("errors.invalidFile"));
+        if (rows.length === 0) {
+          setError(tExtras("errors.emptyFile"));
           return;
         }
 

@@ -193,28 +193,61 @@ export class WooClient {
   }
 
   async listCustomers(page = 1, perPage = 100): Promise<WooCustomer[]> {
-    return this.request<WooCustomer[]>("/customers", {
-      query: { page, per_page: perPage, orderby: "id", order: "asc", role: "all" },
-    });
+    // On tente d'abord `role=all` (retourne aussi les subscribers). Si l'API key
+    // n'a pas la capacité `list_users` étendue, on retombe sur le rôle par défaut
+    // (`customer`) pour éviter un 401 bloquant.
+    try {
+      return await this.request<WooCustomer[]>("/customers", {
+        query: { page, per_page: perPage, orderby: "id", order: "asc", role: "all" },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (/401|403|rest_user_cannot_view|role/i.test(msg)) {
+        return this.request<WooCustomer[]>("/customers", {
+          query: { page, per_page: perPage, orderby: "id", order: "asc" },
+        });
+      }
+      throw err;
+    }
   }
 
   /**
    * Retourne le total count via l'entête HTTP `X-WP-Total`.
    * Utile pour la barre de progression de l'import.
+   *
+   * Retourne `null` si le count ne peut pas être déterminé (l'import reste
+   * possible en mode progression indéterminée).
    */
-  async countCustomers(): Promise<number> {
-    const url = new URL(this.base + "/customers");
-    url.searchParams.set("per_page", "1");
-    url.searchParams.set("role", "all");
-    const res = await fetch(url, {
-      headers: { Authorization: this.authHeader, "Content-Type": "application/json" },
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`WooCommerce ${res.status}: ${text.slice(0, 200) || res.statusText}`);
+  async countCustomers(): Promise<number | null> {
+    const attempt = async (withRoleAll: boolean): Promise<number | null> => {
+      const url = new URL(this.base + "/customers");
+      url.searchParams.set("per_page", "1");
+      if (withRoleAll) url.searchParams.set("role", "all");
+      const res = await fetch(url, {
+        headers: { Authorization: this.authHeader, "Content-Type": "application/json" },
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(
+          `WooCommerce ${res.status} on /customers: ${text.slice(0, 200) || res.statusText}`,
+        );
+      }
+      const header = res.headers.get("x-wp-total");
+      if (header) {
+        const parsed = Number.parseInt(header, 10);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+      return null;
+    };
+    try {
+      return await attempt(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (/401|403|rest_user_cannot_view|role/i.test(msg)) {
+        return attempt(false);
+      }
+      throw err;
     }
-    const header = res.headers.get("x-wp-total");
-    return header ? Number.parseInt(header, 10) || 0 : 0;
   }
 }

@@ -61,23 +61,30 @@ function customerAsDedupInput(customer: WooCustomer, tenantId: string) {
 /**
  * GET : renvoie un résumé (nombre total de customers Woo côté source, sans mutation).
  * Utilisé par le dialog pour afficher le compteur avant de lancer l'import.
+ *
+ * Ne bloque jamais l'import si le count échoue : renvoie `total: null` et
+ * laisse le POST tenter la pagination avec progression indéterminée.
  */
 export async function GET() {
+  const session = await requireModule("institut");
+  const creds = await getWooCredentialsForTenant(session.tenant.id);
+  if (!creds) {
+    return NextResponse.json({ error: "no_woo_connection" }, { status: 400 });
+  }
+  const client = new WooClient(creds);
   try {
-    const session = await requireModule("institut");
-    const creds = await getWooCredentialsForTenant(session.tenant.id);
-    if (!creds) {
-      return NextResponse.json({ error: "no_woo_connection" }, { status: 400 });
-    }
-    const client = new WooClient(creds);
     const total = await client.countCustomers();
     return NextResponse.json({ total, storeUrl: creds.url });
   } catch (error) {
-    console.error("[institut-clients-import-woo:GET]", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "status_failed" },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[institut-clients-import-woo:GET]", message);
+    // On renvoie 200 + total=null pour permettre à l'UI d'afficher le détail
+    // et de tenter quand même l'import (mode progression indéterminée).
+    return NextResponse.json({
+      total: null,
+      storeUrl: creds.url,
+      warning: message,
+    });
   }
 }
 
@@ -105,17 +112,14 @@ export async function POST(request: Request) {
 
   const client = new WooClient(creds);
 
-  // On s'assure que le tenant a de la marge côté quota (approximation : on
-  // check pour PAGE_SIZE créations à chaque page, mais on ne bloque pas
-  // l'import complet a priori — la dedup peut aboutir à un simple match).
-  let totalCustomers = 0;
+  // Count best-effort : on continue même si l'entête X-WP-Total n'est pas
+  // accessible, l'UI passera juste en mode progression indéterminée.
+  let totalCustomers: number | null = null;
   try {
     totalCustomers = await client.countCustomers();
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "woo_count_failed" },
-      { status: 500 },
-    );
+    console.warn("[institut-clients-import-woo:POST] count failed", err);
+    totalCustomers = null;
   }
 
   const stream = new ReadableStream({
@@ -134,7 +138,7 @@ export async function POST(request: Request) {
         errors: [] as string[],
       };
 
-      send({ kind: "start", total: totalCustomers });
+      send({ kind: "start", total: totalCustomers ?? 0 });
 
       let page = Math.max(1, body.fromPage ?? 1);
       let hasMore = true;

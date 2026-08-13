@@ -54,6 +54,7 @@ export function ClientsImportWooDialog({
 
   const [statusLoading, setStatusLoading] = useState(true);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [statusWarning, setStatusWarning] = useState<string | null>(null);
   const [total, setTotal] = useState<number | null>(null);
   const [storeUrl, setStoreUrl] = useState<string | null>(null);
 
@@ -62,12 +63,15 @@ export function ClientsImportWooDialog({
   const [done, setDone] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
 
-  const percent =
-    progress.total > 0 ? Math.min(100, Math.round((progress.processed / progress.total) * 100)) : 0;
+  const totalKnown = progress.total > 0;
+  const percent = totalKnown
+    ? Math.min(100, Math.round((progress.processed / progress.total) * 100))
+    : null;
 
   const fetchStatus = useCallback(async () => {
     setStatusLoading(true);
     setStatusError(null);
+    setStatusWarning(null);
     setTotal(null);
     setStoreUrl(null);
     setImporting(false);
@@ -79,19 +83,29 @@ export function ClientsImportWooDialog({
         credentials: "include",
       });
       const data = (await res.json().catch(() => ({}))) as {
-        total?: number;
+        total?: number | null;
         storeUrl?: string;
         error?: string;
+        warning?: string;
       };
       if (!res.ok) {
-        setStatusError(data.error === "no_woo_connection" ? t("noConnection") : t("statusError"));
+        if (data.error === "no_woo_connection") {
+          setStatusError(t("noConnection"));
+        } else {
+          setStatusError(
+            data.error ? `${t("statusError")} — ${data.error}` : t("statusError"),
+          );
+        }
         return;
       }
-      setTotal(typeof data.total === "number" ? data.total : 0);
+      setTotal(typeof data.total === "number" ? data.total : null);
       setStoreUrl(typeof data.storeUrl === "string" ? data.storeUrl : null);
+      if (data.warning) setStatusWarning(data.warning);
     } catch (err) {
       console.error("[clients-import-woo]", err);
-      setStatusError(t("statusError"));
+      setStatusError(
+        err instanceof Error ? `${t("statusError")} — ${err.message}` : t("statusError"),
+      );
     } finally {
       setStatusLoading(false);
     }
@@ -227,18 +241,22 @@ export function ClientsImportWooDialog({
           <p className="text-sm text-slate-600">{t("intro")}</p>
           <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
             <StatLine label={t("stats.storeUrl")} value={storeUrl ?? tCommon("dash")} />
-            <StatLine label={t("stats.total")} value={total ?? 0} />
+            <StatLine
+              label={t("stats.total")}
+              value={total === null ? tCommon("dash") : total}
+            />
           </div>
+          {statusWarning ? (
+            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              {statusWarning}
+            </p>
+          ) : null}
           <p className="text-xs text-slate-500">{t("hint")}</p>
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={handleClose}>
               {tCommon("cancel")}
             </Button>
-            <Button
-              type="button"
-              onClick={() => void runImport()}
-              disabled={!total || total === 0}
-            >
+            <Button type="button" onClick={() => void runImport()}>
               {t("confirm")}
             </Button>
           </div>
@@ -251,14 +269,20 @@ export function ClientsImportWooDialog({
             <div className="flex items-center justify-between text-sm text-slate-700">
               <span className="font-medium">{t("progressTitle")}</span>
               <span className="tabular-nums">
-                {progress.processed} / {progress.total} · {percent}%
+                {progress.processed}
+                {totalKnown ? ` / ${progress.total}` : ""}
+                {percent !== null ? ` · ${percent}%` : ""}
               </span>
             </div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full rounded-full bg-slate-900 transition-all duration-300"
-                style={{ width: `${percent}%` }}
-              />
+              {totalKnown && percent !== null ? (
+                <div
+                  className="h-full rounded-full bg-slate-900 transition-all duration-300"
+                  style={{ width: `${percent}%` }}
+                />
+              ) : (
+                <div className="h-full w-1/3 animate-pulse rounded-full bg-slate-400" />
+              )}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm sm:grid-cols-3">

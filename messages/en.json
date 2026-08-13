@@ -1177,6 +1177,48 @@
         "tagsHint": "Separate badges with commas (max. 10).",
         "tagsPlaceholder": "VIP, Allergy, New client…"
       },
+      "import": {
+        "title": "Import Overcache clients",
+        "doneTitle": "Import complete",
+        "intro": "Overcache / Lundi Matin CSV export (semicolon delimiter). Clients without email get a placeholder address you can update later.",
+        "chooseFile": "Choose CSV file",
+        "fileHint": "Overcache custom config (.csv)",
+        "fileLabel": "File",
+        "analyzing": "Analyzing file…",
+        "previewIntro": "Review the summary before importing. Re-imports update existing records via C-xxxxx reference.",
+        "stats": {
+          "total": "Rows read",
+          "create": "New records",
+          "update": "Updates",
+          "skip": "Skipped",
+          "withPhone": "With phone"
+        },
+        "quotaWarning": "Client quota: {usage} / {limit} — this import needs {needed} more slots. Upgrade your plan or contact support.",
+        "samplesCreate": "Sample creates",
+        "samplesSkipped": "Sample skipped",
+        "skippedLine": "Line {line} ({ref}) — {reason}",
+        "skipReason": {
+          "missing_reference": "missing reference",
+          "missing_name": "missing name",
+          "professional": "business client (institute)",
+          "archived": "archived",
+          "duplicate_ref": "duplicate reference in file"
+        },
+        "emailHint": "Generated emails use ref@import.{tenant}.local. Overcache badge added. No online account is created automatically.",
+        "back": "Choose another file",
+        "confirmImport": "Start import",
+        "importing": "Importing…",
+        "doneMessage": "{created} created, {updated} updated, {skipped} skipped.",
+        "errors": {
+          "emptyFile": "Empty file.",
+          "missingColumns": "Expected columns not found (Reference, Full name).",
+          "invalidFile": "Invalid CSV or no data.",
+          "confirmRequired": "Confirmation required.",
+          "importFailed": "Import failed."
+        }
+      },
+      "filterImported": "Overcache import",
+      "importCsv": "Import CSV",
       "new": "New customer",
       "noResults": "No results for this search.",
       "searchPlaceholder": "Search for name, email, telephone, badge…"

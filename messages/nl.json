@@ -1184,6 +1184,48 @@
         "submitEdit": "Opslaan",
         "submittingEdit": "Opslaan…"
       },
+      "filterImported": "Overcache-import",
+      "importCsv": "CSV importeren",
+      "import": {
+        "title": "Overcache-klanten importeren",
+        "doneTitle": "Import voltooid",
+        "intro": "Overcache / Lundi Matin CSV-export (puntkomma). Klanten zonder e-mail krijgen een technisch adres dat u later kunt aanpassen.",
+        "chooseFile": "CSV-bestand kiezen",
+        "fileHint": "Overcache custom config (.csv)",
+        "fileLabel": "Bestand",
+        "analyzing": "Bestand analyseren…",
+        "previewIntro": "Controleer het overzicht vóór import. Herimport werkt bestaande fiches bij via referentie C-xxxxx.",
+        "stats": {
+          "total": "Gelezen rijen",
+          "create": "Nieuwe fiches",
+          "update": "Updates",
+          "skip": "Overgeslagen",
+          "withPhone": "Met telefoon"
+        },
+        "quotaWarning": "Klantquota: {usage} / {limit} — deze import vereist {needed} extra plaatsen.",
+        "samplesCreate": "Voorbeelden aan te maken",
+        "samplesSkipped": "Voorbeelden overgeslagen",
+        "skippedLine": "Regel {line} ({ref}) — {reason}",
+        "skipReason": {
+          "missing_reference": "referentie ontbreekt",
+          "missing_name": "naam ontbreekt",
+          "professional": "zakelijke klant (instituut)",
+          "archived": "gearchiveerd",
+          "duplicate_ref": "dubbele referentie in bestand"
+        },
+        "emailHint": "Gegenereerde e-mails: ref@import.{tenant}.local. Overcache-badge toegevoegd. Geen online account automatisch aangemaakt.",
+        "back": "Ander bestand",
+        "confirmImport": "Import starten",
+        "importing": "Importeren…",
+        "doneMessage": "{created} aangemaakt, {updated} bijgewerkt, {skipped} overgeslagen.",
+        "errors": {
+          "emptyFile": "Leeg bestand.",
+          "missingColumns": "Verwachte kolommen niet gevonden (Referentie, Volledige naam).",
+          "invalidFile": "Ongeldig CSV of geen gegevens.",
+          "confirmRequired": "Bevestiging vereist.",
+          "importFailed": "Import mislukt."
+        }
+      },
       "detail": {
         "backToList": "Terug naar klanten",
         "edit": "Bewerken",

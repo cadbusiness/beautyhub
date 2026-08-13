@@ -1177,6 +1177,48 @@
         "tagsHint": "Separe las insignias con comas (máx. 10).",
         "tagsPlaceholder": "VIP, Alergia, Nuevo cliente…"
       },
+      "filterImported": "Importación Overcache",
+      "importCsv": "Importar CSV",
+      "import": {
+        "title": "Importar clientes Overcache",
+        "doneTitle": "Importación completada",
+        "intro": "Exportación CSV Overcache / Lundi Matin (punto y coma). Los clientes sin email reciben una dirección técnica que podrá corregir después.",
+        "chooseFile": "Elegir archivo CSV",
+        "fileHint": "Config custom Overcache (.csv)",
+        "fileLabel": "Archivo",
+        "analyzing": "Analizando archivo…",
+        "previewIntro": "Revise el resumen antes de importar. Las reimportaciones actualizan fichas existentes vía referencia C-xxxxx.",
+        "stats": {
+          "total": "Filas leídas",
+          "create": "Nuevas fichas",
+          "update": "Actualizaciones",
+          "skip": "Omitidas",
+          "withPhone": "Con teléfono"
+        },
+        "quotaWarning": "Cuota de clientes: {usage} / {limit} — esta importación necesita {needed} plazas más.",
+        "samplesCreate": "Ejemplos a crear",
+        "samplesSkipped": "Ejemplos omitidos",
+        "skippedLine": "Línea {line} ({ref}) — {reason}",
+        "skipReason": {
+          "missing_reference": "referencia faltante",
+          "missing_name": "nombre faltante",
+          "professional": "cliente profesional (instituto)",
+          "archived": "archivado",
+          "duplicate_ref": "referencia duplicada en el archivo"
+        },
+        "emailHint": "Emails generados: ref@import.{tenant}.local. Badge Overcache añadido. No se crea cuenta en línea automáticamente.",
+        "back": "Elegir otro archivo",
+        "confirmImport": "Iniciar importación",
+        "importing": "Importando…",
+        "doneMessage": "{created} creadas, {updated} actualizadas, {skipped} omitidas.",
+        "errors": {
+          "emptyFile": "Archivo vacío.",
+          "missingColumns": "Columnas esperadas no encontradas (Referencia, Nombre completo).",
+          "invalidFile": "CSV inválido o sin datos.",
+          "confirmRequired": "Confirmación requerida.",
+          "importFailed": "La importación falló."
+        }
+      },
       "new": "Nuevo cliente",
       "noResults": "No hay resultados para esta búsqueda.",
       "searchPlaceholder": "Busca por nombre, email, teléfono, placa…"

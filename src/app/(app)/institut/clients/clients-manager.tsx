@@ -20,10 +20,12 @@ import type { ClientListSummary } from "@/lib/institut/clients";
 import { paginateItems } from "@/lib/ui/pagination";
 import { formatPrice } from "@/lib/utils";
 import { ClientForm } from "./client-form";
+import { ClientsImportDialog } from "./clients-import-dialog";
+import { OVERCACHE_IMPORT_TAG } from "@/lib/institut/client-import/overcache-csv";
 
 const LIST_PAGE_SIZE = 12;
 
-type Filter = "all" | "upcoming" | "withAccount" | "ecommerce" | "withPurchases";
+type Filter = "all" | "upcoming" | "withAccount" | "ecommerce" | "withPurchases" | "imported";
 
 function ClientTag({ children }: { children: React.ReactNode }) {
   return (
@@ -49,6 +51,7 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ClientListSummary | null>(null);
 
   const filtered = useMemo(() => {
@@ -58,6 +61,7 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
       if (filter === "withAccount" && !c.has_portal_account) return false;
       if (filter === "ecommerce" && !c.has_ecommerce) return false;
       if (filter === "withPurchases" && c.total_spent_cents === 0) return false;
+      if (filter === "imported" && !c.tags.includes(OVERCACHE_IMPORT_TAG)) return false;
       if (!q) return true;
       return (
         c.email.toLowerCase().includes(q) ||
@@ -114,9 +118,18 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
             ) : undefined
           }
           action={
-            <Button onClick={openCreate} className="h-9 w-full sm:w-auto">
-              + {t("new")}
-            </Button>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Button
+                variant="outline"
+                onClick={() => setImportOpen(true)}
+                className="h-9 w-full sm:w-auto"
+              >
+                {t("importCsv")}
+              </Button>
+              <Button onClick={openCreate} className="h-9 w-full sm:w-auto">
+                + {t("new")}
+              </Button>
+            </div>
           }
         >
           <Input
@@ -136,6 +149,7 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
             <option value="withAccount">{t("filterWithAccount")}</option>
             <option value="withPurchases">{t("filterWithPurchases")}</option>
             <option value="ecommerce">{t("filterEcommerce")}</option>
+            <option value="imported">{t("filterImported")}</option>
           </select>
         </ListToolbar>
 
@@ -253,6 +267,10 @@ export function ClientsManager({ clients }: { clients: ClientListSummary[] }) {
           onSuccess={closeDialog}
         />
       </FormDialog>
+
+      {importOpen ? (
+        <ClientsImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
+      ) : null}
     </>
   );
 }

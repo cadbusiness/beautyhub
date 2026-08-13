@@ -1215,6 +1215,11 @@
         "testImportHint": "La prueba crea solo 5 clientas. Revíselas en la lista y luego lance la importación completa: las 5 ya creadas se actualizarán, no se duplicarán.",
         "confirmImport": "Iniciar importación",
         "importing": "Importando…",
+        "progressTitle": "Importación en curso",
+        "progressErrors": "Errores",
+        "progressHint": "No cierre esta ventana. Las clientas se envían en lotes de 200 — puede dejarlo en segundo plano.",
+        "cancel": "Interrumpir",
+        "importAnother": "Importar otro archivo",
         "doneMessage": "{created} creadas, {updated} actualizadas, {skipped} omitidas.",
         "errors": {
           "emptyFile": "Archivo vacío.",

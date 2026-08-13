@@ -1,21 +1,21 @@
 "use client";
 
-import { useActionState, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
 import {
-  importRovercashClientsAction,
-  type ClientImportActionResult,
-} from "../client-import-actions";
-import {
+  buildRovercashImportRow,
   parseRovercashCsv,
   previewRovercashImport,
+  rovercashSkipReason,
+  type RovercashCsvRow,
   type RovercashImportPreview,
+  type RovercashImportRow,
 } from "@/lib/institut/client-import/rovercash-csv";
 
-const initial: ClientImportActionResult = {};
+const BATCH_SIZE = 200;
 
 function StatLine({ label, value }: { label: string; value: string | number }) {
   return (
@@ -110,6 +110,37 @@ type ImportStatus = {
   existingRefs: string[];
 };
 
+type Progress = {
+  processed: number;
+  created: number;
+  updated: number;
+  errors: string[];
+};
+
+const emptyProgress: Progress = {
+  processed: 0,
+  created: 0,
+  updated: 0,
+  errors: [],
+};
+
+function buildRowsToSend(
+  csvRows: RovercashCsvRow[],
+  tenantSlug: string,
+  limit?: number,
+): RovercashImportRow[] {
+  const seen = new Set<string>();
+  const rows: RovercashImportRow[] = [];
+  for (const csvRow of csvRows) {
+    if (rovercashSkipReason(csvRow)) continue;
+    if (seen.has(csvRow.reference)) continue;
+    seen.add(csvRow.reference);
+    rows.push(buildRovercashImportRow(csvRow, tenantSlug));
+    if (limit && rows.length >= limit) break;
+  }
+  return rows;
+}
+
 export function ClientsImportDialog({
   open,
   onClose,
@@ -123,19 +154,18 @@ export function ClientsImportDialog({
   const tCommon = useTranslations("common");
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [csvContent, setCsvContent] = useState("");
+  const abortRef = useRef<AbortController | null>(null);
+  const [csvRows, setCsvRows] = useState<RovercashCsvRow[]>([]);
   const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState<RovercashImportPreview | null>(null);
   const [quotaLimit, setQuotaLimit] = useState<number | null>(null);
   const [quotaUsage, setQuotaUsage] = useState<number | undefined>(undefined);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [importState, importAction, importPending] = useActionState(
-    importRovercashClientsAction,
-    initial,
-  );
-
-  const isDone = Boolean(importState.ok && importState.result);
+  const [importing, setImporting] = useState(false);
+  const [progress, setProgress] = useState<Progress>(emptyProgress);
+  const [totalToProcess, setTotalToProcess] = useState(0);
+  const [done, setDone] = useState(false);
 
   const canTest = useMemo(() => {
     if (!preview) return false;
@@ -155,15 +185,28 @@ export function ClientsImportDialog({
     return true;
   }, [preview, quotaLimit, quotaUsage]);
 
-  function reset() {
-    setCsvContent("");
+  const percent = useMemo(() => {
+    if (totalToProcess === 0) return 0;
+    return Math.min(100, Math.round((progress.processed / totalToProcess) * 100));
+  }, [progress.processed, totalToProcess]);
+
+  const reset = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    setCsvRows([]);
     setFileName("");
     setPreview(null);
     setError(null);
     setQuotaLimit(null);
     setQuotaUsage(undefined);
+    setImporting(false);
+    setProgress(emptyProgress);
+    setTotalToProcess(0);
+    setDone(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
-  }
+  }, []);
 
   function handleClose() {
     reset();
@@ -174,12 +217,10 @@ export function ClientsImportDialog({
     setAnalyzing(true);
     setError(null);
     setPreview(null);
+    setDone(false);
 
     try {
       const text = await file.text();
-      setCsvContent(text);
-      setFileName(file.name);
-
       const { rows, errors: parseErrors } = parseRovercashCsv(text);
       if (parseErrors.includes("missing_columns")) {
         setError(t("errors.missingColumns"));
@@ -189,6 +230,9 @@ export function ClientsImportDialog({
         setError(t("errors.invalidFile"));
         return;
       }
+
+      setCsvRows(rows);
+      setFileName(file.name);
 
       let existingRefs = new Set<string>();
       try {
@@ -214,27 +258,95 @@ export function ClientsImportDialog({
     }
   }
 
-  function handleImport(limit?: number) {
-    const fd = new FormData();
-    if (limit && csvContent) {
-      const lines = csvContent.split(/\r?\n/).filter((line) => line.trim().length > 0);
-      fd.set("csv_content", lines.slice(0, 1 + Math.max(limit * 4, 20)).join("\n"));
-      fd.set("limit", String(limit));
-    } else {
-      fd.set("csv_content", csvContent);
+  async function runImport(rowsToSend: RovercashImportRow[]) {
+    if (rowsToSend.length === 0) return;
+    setImporting(true);
+    setError(null);
+    setDone(false);
+    setProgress(emptyProgress);
+    setTotalToProcess(rowsToSend.length);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const aggregate: Progress = { processed: 0, created: 0, updated: 0, errors: [] };
+
+    for (let start = 0; start < rowsToSend.length; start += BATCH_SIZE) {
+      if (controller.signal.aborted) break;
+      const batch = rowsToSend.slice(start, start + BATCH_SIZE);
+
+      try {
+        const res = await fetch("/api/institut/clients/import", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rows: batch }),
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          const payload = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            kind?: string;
+          };
+          if (payload.kind === "quota") {
+            aggregate.errors.push(payload.error ?? t("errors.importFailed"));
+            setProgress({ ...aggregate });
+            setError(payload.error ?? t("errors.importFailed"));
+            break;
+          }
+          aggregate.errors.push(payload.error ?? `HTTP ${res.status}`);
+          aggregate.processed += batch.length;
+          setProgress({ ...aggregate });
+          continue;
+        }
+
+        const data = (await res.json()) as {
+          created: number;
+          updated: number;
+          errors: string[];
+        };
+        aggregate.created += data.created ?? 0;
+        aggregate.updated += data.updated ?? 0;
+        if (data.errors && data.errors.length > 0) {
+          aggregate.errors.push(...data.errors);
+        }
+        aggregate.processed += batch.length;
+        setProgress({ ...aggregate });
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") break;
+        console.error("[clients-import-dialog]", err);
+        aggregate.errors.push(err instanceof Error ? err.message : String(err));
+        aggregate.processed += batch.length;
+        setProgress({ ...aggregate });
+      }
     }
-    fd.set("confirm", "1");
-    importAction(fd);
+
+    setImporting(false);
+    setDone(true);
+    abortRef.current = null;
+  }
+
+  function handleImport(limit?: number) {
+    if (csvRows.length === 0) return;
+    const rows = buildRowsToSend(csvRows, tenantSlug, limit);
+    void runImport(rows);
+  }
+
+  function handleAbort() {
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
   }
 
   return (
     <FormDialog
       open={open}
       onClose={handleClose}
-      title={isDone ? t("doneTitle") : t("title")}
+      title={done ? t("doneTitle") : t("title")}
       size="lg"
     >
-      {!preview && !isDone ? (
+      {!preview && !done ? (
         <div className="space-y-4">
           <p className="text-sm text-slate-600">{t("intro")}</p>
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center hover:border-slate-400">
@@ -256,60 +368,127 @@ export function ClientsImportDialog({
         </div>
       ) : null}
 
-      {preview && !isDone ? (
+      {preview && !done && !importing ? (
         <div className="space-y-4">
           {fileName ? (
             <p className="text-xs text-slate-500">
               {t("fileLabel")}: {fileName}
             </p>
           ) : null}
-          <PreviewPanel
-            preview={preview}
-            quotaLimit={quotaLimit}
-            quotaUsage={quotaUsage}
-          />
-          {importState.error ? <p className="text-sm text-red-600">{importState.error}</p> : null}
+          <PreviewPanel preview={preview} quotaLimit={quotaLimit} quotaUsage={quotaUsage} />
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={reset} disabled={importPending}>
+            <Button type="button" variant="outline" onClick={reset}>
               {t("back")}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => handleImport(5)}
-              disabled={!canTest || importPending}
+              disabled={!canTest}
             >
-              {importPending ? t("importing") : t("testImport")}
+              {t("testImport")}
             </Button>
-            <Button type="button" onClick={() => handleImport()} disabled={!canImport || importPending}>
-              {importPending ? t("importing") : t("confirmImport")}
+            <Button type="button" onClick={() => handleImport()} disabled={!canImport}>
+              {t("confirmImport")}
             </Button>
           </div>
           <p className="text-xs text-slate-500">{t("testImportHint")}</p>
         </div>
       ) : null}
 
-      {isDone && importState.result ? (
+      {importing ? (
+        <div className="space-y-4">
+          <div>
+            <div className="flex items-center justify-between text-sm text-slate-700">
+              <span className="font-medium">{t("progressTitle")}</span>
+              <span className="tabular-nums">
+                {progress.processed} / {totalToProcess} · {percent}%
+              </span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-slate-900 transition-all duration-300"
+                style={{ width: `${percent}%` }}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">
+                {t("stats.create")}
+              </p>
+              <p className="text-lg font-medium tabular-nums text-slate-900">
+                {progress.created}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">
+                {t("stats.update")}
+              </p>
+              <p className="text-lg font-medium tabular-nums text-slate-900">
+                {progress.updated}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">
+                {t("progressErrors")}
+              </p>
+              <p className="text-lg font-medium tabular-nums text-slate-900">
+                {progress.errors.length}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">{t("progressHint")}</p>
+          <Button type="button" variant="outline" onClick={handleAbort}>
+            {t("cancel")}
+          </Button>
+        </div>
+      ) : null}
+
+      {done ? (
         <div className="space-y-4">
           <p className="text-sm text-slate-700">
             {t("doneMessage", {
-              created: importState.result.created,
-              updated: importState.result.updated,
-              skipped: importState.result.skipped,
+              created: progress.created,
+              updated: progress.updated,
+              skipped: preview?.skipped ?? 0,
             })}
           </p>
-          {importState.result.errors.length > 0 ? (
-            <p className="text-sm text-amber-700">{importState.result.errors[0]}</p>
+          {progress.errors.length > 0 ? (
+            <details className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              <summary className="cursor-pointer font-medium">
+                {t("progressErrors")}: {progress.errors.length}
+              </summary>
+              <ul className="mt-2 max-h-40 overflow-y-auto space-y-1 text-xs">
+                {progress.errors.slice(0, 20).map((message, idx) => (
+                  <li key={idx} className="truncate">
+                    · {message}
+                  </li>
+                ))}
+              </ul>
+            </details>
           ) : null}
-          <Button
-            type="button"
-            onClick={() => {
-              handleClose();
-              router.refresh();
-            }}
-          >
-            {tCommon("close")}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                reset();
+              }}
+            >
+              {t("importAnother")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                handleClose();
+                router.refresh();
+              }}
+            >
+              {tCommon("close")}
+            </Button>
+          </div>
         </div>
       ) : null}
     </FormDialog>

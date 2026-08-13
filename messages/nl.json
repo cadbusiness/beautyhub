@@ -1222,6 +1222,11 @@
         "testImportHint": "De test maakt slechts 5 klanten aan. Controleer ze in de lijst en start daarna de volledige import: de 5 bestaande fiches worden bijgewerkt, niet gedupliceerd.",
         "confirmImport": "Import starten",
         "importing": "Importeren…",
+        "progressTitle": "Import bezig",
+        "progressErrors": "Fouten",
+        "progressHint": "Sluit dit venster niet. Klanten worden verzonden in groepen van 200 — u kunt op de achtergrond laten draaien.",
+        "cancel": "Onderbreken",
+        "importAnother": "Nog een bestand importeren",
         "doneMessage": "{created} aangemaakt, {updated} bijgewerkt, {skipped} overgeslagen.",
         "errors": {
           "emptyFile": "Leeg bestand.",

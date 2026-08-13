@@ -253,7 +253,7 @@ function parseRovercashDate(raw: string | null): string | null {
   return date.toISOString();
 }
 
-function skipReason(row: RovercashCsvRow): string | null {
+export function rovercashSkipReason(row: RovercashCsvRow): string | null {
   if (!row.reference) return "missing_reference";
   if (!row.fullName) return "missing_name";
   if (row.type.toLowerCase() === "professionnel") return "professional";
@@ -261,7 +261,9 @@ function skipReason(row: RovercashCsvRow): string | null {
   return null;
 }
 
-function buildImportRow(row: RovercashCsvRow, tenantSlug: string): RovercashImportRow {
+const skipReason = rovercashSkipReason;
+
+export function buildRovercashImportRow(row: RovercashCsvRow, tenantSlug: string): RovercashImportRow {
   const phone = normalizeBelgianPhone(row.phone);
   const metadata: Record<string, unknown> = {
     rovercash_ref: row.reference,
@@ -336,7 +338,7 @@ export function previewRovercashImport(
     }
     seenRefs.add(row.reference);
 
-    const mapped = buildImportRow(row, tenantSlug);
+    const mapped = buildRovercashImportRow(row, tenantSlug);
     if (mapped.phone) withPhone += 1;
 
     if (existingRefs.has(row.reference)) {
@@ -460,7 +462,7 @@ export async function runRovercashImport(
 
     if (options.limit && toInsert.length + toUpdate.length >= options.limit) break;
 
-    const mapped = buildImportRow(row, tenantSlug);
+    const mapped = buildRovercashImportRow(row, tenantSlug);
     const existing = existingByRef.get(row.reference);
 
     if (existing) {

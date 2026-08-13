@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
-import { OVERCACHE_IMPORT_TAG } from "@/lib/institut/client-import/overcache-csv";
+import { OVERCACHE_IMPORT_TAG } from "@/lib/institut/client-import/constants";
 
 type Db = SupabaseClient<Database>;
 
@@ -125,6 +125,9 @@ export type ClientProfile = ClientOverview & {
 
 const CLIENT_SELECT =
   "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_code, pin_hash, password_hash, referred_by_client_id, created_at, updated_at";
+
+const CLIENT_LIST_SELECT =
+  "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_hash, password_hash, referred_by_client_id, created_at, updated_at";
 
 function mapClient(row: Record<string, unknown>): ClientRow {
   return {
@@ -278,7 +281,7 @@ async function fetchClientRowsByIds(
     const chunk = ids.slice(i, i + 500);
     const { data, error } = await supabase
       .from("clients")
-      .select(CLIENT_SELECT)
+      .select(CLIENT_LIST_SELECT)
       .eq("tenant_id", tenantId)
       .in("id", chunk);
     if (error) throw new Error(error.message);
@@ -360,7 +363,7 @@ export async function fetchClientsListPage(
 
   let clientsQuery = supabase
     .from("clients")
-    .select(CLIENT_SELECT, { count: "exact" })
+    .select(CLIENT_LIST_SELECT, { count: "exact", head: false })
     .eq("tenant_id", tenantId);
 
   clientsQuery = applyClientSearch(clientsQuery, search);

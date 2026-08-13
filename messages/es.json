@@ -1179,6 +1179,8 @@
       },
       "filterImported": "Importación Overcache",
       "importCsv": "Importar CSV",
+      "loadError": "No se puede cargar la lista de clientes.",
+      "retry": "Reintentar",
       "import": {
         "title": "Importar clientes Overcache",
         "doneTitle": "Importación completada",

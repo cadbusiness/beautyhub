@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/lib/db/database.types";
+import { OVERCACHE_IMPORT_TAG } from "@/lib/institut/client-import/constants";
 
-export const OVERCACHE_IMPORT_TAG = "Overcache";
+export { OVERCACHE_IMPORT_TAG };
 
 export type OvercacheCsvRow = {
   reference: string;

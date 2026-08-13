@@ -1186,6 +1186,8 @@
       },
       "filterImported": "Overcache-import",
       "importCsv": "CSV importeren",
+      "loadError": "Kan de klantenlijst niet laden.",
+      "retry": "Opnieuw proberen",
       "import": {
         "title": "Overcache-klanten importeren",
         "doneTitle": "Import voltooid",

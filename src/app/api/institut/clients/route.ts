@@ -7,6 +7,9 @@ import {
   type ClientsListFilter,
 } from "@/lib/institut/clients";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 const FILTERS: ClientsListFilter[] = [
   "all",
   "upcoming",

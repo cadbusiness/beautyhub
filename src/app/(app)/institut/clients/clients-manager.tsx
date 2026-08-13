@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,11 @@ import { PaginationControls } from "@/components/ui/pagination";
 import type { ClientListSummary, ClientsListFilter, ClientsListPage } from "@/lib/institut/clients";
 import { formatPrice } from "@/lib/utils";
 import { ClientForm } from "./client-form";
-import { ClientsImportDialog } from "./clients-import-dialog";
+
+const ClientsImportDialog = dynamic(
+  () => import("./clients-import-dialog").then((mod) => mod.ClientsImportDialog),
+  { ssr: false },
+);
 
 function ClientTag({ children }: { children: React.ReactNode }) {
   return (
@@ -37,31 +42,25 @@ function EditIcon() {
   );
 }
 
-export function ClientsManager({ initial }: { initial: ClientsListPage }) {
+export function ClientsManager() {
   const t = useTranslations("institut.clients");
   const tCommon = useTranslations("common");
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ClientsListFilter>("all");
-  const [page, setPage] = useState(initial.page);
-  const [items, setItems] = useState(initial.items);
-  const [total, setTotal] = useState(initial.total);
-  const [totalPages, setTotalPages] = useState(initial.totalPages);
-  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [items, setItems] = useState<ClientListSummary[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ClientListSummary | null>(null);
-  const skipInitialFetch = useRef(true);
-
-  useEffect(() => {
-    setItems(initial.items);
-    setTotal(initial.total);
-    setTotalPages(initial.totalPages);
-    setPage(initial.page);
-  }, [initial]);
 
   const loadPage = useCallback(async (signal: AbortSignal) => {
     setLoading(true);
+    setLoadError(null);
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -78,23 +77,16 @@ export function ClientsManager({ initial }: { initial: ClientsListPage }) {
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       console.error("[clients-manager]", error);
+      setLoadError(t("loadError"));
+      setItems([]);
+      setTotal(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [filter, page, query]);
+  }, [filter, page, query, t]);
 
   useEffect(() => {
-    if (
-      skipInitialFetch.current &&
-      page === initial.page &&
-      filter === "all" &&
-      !query.trim()
-    ) {
-      skipInitialFetch.current = false;
-      return;
-    }
-    skipInitialFetch.current = false;
-
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       void loadPage(controller.signal);
@@ -104,7 +96,7 @@ export function ClientsManager({ initial }: { initial: ClientsListPage }) {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [filter, page, query, loadPage, initial.page]);
+  }, [filter, page, query, loadPage]);
 
   function openCreate() {
     setEditing(null);
@@ -122,9 +114,11 @@ export function ClientsManager({ initial }: { initial: ClientsListPage }) {
     setDialogOpen(false);
     setEditing(null);
     router.refresh();
+    void loadPage(new AbortController().signal);
   }
 
-  const emptyMessage = total === 0 && !query && filter === "all" ? t("empty") : t("noResults");
+  const emptyMessage =
+    loadError ?? (total === 0 && !query && filter === "all" ? t("empty") : t("noResults"));
 
   return (
     <>
@@ -286,7 +280,13 @@ export function ClientsManager({ initial }: { initial: ClientsListPage }) {
       </FormDialog>
 
       {importOpen ? (
-        <ClientsImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
+        <ClientsImportDialog
+          open={importOpen}
+          onClose={() => {
+            setImportOpen(false);
+            void loadPage(new AbortController().signal);
+          }}
+        />
       ) : null}
     </>
   );

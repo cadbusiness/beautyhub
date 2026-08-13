@@ -1219,6 +1219,8 @@
       },
       "filterImported": "Overcache import",
       "importCsv": "Import CSV",
+      "loadError": "Unable to load the client list.",
+      "retry": "Retry",
       "new": "New customer",
       "noResults": "No results for this search.",
       "searchPlaceholder": "Search for name, email, telephone, badge…"

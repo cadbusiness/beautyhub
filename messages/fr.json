@@ -1219,6 +1219,8 @@
       "filterEcommerce": "E-commerce",
       "filterImported": "Import Overcache",
       "importCsv": "Importer CSV",
+      "loadError": "Impossible de charger la liste des clients.",
+      "retry": "Réessayer",
       "badgeUpcoming": "{count, plural, one {# RDV} other {# RDV}}",
       "badgeAccount": "Compte actif",
       "badgeEcommerce": "E-commerce",

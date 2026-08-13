@@ -127,7 +127,7 @@ const CLIENT_SELECT =
   "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_code, pin_hash, password_hash, referred_by_client_id, created_at, updated_at";
 
 const CLIENT_LIST_SELECT =
-  "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_hash, password_hash, referred_by_client_id, created_at, updated_at";
+  "id, full_name, email, phone, notes, tags, marketing_opt_in, login_id, referred_by_client_id, created_at, updated_at";
 
 function mapClient(row: Record<string, unknown>): ClientRow {
   return {
@@ -144,7 +144,7 @@ function mapClient(row: Record<string, unknown>): ClientRow {
     notes: (row.notes as string | null) ?? null,
     tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
     marketing_opt_in: Boolean(row.marketing_opt_in),
-    has_portal_account: Boolean(row.pin_hash ?? row.password_hash),
+    has_portal_account: Boolean(row.pin_hash ?? row.password_hash ?? row.login_id),
     login_id: (row.login_id as string | null) ?? null,
     pin_code: (row.pin_code as string | null) ?? null,
     referred_by_client_id: (row.referred_by_client_id as string | null) ?? null,
@@ -378,7 +378,10 @@ export async function fetchClientsListPage(
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[fetchClientsListPage]", error.message);
+    return { items: [], page, pageSize, total: 0, totalPages: 1 };
+  }
 
   const total = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));

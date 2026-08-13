@@ -400,14 +400,34 @@ export async function fetchExistingOvercacheClients(
   supabase: Db,
   tenantId: string,
 ): Promise<Map<string, ExistingOvercacheClient>> {
-  const { data, error } = await supabase
-    .from("clients")
-    .select("id, email, phone, metadata, tags")
-    .eq("tenant_id", tenantId)
-    .filter("metadata->>overcache_ref", "not.is", null);
+  const rows: Array<{
+    id: string;
+    email: string;
+    phone: string | null;
+    metadata: unknown;
+    tags: string[] | null;
+  }> = [];
 
-  if (error) throw new Error(error.message);
-  return mapExistingOvercacheClients(data ?? []);
+  let from = 0;
+  const pageSize = 1000;
+  while (from < 20_000) {
+    const { data, error } = await supabase
+      .from("clients")
+      .select("id, email, phone, metadata, tags")
+      .eq("tenant_id", tenantId)
+      .contains("tags", [OVERCACHE_IMPORT_TAG])
+      .range(from, from + pageSize - 1);
+    if (error) {
+      console.error("[fetchExistingOvercacheClients]", error.message);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return mapExistingOvercacheClients(rows);
 }
 
 export async function runOvercacheImport(

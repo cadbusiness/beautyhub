@@ -181,19 +181,21 @@ export function ClientsImportDialog({
         return;
       }
 
-      const statusRes = await fetch("/api/institut/clients/import-status", {
-        credentials: "include",
-      });
-      if (!statusRes.ok) {
-        setError(t("errors.invalidFile"));
-        return;
+      let existingRefs = new Set<string>();
+      try {
+        const statusRes = await fetch("/api/institut/clients/import-status", {
+          credentials: "include",
+        });
+        if (statusRes.ok) {
+          const status = (await statusRes.json()) as ImportStatus;
+          setQuotaLimit(status.quotaLimit);
+          setQuotaUsage(status.quotaUsage);
+          existingRefs = new Set(status.existingRefs ?? []);
+        }
+      } catch {
+        // Preview still works without quota / existing refs.
       }
 
-      const status = (await statusRes.json()) as ImportStatus;
-      setQuotaLimit(status.quotaLimit);
-      setQuotaUsage(status.quotaUsage);
-
-      const existingRefs = new Set(status.existingRefs ?? []);
       setPreview(previewOvercacheImport(rows, tenantSlug, existingRefs));
     } catch (readError) {
       console.error("[clients-import-dialog]", readError);

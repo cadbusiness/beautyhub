@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireModule } from "@/lib/auth/guards";
-import { createServiceClient } from "@/lib/supabase/service";
+import { createClient } from "@/lib/supabase/server";
 import {
   CLIENTS_LIST_PAGE_SIZE,
   fetchClientsListPage,
@@ -8,7 +8,6 @@ import {
 } from "@/lib/institut/clients";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
 
 const FILTERS: ClientsListFilter[] = [
   "all",
@@ -38,7 +37,7 @@ export async function GET(request: Request) {
 
   try {
     const session = await requireModule("institut");
-    const supabase = createServiceClient();
+    const supabase = await createClient();
     const result = await fetchClientsListPage(supabase, session.tenant.id, {
       page: Number.isFinite(page) ? page : 1,
       pageSize: Number.isFinite(pageSize) ? Math.min(pageSize, 50) : CLIENTS_LIST_PAGE_SIZE,
@@ -54,8 +53,17 @@ export async function GET(request: Request) {
     if (digest.startsWith("NEXT_REDIRECT") || digest.startsWith("NEXT_NOT_FOUND")) {
       throw error;
     }
-    const message = error instanceof Error ? error.message : "load_failed";
     console.error("[institut-clients-list]", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      {
+        items: [],
+        page: 1,
+        pageSize: CLIENTS_LIST_PAGE_SIZE,
+        total: 0,
+        totalPages: 1,
+        error: error instanceof Error ? error.message : "load_failed",
+      },
+      { status: 200 },
+    );
   }
 }

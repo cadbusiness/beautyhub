@@ -3,10 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
-import { createServiceClient } from "@/lib/supabase/service";
+import { createClient } from "@/lib/supabase/server";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
 import { translateQuotaError } from "@/lib/i18n/quota";
 import {
+  fetchExistingOvercacheClients,
   parseOvercacheCsv,
   previewOvercacheImport,
   runOvercacheImport,
@@ -40,28 +41,13 @@ export async function importOvercacheClientsAction(
     }
     if (rows.length === 0) return { error: t("errors.invalidFile") };
 
-    const supabase = createServiceClient();
-    const { data: existingRows, error: existingError } = await supabase
-      .from("clients")
-      .select("id, email, phone, metadata, tags")
-      .eq("tenant_id", session.tenant.id)
-      .filter("metadata->>overcache_ref", "not.is", null);
-
-    if (existingError) {
-      return { error: existingError.message };
-    }
-
-    const existingRefs = new Set<string>();
-    for (const row of existingRows ?? []) {
-      const metadata =
-        row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
-          ? (row.metadata as Record<string, unknown>)
-          : {};
-      const ref = typeof metadata.overcache_ref === "string" ? metadata.overcache_ref : null;
-      if (ref) existingRefs.add(ref);
-    }
-
-    const preview = previewOvercacheImport(rows, session.tenant.slug, existingRefs);
+    const supabase = await createClient();
+    const existingByRef = await fetchExistingOvercacheClients(supabase, session.tenant.id);
+    const preview = previewOvercacheImport(
+      rows,
+      session.tenant.slug,
+      existingByRef,
+    );
 
     try {
       await assertQuota(session.tenant.id, "clients", preview.toCreate);

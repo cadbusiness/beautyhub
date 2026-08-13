@@ -137,10 +137,19 @@ export function ClientsImportDialog({
 
   const isDone = Boolean(importState.ok && importState.result);
 
+  const canTest = useMemo(() => {
+    if (!preview) return false;
+    if (preview.toCreate === 0 && preview.toUpdate === 0) return false;
+    if (quotaLimit !== null && quotaLimit !== undefined && quotaUsage !== undefined) {
+      if (quotaUsage + 5 > quotaLimit) return false;
+    }
+    return true;
+  }, [preview, quotaLimit, quotaUsage]);
+
   const canImport = useMemo(() => {
     if (!preview) return false;
     if (preview.toCreate === 0 && preview.toUpdate === 0) return false;
-    if (quotaLimit !== null && quotaUsage !== undefined) {
+    if (quotaLimit !== null && quotaLimit !== undefined && quotaUsage !== undefined) {
       if (quotaUsage + preview.toCreate > quotaLimit) return false;
     }
     return true;
@@ -205,9 +214,15 @@ export function ClientsImportDialog({
     }
   }
 
-  function handleImport() {
+  function handleImport(limit?: number) {
     const fd = new FormData();
-    fd.set("csv_content", csvContent);
+    if (limit && csvContent) {
+      const lines = csvContent.split(/\r?\n/).filter((line) => line.trim().length > 0);
+      fd.set("csv_content", lines.slice(0, 1 + Math.max(limit * 4, 20)).join("\n"));
+      fd.set("limit", String(limit));
+    } else {
+      fd.set("csv_content", csvContent);
+    }
     fd.set("confirm", "1");
     importAction(fd);
   }
@@ -258,10 +273,19 @@ export function ClientsImportDialog({
             <Button type="button" variant="outline" onClick={reset} disabled={importPending}>
               {t("back")}
             </Button>
-            <Button type="button" onClick={handleImport} disabled={!canImport || importPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleImport(5)}
+              disabled={!canTest || importPending}
+            >
+              {importPending ? t("importing") : t("testImport")}
+            </Button>
+            <Button type="button" onClick={() => handleImport()} disabled={!canImport || importPending}>
               {importPending ? t("importing") : t("confirmImport")}
             </Button>
           </div>
+          <p className="text-xs text-slate-500">{t("testImportHint")}</p>
         </div>
       ) : null}
 

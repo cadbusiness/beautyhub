@@ -41,6 +41,10 @@ export async function importOvercacheClientsAction(
     }
     if (rows.length === 0) return { error: t("errors.invalidFile") };
 
+    const limitRaw = String(formData.get("limit") ?? "").trim();
+    const limit = limitRaw ? Number.parseInt(limitRaw, 10) : undefined;
+    const importLimit = Number.isFinite(limit) && (limit as number) > 0 ? limit : undefined;
+
     const supabase = await createClient();
     const existingByRef = await fetchExistingOvercacheClients(supabase, session.tenant.id);
     const preview = previewOvercacheImport(
@@ -49,8 +53,12 @@ export async function importOvercacheClientsAction(
       existingByRef,
     );
 
+    const quotaIncrement = importLimit
+      ? Math.min(importLimit, preview.toCreate)
+      : preview.toCreate;
+
     try {
-      await assertQuota(session.tenant.id, "clients", preview.toCreate);
+      await assertQuota(session.tenant.id, "clients", quotaIncrement);
     } catch (e) {
       if (e instanceof QuotaExceededError) {
         return { error: await translateQuotaError(e), preview };
@@ -63,6 +71,7 @@ export async function importOvercacheClientsAction(
       session.tenant.id,
       session.tenant.slug,
       rows,
+      { limit: importLimit },
     );
 
     if (result.errors.length > 0 && result.created === 0 && result.updated === 0) {

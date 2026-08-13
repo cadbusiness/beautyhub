@@ -435,6 +435,7 @@ export async function runOvercacheImport(
   tenantId: string,
   tenantSlug: string,
   csvRows: OvercacheCsvRow[],
+  options: { limit?: number } = {},
 ): Promise<OvercacheImportResult> {
   const existingByRef = await fetchExistingOvercacheClients(supabase, tenantId);
   const preview = previewOvercacheImport(csvRows, tenantSlug, existingByRef);
@@ -451,6 +452,8 @@ export async function runOvercacheImport(
     if (reason) continue;
     if (seenRefs.has(row.reference)) continue;
     seenRefs.add(row.reference);
+
+    if (options.limit && toInsert.length + toUpdate.length >= options.limit) break;
 
     const mapped = buildImportRow(row, tenantSlug);
     const existing = existingByRef.get(row.reference);

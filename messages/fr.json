@@ -1286,6 +1286,8 @@
         },
         "emailHint": "Generated emails use the pattern ref@import.{tenant}.local. Overcache badge added. No online account is created automatically.",
         "back": "Changer de fichier",
+        "testImport": "Tester avec 5 fiches",
+        "testImportHint": "Le test crée seulement 5 clientes. Vérifiez-les dans la liste, puis relancez l’import complet : les 5 déjà créées seront mises à jour, pas dupliquées.",
         "confirmImport": "Lancer l'import",
         "importing": "Import en cours…",
         "doneMessage": "{created} créées, {updated} mises à jour, {skipped} ignorées.",

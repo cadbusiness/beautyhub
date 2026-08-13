@@ -1210,6 +1210,8 @@
         },
         "emailHint": "Emails generados: ref@import.{tenant}.local. Badge Overcache añadido. No se crea cuenta en línea automáticamente.",
         "back": "Elegir otro archivo",
+        "testImport": "Probar con 5 fichas",
+        "testImportHint": "La prueba crea solo 5 clientas. Revíselas en la lista y luego lance la importación completa: las 5 ya creadas se actualizarán, no se duplicarán.",
         "confirmImport": "Iniciar importación",
         "importing": "Importando…",
         "doneMessage": "{created} creadas, {updated} actualizadas, {skipped} omitidas.",

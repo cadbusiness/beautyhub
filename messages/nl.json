@@ -1217,6 +1217,8 @@
         },
         "emailHint": "Gegenereerde e-mails: ref@import.{tenant}.local. Overcache-badge toegevoegd. Geen online account automatisch aangemaakt.",
         "back": "Ander bestand",
+        "testImport": "Testen met 5 fiches",
+        "testImportHint": "De test maakt slechts 5 klanten aan. Controleer ze in de lijst en start daarna de volledige import: de 5 bestaande fiches worden bijgewerkt, niet gedupliceerd.",
         "confirmImport": "Import starten",
         "importing": "Importeren…",
         "doneMessage": "{created} aangemaakt, {updated} bijgewerkt, {skipped} overgeslagen.",

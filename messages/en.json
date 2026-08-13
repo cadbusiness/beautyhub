@@ -1309,6 +1309,8 @@
         "back": "Change file",
         "chooseFile": "Choose a CSV file",
         "confirmImport": "Start the import",
+        "testImport": "Test with 5 records",
+        "testImportHint": "The test creates only 5 clients. Check them in the list, then run the full import: the 5 already created will be updated, not duplicated.",
         "doneMessage": "{created} created, {updated} updated, {skipped} ignored.",
         "doneTitle": "Import completed",
         "emailHint": "Generated emails use the pattern ref@import.{tenant}.local. ",

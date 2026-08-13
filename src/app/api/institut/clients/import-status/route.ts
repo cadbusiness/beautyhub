@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { OVERCACHE_IMPORT_TAG } from "@/lib/institut/client-import/constants";
 
 export const runtime = "nodejs";
 
@@ -30,7 +29,7 @@ export async function GET() {
         .from("clients")
         .select("metadata")
         .eq("tenant_id", session.tenant.id)
-        .contains("tags", [OVERCACHE_IMPORT_TAG])
+        .or(`tags.cs.{"Rovercash"},tags.cs.{"Overcache"}`)
         .range(from, from + pageSize - 1);
       if (error || !data || data.length === 0) break;
       for (const row of data) {
@@ -38,9 +37,13 @@ export async function GET() {
           row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
             ? (row.metadata as Record<string, unknown>)
             : {};
-        if (typeof metadata.overcache_ref === "string") {
-          existingRefs.push(metadata.overcache_ref);
-        }
+        const ref =
+          typeof metadata.rovercash_ref === "string"
+            ? metadata.rovercash_ref
+            : typeof metadata.overcache_ref === "string"
+              ? metadata.overcache_ref
+              : null;
+        if (ref) existingRefs.push(ref);
       }
       if (data.length < pageSize) break;
       from += pageSize;

@@ -7,22 +7,22 @@ import { createClient } from "@/lib/supabase/server";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
 import { translateQuotaError } from "@/lib/i18n/quota";
 import {
-  fetchExistingOvercacheClients,
-  parseOvercacheCsv,
-  previewOvercacheImport,
-  runOvercacheImport,
-  type OvercacheImportPreview,
-  type OvercacheImportResult,
-} from "@/lib/institut/client-import/overcache-csv";
+  fetchExistingRovercashClients,
+  parseRovercashCsv,
+  previewRovercashImport,
+  runRovercashImport,
+  type RovercashImportPreview,
+  type RovercashImportResult,
+} from "@/lib/institut/client-import/rovercash-csv";
 
 export type ClientImportActionResult = {
   ok?: boolean;
   error?: string;
-  preview?: OvercacheImportPreview;
-  result?: OvercacheImportResult;
+  preview?: RovercashImportPreview;
+  result?: RovercashImportResult;
 };
 
-export async function importOvercacheClientsAction(
+export async function importRovercashClientsAction(
   _prev: ClientImportActionResult,
   formData: FormData,
 ): Promise<ClientImportActionResult> {
@@ -35,7 +35,7 @@ export async function importOvercacheClientsAction(
     if (!confirm) return { error: t("errors.confirmRequired") };
     if (!csvContent.trim()) return { error: t("errors.emptyFile") };
 
-    const { rows, errors: parseErrors } = parseOvercacheCsv(csvContent);
+    const { rows, errors: parseErrors } = parseRovercashCsv(csvContent);
     if (parseErrors.includes("missing_columns")) {
       return { error: t("errors.missingColumns") };
     }
@@ -46,12 +46,8 @@ export async function importOvercacheClientsAction(
     const importLimit = Number.isFinite(limit) && (limit as number) > 0 ? limit : undefined;
 
     const supabase = await createClient();
-    const existingByRef = await fetchExistingOvercacheClients(supabase, session.tenant.id);
-    const preview = previewOvercacheImport(
-      rows,
-      session.tenant.slug,
-      existingByRef,
-    );
+    const existingByRef = await fetchExistingRovercashClients(supabase, session.tenant.id);
+    const preview = previewRovercashImport(rows, session.tenant.slug, existingByRef);
 
     const quotaIncrement = importLimit
       ? Math.min(importLimit, preview.toCreate)
@@ -66,7 +62,7 @@ export async function importOvercacheClientsAction(
       throw e;
     }
 
-    const result = await runOvercacheImport(
+    const result = await runRovercashImport(
       supabase,
       session.tenant.id,
       session.tenant.slug,
@@ -81,7 +77,10 @@ export async function importOvercacheClientsAction(
     revalidatePath("/institut/clients");
     return { ok: true, preview, result };
   } catch (error) {
-    console.error("[importOvercacheClientsAction]", error);
+    console.error("[importRovercashClientsAction]", error);
     return { error: t("errors.importFailed") };
   }
 }
+
+/** @deprecated Prefer importRovercashClientsAction */
+export const importOvercacheClientsAction = importRovercashClientsAction;

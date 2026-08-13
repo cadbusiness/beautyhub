@@ -1275,7 +1275,7 @@
       "empty": "No customers at the moment.",
       "filterAll": "All",
       "filterEcommerce": "E-commerce",
-      "filterImported": "Import Overcache",
+      "filterImported": "Import Rovercash",
       "filterUpcoming": "Upcoming appointments",
       "filterWithAccount": "Online account",
       "filterWithPurchases": "With purchases",
@@ -1322,10 +1322,10 @@
           "invalidFile": "Invalid or no data CSV file.",
           "missingColumns": "Expected columns not found (Reference, Full Name)."
         },
-        "fileHint": "Custom Overcache config (.csv)",
+        "fileHint": "Custom Rovercash config (.csv)",
         "fileLabel": "File",
         "importing": "Import in progress…",
-        "intro": "Export CSV Overcache / Monday Morning (semicolon separator). ",
+        "intro": "Export CSV Rovercash / Monday Morning (semicolon separator). ",
         "previewIntro": "Check the summary before starting the import. ",
         "quotaWarning": "Customer quota: {usage} / {limit} — this import requires {needed} additional places. ",
         "samplesCreate": "Examples to create",
@@ -1345,7 +1345,7 @@
           "update": "Updates",
           "withPhone": "With telephone"
         },
-        "title": "Import Overcache clients"
+        "title": "Import Rovercash clients"
       },
       "importCsv": "Import CSV",
       "loadError": "Unable to load customer list.",

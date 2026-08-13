@@ -1,10 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/lib/db/database.types";
-import { OVERCACHE_IMPORT_TAG } from "@/lib/institut/client-import/constants";
+import { ROVERCASH_IMPORT_TAG } from "@/lib/institut/client-import/constants";
 
-export { OVERCACHE_IMPORT_TAG };
+export { ROVERCASH_IMPORT_TAG };
 
-export type OvercacheCsvRow = {
+export type RovercashCsvRow = {
   reference: string;
   type: string;
   category: string;
@@ -23,7 +23,7 @@ export type OvercacheCsvRow = {
   lineNumber: number;
 };
 
-export type OvercacheImportRow = {
+export type RovercashImportRow = {
   reference: string;
   fullName: string;
   email: string;
@@ -34,7 +34,7 @@ export type OvercacheImportRow = {
   lineNumber: number;
 };
 
-export type OvercacheImportPreview = {
+export type RovercashImportPreview = {
   totalRows: number;
   toCreate: number;
   toUpdate: number;
@@ -42,21 +42,21 @@ export type OvercacheImportPreview = {
   withPhone: number;
   duplicateRefsInFile: number;
   samples: {
-    create: OvercacheImportRow[];
-    update: OvercacheImportRow[];
+    create: RovercashImportRow[];
+    update: RovercashImportRow[];
     skipped: Array<{ lineNumber: number; reference: string; reason: string }>;
   };
   errors: string[];
 };
 
-export type OvercacheImportResult = {
+export type RovercashImportResult = {
   created: number;
   updated: number;
   skipped: number;
   errors: string[];
 };
 
-type ExistingOvercacheClient = {
+type ExistingRovercashClient = {
   id: string;
   email: string;
   phone: string | null;
@@ -64,7 +64,7 @@ type ExistingOvercacheClient = {
   tags: string[];
 };
 
-const HEADER_ALIASES: Record<keyof Omit<OvercacheCsvRow, "lineNumber">, string[]> = {
+const HEADER_ALIASES: Record<keyof Omit<RovercashCsvRow, "lineNumber">, string[]> = {
   reference: ["référence", "reference"],
   type: ["type"],
   category: ["catégorie client", "categorie client"],
@@ -147,12 +147,12 @@ function cleanCsvValue(value: string | undefined): string {
   return trimmed;
 }
 
-function mapHeaders(headerRow: string[]): Partial<Record<keyof Omit<OvercacheCsvRow, "lineNumber">, number>> {
+function mapHeaders(headerRow: string[]): Partial<Record<keyof Omit<RovercashCsvRow, "lineNumber">, number>> {
   const normalized = headerRow.map(normalizeHeader);
-  const mapping: Partial<Record<keyof Omit<OvercacheCsvRow, "lineNumber">, number>> = {};
+  const mapping: Partial<Record<keyof Omit<RovercashCsvRow, "lineNumber">, number>> = {};
 
   for (const [key, aliases] of Object.entries(HEADER_ALIASES) as Array<
-    [keyof Omit<OvercacheCsvRow, "lineNumber">, string[]]
+    [keyof Omit<RovercashCsvRow, "lineNumber">, string[]]
   >) {
     const index = normalized.findIndex((header) => aliases.includes(header));
     if (index >= 0) mapping[key] = index;
@@ -161,8 +161,8 @@ function mapHeaders(headerRow: string[]): Partial<Record<keyof Omit<OvercacheCsv
   return mapping;
 }
 
-export function parseOvercacheCsv(content: string): {
-  rows: OvercacheCsvRow[];
+export function parseRovercashCsv(content: string): {
+  rows: RovercashCsvRow[];
   errors: string[];
 } {
   const errors: string[] = [];
@@ -179,10 +179,10 @@ export function parseOvercacheCsv(content: string): {
     return { rows: [], errors: ["missing_columns"] };
   }
 
-  const rows: OvercacheCsvRow[] = [];
+  const rows: RovercashCsvRow[] = [];
   for (let i = 1; i < matrix.length; i += 1) {
     const cells = matrix[i] ?? [];
-    const get = (key: keyof Omit<OvercacheCsvRow, "lineNumber">) =>
+    const get = (key: keyof Omit<RovercashCsvRow, "lineNumber">) =>
       cleanCsvValue(cells[headers[key] ?? -1]);
 
     rows.push({
@@ -234,7 +234,7 @@ export function normalizeBelgianPhone(raw: string): string | null {
   return trimmed.replace(/\s+/g, " ").trim();
 }
 
-export function overcacheImportEmail(reference: string, tenantSlug: string): string {
+export function rovercashImportEmail(reference: string, tenantSlug: string): string {
   const ref = reference.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
   const slug = tenantSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-") || "tenant";
   return `${ref}@import.${slug}.local`;
@@ -245,7 +245,7 @@ export function isGeneratedImportEmail(email: string, tenantSlug: string): boole
   return email.toLowerCase().endsWith(suffix);
 }
 
-function parseOvercacheDate(raw: string | null): string | null {
+function parseRovercashDate(raw: string | null): string | null {
   if (!raw) return null;
   const normalized = raw.trim().replace(" ", "T");
   const date = new Date(normalized);
@@ -253,7 +253,7 @@ function parseOvercacheDate(raw: string | null): string | null {
   return date.toISOString();
 }
 
-function skipReason(row: OvercacheCsvRow): string | null {
+function skipReason(row: RovercashCsvRow): string | null {
   if (!row.reference) return "missing_reference";
   if (!row.fullName) return "missing_name";
   if (row.type.toLowerCase() === "professionnel") return "professional";
@@ -261,21 +261,21 @@ function skipReason(row: OvercacheCsvRow): string | null {
   return null;
 }
 
-function buildImportRow(row: OvercacheCsvRow, tenantSlug: string): OvercacheImportRow {
+function buildImportRow(row: RovercashCsvRow, tenantSlug: string): RovercashImportRow {
   const phone = normalizeBelgianPhone(row.phone);
   const metadata: Record<string, unknown> = {
-    overcache_ref: row.reference,
-    import_source: "overcache",
+    rovercash_ref: row.reference,
+    import_source: "rovercash",
     imported_email: true,
-    overcache_type: row.type || null,
-    overcache_category: row.category || null,
-    overcache_civility: row.civility || null,
-    overcache_language: row.language || null,
+    rovercash_type: row.type || null,
+    rovercash_category: row.category || null,
+    rovercash_civility: row.civility || null,
+    rovercash_language: row.language || null,
   };
 
-  if (row.vatNumber) metadata.overcache_vat = row.vatNumber;
+  if (row.vatNumber) metadata.rovercash_vat = row.vatNumber;
 
-  const tags = [OVERCACHE_IMPORT_TAG];
+  const tags = [ROVERCASH_IMPORT_TAG];
   if (row.category && row.category !== "Client standard") {
     tags.push(row.category);
   }
@@ -283,20 +283,20 @@ function buildImportRow(row: OvercacheCsvRow, tenantSlug: string): OvercacheImpo
   return {
     reference: row.reference,
     fullName: row.fullName,
-    email: overcacheImportEmail(row.reference, tenantSlug),
+    email: rovercashImportEmail(row.reference, tenantSlug),
     phone,
     tags: tags.slice(0, 10),
     metadata,
-    createdAt: parseOvercacheDate(row.createdAt),
+    createdAt: parseRovercashDate(row.createdAt),
     lineNumber: row.lineNumber,
   };
 }
 
-export function previewOvercacheImport(
-  csvRows: OvercacheCsvRow[],
+export function previewRovercashImport(
+  csvRows: RovercashCsvRow[],
   tenantSlug: string,
-  existingRefs: Set<string> | Map<string, ExistingOvercacheClient>,
-): OvercacheImportPreview {
+  existingRefs: Set<string> | Map<string, ExistingRovercashClient>,
+): RovercashImportPreview {
   const seenRefs = new Set<string>();
   let duplicateRefsInFile = 0;
   let toCreate = 0;
@@ -304,8 +304,8 @@ export function previewOvercacheImport(
   let skipped = 0;
   let withPhone = 0;
 
-  const createSamples: OvercacheImportRow[] = [];
-  const updateSamples: OvercacheImportRow[] = [];
+  const createSamples: RovercashImportRow[] = [];
+  const updateSamples: RovercashImportRow[] = [];
   const skippedSamples: Array<{ lineNumber: number; reference: string; reason: string }> = [];
 
   for (const row of csvRows) {
@@ -364,7 +364,7 @@ export function previewOvercacheImport(
   };
 }
 
-export function mapExistingOvercacheClients(
+export function mapExistingRovercashClients(
   rows: Array<{
     id: string;
     email: string;
@@ -372,14 +372,19 @@ export function mapExistingOvercacheClients(
     metadata: unknown;
     tags: string[] | null;
   }>,
-): Map<string, ExistingOvercacheClient> {
-  const map = new Map<string, ExistingOvercacheClient>();
+): Map<string, ExistingRovercashClient> {
+  const map = new Map<string, ExistingRovercashClient>();
   for (const row of rows) {
     const metadata =
       row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
         ? (row.metadata as Record<string, unknown>)
         : {};
-    const ref = typeof metadata.overcache_ref === "string" ? metadata.overcache_ref : null;
+    const ref =
+      typeof metadata.rovercash_ref === "string"
+        ? metadata.rovercash_ref
+        : typeof metadata.overcache_ref === "string"
+          ? metadata.overcache_ref
+          : null;
     if (!ref) continue;
     map.set(ref, {
       id: row.id,
@@ -396,10 +401,10 @@ type Db = SupabaseClient<Database>;
 
 const BATCH_SIZE = 150;
 
-export async function fetchExistingOvercacheClients(
+export async function fetchExistingRovercashClients(
   supabase: Db,
   tenantId: string,
-): Promise<Map<string, ExistingOvercacheClient>> {
+): Promise<Map<string, ExistingRovercashClient>> {
   const rows: Array<{
     id: string;
     email: string;
@@ -415,10 +420,10 @@ export async function fetchExistingOvercacheClients(
       .from("clients")
       .select("id, email, phone, metadata, tags")
       .eq("tenant_id", tenantId)
-      .contains("tags", [OVERCACHE_IMPORT_TAG])
+      .or(`tags.cs.{"Rovercash"},tags.cs.{"Overcache"}`)
       .range(from, from + pageSize - 1);
     if (error) {
-      console.error("[fetchExistingOvercacheClients]", error.message);
+      console.error("[fetchExistingRovercashClients]", error.message);
       break;
     }
     if (!data || data.length === 0) break;
@@ -427,18 +432,18 @@ export async function fetchExistingOvercacheClients(
     from += pageSize;
   }
 
-  return mapExistingOvercacheClients(rows);
+  return mapExistingRovercashClients(rows);
 }
 
-export async function runOvercacheImport(
+export async function runRovercashImport(
   supabase: Db,
   tenantId: string,
   tenantSlug: string,
-  csvRows: OvercacheCsvRow[],
+  csvRows: RovercashCsvRow[],
   options: { limit?: number } = {},
-): Promise<OvercacheImportResult> {
-  const existingByRef = await fetchExistingOvercacheClients(supabase, tenantId);
-  const preview = previewOvercacheImport(csvRows, tenantSlug, existingByRef);
+): Promise<RovercashImportResult> {
+  const existingByRef = await fetchExistingRovercashClients(supabase, tenantId);
+  const preview = previewRovercashImport(csvRows, tenantSlug, existingByRef);
 
   const seenRefs = new Set<string>();
   const toInsert: Database["public"]["Tables"]["clients"]["Insert"][] = [];

@@ -6,14 +6,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
 import {
-  importOvercacheClientsAction,
+  importRovercashClientsAction,
   type ClientImportActionResult,
 } from "../client-import-actions";
 import {
-  parseOvercacheCsv,
-  previewOvercacheImport,
-  type OvercacheImportPreview,
-} from "@/lib/institut/client-import/overcache-csv";
+  parseRovercashCsv,
+  previewRovercashImport,
+  type RovercashImportPreview,
+} from "@/lib/institut/client-import/rovercash-csv";
 
 const initial: ClientImportActionResult = {};
 
@@ -31,7 +31,7 @@ function PreviewPanel({
   quotaLimit,
   quotaUsage,
 }: {
-  preview: OvercacheImportPreview;
+  preview: RovercashImportPreview;
   quotaLimit: number | null | undefined;
   quotaUsage: number | undefined;
 }) {
@@ -125,13 +125,13 @@ export function ClientsImportDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvContent, setCsvContent] = useState("");
   const [fileName, setFileName] = useState("");
-  const [preview, setPreview] = useState<OvercacheImportPreview | null>(null);
+  const [preview, setPreview] = useState<RovercashImportPreview | null>(null);
   const [quotaLimit, setQuotaLimit] = useState<number | null>(null);
   const [quotaUsage, setQuotaUsage] = useState<number | undefined>(undefined);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importState, importAction, importPending] = useActionState(
-    importOvercacheClientsAction,
+    importRovercashClientsAction,
     initial,
   );
 
@@ -180,7 +180,7 @@ export function ClientsImportDialog({
       setCsvContent(text);
       setFileName(file.name);
 
-      const { rows, errors: parseErrors } = parseOvercacheCsv(text);
+      const { rows, errors: parseErrors } = parseRovercashCsv(text);
       if (parseErrors.includes("missing_columns")) {
         setError(t("errors.missingColumns"));
         return;
@@ -205,7 +205,7 @@ export function ClientsImportDialog({
         // Preview still works without quota / existing refs.
       }
 
-      setPreview(previewOvercacheImport(rows, tenantSlug, existingRefs));
+      setPreview(previewRovercashImport(rows, tenantSlug, existingRefs));
     } catch (readError) {
       console.error("[clients-import-dialog]", readError);
       setError(t("errors.invalidFile"));

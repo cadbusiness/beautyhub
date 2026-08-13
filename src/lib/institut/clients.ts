@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
-import { OVERCACHE_IMPORT_TAG } from "@/lib/institut/client-import/constants";
+import { ROVERCASH_IMPORT_TAG } from "@/lib/institut/client-import/constants";
 
 type Db = SupabaseClient<Database>;
 
@@ -370,7 +370,7 @@ export async function fetchClientsListPage(
   clientsQuery = applyClientSearch(clientsQuery, search);
 
   if (filter === "imported") {
-    clientsQuery = clientsQuery.contains("tags", [OVERCACHE_IMPORT_TAG]);
+    clientsQuery = clientsQuery.contains("tags", [ROVERCASH_IMPORT_TAG]);
   } else if (filter === "withAccount") {
     clientsQuery = clientsQuery.or("pin_hash.not.is.null,password_hash.not.is.null");
   }

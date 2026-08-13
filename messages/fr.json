@@ -1218,7 +1218,7 @@
       "filterWithAccount": "Compte en ligne",
       "filterWithPurchases": "Avec achats",
       "filterEcommerce": "E-commerce",
-      "filterImported": "Import Overcache",
+      "filterImported": "Import Rovercash",
       "importCsv": "Importer CSV",
       "loadError": "Impossible de charger la liste des clients.",
       "retry": "Réessayer",
@@ -1259,11 +1259,11 @@
         "submittingEdit": "Enregistrement…"
       },
       "import": {
-        "title": "Importer des clients Overcache",
+        "title": "Importer des clients Rovercash",
         "doneTitle": "Import terminé",
-        "intro": "Export CSV Overcache / Lundi Matin (séparateur point-virgule). Les clients sans e-mail recevront une adresse technique ; vous pourrez la corriger plus tard.",
+        "intro": "Export CSV Rovercash / Lundi Matin (séparateur point-virgule). Les clients sans e-mail recevront une adresse technique ; vous pourrez la corriger plus tard.",
         "chooseFile": "Choisir un fichier CSV",
-        "fileHint": "Config custom Overcache (.csv)",
+        "fileHint": "Config custom Rovercash (.csv)",
         "fileLabel": "Fichier",
         "analyzing": "Analyse du fichier…",
         "previewIntro": "Vérifiez le résumé avant de lancer l'import. Les réimportations mettent à jour les fiches existantes via la référence C-xxxxx.",
@@ -1285,7 +1285,7 @@
           "archived": "archivé",
           "duplicate_ref": "référence en double dans le fichier"
         },
-        "emailHint": "Generated emails use the pattern ref@import.{tenant}.local. Overcache badge added. No online account is created automatically.",
+        "emailHint": "Les e-mails générés suivent le modèle ref@import.{tenant}.local. Badge Rovercash ajouté. Aucun compte en ligne n’est créé automatiquement.",
         "back": "Changer de fichier",
         "testImport": "Tester avec 5 fiches",
         "testImportHint": "Le test crée seulement 5 clientes. Vérifiez-les dans la liste, puis relancez l’import complet : les 5 déjà créées seront mises à jour, pas dupliquées.",

@@ -1,19 +1,22 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
-import { Field, Select } from "@/components/ui/input";
+import { Field, Input, Select } from "@/components/ui/input";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { PaginationControls } from "@/components/ui/pagination";
 import { RowActionButton } from "@/components/ui/row-actions";
 import type { VoucherTemplateRow } from "@/lib/institut/voucher-pdf";
+import { paginateItems } from "@/lib/ui/pagination";
 import { saveGiftProductSettings, type ActionResult } from "./gift-product-actions";
 
 export type GiftProductRow = {
   id: string;
   name: string;
+  sku: string | null;
   woo_id: number | null;
   is_gift_card: boolean;
   gift_template_id: string | null;
@@ -21,6 +24,8 @@ export type GiftProductRow = {
 };
 
 type VariationRow = { id: number; name: string; sku: string };
+
+const LIST_PAGE_SIZE = 15;
 
 const initial: ActionResult = {};
 
@@ -34,14 +39,62 @@ export function GiftProductsManager({
   const t = useTranslations("pos.vouchers.giftProducts");
   const tCommon = useTranslations("common");
   const [editing, setEditing] = useState<GiftProductRow | null>(null);
+  const [query, setQuery] = useState("");
+  const [onlyGift, setOnlyGift] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const filterKey = `${query.trim().toLowerCase()}|${onlyGift ? "1" : "0"}`;
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (prevFilterKey !== filterKey) {
+    setPrevFilterKey(filterKey);
+    setPage(1);
+  }
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const rows = products.filter((p) => {
+      if (onlyGift && !p.is_gift_card) return false;
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        (p.sku?.toLowerCase().includes(q) ?? false)
+      );
+    });
+    return [...rows].sort((a, b) => {
+      if (a.is_gift_card !== b.is_gift_card) return a.is_gift_card ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [products, query, onlyGift]);
+
+  const paged = paginateItems(filtered, page, LIST_PAGE_SIZE);
+
+  const emptyMessage = products.length === 0 ? t("empty") : t("noResults");
 
   return (
-    <div className="border-b border-slate-200 pb-6">
-      <ListToolbar>
-        <p className="text-sm text-slate-600">{t("description")}</p>
+    <div className="overflow-hidden rounded-lg border border-slate-200">
+      <ListToolbar
+        trailing={
+          <label className="flex items-center gap-2 text-xs text-slate-600">
+            <input
+              type="checkbox"
+              checked={onlyGift}
+              onChange={(e) => setOnlyGift(e.target.checked)}
+              className="h-3.5 w-3.5"
+            />
+            {t("onlyGift")}
+          </label>
+        }
+      >
+        <Input
+          type="search"
+          placeholder={t("search")}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="h-9 sm:max-w-xs"
+        />
       </ListToolbar>
 
-      <DataTable empty={products.length === 0 ? t("empty") : undefined}>
+      <DataTable empty={filtered.length === 0 ? emptyMessage : undefined}>
         <table className="w-full text-sm">
           <thead className="border-b border-slate-200">
             <tr>
@@ -52,13 +105,24 @@ export function GiftProductsManager({
             </tr>
           </thead>
           <tbody>
-            {products.map((row) => {
+            {paged.items.map((row) => {
               const tpl = templates.find((x) => x.id === row.gift_template_id);
               return (
                 <tr key={row.id} className={dataTableRow}>
-                  <td className={`font-medium text-slate-900 ${dataTableCell}`}>{row.name}</td>
+                  <td className={`font-medium text-slate-900 ${dataTableCell}`}>
+                    <div>{row.name}</div>
+                    {row.sku ? (
+                      <div className="text-xs text-slate-500">{row.sku}</div>
+                    ) : null}
+                  </td>
                   <td className={dataTableCell}>
-                    {row.is_gift_card ? t("yes") : t("no")}
+                    {row.is_gift_card ? (
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                        {t("yes")}
+                      </span>
+                    ) : (
+                      <span className="text-slate-500">{t("no")}</span>
+                    )}
                   </td>
                   <td className={`hidden text-slate-600 sm:table-cell ${dataTableCell}`}>
                     {tpl?.name ?? t("defaultTemplate")}
@@ -74,6 +138,19 @@ export function GiftProductsManager({
           </tbody>
         </table>
       </DataTable>
+
+      {paged.total > 0 ? (
+        <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-2 text-xs text-slate-400 lg:px-6">
+          <span>
+            {tCommon("countOfTotal", { count: paged.to - paged.from + 1, total: paged.total })}
+          </span>
+          <PaginationControls
+            page={paged.page}
+            totalPages={paged.totalPages}
+            onPageChange={setPage}
+          />
+        </div>
+      ) : null}
 
       {editing ? (
         <GiftProductDialog

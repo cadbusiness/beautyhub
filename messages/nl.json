@@ -1810,6 +1810,14 @@
       "connectShop": "Winkel koppelen",
       "settingsButton": "Kassa-instellingen"
     },
+    "posTemplates": {
+      "title": "Cadeaubon PDF-sjablonen",
+      "description": "Achtergronden, teksten en lay-out van de gegenereerde cadeaubon-PDF's."
+    },
+    "posGiftProducts": {
+      "title": "WooCommerce-producten — cadeaubonnen",
+      "description": "Markeer Woo-producten die een cadeaubon uitgeven en kies hun PDF-sjabloon."
+    },
     "posSettings": {
       "title": "Kassa-instellingen",
       "description": "BTW, betaalmethoden, wettelijke vermeldingen en ticketmodel.",
@@ -2972,6 +2980,7 @@
       }
     },
     "vouchers": {
+      "issueButton": "Uitgeven",
       "issueVoucher": "Voucher uitgeven",
       "issueGiftCard": "Cadeaubon uitgeven",
       "issueCreditNote": "Creditnota aanmaken",
@@ -2982,12 +2991,43 @@
       "noGiftCards": "Geen cadeaubonnen.",
       "noCreditNotes": "Geen creditnota's.",
       "openVoucher": "Document",
+      "downloadPdf": "PDF downloaden",
       "voidVoucher": "Annuleren",
+      "list": {
+        "empty": "Nog geen bonnen uitgegeven.",
+        "noResults": "Geen bon komt overeen met je zoekopdracht.",
+        "search": "Zoek (code, ontvanger, reden)…"
+      },
+      "filters": {
+        "allTypes": "Alle types",
+        "allStatus": "Alle statussen",
+        "legacyBadge": "Legacy"
+      },
+      "issueDialog": {
+        "title": "Bon uitgeven",
+        "typeLabel": "Type",
+        "amount": "Bedrag (€)",
+        "codeOptional": "Code",
+        "codeAuto": "Automatisch indien leeg",
+        "recipientOptional": "Ontvanger",
+        "expiresAt": "Verloopt op",
+        "message": "Bericht",
+        "messagePlaceholder": "Gefeliciteerd met je verjaardag…",
+        "template": "PDF-sjabloon",
+        "templateDefault": "Standaardsjabloon",
+        "defaultTag": "standaard",
+        "selectSale": "Bronverkoop",
+        "noSalesHint": "Geen recente verkopen met betaling.",
+        "reason": "Reden",
+        "submit": "Uitgeven",
+        "downloadPdf": "PDF downloaden"
+      },
       "columns": {
         "code": "Code",
         "type": "Type",
         "balance": "Saldo",
         "number": "Nr.",
+        "recipient": "Ontvanger / reden",
         "remaining": "Resterend",
         "status": "Status",
         "date": "Datum",
@@ -3091,6 +3131,9 @@
       "giftProducts": {
         "description": "WooCommerce-producten gemarkeerd als cadeaubon — meta synchroniseert naar de winkel.",
         "empty": "Geen gesynchroniseerde Woo-producten. Voer eerst een catalogs-sync uit.",
+        "noResults": "Geen product komt overeen met je zoekopdracht.",
+        "search": "Zoek een product of SKU…",
+        "onlyGift": "Alleen cadeaubonnen",
         "yes": "Ja",
         "no": "Nee",
         "defaultTemplate": "Standaardsjabloon",

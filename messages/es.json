@@ -1797,6 +1797,14 @@
       "syncWoo": "Sincronizar WooCommerce",
       "wooNotConnected": "WooCommerce no está conectado: solo están disponibles productos y servicios internos."
     },
+    "posTemplates": {
+      "title": "Plantillas PDF de tarjetas regalo",
+      "description": "Fondos, textos y disposición de los PDF de tarjetas regalo."
+    },
+    "posGiftProducts": {
+      "title": "Productos WooCommerce — tarjetas regalo",
+      "description": "Marca los productos Woo que emiten una tarjeta regalo y elige su plantilla PDF."
+    },
     "posSettings": {
       "configured": "Configurable",
       "description": "IVA, medios de pago, avisos legales y modelo de billete.",
@@ -2777,12 +2785,44 @@
       "vatAmount": "TINA"
     },
     "vouchers": {
+      "issueButton": "Emitir",
       "issueVoucher": "Emitir voucher",
+      "downloadPdf": "Descargar PDF",
+      "list": {
+        "empty": "Aún no se ha emitido ningún bono.",
+        "noResults": "Ningún bono coincide con tu búsqueda.",
+        "search": "Buscar (código, destinatario, motivo)…"
+      },
+      "filters": {
+        "allTypes": "Todos los tipos",
+        "allStatus": "Todos los estados",
+        "legacyBadge": "Legacy"
+      },
+      "issueDialog": {
+        "title": "Emitir un bono",
+        "typeLabel": "Tipo",
+        "amount": "Importe (€)",
+        "codeOptional": "Código",
+        "codeAuto": "Auto si está vacío",
+        "recipientOptional": "Destinatario",
+        "expiresAt": "Caduca el",
+        "message": "Mensaje",
+        "messagePlaceholder": "¡Feliz cumpleaños!…",
+        "template": "Plantilla PDF",
+        "templateDefault": "Plantilla por defecto",
+        "defaultTag": "por defecto",
+        "selectSale": "Venta de origen",
+        "noSalesHint": "No hay ventas recientes con cobro.",
+        "reason": "Motivo",
+        "submit": "Emitir",
+        "downloadPdf": "Descargar PDF"
+      },
       "columns": {
         "balance": "Pagar",
         "code": "Código",
         "date": "Fecha",
         "type": "Tipo",
+        "recipient": "Destinatario / motivo",
         "lastEvent": "Último evento",
         "actions": "Acciones",
         "number": "No.",
@@ -2896,6 +2936,9 @@
       "giftProducts": {
         "description": "Productos WooCommerce marcados como tarjeta regalo — meta sincronizada.",
         "empty": "No hay productos Woo sincronizados. Ejecute primero la sync del catálogo.",
+        "noResults": "Ningún producto coincide con tu búsqueda.",
+        "search": "Buscar un producto o SKU…",
+        "onlyGift": "Solo tarjetas regalo",
         "yes": "Sí",
         "no": "No",
         "defaultTemplate": "Plantilla por defecto",

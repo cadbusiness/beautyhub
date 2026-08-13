@@ -43,7 +43,7 @@ export function VoucherTemplatesManager({ templates }: { templates: VoucherTempl
   }
 
   return (
-    <div className="border-b border-slate-200 pb-6">
+    <div className="overflow-hidden rounded-lg border border-slate-200">
       <ListToolbar
         action={
           <Button onClick={openCreate} className="h-9 w-full sm:w-auto">

@@ -1973,6 +1973,14 @@
       "syncWooPending": "Synchronization…",
       "wooNotConnected": "WooCommerce not connected — only internal services and products are available."
     },
+    "posTemplates": {
+      "title": "Gift card PDF templates",
+      "description": "Backgrounds, texts and layout of generated gift card PDFs."
+    },
+    "posGiftProducts": {
+      "title": "WooCommerce products — gift cards",
+      "description": "Flag which Woo products issue a gift card and pick their PDF template."
+    },
     "posSettings": {
       "configured": "Configurable",
       "description": "VAT, means of payment, legal notices and ticket model.",
@@ -3251,6 +3259,36 @@
       "vatAmount": "VAT"
     },
     "vouchers": {
+      "issueButton": "Issue",
+      "list": {
+        "empty": "No voucher issued yet.",
+        "noResults": "No voucher matches your search.",
+        "search": "Search (code, recipient, reason)…"
+      },
+      "filters": {
+        "allTypes": "All types",
+        "allStatus": "All statuses",
+        "legacyBadge": "Legacy"
+      },
+      "issueDialog": {
+        "title": "Issue a voucher",
+        "typeLabel": "Type",
+        "amount": "Amount (€)",
+        "codeOptional": "Code",
+        "codeAuto": "Auto if empty",
+        "recipientOptional": "Recipient",
+        "expiresAt": "Expires on",
+        "message": "Message",
+        "messagePlaceholder": "Happy birthday…",
+        "template": "PDF template",
+        "templateDefault": "Default template",
+        "defaultTag": "default",
+        "selectSale": "Source sale",
+        "noSalesHint": "No recent sales with payment.",
+        "reason": "Reason",
+        "submit": "Issue",
+        "downloadPdf": "Download PDF"
+      },
       "columns": {
         "actions": "Actions",
         "balance": "Pay",
@@ -3258,6 +3296,7 @@
         "date": "Date",
         "lastEvent": "Latest event",
         "number": "No.",
+        "recipient": "Recipient / reason",
         "remaining": "Remaining",
         "status": "Status",
         "type": "Kind"
@@ -3307,6 +3346,9 @@
         "description": "WooCommerce products marked gift card — meta sync to store.",
         "dialogTitle": "Gift card product",
         "empty": "No Woo products synced. ",
+        "noResults": "No product matches your search.",
+        "search": "Search a product or SKU…",
+        "onlyGift": "Only gift cards",
         "inheritTemplate": "Inherit product",
         "markGift": "BeautyHub gift card",
         "no": "No",

@@ -1882,6 +1882,14 @@
       "connectShop": "Connecter la boutique",
       "settingsButton": "Paramètres caisse"
     },
+    "posTemplates": {
+      "title": "Templates cartes cadeau PDF",
+      "description": "Fonds, textes et disposition des PDF émis pour les cartes cadeau."
+    },
+    "posGiftProducts": {
+      "title": "Produits WooCommerce — cartes cadeau",
+      "description": "Marquez les produits Woo qui déclenchent l'émission d'une carte cadeau et choisissez leur template PDF."
+    },
     "posSettings": {
       "title": "Paramètres caisse",
       "description": "TVA, moyens de paiement, mentions légales et modèle de ticket.",
@@ -3193,6 +3201,7 @@
       }
     },
     "vouchers": {
+      "issueButton": "Émettre",
       "issueVoucher": "Émettre un voucher",
       "issueGiftCard": "Émettre un bon-cadeau",
       "issueCreditNote": "Créer un avoir",
@@ -3205,11 +3214,41 @@
       "openVoucher": "Document",
       "downloadPdf": "Télécharger le PDF",
       "voidVoucher": "Annuler",
+      "list": {
+        "empty": "Aucun bon émis pour le moment.",
+        "noResults": "Aucun bon ne correspond à votre recherche.",
+        "search": "Rechercher (code, destinataire, motif)…"
+      },
+      "filters": {
+        "allTypes": "Tous les types",
+        "allStatus": "Tous statuts",
+        "legacyBadge": "Legacy"
+      },
+      "issueDialog": {
+        "title": "Émettre un bon",
+        "typeLabel": "Type",
+        "amount": "Montant (€)",
+        "codeOptional": "Code",
+        "codeAuto": "Auto si vide",
+        "recipientOptional": "Destinataire",
+        "expiresAt": "Expire le",
+        "message": "Message",
+        "messagePlaceholder": "Joyeux anniversaire…",
+        "template": "Template PDF",
+        "templateDefault": "Template par défaut",
+        "defaultTag": "défaut",
+        "selectSale": "Vente source",
+        "noSalesHint": "Aucune vente récente avec encaissement.",
+        "reason": "Motif",
+        "submit": "Émettre",
+        "downloadPdf": "Télécharger le PDF"
+      },
       "columns": {
         "code": "Code",
         "type": "Type",
         "balance": "Solde",
         "number": "N°",
+        "recipient": "Destinataire / motif",
         "remaining": "Restant",
         "status": "Statut",
         "date": "Date",
@@ -3312,6 +3351,9 @@
       "giftProducts": {
         "description": "Produits WooCommerce marqués carte cadeau — sync meta vers la boutique.",
         "empty": "Aucun produit Woo synchronisé. Lancez une sync catalogue d’abord.",
+        "noResults": "Aucun produit ne correspond à votre recherche.",
+        "search": "Rechercher un produit ou SKU…",
+        "onlyGift": "Seulement les cartes cadeau",
         "yes": "Oui",
         "no": "Non",
         "defaultTemplate": "Template par défaut",

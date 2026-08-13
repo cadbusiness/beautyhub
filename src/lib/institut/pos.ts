@@ -46,6 +46,47 @@ export function parsePosCart(raw: string): Record<string, number> {
   return out;
 }
 
+/**
+ * Parse une map d'overrides de prix { "service:uuid": 4500 } où la valeur
+ * est le prix unitaire en centimes (dans le même mode HT/TTC que le catalogue).
+ * Ignore les valeurs négatives, non finies, ou dont la clé n'est pas valide.
+ */
+export function parsePriceOverrides(
+  raw: string | null | undefined,
+): Record<string, number> {
+  if (!raw) return {};
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return {};
+  }
+  if (!parsed || typeof parsed !== "object") return {};
+  const out: Record<string, number> = {};
+  for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+    if (!key.startsWith("service:") && !key.startsWith("product:")) continue;
+    const cents = Math.round(Number(value));
+    if (!Number.isFinite(cents) || cents < 0) continue;
+    out[key] = cents;
+  }
+  return out;
+}
+
+/** Applique des overrides de prix unitaires (par clé) à un ensemble de lignes résolues. */
+export function applyPriceOverrides(
+  lines: ResolvedCartLine[],
+  overrides: Record<string, number> | null | undefined,
+): ResolvedCartLine[] {
+  if (!overrides || Object.keys(overrides).length === 0) return lines;
+  return lines.map((line) => {
+    const override = overrides[line.key];
+    if (typeof override !== "number" || !Number.isFinite(override) || override < 0) {
+      return line;
+    }
+    return { ...line, unit_price_cents: override };
+  });
+}
+
 export function cartTotal(
   cart: Record<string, number>,
   catalog: PosCatalogItem[],

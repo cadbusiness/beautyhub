@@ -13,7 +13,12 @@ import {
 } from "@/lib/institut/pos-checkout";
 import { parseCartDiscountCents } from "@/lib/institut/pos-totals";
 import { computeCartTotals } from "@/lib/institut/pos-totals";
-import { parsePosCart, resolveCartLines } from "@/lib/institut/pos";
+import {
+  applyPriceOverrides,
+  parsePosCart,
+  parsePriceOverrides,
+  resolveCartLines,
+} from "@/lib/institut/pos";
 import {
   getPosSettings,
   vatRateForLineType,
@@ -246,6 +251,10 @@ export async function checkoutPos(
     return { error: t("invalidPayments") };
   }
 
+  const priceOverrides = parsePriceOverrides(
+    String(formData.get("price_overrides") ?? ""),
+  );
+
   try {
     const result = await executePosCheckout(supabase, session.tenant.id, {
       cartJson,
@@ -258,6 +267,7 @@ export async function checkoutPos(
       ),
       loyaltyRewardId: String(formData.get("loyalty_reward_id") ?? "") || null,
       promoCode: String(formData.get("promo_code") ?? "") || null,
+      priceOverrides,
       payments,
     });
 
@@ -291,6 +301,7 @@ export async function processPosCheckout(
     totalCents?: number;
     loyaltyRewardId?: string | null;
     promoCode?: string | null;
+    priceOverrides?: Record<string, number> | null;
   },
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
@@ -302,7 +313,8 @@ export async function processPosCheckout(
   if (total == null) {
     try {
       const cart = parsePosCart(cartJson);
-      const lines = await resolveCartLines(supabase, session.tenant.id, cart);
+      const rawLines = await resolveCartLines(supabase, session.tenant.id, cart);
+      const lines = applyPriceOverrides(rawLines, options?.priceOverrides);
       const totals = computeCartTotals(lines, {
         priceDisplay: settings.price_display,
         vatRateForType: (type) => vatRateForLineType(settings, type),
@@ -323,6 +335,7 @@ export async function processPosCheckout(
       stripePaymentIntentId: options?.stripePaymentIntentId,
       loyaltyRewardId: options?.loyaltyRewardId ?? null,
       promoCode: options?.promoCode ?? null,
+      priceOverrides: options?.priceOverrides ?? null,
       payments: [
         {
           method: paymentMethod,

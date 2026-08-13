@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 import { getWooClientForTenant } from "@/lib/woocommerce";
 import { decrementLocalProductStock } from "@/lib/woocommerce/sync";
-import { parsePosCart, resolveCartLines } from "./pos";
+import { applyPriceOverrides, parsePosCart, resolveCartLines } from "./pos";
 import {
   formatTicketNumber,
   getPosSettings,
@@ -61,6 +61,12 @@ export interface PosCheckoutInput {
   loyaltyRewardId?: string | null;
   /** Code promo marketing (désactive la remise manuelle côté UI). */
   promoCode?: string | null;
+  /**
+   * Surcharges de prix unitaires par clé de panier (`service:{id}` / `product:{id}`),
+   * en centimes (mode HT/TTC identique au catalogue). Permet de facturer un tarif
+   * spécifique à un client sans modifier le catalogue.
+   */
+  priceOverrides?: Record<string, number> | null;
 }
 
 export interface PosCheckoutResult {
@@ -176,6 +182,7 @@ export async function resolvePosCartTotals(
     clientId?: string | null;
     loyaltyRewardId?: string | null;
     promoCode?: string | null;
+    priceOverrides?: Record<string, number> | null;
   },
 ): Promise<ResolvedPosCartTotals> {
   let cart: Record<string, number>;
@@ -187,7 +194,8 @@ export async function resolvePosCartTotals(
   if (Object.keys(cart).length === 0) throw new Error("empty_cart");
 
   const settings = await getPosSettings(supabase, tenantId);
-  const lines = await resolveCartLines(supabase, tenantId, cart);
+  const rawLines = await resolveCartLines(supabase, tenantId, cart);
+  const lines = applyPriceOverrides(rawLines, input.priceOverrides);
 
   const baseTotals = computeCartTotals(lines, {
     priceDisplay: settings.price_display,
@@ -288,6 +296,7 @@ export async function executePosCheckout(
     clientId: input.clientId,
     loyaltyRewardId: input.loyaltyRewardId,
     promoCode: input.promoCode,
+    priceOverrides: input.priceOverrides,
   });
 
   if (totals.total_cents <= 0) throw new Error("invalid_amount");

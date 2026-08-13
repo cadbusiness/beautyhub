@@ -2847,6 +2847,11 @@
         "appointmentAria": "Rendez-vous",
         "noAppointment": "— Sans RDV —",
         "extraBadge": "extra",
+        "qtyIncrease": "Ajouter",
+        "qtyDecrease": "Retirer",
+        "unitPriceAria": "Prix unitaire",
+        "resetPrice": "Prix catalogue",
+        "resetPriceTitle": "Restaurer le prix catalogue ({price})",
         "addToCheckout": "Ajoute des articles pour encaisser.",
         "settingsLink": "Paramètres caisse →"
       },

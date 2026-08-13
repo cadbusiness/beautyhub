@@ -3178,10 +3178,15 @@
           "promo_not_started": "Promo code not yet valid."
         },
         "promoPlaceholder": "SUMMER20",
+        "qtyDecrease": "Remove",
+        "qtyIncrease": "Add",
+        "resetPrice": "Catalog price",
+        "resetPriceTitle": "Restore catalog price ({price})",
         "settingsLink": "Checkout settings →",
         "staffAria": "Practitioner",
         "title": "Basket",
-        "total": "Total"
+        "total": "Total",
+        "unitPriceAria": "Unit price"
       },
       "categories": {
         "extra": "Extra",

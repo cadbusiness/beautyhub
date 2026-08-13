@@ -2715,10 +2715,15 @@
         "noClient": "— Sin clientes —",
         "noStaff": "— Sin practicante —",
         "notePlaceholder": "Nota interna (opcional)",
+        "qtyDecrease": "Retirar",
+        "qtyIncrease": "Añadir",
+        "resetPrice": "Precio de catálogo",
+        "resetPriceTitle": "Restablecer el precio de catálogo ({price})",
         "settingsLink": "Configuración de pago →",
         "staffAria": "Facultativo",
         "title": "Cesta",
-        "total": "Total"
+        "total": "Total",
+        "unitPriceAria": "Precio unitario"
       },
       "categories": {
         "extra": "Extra",

@@ -18,7 +18,7 @@ import {
   STRIPE_CONNECT_PROVIDER,
 } from "@/lib/stripe/index";
 import { getRequestOrigin } from "@/lib/stripe/origin";
-import { parsePosCart } from "@/lib/institut/pos";
+import { parsePosCart, parsePriceOverrides } from "@/lib/institut/pos";
 import { parseCartDiscountCents } from "@/lib/institut/pos-totals";
 import { resolvePosCartTotals } from "@/lib/institut/pos-checkout";
 import { processPosCheckout } from "./caisse-actions";
@@ -144,6 +144,7 @@ export async function createStripePaymentIntent(
   clientId: string | null = null,
   loyaltyRewardId: string | null = null,
   promoCode: string | null = null,
+  priceOverridesJson: string | null = null,
 ): Promise<PaymentIntentResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
@@ -161,6 +162,7 @@ export async function createStripePaymentIntent(
   if (Object.keys(cart).length === 0) return { error: t("emptyCart") };
 
   const supabase = await createClient();
+  const priceOverrides = parsePriceOverrides(priceOverridesJson);
   let resolved;
   try {
     resolved = await resolvePosCartTotals(supabase, session.tenant.id, {
@@ -169,6 +171,7 @@ export async function createStripePaymentIntent(
       clientId,
       loyaltyRewardId,
       promoCode,
+      priceOverrides,
     });
   } catch (e) {
     return { error: (e as Error).message };
@@ -206,6 +209,7 @@ export async function finalizeStripeCheckout(
   cartDiscountEuros = "0",
   loyaltyRewardId: string | null = null,
   promoCode: string | null = null,
+  priceOverridesJson: string | null = null,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
@@ -223,6 +227,7 @@ export async function finalizeStripeCheckout(
   }
 
   const supabase = await createClient();
+  const priceOverrides = parsePriceOverrides(priceOverridesJson);
   let resolved;
   try {
     resolved = await resolvePosCartTotals(supabase, session.tenant.id, {
@@ -231,6 +236,7 @@ export async function finalizeStripeCheckout(
       clientId,
       loyaltyRewardId,
       promoCode,
+      priceOverrides,
     });
   } catch (e) {
     return { error: (e as Error).message };
@@ -247,5 +253,6 @@ export async function finalizeStripeCheckout(
     totalCents: totals.total_cents,
     loyaltyRewardId,
     promoCode,
+    priceOverrides,
   });
 }

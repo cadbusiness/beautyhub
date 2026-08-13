@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { formatPrice } from "@/lib/utils";
 import {
-  cartTotal,
+  applyPriceOverrides,
   type PosCatalogItem,
   type PosCategory,
 } from "@/lib/institut/pos";
@@ -64,6 +64,8 @@ export function PosTerminal({
   const initialPrefill = initialAppt ? applyPosAppointmentPrefill(initialAppt) : null;
 
   const [cart, setCart] = useState<Record<string, number>>(() => initialPrefill?.cart ?? {});
+  const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>({});
+  const [priceEdits, setPriceEdits] = useState<Record<string, string>>({});
   const [tab, setTab] = useState<PosCategory>("all");
   const [query, setQuery] = useState("");
   const [wooCategory, setWooCategory] = useState("all");
@@ -97,6 +99,8 @@ export function PosTerminal({
       lastRecordedSale.current = checkoutState.saleId;
       setLastSale(checkoutState);
       setCart({});
+      setPriceOverrides({});
+      setPriceEdits({});
       setCartDiscountEuros("0");
       setLoyaltyRewardId("");
       setLoyaltyPreviewCents(0);
@@ -116,6 +120,8 @@ export function PosTerminal({
     if (appt.staffId) setStaffId(appt.staffId);
     if (Object.keys(appt.prefillCart).length > 0) {
       setCart(appt.prefillCart);
+      setPriceOverrides({});
+      setPriceEdits({});
       setLastSale(null);
     }
     setLoyaltyRewardId("");
@@ -142,6 +148,23 @@ export function PosTerminal({
 
   const cartJson = JSON.stringify(cart);
   const cartEmpty = Object.keys(cart).length === 0;
+
+  const activeOverrides = useMemo(() => {
+    const catalogPrice = new Map(catalog.map((i) => [i.key, i.price_cents]));
+    const out: Record<string, number> = {};
+    for (const [key, cents] of Object.entries(priceOverrides)) {
+      if (!(key in cart)) continue;
+      const base = catalogPrice.get(key);
+      if (base != null && cents === base) continue;
+      out[key] = cents;
+    }
+    return out;
+  }, [priceOverrides, cart, catalog]);
+
+  const priceOverridesJson = useMemo(
+    () => JSON.stringify(activeOverrides),
+    [activeOverrides],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -192,7 +215,7 @@ export function PosTerminal({
 
   const resolvedForTotals = useMemo(() => {
     const byKey = new Map(catalog.map((i) => [i.key, i]));
-    return Object.entries(cart).flatMap(([key, qty]) => {
+    const lines = Object.entries(cart).flatMap(([key, qty]) => {
       const item = byKey.get(key);
       if (!item) return [];
       return [
@@ -208,7 +231,8 @@ export function PosTerminal({
         },
       ];
     });
-  }, [cart, catalog]);
+    return applyPriceOverrides(lines, activeOverrides);
+  }, [cart, catalog, activeOverrides]);
 
   const discountCents = useMemo(() => {
     if (promoCode) return 0;
@@ -298,8 +322,6 @@ export function PosTerminal({
     });
   }, [resolvedForTotals, settings, totalDiscountCents]);
 
-  const catalogTotal = useMemo(() => cartTotal(cart, catalog), [cart, catalog]);
-
   function add(key: string) {
     setLastSale(null);
     setCart((c) => ({ ...c, [key]: (c[key] ?? 0) + 1 }));
@@ -309,19 +331,83 @@ export function PosTerminal({
     setCart((c) => {
       const next = { ...c };
       const q = (next[key] ?? 0) - 1;
-      if (q <= 0) delete next[key];
-      else next[key] = q;
+      if (q <= 0) {
+        delete next[key];
+        setPriceOverrides((po) => {
+          if (!(key in po)) return po;
+          const nextPo = { ...po };
+          delete nextPo[key];
+          return nextPo;
+        });
+        setPriceEdits((pe) => {
+          if (!(key in pe)) return pe;
+          const nextPe = { ...pe };
+          delete nextPe[key];
+          return nextPe;
+        });
+      } else {
+        next[key] = q;
+      }
       return next;
     });
   }
 
   function clearCart() {
     setCart({});
+    setPriceOverrides({});
+    setPriceEdits({});
     setCartDiscountEuros("0");
+  }
+
+  function eurosToCents(input: string): number | null {
+    const trimmed = input.trim().replace(",", ".");
+    if (trimmed === "") return null;
+    const n = Number.parseFloat(trimmed);
+    if (!Number.isFinite(n) || n < 0) return null;
+    return Math.round(n * 100);
+  }
+
+  function commitPriceEdit(key: string, defaultCents: number) {
+    const draft = priceEdits[key];
+    if (draft === undefined) return;
+    const cents = eurosToCents(draft);
+    setPriceEdits((pe) => {
+      if (!(key in pe)) return pe;
+      const next = { ...pe };
+      delete next[key];
+      return next;
+    });
+    if (cents == null || cents === defaultCents) {
+      setPriceOverrides((po) => {
+        if (!(key in po)) return po;
+        const next = { ...po };
+        delete next[key];
+        return next;
+      });
+    } else {
+      setPriceOverrides((po) => ({ ...po, [key]: cents }));
+    }
+  }
+
+  function resetPrice(key: string) {
+    setPriceOverrides((po) => {
+      if (!(key in po)) return po;
+      const next = { ...po };
+      delete next[key];
+      return next;
+    });
+    setPriceEdits((pe) => {
+      if (!(key in pe)) return pe;
+      const next = { ...pe };
+      delete next[key];
+      return next;
+    });
   }
 
   function handleStripeSuccess(message: string) {
     setCart({});
+    setPriceOverrides({});
+    setPriceEdits({});
     setCartDiscountEuros("0");
     setLoyaltyRewardId("");
     setLoyaltyPreviewCents(0);
@@ -332,7 +418,7 @@ export function PosTerminal({
   const tCheckout = useTranslations("pos.checkout");
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
           {tabs.map((item) => (
@@ -533,38 +619,105 @@ export function PosTerminal({
         {cartLines.length === 0 ? (
           <p className="text-sm text-slate-500">{t("cart.empty")}</p>
         ) : (
-          <ul className="max-h-48 space-y-2 overflow-y-auto">
-            {cartLines.map(({ item, key, qty }) =>
-              item ? (
-                <li key={key} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="min-w-0 flex-1 truncate text-slate-700">
-                    {item.name}
-                    {item.visibility === "extra_only" ? (
-                      <span className="ml-1 text-[10px] font-medium uppercase text-violet-600">
-                        {t("cart.extraBadge")}
+          <ul className="max-h-64 space-y-3 overflow-y-auto pr-1">
+            {cartLines.map(({ item, key, qty }) => {
+              if (!item) return null;
+              const defaultCents = item.price_cents;
+              const currentCents = priceOverrides[key] ?? defaultCents;
+              const overridden = key in priceOverrides;
+              const editValue = priceEdits[key] ?? (currentCents / 100).toFixed(2);
+              const lineTotalCents = currentCents * qty;
+              return (
+                <li key={key} className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <span className="min-w-0 flex-1 truncate text-slate-700">
+                      {item.name}
+                      {item.visibility === "extra_only" ? (
+                        <span className="ml-1 text-[10px] font-medium uppercase text-violet-600">
+                          {t("cart.extraBadge")}
+                        </span>
+                      ) : null}
+                    </span>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => remove(key)}
+                        className="h-7 w-7 rounded text-slate-500 hover:bg-slate-100"
+                        aria-label={t("cart.qtyDecrease")}
+                      >
+                        −
+                      </button>
+                      <span className="w-6 text-center">{qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => add(key)}
+                        className="h-7 w-7 rounded text-slate-500 hover:bg-slate-100"
+                        aria-label={t("cart.qtyIncrease")}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="0.01"
+                        value={editValue}
+                        onChange={(e) =>
+                          setPriceEdits((pe) => ({ ...pe, [key]: e.target.value }))
+                        }
+                        onFocus={(e) => e.currentTarget.select()}
+                        onBlur={() => commitPriceEdit(key, defaultCents)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.currentTarget.blur();
+                          } else if (e.key === "Escape") {
+                            setPriceEdits((pe) => {
+                              if (!(key in pe)) return pe;
+                              const next = { ...pe };
+                              delete next[key];
+                              return next;
+                            });
+                            e.currentTarget.blur();
+                          }
+                        }}
+                        aria-label={t("cart.unitPriceAria")}
+                        className={`h-8 w-24 rounded-md border bg-white pl-2 pr-6 text-sm tabular-nums text-slate-900 outline-none focus:ring-2 focus:ring-ring/20 ${
+                          overridden
+                            ? "border-violet-300 focus:border-violet-400"
+                            : "border-slate-200 focus:border-ring"
+                        }`}
+                      />
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                        €
                       </span>
+                    </div>
+                    {overridden ? (
+                      <button
+                        type="button"
+                        onClick={() => resetPrice(key)}
+                        className="text-[11px] text-slate-500 underline decoration-dotted hover:text-slate-700"
+                        title={t("cart.resetPriceTitle", {
+                          price: formatPrice(defaultCents),
+                        })}
+                      >
+                        {t("cart.resetPrice")}
+                      </button>
                     ) : null}
-                  </span>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => remove(key)}
-                      className="h-7 w-7 rounded text-slate-500 hover:bg-slate-100"
-                    >
-                      −
-                    </button>
-                    <span className="w-6 text-center">{qty}</span>
-                    <button
-                      type="button"
-                      onClick={() => add(key)}
-                      className="h-7 w-7 rounded text-slate-500 hover:bg-slate-100"
-                    >
-                      +
-                    </button>
+                    <span className="ml-auto tabular-nums text-slate-500">
+                      {qty > 1 ? (
+                        <span className="font-medium text-slate-700">
+                          = {formatPrice(lineTotalCents)}
+                        </span>
+                      ) : null}
+                    </span>
                   </div>
                 </li>
-              ) : null,
-            )}
+              );
+            })}
           </ul>
         )}
 
@@ -627,7 +780,7 @@ export function PosTerminal({
                   type="number"
                   min={0}
                   step="0.01"
-                  max={(catalogTotal / 100).toFixed(2)}
+                  max={(grossCents / 100).toFixed(2)}
                   value={cartDiscountEuros}
                   onChange={(e) => setCartDiscountEuros(e.target.value)}
                 />
@@ -712,6 +865,7 @@ export function PosTerminal({
             cartDiscountEuros={cartDiscountEuros}
             loyaltyRewardId={loyaltyRewardId}
             promoCode={promoCode}
+            priceOverridesJson={priceOverridesJson}
             totals={totals}
             settings={settings}
             stripeEnabled={Boolean(stripeEnabled)}

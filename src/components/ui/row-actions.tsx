@@ -74,28 +74,55 @@ export function RowActionsMenu({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const MENU_WIDTH = 200;
+
+  function computePosition() {
+    const btn = buttonRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const left =
+      align === "right"
+        ? Math.max(8, rect.right - MENU_WIDTH)
+        : Math.min(window.innerWidth - MENU_WIDTH - 8, rect.left);
+    setPos({ top: rect.bottom + 4, left });
+  }
 
   useEffect(() => {
     if (!open) return;
+    computePosition();
     function onDown(e: MouseEvent) {
-      if (!containerRef.current) return;
-      if (!containerRef.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (buttonRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
+    function onReflow() {
+      computePosition();
+    }
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onReflow, true);
+    window.addEventListener("resize", onReflow);
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onReflow, true);
+      window.removeEventListener("resize", onReflow);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   return (
-    <div ref={containerRef} className="relative inline-flex">
+    <>
       <button
+        ref={buttonRef}
         type="button"
         aria-label={label}
         aria-haspopup="menu"
@@ -107,19 +134,18 @@ export function RowActionsMenu({
       >
         <MoreVertical className="h-4 w-4" />
       </button>
-      {open ? (
+      {open && pos ? (
         <div
+          ref={menuRef}
           role="menu"
-          className={cn(
-            "absolute top-full z-30 mt-1 min-w-45 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg",
-            align === "right" ? "right-0" : "left-0",
-          )}
+          style={{ position: "fixed", top: pos.top, left: pos.left, width: MENU_WIDTH }}
+          className="z-50 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
           onClick={() => setOpen(false)}
         >
           {children}
         </div>
       ) : null}
-    </div>
+    </>
   );
 }
 

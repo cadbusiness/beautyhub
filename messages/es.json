@@ -1191,6 +1191,8 @@
         "hint": "Los clientes Rovercash existentes nunca se duplican: solo se enriquecen con su identificador WooCommerce.",
         "loadingStatus": "Contactando con la tienda WooCommerce…",
         "statusError": "No se puede contactar con la tienda WooCommerce.",
+        "statusErrorHint": "La tienda puede estar lenta o temporalmente inaccesible. Puedes reintentar o iniciar la importación de todos modos (progreso sin total).",
+        "forceStart": "Iniciar de todos modos",
         "noConnection": "No hay conexión WooCommerce activa para este instituto. Configúrala en Ajustes > Integraciones.",
         "stats": {
           "storeUrl": "Tienda",

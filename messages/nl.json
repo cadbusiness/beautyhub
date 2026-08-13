@@ -1197,6 +1197,8 @@
         "hint": "Bestaande Rovercash-klanten worden nooit gedupliceerd: ze worden alleen verrijkt met hun WooCommerce-ID.",
         "loadingStatus": "Verbinding maken met de WooCommerce-winkel…",
         "statusError": "Kan geen contact maken met de WooCommerce-winkel.",
+        "statusErrorHint": "De winkel is misschien traag of tijdelijk onbereikbaar. Je kunt opnieuw proberen of de import toch starten (voortgang zonder totaal).",
+        "forceStart": "Toch starten",
         "noConnection": "Geen actieve WooCommerce-verbinding voor dit instituut. Configureer via Instellingen > Integraties.",
         "stats": {
           "storeUrl": "Winkel",

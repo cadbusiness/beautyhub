@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import { findOrCreateClientFromExternal } from "@/lib/institut/clients-dedup";
+import { deriveWooCustomerNames } from "@/lib/woocommerce/customer-names";
 
 type Db = SupabaseClient<Database>;
 
@@ -93,12 +94,23 @@ export async function ingestWooCompletedOrder(
   const billing = payload.billing ?? {};
   const billingEmail = typeof billing.email === "string" ? billing.email.trim().toLowerCase() : "";
   const billingPhone = typeof billing.phone === "string" ? billing.phone.trim() : "";
-  const firstName = typeof billing.first_name === "string" ? billing.first_name.trim() : "";
-  const lastName = typeof billing.last_name === "string" ? billing.last_name.trim() : "";
   const wooCustomerId =
     typeof payload.customer_id === "number" && payload.customer_id > 0
       ? String(payload.customer_id)
       : null;
+
+  // Utilise le même fallback (billing → username → préfixe email) que le bulk
+  // import pour éviter les clients Woo `full_name = null`.
+  const { firstName, lastName } = deriveWooCustomerNames({
+    first_name: typeof billing.first_name === "string" ? billing.first_name : null,
+    last_name: typeof billing.last_name === "string" ? billing.last_name : null,
+    billing: {
+      first_name: typeof billing.first_name === "string" ? billing.first_name : null,
+      last_name: typeof billing.last_name === "string" ? billing.last_name : null,
+      email: billingEmail || null,
+    },
+    email: billingEmail || null,
+  });
 
   let clientId: string | null = null;
   // On tente la dédup uniquement si on a au moins un identifiant discriminant.
@@ -110,8 +122,8 @@ export async function ingestWooCompletedOrder(
         externalId: wooCustomerId,
         phone: billingPhone || null,
         email: billingEmail || null,
-        firstName: firstName || null,
-        lastName: lastName || null,
+        firstName,
+        lastName,
         extraTags: ["WooCommerce"],
         metadata: {
           woo_customer_id: wooCustomerId ? Number(wooCustomerId) : undefined,

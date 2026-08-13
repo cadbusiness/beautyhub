@@ -284,9 +284,26 @@ export function ClientsImportWooDialog({
       {statusError ? (
         <div className="space-y-3">
           <p className="text-sm text-red-600">{statusError}</p>
-          <Button type="button" variant="outline" onClick={handleClose}>
-            {tCommon("close")}
-          </Button>
+          <p className="text-xs text-slate-500">{t("statusErrorHint")}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={handleClose}>
+              {tCommon("close")}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => void fetchStatus()}>
+              {t("retry")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setStatusError(null);
+                setTotal(null);
+                setStatusWarning(t("statusErrorHint"));
+                void runImport();
+              }}
+            >
+              {t("forceStart")}
+            </Button>
+          </div>
         </div>
       ) : null}
 

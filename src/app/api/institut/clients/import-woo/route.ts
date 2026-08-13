@@ -4,59 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
 import { translateQuotaError } from "@/lib/i18n/quota";
 import { getWooCredentialsForTenant, WooClient, type WooCustomer } from "@/lib/woocommerce";
+import { deriveWooCustomerNames } from "@/lib/woocommerce/customer-names";
 import { findOrCreateClientFromExternal, type DedupMatchKind } from "@/lib/institut/clients-dedup";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const PAGE_SIZE = 100;
-
-function titleCasePiece(raw: string): string {
-  return raw
-    .split(/[\s._-]+/)
-    .filter(Boolean)
-    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1).toLowerCase())
-    .join(" ")
-    .trim();
-}
-
-/**
- * Extrait un prénom / nom raisonnable même quand Woo renvoie des champs vides :
- * fallback sur username (si ce n'est pas un pattern générique `user123`), puis
- * sur le préfixe de l'email (`marie.durand@gmail.com` → `Marie Durand`).
- */
-function deriveNames(customer: WooCustomer): { firstName: string | null; lastName: string | null } {
-  const trim = (v: unknown) => (typeof v === "string" ? v.trim() : "");
-
-  const firstName = trim(customer.first_name) || trim(customer.billing?.first_name);
-  const lastName = trim(customer.last_name) || trim(customer.billing?.last_name);
-  if (firstName || lastName) {
-    return { firstName: firstName || null, lastName: lastName || null };
-  }
-
-  const username = trim(customer.username);
-  if (username && !/^user_?\d+$/i.test(username) && !/^[a-f0-9-]{16,}$/i.test(username)) {
-    const nice = titleCasePiece(username);
-    if (nice) return { firstName: nice, lastName: null };
-  }
-
-  const email = trim(customer.email) || trim(customer.billing?.email);
-  if (email) {
-    const prefix = email.split("@")[0] ?? "";
-    // Skip prefixes qui ressemblent à un ID (`user123`, `12345`, `no-reply`, etc.)
-    if (
-      prefix.length >= 2 &&
-      /[a-z]/i.test(prefix) &&
-      !/^(no-?reply|no-?email|admin|user_?\d+|contact|info|support)$/i.test(prefix) &&
-      !/^\d+$/.test(prefix)
-    ) {
-      const nice = titleCasePiece(prefix);
-      if (nice) return { firstName: nice, lastName: null };
-    }
-  }
-
-  return { firstName: null, lastName: null };
-}
 
 function customerAsDedupInput(customer: WooCustomer, tenantId: string) {
   const email =
@@ -65,7 +19,7 @@ function customerAsDedupInput(customer: WooCustomer, tenantId: string) {
     null;
   const phone =
     (typeof customer.billing?.phone === "string" && customer.billing.phone.trim()) || null;
-  const { firstName, lastName } = deriveNames(customer);
+  const { firstName, lastName } = deriveWooCustomerNames(customer);
 
   return {
     tenantId,
@@ -95,25 +49,36 @@ function customerAsDedupInput(customer: WooCustomer, tenantId: string) {
  * GET : renvoie un résumé (nombre total de customers Woo côté source, sans mutation).
  * Utilisé par le dialog pour afficher le compteur avant de lancer l'import.
  *
- * Ne bloque jamais l'import si le count échoue : renvoie `total: null` et
- * laisse le POST tenter la pagination avec progression indéterminée.
+ * Ne bloque **jamais** l'import si le count échoue : on renvoie toujours 200 avec
+ * un `warning`. L'UI peut ainsi proposer un « Continuer sans compter » et lancer
+ * les POST de pagination sans dépendre du total connu.
  */
 export async function GET() {
-  const session = await requireModule("institut");
-  const creds = await getWooCredentialsForTenant(session.tenant.id);
-  if (!creds) {
-    return NextResponse.json({ error: "no_woo_connection" }, { status: 400 });
-  }
-  const client = new WooClient(creds);
   try {
-    const total = await client.countCustomers();
-    return NextResponse.json({ total, storeUrl: creds.url });
+    const session = await requireModule("institut");
+    const creds = await getWooCredentialsForTenant(session.tenant.id);
+    if (!creds) {
+      return NextResponse.json({ error: "no_woo_connection" }, { status: 400 });
+    }
+    const client = new WooClient(creds);
+    try {
+      const total = await client.countCustomers();
+      return NextResponse.json({ total, storeUrl: creds.url });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("[institut-clients-import-woo:GET] count failed", message);
+      return NextResponse.json({
+        total: null,
+        storeUrl: creds.url,
+        warning: message,
+      });
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error("[institut-clients-import-woo:GET]", message);
+    console.error("[institut-clients-import-woo:GET] unexpected", message);
     return NextResponse.json({
       total: null,
-      storeUrl: creds.url,
+      storeUrl: null,
       warning: message,
     });
   }

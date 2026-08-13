@@ -61,6 +61,39 @@ export interface WooCustomer {
   meta_data?: Array<{ key: string; value: unknown }>;
 }
 
+/**
+ * Timeout par requête WooCommerce (ms). Volontairement inférieur au budget
+ * serverless Vercel (60 s) pour laisser de la marge à la logique BH et éviter
+ * qu'un tenant avec un Woo lent ne kille la fonction.
+ */
+const WOO_REQUEST_TIMEOUT_MS = 25_000;
+
+function fetchWithTimeout(
+  url: URL | string,
+  init: RequestInit,
+  timeoutMs: number,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const signal = init.signal
+    ? mergeAbortSignals([init.signal, controller.signal])
+    : controller.signal;
+  return fetch(url, { ...init, signal }).finally(() => clearTimeout(timer));
+}
+
+function mergeAbortSignals(signals: AbortSignal[]): AbortSignal {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  for (const signal of signals) {
+    if (signal.aborted) {
+      controller.abort();
+      break;
+    }
+    signal.addEventListener("abort", abort, { once: true });
+  }
+  return controller.signal;
+}
+
 /** Client minimal de l'API REST WooCommerce v3 (auth basic ck/cs sur HTTPS). */
 export class WooClient {
   private base: string;
@@ -85,15 +118,30 @@ export class WooClient {
         url.searchParams.set(k, String(v));
       }
     }
-    const res = await fetch(url, {
-      ...init,
-      headers: {
-        Authorization: this.authHeader,
-        "Content-Type": "application/json",
-        ...(init?.headers ?? {}),
-      },
-      cache: "no-store",
-    });
+    let res: Response;
+    try {
+      res = await fetchWithTimeout(
+        url,
+        {
+          ...init,
+          headers: {
+            Authorization: this.authHeader,
+            "Content-Type": "application/json",
+            ...(init?.headers ?? {}),
+          },
+          cache: "no-store",
+        },
+        WOO_REQUEST_TIMEOUT_MS,
+      );
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new Error(
+          `WooCommerce timeout après ${Math.round(WOO_REQUEST_TIMEOUT_MS / 1000)}s sur ${path}. La boutique est injoignable ou trop lente.`,
+        );
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`WooCommerce fetch ${path}: ${msg}`);
+    }
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(
@@ -223,10 +271,28 @@ export class WooClient {
       const url = new URL(this.base + "/customers");
       url.searchParams.set("per_page", "1");
       if (withRoleAll) url.searchParams.set("role", "all");
-      const res = await fetch(url, {
-        headers: { Authorization: this.authHeader, "Content-Type": "application/json" },
-        cache: "no-store",
-      });
+      let res: Response;
+      try {
+        res = await fetchWithTimeout(
+          url,
+          {
+            headers: {
+              Authorization: this.authHeader,
+              "Content-Type": "application/json",
+            },
+            cache: "no-store",
+          },
+          WOO_REQUEST_TIMEOUT_MS,
+        );
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          throw new Error(
+            `WooCommerce timeout après ${Math.round(WOO_REQUEST_TIMEOUT_MS / 1000)}s sur /customers (count).`,
+          );
+        }
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`WooCommerce fetch /customers (count): ${msg}`);
+      }
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         throw new Error(

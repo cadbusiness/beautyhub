@@ -256,9 +256,26 @@ export async function POST(
             : {};
         const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
         const email = str(payload.email) || str(billing.email);
-        const firstName = str(payload.first_name) || str(billing.first_name);
-        const lastName = str(payload.last_name) || str(billing.last_name);
         const phone = str(billing.phone);
+        const username = str(payload.username);
+
+        // Applique le même fallback (username / préfixe email) que le bulk import
+        // pour ne jamais créer une fiche BH avec full_name = null quand Woo a des
+        // informations exploitables.
+        const { deriveWooCustomerNames } = await import(
+          "@/lib/woocommerce/customer-names"
+        );
+        const { firstName, lastName } = deriveWooCustomerNames({
+          first_name: str(payload.first_name),
+          last_name: str(payload.last_name),
+          billing: {
+            first_name: str(billing.first_name),
+            last_name: str(billing.last_name),
+            email: str(billing.email),
+          },
+          username: username || null,
+          email: email || null,
+        });
 
         // On ne dédup pas si on a strictement aucun identifiant discriminant.
         if (!email && !phone && !firstName && !lastName) {
@@ -274,11 +291,12 @@ export async function POST(
           externalId: String(wooCustomerId),
           email: email || null,
           phone: phone || null,
-          firstName: firstName || null,
-          lastName: lastName || null,
+          firstName,
+          lastName,
           extraTags: ["WooCommerce"],
           metadata: {
             woo_customer_id: wooCustomerId,
+            woo_username: username || null,
             woo_date_created:
               typeof payload.date_created === "string" ? payload.date_created : null,
             woo_billing: {

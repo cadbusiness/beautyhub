@@ -2409,6 +2409,7 @@
         "accessNone": "Uninvited",
         "accessPending": "Pending invitation",
         "add": "Add staff",
+        "actionsMenuLabel": "Member actions",
         "archivedBadge": "Archived",
         "archive": "Archive",
         "archiveDialog": {

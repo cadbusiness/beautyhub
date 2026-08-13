@@ -11,7 +11,7 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { ListPanel, ListPanelFooter } from "@/components/ui/list-panel";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { PageTabs } from "@/components/ui/page-tabs";
-import { RowActionButton, RowActions } from "@/components/ui/row-actions";
+import { RowActionsMenu, RowActionsMenuItem } from "@/components/ui/row-actions";
 import { StaffAvatar } from "@/components/ui/staff-avatar";
 import type {
   StaffWithAccess,
@@ -305,70 +305,61 @@ export function EquipeManager({
                             className={`text-right ${dataTableCell}`}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <RowActions>
-                              {archived ? (
-                                <>
-                                  <RowActionButton
-                                    type="button"
-                                    iconOnly
-                                    disabled={rowPending}
-                                    onClick={() => runRestore(s.id)}
-                                    icon={<RotateCcw className="h-3.5 w-3.5" />}
-                                  >
-                                    {t("personnel.restore")}
-                                  </RowActionButton>
-                                  <RowActionButton
-                                    type="button"
-                                    iconOnly
-                                    tone="danger"
-                                    disabled={!canHard || rowPending}
-                                    title={
-                                      canHard
-                                        ? t("personnel.hardDelete")
-                                        : t("personnel.hardDeleteBlockedTooltip")
-                                    }
-                                    aria-label={t("personnel.hardDelete")}
-                                    onClick={() => runHardDelete(s.id)}
-                                    icon={<Trash2 className="h-3.5 w-3.5" />}
-                                  >
-                                    {t("personnel.hardDelete")}
-                                  </RowActionButton>
-                                </>
-                              ) : (
-                                <>
-                                  <RowActionButton
-                                    type="button"
-                                    iconOnly
-                                    onClick={() => {
-                                      setEditingStaff(s);
-                                      setStaffDialogOpen(true);
-                                    }}
-                                    icon={<Pencil className="h-3.5 w-3.5" />}
-                                  >
-                                    {t("personnel.edit")}
-                                  </RowActionButton>
-                                  {s.access_status !== "active" ? (
-                                    <RowActionButton
-                                      type="button"
-                                      iconOnly
-                                      onClick={() => setInviteStaff(s)}
-                                      icon={<MailPlus className="h-3.5 w-3.5" />}
+                            <div className="flex justify-end">
+                              <RowActionsMenu label={t("personnel.actionsMenuLabel")}>
+                                {archived ? (
+                                  <>
+                                    <RowActionsMenuItem
+                                      icon={<RotateCcw className="h-3.5 w-3.5" />}
+                                      onSelect={() => runRestore(s.id)}
+                                      disabled={rowPending}
                                     >
-                                      {t("personnel.invite")}
-                                    </RowActionButton>
-                                  ) : null}
-                                  <RowActionButton
-                                    type="button"
-                                    iconOnly
-                                    tone="danger"
-                                    onClick={() => setArchiveStaff(s)}
-                                    icon={<Archive className="h-3.5 w-3.5" />}
-                                  >
-                                    {t("personnel.archive")}
-                                  </RowActionButton>
-                                </>
-                              )}
-                            </RowActions>
+                                      {t("personnel.restore")}
+                                    </RowActionsMenuItem>
+                                    <RowActionsMenuItem
+                                      icon={<Trash2 className="h-3.5 w-3.5" />}
+                                      tone="danger"
+                                      onSelect={() => runHardDelete(s.id)}
+                                      disabled={!canHard || rowPending}
+                                      title={
+                                        canHard
+                                          ? t("personnel.hardDelete")
+                                          : t("personnel.hardDeleteBlockedTooltip")
+                                      }
+                                    >
+                                      {t("personnel.hardDelete")}
+                                    </RowActionsMenuItem>
+                                  </>
+                                ) : (
+                                  <>
+                                    <RowActionsMenuItem
+                                      icon={<Pencil className="h-3.5 w-3.5" />}
+                                      onSelect={() => {
+                                        setEditingStaff(s);
+                                        setStaffDialogOpen(true);
+                                      }}
+                                    >
+                                      {t("personnel.edit")}
+                                    </RowActionsMenuItem>
+                                    {s.access_status !== "active" ? (
+                                      <RowActionsMenuItem
+                                        icon={<MailPlus className="h-3.5 w-3.5" />}
+                                        onSelect={() => setInviteStaff(s)}
+                                      >
+                                        {t("personnel.invite")}
+                                      </RowActionsMenuItem>
+                                    ) : null}
+                                    <RowActionsMenuItem
+                                      icon={<Archive className="h-3.5 w-3.5" />}
+                                      tone="danger"
+                                      onSelect={() => setArchiveStaff(s)}
+                                    >
+                                      {t("personnel.archive")}
+                                    </RowActionsMenuItem>
+                                  </>
+                                )}
+                              </RowActionsMenu>
+                            </div>
                           </td>
                         </tr>
                       );

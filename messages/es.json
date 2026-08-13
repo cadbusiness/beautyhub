@@ -2223,6 +2223,7 @@
         "accessNone": "No invitado",
         "accessPending": "Invitación pendiente",
         "add": "Agregar personal",
+        "actionsMenuLabel": "Acciones del miembro",
         "archivedBadge": "Archivado",
         "archive": "Archivar",
         "archiveDialog": {

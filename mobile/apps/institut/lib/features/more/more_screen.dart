@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../state/session_providers.dart';
 import '../shared/money.dart';
 import '../shared/tenant_logo.dart';
-import 'branding_logo_section.dart';
 
-class MoreScreen extends ConsumerWidget {
+class MoreScreen extends ConsumerStatefulWidget {
   const MoreScreen({super.key});
+
+  @override
+  ConsumerState<MoreScreen> createState() => _MoreScreenState();
+}
+
+class _MoreScreenState extends ConsumerState<MoreScreen> {
+  final _picker = ImagePicker();
+  bool _uploadingLogo = false;
 
   static const _bg = Color(0xFFF5F5F5);
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
-  static const _border = Color(0xFFE8E8E8);
+  static const _border = Color(0xFFE5E5E5);
+  static const _rowBg = Colors.white;
 
   String _initials(String? email) {
     if (email == null || email.isEmpty) return '?';
@@ -28,20 +37,67 @@ class MoreScreen extends ConsumerWidget {
 
   String _roleLabel(String role) {
     switch (role) {
+      case 'platform_admin':
+        return 'Super admin';
+      case 'brand_owner':
+        return 'Propriétaire marque';
+      case 'tenant_owner':
       case 'owner':
         return 'Propriétaire';
       case 'admin':
+      case 'tenant_admin':
         return 'Administrateur';
       case 'manager':
+      case 'tenant_manager':
         return 'Manager';
       case 'staff':
+      case 'tenant_staff':
         return 'Équipe';
+      case 'coach':
+        return 'Coach';
       default:
-        return role;
+        return role.replaceAll('_', ' ');
     }
   }
 
-  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+  Future<void> _pickAndUploadLogo() async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 90,
+    );
+    if (picked == null) return;
+
+    final token = ref.read(accessTokenProvider);
+    final tenantId = ref.read(selectedTenantIdProvider);
+    if (token == null || tenantId == null) return;
+
+    setState(() => _uploadingLogo = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      final mime = picked.mimeType ?? 'image/jpeg';
+      await ref.read(mobileApiProvider).uploadTenantLogo(
+            accessToken: token,
+            tenantId: tenantId,
+            bytes: bytes,
+            filename: picked.name,
+            mimeType: mime,
+          );
+      ref.invalidate(tenantBrandingProvider);
+      await ref.read(tenantBrandingProvider.future);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload logo échoué : $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingLogo = false);
+    }
+  }
+
+  Future<void> _logout() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -56,6 +112,7 @@ class MoreScreen extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
             child: const Text('Déconnexion'),
           ),
         ],
@@ -65,11 +122,11 @@ class MoreScreen extends ConsumerWidget {
 
     await ref.read(selectedTenantIdProvider.notifier).select(null);
     await Supabase.instance.client.auth.signOut();
-    if (context.mounted) context.go('/login');
+    if (mounted) context.go('/login');
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final bootstrap = ref.watch(bootstrapProvider);
     final tenantId = ref.watch(selectedTenantIdProvider);
     final tenants = ref.watch(tenantsProvider).valueOrNull ?? const [];
@@ -78,11 +135,19 @@ class MoreScreen extends ConsumerWidget {
     final cashAsync = ref.watch(cashSessionProvider);
     final brandingAsync = ref.watch(tenantBrandingProvider);
 
+    final branding = brandingAsync.valueOrNull;
+    final displayName = (branding?.displayName.isNotEmpty ?? false)
+        ? branding!.displayName
+        : (tenant?.name ?? 'Aucun institut');
+    final logoUrl = branding?.logoUrl;
+    final roleText = tenant != null ? _roleLabel(tenant.role) : null;
+
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
+        bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
           children: [
             const Text(
               'Plus',
@@ -94,157 +159,122 @@ class MoreScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 20),
-            brandingAsync.when(
-              loading: () => _ProfileHero(
-                initials: _initials(email),
-                appName: bootstrap.appName,
-                tenantName: tenant?.name ?? 'Aucun institut',
-                role: tenant != null ? _roleLabel(tenant.role) : null,
-              ),
-              error: (_, __) => _ProfileHero(
-                initials: _initials(email),
-                appName: bootstrap.appName,
-                tenantName: tenant?.name ?? 'Aucun institut',
-                role: tenant != null ? _roleLabel(tenant.role) : null,
-              ),
-              data: (branding) => _ProfileHero(
-                initials: _initials(email),
-                appName: bootstrap.appName,
-                tenantName: branding.displayName.isNotEmpty
-                    ? branding.displayName
-                    : (tenant?.name ?? 'Aucun institut'),
-                role: tenant != null ? _roleLabel(tenant.role) : null,
-                logoUrl: branding.logoUrl,
-              ),
+            _ProfileHero(
+              logoUrl: logoUrl,
+              tenantName: displayName,
+              email: email,
+              roleLabel: roleText,
+              fallbackInitials: _initials(email),
             ),
-            const SizedBox(height: 16),
-            const BrandingLogoSection(),
+            const SizedBox(height: 24),
             cashAsync.when(
               loading: () => const SizedBox.shrink(),
               error: (e, st) => const SizedBox.shrink(),
               data: (session) {
                 if (session == null) return const SizedBox.shrink();
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _SectionCard(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: _SectionGroup(
                     title: 'Caisse',
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF22C55E),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Session ouverte',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: _black,
-                                ),
-                              ),
-                              Text(
-                                '${session.salesCount} ventes · ${formatEuros(session.totalCents)}',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: _muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            ref.read(cashInitialTabProvider.notifier).state = 1;
-                            context.go('/app/cash');
-                          },
-                          child: const Text('Voir'),
-                        ),
-                      ],
-                    ),
+                    children: [
+                      _MenuRow(
+                        leading: _StatusDot(color: Color(0xFF10B981)),
+                        title: 'Session ouverte',
+                        subtitle:
+                            '${session.salesCount} ventes · ${formatEuros(session.totalCents)}',
+                        onTap: () {
+                          ref.read(cashInitialTabProvider.notifier).state = 1;
+                          context.go('/app/cash');
+                        },
+                      ),
+                    ],
                   ),
                 );
               },
             ),
-            _SectionCard(
+            _SectionGroup(
               title: 'Institut',
-              child: Column(
-                children: [
-                  _MenuRow(
-                    icon: Icons.storefront_outlined,
-                    title: 'Changer d’institut',
-                    subtitle: tenants.length > 1
-                        ? '${tenants.length} instituts disponibles'
-                        : 'Sélectionner un autre espace',
-                    onTap: () => context.go('/tenants'),
+              children: [
+                _MenuRow(
+                  leading: _LogoAvatar(
+                    logoUrl: logoUrl,
+                    label: displayName,
+                    loading: _uploadingLogo,
                   ),
-                  if (tenant != null) ...[
-                    const Divider(height: 1, color: _border),
-                    _MenuRow(
-                      icon: Icons.badge_outlined,
-                      title: 'Rôle',
-                      subtitle: _roleLabel(tenant.role),
-                      showChevron: false,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _SectionCard(
-              title: 'Compte',
-              child: Column(
-                children: [
-                  if (email != null)
-                    _MenuRow(
-                      icon: Icons.mail_outline,
-                      title: email,
-                      subtitle: 'Adresse de connexion',
-                      showChevron: false,
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _SectionCard(
-              title: 'Application',
-              child: _MenuRow(
-                icon: Icons.info_outline,
-                title: bootstrap.appName,
-                subtitle: 'Version 1.0.0',
-                showChevron: false,
-              ),
+                  title: 'Logo institut',
+                  subtitle: _uploadingLogo
+                      ? 'Envoi en cours…'
+                      : 'Appuyez pour changer',
+                  onTap: _uploadingLogo ? null : _pickAndUploadLogo,
+                ),
+                _MenuRow(
+                  leading: _IconTile(icon: Icons.storefront_outlined),
+                  title: 'Changer d’institut',
+                  subtitle: tenants.length > 1
+                      ? '${tenants.length} instituts disponibles'
+                      : 'Sélectionner un autre espace',
+                  onTap: () => context.go('/tenants'),
+                ),
+                if (roleText != null)
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.badge_outlined),
+                    title: 'Rôle',
+                    subtitle: roleText,
+                    showChevron: false,
+                  ),
+              ],
             ),
             const SizedBox(height: 24),
+            _SectionGroup(
+              title: 'Compte',
+              children: [
+                if (email != null)
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.mail_outline_rounded),
+                    title: email,
+                    subtitle: 'Adresse de connexion',
+                    showChevron: false,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _SectionGroup(
+              title: 'Application',
+              children: [
+                _MenuRow(
+                  leading: _IconTile(icon: Icons.info_outline_rounded),
+                  title: bootstrap.appName,
+                  subtitle: 'Version 1.0.0',
+                  showChevron: false,
+                ),
+              ],
+            ),
+            const SizedBox(height: 28),
             OutlinedButton(
-              onPressed: () => _logout(context, ref),
+              onPressed: _logout,
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFB91C1C),
-                side: const BorderSide(color: Color(0xFFFCA5A5)),
+                foregroundColor: const Color(0xFFDC2626),
+                side: const BorderSide(color: Color(0xFFFECACA)),
+                backgroundColor: _rowBg,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.logout, size: 18),
+                  Icon(Icons.logout_rounded, size: 18),
                   SizedBox(width: 8),
                   Text(
                     'Se déconnecter',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                   ),
                 ],
               ),
+            ),
+            SizedBox(
+              height: MediaQuery.viewPaddingOf(context).bottom + 16,
             ),
           ],
         ),
@@ -255,63 +285,34 @@ class MoreScreen extends ConsumerWidget {
 
 class _ProfileHero extends StatelessWidget {
   const _ProfileHero({
-    required this.initials,
-    required this.appName,
+    required this.logoUrl,
     required this.tenantName,
-    this.role,
-    this.logoUrl,
+    required this.email,
+    required this.roleLabel,
+    required this.fallbackInitials,
   });
 
-  final String initials;
-  final String appName;
-  final String tenantName;
-  final String? role;
   final String? logoUrl;
+  final String tenantName;
+  final String? email;
+  final String? roleLabel;
+  final String fallbackInitials;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: MoreScreen._black,
-        borderRadius: BorderRadius.circular(18),
+        color: const Color(0xFF0A0A0A),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          if (logoUrl != null && logoUrl!.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.network(
-                logoUrl!,
-                width: 56,
-                height: 56,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => TenantLogoAvatar(
-                  label: tenantName,
-                  size: 56,
-                  primaryColor: Colors.white.withValues(alpha: 0.12),
-                ),
-              ),
-            )
-          else
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                initials,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          const SizedBox(width: 16),
+          _HeroLogo(
+            logoUrl: logoUrl,
+            fallbackInitials: fallbackInitials,
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,39 +320,28 @@ class _ProfileHero extends StatelessWidget {
                 Text(
                   tenantName,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
+                    letterSpacing: -0.2,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  appName,
+                  [
+                    if (roleLabel != null) roleLabel!,
+                    if (email != null) email!,
+                  ].join(' · '),
                   style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.7),
+                    height: 1.35,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                if (role != null) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      role!.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -361,55 +351,115 @@ class _ProfileHero extends StatelessWidget {
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.child});
+class _HeroLogo extends StatelessWidget {
+  const _HeroLogo({required this.logoUrl, required this.fallbackInitials});
 
-  final String title;
-  final Widget child;
+  final String? logoUrl;
+  final String fallbackInitials;
 
   @override
   Widget build(BuildContext context) {
+    const size = 52.0;
+    if (logoUrl != null && logoUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: size,
+          height: size,
+          color: Colors.white,
+          child: Image.network(
+            logoUrl!,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => _initialsFallback(),
+          ),
+        ),
+      );
+    }
+    return _initialsFallback();
+  }
+
+  Widget _initialsFallback() {
     return Container(
+      width: 52,
+      height: 52,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: MoreScreen._border),
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
-            child: Text(
-              title.toUpperCase(),
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.7,
-                color: MoreScreen._muted,
-              ),
+      child: Text(
+        fallbackInitials,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionGroup extends StatelessWidget {
+  const _SectionGroup({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var i = 0; i < children.length; i++) {
+      rows.add(children[i]);
+      if (i < children.length - 1) {
+        rows.add(const Divider(
+          height: 1,
+          thickness: 1,
+          color: Color(0xFFF1F1F1),
+          indent: 62,
+        ));
+      }
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+          child: Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+              color: _MoreScreenState._muted,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(6, 8, 6, 6),
-            child: child,
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: _MoreScreenState._rowBg,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _MoreScreenState._border),
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: rows,
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _MenuRow extends StatelessWidget {
   const _MenuRow({
-    required this.icon,
+    required this.leading,
     required this.title,
     this.subtitle,
     this.onTap,
     this.showChevron = true,
   });
 
-  final IconData icon;
+  final Widget leading;
   final String title;
   final String? subtitle;
   final VoidCallback? onTap;
@@ -421,32 +471,30 @@ class _MenuRow extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
           child: Row(
             children: [
-              Container(
+              SizedBox(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F3F3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, size: 20, color: MoreScreen._black),
+                child: Center(child: leading),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       title,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: MoreScreen._black,
+                        color: _MoreScreenState._black,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 2),
@@ -454,8 +502,10 @@ class _MenuRow extends StatelessWidget {
                         subtitle!,
                         style: const TextStyle(
                           fontSize: 12,
-                          color: MoreScreen._muted,
+                          color: _MoreScreenState._muted,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ],
@@ -463,14 +513,88 @@ class _MenuRow extends StatelessWidget {
               ),
               if (showChevron && onTap != null)
                 const Icon(
-                  Icons.chevron_right,
-                  color: MoreScreen._muted,
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFFB5B5B5),
                   size: 22,
                 ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _IconTile extends StatelessWidget {
+  const _IconTile({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, size: 18, color: _MoreScreenState._black),
+    );
+  }
+}
+
+class _LogoAvatar extends StatelessWidget {
+  const _LogoAvatar({
+    required this.logoUrl,
+    required this.label,
+    required this.loading,
+  });
+
+  final String? logoUrl;
+  final String label;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return const SizedBox(
+        width: 22,
+        height: 22,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+    if (logoUrl != null && logoUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 36,
+          height: 36,
+          color: Colors.white,
+          child: Image.network(
+            logoUrl!,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) =>
+                TenantLogoAvatar(label: label, size: 36),
+          ),
+        ),
+      );
+    }
+    return TenantLogoAvatar(label: label, size: 36);
+  }
+}
+
+class _StatusDot extends StatelessWidget {
+  const _StatusDot({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

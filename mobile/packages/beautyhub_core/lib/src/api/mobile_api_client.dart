@@ -243,6 +243,36 @@ class MobileApiClient {
     return PosContext.fromJson(body);
   }
 
+  /// Créé une nouvelle cliente depuis le mobile (POS / agenda).
+  /// Retourne l'option prête à insérer dans un picker.
+  Future<PosOption> createInstitutClient({
+    required String accessToken,
+    required String tenantId,
+    String? fullName,
+    String? email,
+    String? phone,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/clients'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        if (fullName != null && fullName.isNotEmpty) 'fullName': fullName,
+        if (email != null && email.isNotEmpty) 'email': email,
+        if (phone != null && phone.isNotEmpty) 'phone': phone,
+      }),
+    );
+    final body = await _decode(response);
+    final raw = body['client'];
+    if (raw is! Map) {
+      throw MobileApiException('Réponse invalide');
+    }
+    final map = Map<String, dynamic>.from(raw);
+    return PosOption(
+      id: map['id'] as String,
+      label: map['label'] as String? ?? '',
+    );
+  }
+
   Future<PosCheckoutResult> checkout({
     required String accessToken,
     required String tenantId,

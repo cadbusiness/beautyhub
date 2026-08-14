@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/pos_cart_provider.dart';
 import '../../state/session_providers.dart';
+import '../../widgets/new_client_sheet.dart';
 import '../../widgets/searchable_picker.dart';
 import '../shared/catalog_item_thumb.dart';
 import '../shared/money.dart';
@@ -455,6 +456,14 @@ class _CartSheet extends ConsumerWidget {
                   nullOption:
                       const PickerItem(id: '__none__', title: 'Aucune cliente'),
                   emptyMessage: 'Aucune cliente trouvée.',
+                  createAction: PickerCreateAction(
+                    label: 'Nouvelle',
+                    onCreate: (sheetCtx, initialQuery) => showNewClientSheet(
+                      context: sheetCtx,
+                      ref: ref,
+                      initialQuery: initialQuery,
+                    ),
+                  ),
                 );
                 if (picked == null) {
                   onClientChanged(null);

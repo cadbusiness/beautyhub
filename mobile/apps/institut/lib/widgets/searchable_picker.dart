@@ -137,10 +137,32 @@ class SearchablePickerField extends StatelessWidget {
   }
 }
 
+/// Action optionnelle "+ créer" dans le header du picker.
+class PickerCreateAction {
+  const PickerCreateAction({
+    required this.label,
+    required this.onCreate,
+  });
+
+  final String label;
+
+  /// Appelé quand l'utilisateur tape "+". Peut afficher un formulaire dans un
+  /// dialog / sub-sheet, faire l'appel API, et retourner le nouvel item à
+  /// sélectionner (ou `null` si annulé).
+  ///
+  /// Le [initialQuery] est le texte actuellement tapé dans la recherche —
+  /// pratique pour pré-remplir un champ nom ou téléphone.
+  final Future<PickerItem?> Function(
+    BuildContext sheetContext,
+    String initialQuery,
+  ) onCreate;
+}
+
 /// Ouvre un bottom sheet plein-écran avec recherche + liste virtualisée.
 ///
 /// Retourne l'id sélectionné (`null` si "Aucun" ou fermé sans choisir).
 /// Passer [nullOption] pour proposer une entrée "aucun/sans" en haut de liste.
+/// Passer [createAction] pour afficher un bouton "+ Nouveau" dans le header.
 Future<String?> showSearchablePicker({
   required BuildContext context,
   required String title,
@@ -149,6 +171,7 @@ Future<String?> showSearchablePicker({
   String searchHint = 'Rechercher…',
   PickerItem? nullOption,
   String emptyMessage = 'Aucun résultat.',
+  PickerCreateAction? createAction,
 }) {
   return showModalBottomSheet<String?>(
     context: context,
@@ -165,6 +188,7 @@ Future<String?> showSearchablePicker({
       searchHint: searchHint,
       nullOption: nullOption,
       emptyMessage: emptyMessage,
+      createAction: createAction,
     ),
   );
 }
@@ -177,6 +201,7 @@ class _PickerSheet extends StatefulWidget {
     required this.searchHint,
     required this.nullOption,
     required this.emptyMessage,
+    required this.createAction,
   });
 
   final String title;
@@ -185,6 +210,7 @@ class _PickerSheet extends StatefulWidget {
   final String searchHint;
   final PickerItem? nullOption;
   final String emptyMessage;
+  final PickerCreateAction? createAction;
 
   @override
   State<_PickerSheet> createState() => _PickerSheetState();
@@ -205,6 +231,17 @@ class _PickerSheetState extends State<_PickerSheet> {
     _searchController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleCreate(BuildContext sheetContext) async {
+    final action = widget.createAction;
+    if (action == null) return;
+    final navigator = Navigator.of(sheetContext);
+    final created = await action.onCreate(sheetContext, _query);
+    if (!mounted) return;
+    if (created != null) {
+      navigator.pop<String?>(created.id);
+    }
   }
 
   @override
@@ -242,6 +279,30 @@ class _PickerSheetState extends State<_PickerSheet> {
                       ),
                     ),
                   ),
+                  if (widget.createAction != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: TextButton.icon(
+                        onPressed: () => _handleCreate(context),
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: Text(widget.createAction!.label),
+                        style: TextButton.styleFrom(
+                          foregroundColor: _black,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          side: const BorderSide(color: _border),
+                        ),
+                      ),
+                    ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded, size: 22),
@@ -319,10 +380,38 @@ class _PickerSheetState extends State<_PickerSheet> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Text(
-            widget.emptyMessage,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: _muted, fontSize: 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.emptyMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: _muted, fontSize: 14),
+              ),
+              if (widget.createAction != null) ...[
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () => _handleCreate(context),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: Text(widget.createAction!.label),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _black,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       );

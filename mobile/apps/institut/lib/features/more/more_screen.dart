@@ -193,7 +193,31 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               },
             ),
             _SectionGroup(
-              title: 'Institut',
+              title: 'Gestion',
+              children: [
+                _MenuRow(
+                  leading: _IconTile(icon: Icons.people_outline_rounded),
+                  title: 'Clientes',
+                  subtitle: 'Rechercher & consulter toutes les fiches',
+                  onTap: () => context.go('/app/more/clients'),
+                ),
+                _MenuRow(
+                  leading: _IconTile(icon: Icons.groups_2_outlined),
+                  title: 'Équipe',
+                  subtitle: 'Praticiennes de l’institut',
+                  onTap: () => context.go('/app/more/team'),
+                ),
+                _MenuRow(
+                  leading: _IconTile(icon: Icons.store_mall_directory_outlined),
+                  title: 'Institut',
+                  subtitle: 'Contact, adresse & horaires publics',
+                  onTap: () => context.go('/app/more/institut'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _SectionGroup(
+              title: 'Espace',
               children: [
                 _MenuRow(
                   leading: _LogoAvatar(

@@ -8,9 +8,12 @@ import 'app_theme.dart';
 import 'features/agenda/agenda_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/cash/cash_screen.dart';
+import 'features/clients/clients_screen.dart';
 import 'features/home/home_screen.dart';
+import 'features/institut/institut_screen.dart';
 import 'features/more/more_screen.dart';
 import 'features/shell/institut_shell.dart';
+import 'features/team/team_screen.dart';
 import 'features/tenant/tenant_picker_screen.dart';
 import 'state/session_providers.dart';
 
@@ -134,6 +137,20 @@ class _InstitutRouterAppState extends ConsumerState<_InstitutRouterApp> {
                 GoRoute(
                   path: '/app/more',
                   builder: (_, _) => const MoreScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'clients',
+                      builder: (_, _) => const ClientsScreen(),
+                    ),
+                    GoRoute(
+                      path: 'team',
+                      builder: (_, _) => const TeamScreen(),
+                    ),
+                    GoRoute(
+                      path: 'institut',
+                      builder: (_, _) => const InstitutScreen(),
+                    ),
+                  ],
                 ),
               ],
             ),

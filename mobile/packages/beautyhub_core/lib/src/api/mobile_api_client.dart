@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
+import '../models/institut_models.dart';
 import '../models/ops_models.dart';
 import '../models/pos_models.dart';
 
@@ -303,6 +304,92 @@ class MobileApiClient {
       ),
       account: account,
     );
+  }
+
+  /// Liste paginée des clientes avec recherche optionnelle.
+  Future<InstClientPage> fetchInstitutClients({
+    required String accessToken,
+    required String tenantId,
+    String query = '',
+    int limit = 60,
+    String? cursor,
+  }) async {
+    final params = <String, String>{
+      if (query.isNotEmpty) 'q': query,
+      'limit': '$limit',
+      if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+    };
+    final response = await _http.get(
+      _uri('/api/mobile/institut/clients', params),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    final list = body['items'] as List? ?? const [];
+    return InstClientPage(
+      items: list
+          .whereType<Map>()
+          .map((e) => InstClient.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+      nextCursor: body['nextCursor'] as String?,
+    );
+  }
+
+  /// Historique des ventes de caisse (pagination cursor).
+  Future<InstSalePage> fetchInstitutSales({
+    required String accessToken,
+    required String tenantId,
+    int limit = 40,
+    String? cursor,
+    String? status,
+  }) async {
+    final params = <String, String>{
+      'limit': '$limit',
+      if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+      if (status != null && status.isNotEmpty) 'status': status,
+    };
+    final response = await _http.get(
+      _uri('/api/mobile/institut/sales', params),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    final list = body['items'] as List? ?? const [];
+    return InstSalePage(
+      items: list
+          .whereType<Map>()
+          .map((e) => InstSale.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+      nextCursor: body['nextCursor'] as String?,
+    );
+  }
+
+  /// Membres de l'équipe (staff institut).
+  Future<List<InstStaffMember>> fetchInstitutTeam({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/team'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    final list = body['items'] as List? ?? const [];
+    return list
+        .whereType<Map>()
+        .map((e) => InstStaffMember.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
+  }
+
+  /// Infos publiques de l'institut (nom, contact, horaires, compteurs).
+  Future<InstTenantInfo> fetchInstitutTenant({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/tenant'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return InstTenantInfo.fromJson(body);
   }
 
   Future<PosCheckoutResult> checkout({

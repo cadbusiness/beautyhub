@@ -7,6 +7,90 @@ import type { Database } from "@/lib/db/database.types";
 
 type ClientInsert = Database["public"]["Tables"]["clients"]["Insert"];
 
+const DEFAULT_LIMIT = 60;
+const MAX_LIMIT = 200;
+
+function isPlaceholderEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return (
+    email.endsWith("@beautyhub.local") ||
+    email.endsWith("@no-email.local") ||
+    email.endsWith("@overcache.local") ||
+    email.includes("@import.")
+  );
+}
+
+/**
+ * GET /api/mobile/institut/clients
+ * Liste paginée + recherche pour l'app mobile.
+ * ?q=texte&limit=60&cursor=<created_at ISO>
+ */
+export async function GET(request: Request) {
+  try {
+    const session = await requireMobileTenantSession(request, {
+      moduleId: "institut",
+    });
+    const url = new URL(request.url);
+    const q = (url.searchParams.get("q") ?? "").trim();
+    const limitRaw = Number.parseInt(
+      url.searchParams.get("limit") ?? String(DEFAULT_LIMIT),
+      10,
+    );
+    const limit = Number.isFinite(limitRaw)
+      ? Math.min(Math.max(limitRaw, 1), MAX_LIMIT)
+      : DEFAULT_LIMIT;
+    const cursor = url.searchParams.get("cursor");
+
+    let query = session.supabase
+      .from("clients")
+      .select(
+        "id, full_name, email, phone, marketing_opt_in, tags, login_id, created_at",
+      )
+      .eq("tenant_id", session.tenant.id)
+      .order("created_at", { ascending: false })
+      .limit(limit + 1);
+
+    if (q.length >= 2) {
+      const like = `%${q}%`;
+      query = query.or(
+        `full_name.ilike.${like},email.ilike.${like},phone.ilike.${like}`,
+      );
+    }
+    if (cursor) {
+      query = query.lt("created_at", cursor);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      return Response.json(
+        { error: "fetch_failed", message: error.message },
+        { status: 500 },
+      );
+    }
+
+    const rows = data ?? [];
+    const hasMore = rows.length > limit;
+    const items = (hasMore ? rows.slice(0, limit) : rows).map((c) => {
+      const displayEmail = isPlaceholderEmail(c.email) ? null : c.email;
+      return {
+        id: c.id,
+        fullName: c.full_name,
+        email: displayEmail,
+        phone: c.phone,
+        marketingOptIn: c.marketing_opt_in ?? false,
+        tags: c.tags ?? [],
+        hasAccount: !!c.login_id,
+        createdAt: c.created_at,
+      };
+    });
+    const nextCursor = hasMore ? rows[limit - 1].created_at : null;
+
+    return Response.json({ items, nextCursor });
+  } catch (error) {
+    return mobileErrorResponse(error);
+  }
+}
+
 interface CreateClientPayload {
   email?: unknown;
   fullName?: unknown;

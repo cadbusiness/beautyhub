@@ -149,3 +149,37 @@ final posContextProvider = FutureProvider.autoDispose<PosContext>((ref) async {
   final api = ref.watch(mobileApiProvider);
   return api.fetchPosContext(accessToken: token, tenantId: tenantId);
 });
+
+final institutTeamProvider =
+    FutureProvider.autoDispose<List<InstStaffMember>>((ref) async {
+  final token = ref.watch(accessTokenProvider);
+  final tenantId = ref.watch(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  final api = ref.watch(mobileApiProvider);
+  return api.fetchInstitutTeam(accessToken: token, tenantId: tenantId);
+});
+
+final institutTenantInfoProvider =
+    FutureProvider.autoDispose<InstTenantInfo>((ref) async {
+  final token = ref.watch(accessTokenProvider);
+  final tenantId = ref.watch(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  final api = ref.watch(mobileApiProvider);
+  return api.fetchInstitutTenant(accessToken: token, tenantId: tenantId);
+});
+
+/// Page 0 des ventes (les autres pages sont chargées manuellement via l'API).
+final institutSalesFirstPageProvider =
+    FutureProvider.autoDispose<InstSalePage>((ref) async {
+  final token = ref.watch(accessTokenProvider);
+  final tenantId = ref.watch(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  final api = ref.watch(mobileApiProvider);
+  return api.fetchInstitutSales(accessToken: token, tenantId: tenantId);
+});

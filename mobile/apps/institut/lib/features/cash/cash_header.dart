@@ -49,6 +49,12 @@ class CashScreenHeader extends StatelessWidget {
                 selected: selectedIndex == 1,
                 onTap: () => onChanged(1),
               ),
+              const SizedBox(width: 6),
+              _Segment(
+                label: 'Historique',
+                selected: selectedIndex == 2,
+                onTap: () => onChanged(2),
+              ),
             ],
           ),
         ),

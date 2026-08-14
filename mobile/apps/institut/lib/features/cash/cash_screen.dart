@@ -7,6 +7,7 @@ import '../../state/session_providers.dart';
 import '../shared/money.dart';
 import 'cash_header.dart';
 import 'pos_sale_tab.dart';
+import 'sales_history_tab.dart';
 
 class CashScreen extends ConsumerStatefulWidget {
   const CashScreen({super.key});
@@ -242,6 +243,7 @@ class _CashScreenState extends ConsumerState<CashScreen> {
                   onRefresh: _refresh,
                   child: const PosSaleTab(),
                 ),
+                const SalesHistoryTab(),
               ],
             ),
           ),

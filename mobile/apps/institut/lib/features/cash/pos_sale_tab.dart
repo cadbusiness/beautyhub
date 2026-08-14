@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/pos_cart_provider.dart';
 import '../../state/session_providers.dart';
+import '../../widgets/searchable_picker.dart';
 import '../shared/catalog_item_thumb.dart';
 import '../shared/money.dart';
 import 'catalog_item_detail_sheet.dart';
@@ -421,22 +422,50 @@ class _CartSheet extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          DropdownButtonFormField<String?>(
-            initialValue: clientId,
-            decoration: const InputDecoration(
-              labelText: 'Client (optionnel)',
-              filled: true,
-              fillColor: Color(0xFFF9F9F9),
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              const DropdownMenuItem<String?>(value: null, child: Text('—')),
-              ...ctx.clients.map(
-                (c) => DropdownMenuItem(value: c.id, child: Text(c.label)),
-              ),
-            ],
-            onChanged: onClientChanged,
-          ),
+          Builder(builder: (fieldCtx) {
+            final selectedClient = clientId == null
+                ? null
+                : ctx.clients.firstWhere(
+                    (c) => c.id == clientId,
+                    orElse: () => PosOption(id: clientId!, label: ''),
+                  );
+            final split = selectedClient == null
+                ? null
+                : splitLabelWithEmail(selectedClient.label);
+            return SearchablePickerField(
+              label: 'Cliente (optionnel)',
+              value: split?.title.isNotEmpty == true ? split!.title : null,
+              selectedSubtitle: split?.subtitle,
+              placeholder: 'Aucune cliente',
+              onOpen: () async {
+                final picked = await showSearchablePicker(
+                  context: fieldCtx,
+                  title: 'Choisir une cliente',
+                  items: ctx.clients.map((c) {
+                    final s = splitLabelWithEmail(c.label);
+                    return PickerItem(
+                      id: c.id,
+                      title: s.title,
+                      subtitle: s.subtitle,
+                      searchKeywords: [c.label],
+                    );
+                  }).toList(),
+                  selectedId: clientId,
+                  searchHint: 'Rechercher (nom, email)…',
+                  nullOption:
+                      const PickerItem(id: '__none__', title: 'Aucune cliente'),
+                  emptyMessage: 'Aucune cliente trouvée.',
+                );
+                if (picked == null) {
+                  onClientChanged(null);
+                } else if (picked == '__none__') {
+                  onClientChanged(null);
+                } else {
+                  onClientChanged(picked);
+                }
+              },
+            );
+          }),
           const SizedBox(height: 12),
           SegmentedButton<String>(
             segments: [

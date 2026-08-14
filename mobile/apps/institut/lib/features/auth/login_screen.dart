@@ -58,328 +58,248 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final bootstrap = ref.watch(bootstrapProvider);
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final brandInitial = bootstrap.brand.name.isNotEmpty
-        ? bootstrap.brand.name.characters.first.toUpperCase()
-        : 'B';
+    final logoUrl = bootstrap.branding.logoUrl;
+    final hasLogo = logoUrl != null && logoUrl.isNotEmpty;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(
+      value: SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.transparent,
       ),
       child: Scaffold(
-        backgroundColor: theme.colorScheme.surface,
-        body: Column(
-          children: [
-            _BrandHeader(
-              primary: primary,
-              appName: bootstrap.appName,
-              brandName: bootstrap.brand.name,
-              initial: brandInitial,
-              logoUrl: bootstrap.branding.logoUrl,
-            ),
-            Expanded(
-              child: SafeArea(
-                top: false,
-                child: Form(
-                  key: _formKey,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    children: [
-                      Text(
-                        'Connexion équipe',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Accédez à l’agenda et à la caisse de votre institut.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          height: 1.35,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      TextFormField(
-                        controller: _email,
-                        focusNode: _emailFocus,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        autofillHints: const [AutofillHints.email],
-                        onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
-                        validator: (value) {
-                          final v = value?.trim() ?? '';
-                          if (v.isEmpty || !v.contains('@')) {
-                            return 'Email invalide';
-                          }
-                          return null;
-                        },
-                        decoration: _fieldDecoration(
-                          context,
-                          label: 'Email',
-                          icon: Icons.mail_outline_rounded,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _password,
-                        focusNode: _passwordFocus,
-                        obscureText: _obscure,
-                        textInputAction: TextInputAction.done,
-                        autofillHints: const [AutofillHints.password],
-                        onFieldSubmitted: (_) => _submit(),
-                        validator: (value) {
-                          if ((value ?? '').isEmpty) {
-                            return 'Mot de passe requis';
-                          }
-                          return null;
-                        },
-                        decoration: _fieldDecoration(
-                          context,
-                          label: 'Mot de passe',
-                          icon: Icons.lock_outline_rounded,
-                          suffix: IconButton(
-                            onPressed: () =>
-                                setState(() => _obscure = !_obscure),
-                            icon: Icon(
-                              _obscure
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                            ),
-                            tooltip: _obscure
-                                ? 'Afficher le mot de passe'
-                                : 'Masquer le mot de passe',
-                          ),
-                        ),
-                      ),
-                      if (_error != null) ...[
-                        const SizedBox(height: 14),
-                        _ErrorBanner(message: _error!),
-                      ],
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        height: 52,
-                        child: FilledButton(
-                          onPressed: _loading ? null : _submit,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            textStyle: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          child: _loading
-                              ? const SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.4,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Se connecter'),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Réservé à l’équipe de l’institut.',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(28, 48, 28, 24),
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
+              children: [
+                if (hasLogo)
+                  _LogoMark(url: logoUrl)
+                else
+                  _WordMarkFallback(name: bootstrap.brand.name),
+                const SizedBox(height: 40),
+                const Text(
+                  'Connexion',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.4,
+                    color: Color(0xFF0A0A0A),
+                    height: 1.15,
                   ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  '${bootstrap.appName} — accédez à l’agenda et à la caisse.',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Color(0xFF737373),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                _FieldLabel('Email'),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _email,
+                  focusNode: _emailFocus,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.email],
+                  onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
+                  validator: (value) {
+                    final v = value?.trim() ?? '';
+                    if (v.isEmpty || !v.contains('@')) {
+                      return 'Email invalide';
+                    }
+                    return null;
+                  },
+                  decoration: _fieldDecoration(hint: 'vous@institut.com'),
+                ),
+                const SizedBox(height: 18),
+                _FieldLabel('Mot de passe'),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _password,
+                  focusNode: _passwordFocus,
+                  obscureText: _obscure,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.password],
+                  onFieldSubmitted: (_) => _submit(),
+                  validator: (value) {
+                    if ((value ?? '').isEmpty) {
+                      return 'Mot de passe requis';
+                    }
+                    return null;
+                  },
+                  decoration: _fieldDecoration(
+                    hint: '••••••••',
+                    suffix: IconButton(
+                      onPressed: () =>
+                          setState(() => _obscure = !_obscure),
+                      icon: Icon(
+                        _obscure
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        size: 20,
+                        color: const Color(0xFF737373),
+                      ),
+                      splashRadius: 20,
+                      tooltip: _obscure
+                          ? 'Afficher le mot de passe'
+                          : 'Masquer le mot de passe',
+                    ),
+                  ),
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 16),
+                  _ErrorBanner(message: _error!),
+                ],
+                const SizedBox(height: 28),
+                SizedBox(
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: _loading ? null : _submit,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    child: _loading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Se connecter'),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Réservé à l’équipe de l’institut.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF9CA3AF),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  InputDecoration _fieldDecoration(
-    BuildContext context, {
-    required String label,
-    required IconData icon,
+  InputDecoration _fieldDecoration({
+    required String hint,
     Widget? suffix,
   }) {
-    final theme = Theme.of(context);
+    const borderColor = Color(0xFFE5E5E5);
+    const focusedColor = Color(0xFF0A0A0A);
     return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, size: 22),
+      hintText: hint,
+      hintStyle: const TextStyle(color: Color(0xFFB5B5B5), fontSize: 15),
       suffixIcon: suffix,
       filled: true,
-      fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
-        alpha: 0.45,
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
-        ),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(
-          color: theme.colorScheme.primary,
-          width: 1.5,
-        ),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: focusedColor, width: 1.4),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: theme.colorScheme.error),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFDC2626)),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFDC2626), width: 1.4),
       ),
     );
   }
 }
 
-class _BrandHeader extends StatelessWidget {
-  const _BrandHeader({
-    required this.primary,
-    required this.appName,
-    required this.brandName,
-    required this.initial,
-    this.logoUrl,
-  });
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
 
-  final Color primary;
-  final String appName;
-  final String brandName;
-  final String initial;
-  final String? logoUrl;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final topInset = MediaQuery.paddingOf(context).top;
-    final hasLogo = logoUrl != null && logoUrl!.isNotEmpty;
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(24, topInset + 28, 24, 32),
-      decoration: BoxDecoration(
-        color: primary,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            primary,
-            Color.lerp(primary, const Color(0xFF1E293B), 0.35) ?? primary,
-          ],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (hasLogo)
-            _LogoBadge(url: logoUrl!, fallbackInitial: initial)
-          else
-            _InitialBadge(initial: initial),
-          const SizedBox(height: 20),
-          Text(
-            appName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.6,
-              height: 1.1,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            brandName,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.72),
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: Color(0xFF404040),
       ),
     );
   }
 }
 
-class _InitialBadge extends StatelessWidget {
-  const _InitialBadge({required this.initial});
-
-  final String initial;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 52,
-      height: 52,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
-      ),
-      child: Text(
-        initial,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          height: 1,
-        ),
-      ),
-    );
-  }
-}
-
-class _LogoBadge extends StatelessWidget {
-  const _LogoBadge({required this.url, required this.fallbackInitial});
+class _LogoMark extends StatelessWidget {
+  const _LogoMark({required this.url});
 
   final String url;
-  final String fallbackInitial;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: SizedBox(
+        height: 34,
+        child: Image.network(
+          url,
+          fit: BoxFit.contain,
+          alignment: Alignment.centerLeft,
+          errorBuilder: (_, __, ___) => const _WordMarkFallback(name: 'BeautyHub'),
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) return child;
+            return const SizedBox(width: 24, height: 24);
+          },
+        ),
       ),
-      child: Image.network(
-        url,
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => _InitialBadge(initial: fallbackInitial),
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-          return const SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          );
-        },
+    );
+  }
+}
+
+class _WordMarkFallback extends StatelessWidget {
+  const _WordMarkFallback({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        name.isEmpty ? 'BeautyHub' : name,
+        style: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.4,
+          color: Color(0xFF0A0A0A),
+        ),
       ),
     );
   }
@@ -392,28 +312,30 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.colorScheme.errorContainer.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFECACA)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
+          const Icon(
             Icons.error_outline_rounded,
-            size: 20,
-            color: theme.colorScheme.error,
+            size: 18,
+            color: Color(0xFFDC2626),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onErrorContainer,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF991B1B),
+                height: 1.4,
               ),
             ),
           ),

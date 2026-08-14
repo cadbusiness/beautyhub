@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../state/session_providers.dart';
-import '../../../widgets/new_client_sheet.dart';
+import '../../../widgets/new_client_form.dart';
 import '../../../widgets/searchable_picker.dart';
 
 Future<void> showCreateAppointmentSheet(
@@ -186,14 +186,7 @@ class _CreateAppointmentSheetState
       searchHint: 'Rechercher (nom, email)…',
       nullOption: const PickerItem(id: '__none__', title: 'Sans cliente'),
       emptyMessage: 'Aucune cliente trouvée.',
-      createAction: PickerCreateAction(
-        label: 'Nouvelle',
-        onCreate: (sheetCtx, initialQuery) => showNewClientSheet(
-          context: sheetCtx,
-          ref: ref,
-          initialQuery: initialQuery,
-        ),
-      ),
+      createAction: newClientPickerAction(ref),
     );
     if (picked == null) {
       setState(() => _clientId = null);

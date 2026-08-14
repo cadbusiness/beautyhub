@@ -2,12 +2,17 @@ import {
   mobileErrorResponse,
   requireMobileTenantSession,
 } from "@/lib/mobile/session";
+import { provisionClientAccess } from "@/lib/institut/client-access";
+import type { Database } from "@/lib/db/database.types";
+
+type ClientInsert = Database["public"]["Tables"]["clients"]["Insert"];
 
 interface CreateClientPayload {
   email?: unknown;
   fullName?: unknown;
   phone?: unknown;
   marketingOptIn?: unknown;
+  createAccount?: unknown;
   notes?: unknown;
 }
 
@@ -25,6 +30,7 @@ function normalizeText(value: unknown): string | null {
  * POST /api/mobile/institut/clients
  * Créé une fiche client minimale depuis l'app mobile (POS ou agenda).
  * Retourne la ligne complète pour être injectée dans un picker.
+ * Peut aussi provisionner un compte cliente (login_id + PIN).
  */
 export async function POST(request: Request) {
   try {
@@ -38,6 +44,7 @@ export async function POST(request: Request) {
     const phone = normalizeText(raw.phone);
     const notes = normalizeText(raw.notes);
     const marketingOptIn = raw.marketingOptIn === true;
+    const createAccount = raw.createAccount === true;
 
     if (!email && !fullName && !phone) {
       return Response.json(
@@ -51,13 +58,21 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+    if (createAccount && !email) {
+      return Response.json(
+        {
+          error: "email_required_for_account",
+          message: "Email requis pour créer un compte cliente.",
+        },
+        { status: 400 },
+      );
+    }
 
     // Placeholder email quand pas fourni (walk-in / téléphone only).
-    // Format stable pour éviter les collisions et rester rétro-compatible.
     const effectiveEmail =
       email || `noemail+${crypto.randomUUID()}@beautyhub.local`;
 
-    const insertPayload: Record<string, unknown> = {
+    const insertPayload: ClientInsert = {
       tenant_id: session.tenant.id,
       email: effectiveEmail,
       full_name: fullName,
@@ -66,7 +81,7 @@ export async function POST(request: Request) {
       source: "manual",
     };
     if (notes) {
-      insertPayload.metadata = { notes };
+      insertPayload.metadata = { notes } as ClientInsert["metadata"];
     }
 
     const { data, error } = await session.supabase
@@ -94,6 +109,20 @@ export async function POST(request: Request) {
       );
     }
 
+    let account: { loginId: string; pinCode: string } | null = null;
+    if (createAccount) {
+      try {
+        account = await provisionClientAccess(
+          session.supabase,
+          session.tenant.id,
+          data.id,
+        );
+      } catch (e) {
+        // Ne bloque pas la création client, on retourne juste sans account.
+        console.error("[mobile/clients] provisionClientAccess failed", e);
+      }
+    }
+
     const displayEmail = data.email?.endsWith("@beautyhub.local")
       ? null
       : data.email;
@@ -111,7 +140,9 @@ export async function POST(request: Request) {
           fullName: data.full_name,
           email: displayEmail,
           phone: data.phone,
+          marketingOptIn,
         },
+        account,
       },
       { status: 201 },
     );

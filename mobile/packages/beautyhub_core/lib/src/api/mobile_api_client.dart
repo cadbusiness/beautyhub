@@ -18,6 +18,22 @@ class MobileApiException implements Exception {
   String toString() => message;
 }
 
+/// Credentials retournés quand on créé un compte cliente à la volée.
+class ClientAccountCredentials {
+  const ClientAccountCredentials({required this.loginId, required this.pinCode});
+
+  final String loginId;
+  final String pinCode;
+}
+
+/// Résultat de la création d'une cliente depuis le mobile.
+class CreatedClientResult {
+  const CreatedClientResult({required this.option, this.account});
+
+  final PosOption option;
+  final ClientAccountCredentials? account;
+}
+
 /// Client HTTP authentifié pour les routes `/api/mobile/*`.
 class MobileApiClient {
   MobileApiClient({
@@ -244,13 +260,15 @@ class MobileApiClient {
   }
 
   /// Créé une nouvelle cliente depuis le mobile (POS / agenda).
-  /// Retourne l'option prête à insérer dans un picker.
-  Future<PosOption> createInstitutClient({
+  /// Retourne l'option picker + éventuel compte cliente provisionné.
+  Future<CreatedClientResult> createInstitutClient({
     required String accessToken,
     required String tenantId,
     String? fullName,
     String? email,
     String? phone,
+    bool marketingOptIn = false,
+    bool createAccount = false,
   }) async {
     final response = await _http.post(
       _uri('/api/mobile/institut/clients'),
@@ -259,17 +277,31 @@ class MobileApiClient {
         if (fullName != null && fullName.isNotEmpty) 'fullName': fullName,
         if (email != null && email.isNotEmpty) 'email': email,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
+        'marketingOptIn': marketingOptIn,
+        'createAccount': createAccount,
       }),
     );
     final body = await _decode(response);
-    final raw = body['client'];
-    if (raw is! Map) {
+    final clientRaw = body['client'];
+    if (clientRaw is! Map) {
       throw MobileApiException('Réponse invalide');
     }
-    final map = Map<String, dynamic>.from(raw);
-    return PosOption(
-      id: map['id'] as String,
-      label: map['label'] as String? ?? '',
+    final clientMap = Map<String, dynamic>.from(clientRaw);
+    final accountRaw = body['account'];
+    ClientAccountCredentials? account;
+    if (accountRaw is Map) {
+      final m = Map<String, dynamic>.from(accountRaw);
+      account = ClientAccountCredentials(
+        loginId: m['loginId'] as String? ?? '',
+        pinCode: m['pinCode'] as String? ?? '',
+      );
+    }
+    return CreatedClientResult(
+      option: PosOption(
+        id: clientMap['id'] as String,
+        label: clientMap['label'] as String? ?? '',
+      ),
+      account: account,
     );
   }
 

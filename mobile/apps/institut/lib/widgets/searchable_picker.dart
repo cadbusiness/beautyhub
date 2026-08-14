@@ -137,32 +137,39 @@ class SearchablePickerField extends StatelessWidget {
   }
 }
 
-/// Action optionnelle "+ créer" dans le header du picker.
+/// Controller passé au formulaire de création pour piloter le picker parent.
+abstract class PickerCreateController {
+  /// Retour à la vue liste (annule la création en cours).
+  void cancel();
+
+  /// Confirme la création : ferme le picker et retourne [item.id].
+  void confirm(PickerItem item);
+}
+
+/// Action optionnelle "+ créer" affichée dans le header du picker.
+///
+/// Le [builder] est appelé quand l'utilisateur tape "+" : il doit retourner
+/// le widget de formulaire à afficher **à l'intérieur du même sheet**
+/// (pas de nouvelle modale). Utiliser le [PickerCreateController] pour piloter.
 class PickerCreateAction {
   const PickerCreateAction({
     required this.label,
-    required this.onCreate,
+    required this.title,
+    required this.builder,
   });
 
   final String label;
-
-  /// Appelé quand l'utilisateur tape "+". Peut afficher un formulaire dans un
-  /// dialog / sub-sheet, faire l'appel API, et retourner le nouvel item à
-  /// sélectionner (ou `null` si annulé).
-  ///
-  /// Le [initialQuery] est le texte actuellement tapé dans la recherche —
-  /// pratique pour pré-remplir un champ nom ou téléphone.
-  final Future<PickerItem?> Function(
-    BuildContext sheetContext,
+  final String title;
+  final Widget Function(
+    BuildContext context,
+    PickerCreateController controller,
     String initialQuery,
-  ) onCreate;
+  ) builder;
 }
 
 /// Ouvre un bottom sheet plein-écran avec recherche + liste virtualisée.
 ///
 /// Retourne l'id sélectionné (`null` si "Aucun" ou fermé sans choisir).
-/// Passer [nullOption] pour proposer une entrée "aucun/sans" en haut de liste.
-/// Passer [createAction] pour afficher un bouton "+ Nouveau" dans le header.
 Future<String?> showSearchablePicker({
   required BuildContext context,
   required String title,
@@ -193,6 +200,8 @@ Future<String?> showSearchablePicker({
   );
 }
 
+enum _SheetMode { browse, create }
+
 class _PickerSheet extends StatefulWidget {
   const _PickerSheet({
     required this.title,
@@ -216,15 +225,14 @@ class _PickerSheet extends StatefulWidget {
   State<_PickerSheet> createState() => _PickerSheetState();
 }
 
-class _PickerSheetState extends State<_PickerSheet> {
+class _PickerSheetState extends State<_PickerSheet>
+    implements PickerCreateController {
   final _searchController = TextEditingController();
   final _focusNode = FocusNode();
   String _query = '';
+  _SheetMode _mode = _SheetMode.browse;
 
   static const _border = Color(0xFFE5E5E5);
-  static const _muted = Color(0xFF737373);
-  static const _black = Color(0xFF0A0A0A);
-  static const _fill = Color(0xFFF5F5F5);
 
   @override
   void dispose() {
@@ -233,24 +241,33 @@ class _PickerSheetState extends State<_PickerSheet> {
     super.dispose();
   }
 
-  Future<void> _handleCreate(BuildContext sheetContext) async {
-    final action = widget.createAction;
-    if (action == null) return;
-    final navigator = Navigator.of(sheetContext);
-    final created = await action.onCreate(sheetContext, _query);
+  void _goCreate() {
+    if (widget.createAction == null) return;
+    FocusScope.of(context).unfocus();
+    setState(() => _mode = _SheetMode.create);
+  }
+
+  @override
+  void cancel() {
     if (!mounted) return;
-    if (created != null) {
-      navigator.pop<String?>(created.id);
-    }
+    FocusScope.of(context).unfocus();
+    setState(() => _mode = _SheetMode.browse);
+  }
+
+  @override
+  void confirm(PickerItem item) {
+    if (!mounted) return;
+    Navigator.of(context).pop<String?>(item.id);
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = widget.items.where((i) => i.matches(_query)).toList();
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final isCreate = _mode == _SheetMode.create;
+    final action = widget.createAction;
 
     return FractionallySizedBox(
-      heightFactor: 0.88,
+      heightFactor: 0.92,
       child: Padding(
         padding: EdgeInsets.only(bottom: bottomInset),
         child: Column(
@@ -265,117 +282,251 @@ class _PickerSheetState extends State<_PickerSheet> {
               ),
             ),
             const SizedBox(height: 14),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: _black,
-                      ),
-                    ),
-                  ),
-                  if (widget.createAction != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4),
-                      child: TextButton.icon(
-                        onPressed: () => _handleCreate(context),
-                        icon: const Icon(Icons.add_rounded, size: 18),
-                        label: Text(widget.createAction!.label),
-                        style: TextButton.styleFrom(
-                          foregroundColor: _black,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          textStyle: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          side: const BorderSide(color: _border),
-                        ),
-                      ),
-                    ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded, size: 22),
-                    color: _muted,
-                    splashRadius: 20,
-                    tooltip: 'Fermer',
-                  ),
-                ],
-              ),
+            _Header(
+              title: isCreate && action != null ? action.title : widget.title,
+              showBack: isCreate,
+              onBack: cancel,
+              trailing: !isCreate && action != null
+                  ? _CreateHeaderButton(
+                      label: action.label,
+                      onTap: _goCreate,
+                    )
+                  : null,
+              onClose: () => Navigator.of(context).pop<String?>(null),
             ),
             const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TextField(
-                controller: _searchController,
-                focusNode: _focusNode,
-                autofocus: true,
-                onChanged: (v) => setState(() => _query = v),
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: widget.searchHint,
-                  hintStyle: const TextStyle(color: _muted, fontSize: 15),
-                  prefixIcon: const Icon(
-                    Icons.search_rounded,
-                    size: 20,
-                    color: _muted,
-                  ),
-                  suffixIcon: _query.isNotEmpty
-                      ? IconButton(
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _query = '');
-                            _focusNode.requestFocus();
-                          },
-                          icon: const Icon(Icons.close_rounded, size: 18),
-                          color: _muted,
-                          splashRadius: 18,
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: _fill,
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: _black, width: 1.2),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
             Expanded(
-              child: _buildList(filtered),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  final offset = Tween<Offset>(
+                    begin: Offset(child.key == const ValueKey('create') ? 0.06 : -0.06, 0),
+                    end: Offset.zero,
+                  ).animate(animation);
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(position: offset, child: child),
+                  );
+                },
+                child: isCreate
+                    ? KeyedSubtree(
+                        key: const ValueKey('create'),
+                        child: action != null
+                            ? action.builder(context, this, _query)
+                            : const SizedBox.shrink(),
+                      )
+                    : KeyedSubtree(
+                        key: const ValueKey('browse'),
+                        child: _BrowseView(
+                          searchController: _searchController,
+                          focusNode: _focusNode,
+                          searchHint: widget.searchHint,
+                          query: _query,
+                          onQueryChanged: (v) => setState(() => _query = v),
+                          items: widget.items,
+                          selectedId: widget.selectedId,
+                          nullOption: widget.nullOption,
+                          emptyMessage: widget.emptyMessage,
+                          createAction: widget.createAction,
+                          onCreateTap: _goCreate,
+                        ),
+                      ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildList(List<PickerItem> items) {
-    final showNull = widget.nullOption != null && _query.isEmpty;
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.title,
+    required this.showBack,
+    required this.onBack,
+    required this.trailing,
+    required this.onClose,
+  });
+
+  final String title;
+  final bool showBack;
+  final VoidCallback onBack;
+  final Widget? trailing;
+  final VoidCallback onClose;
+
+  static const _muted = Color(0xFF737373);
+  static const _black = Color(0xFF0A0A0A);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          if (showBack)
+            IconButton(
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back_rounded, size: 22),
+              color: _black,
+              splashRadius: 20,
+              tooltip: 'Retour',
+            )
+          else
+            const SizedBox(width: 8),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(left: showBack ? 0 : 8),
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: _black,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          ?trailing,
+          IconButton(
+            onPressed: onClose,
+            icon: const Icon(Icons.close_rounded, size: 22),
+            color: _muted,
+            splashRadius: 20,
+            tooltip: 'Fermer',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CreateHeaderButton extends StatelessWidget {
+  const _CreateHeaderButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: TextButton.icon(
+        onPressed: onTap,
+        icon: const Icon(Icons.add_rounded, size: 18),
+        label: Text(label),
+        style: TextButton.styleFrom(
+          foregroundColor: const Color(0xFF0A0A0A),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          side: const BorderSide(color: Color(0xFFE5E5E5)),
+        ),
+      ),
+    );
+  }
+}
+
+class _BrowseView extends StatelessWidget {
+  const _BrowseView({
+    required this.searchController,
+    required this.focusNode,
+    required this.searchHint,
+    required this.query,
+    required this.onQueryChanged,
+    required this.items,
+    required this.selectedId,
+    required this.nullOption,
+    required this.emptyMessage,
+    required this.createAction,
+    required this.onCreateTap,
+  });
+
+  final TextEditingController searchController;
+  final FocusNode focusNode;
+  final String searchHint;
+  final String query;
+  final ValueChanged<String> onQueryChanged;
+  final List<PickerItem> items;
+  final String? selectedId;
+  final PickerItem? nullOption;
+  final String emptyMessage;
+  final PickerCreateAction? createAction;
+  final VoidCallback onCreateTap;
+
+  static const _muted = Color(0xFF737373);
+  static const _black = Color(0xFF0A0A0A);
+  static const _fill = Color(0xFFF5F5F5);
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = items.where((i) => i.matches(query)).toList();
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: TextField(
+            controller: searchController,
+            focusNode: focusNode,
+            autofocus: true,
+            onChanged: onQueryChanged,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: searchHint,
+              hintStyle: const TextStyle(color: _muted, fontSize: 15),
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                size: 20,
+                color: _muted,
+              ),
+              suffixIcon: query.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        searchController.clear();
+                        onQueryChanged('');
+                        focusNode.requestFocus();
+                      },
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                      color: _muted,
+                      splashRadius: 18,
+                    )
+                  : null,
+              filled: true,
+              fillColor: _fill,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: _black, width: 1.2),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Expanded(
+          child: _buildList(context, filtered),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildList(BuildContext context, List<PickerItem> items) {
+    final showNull = nullOption != null && query.isEmpty;
     if (items.isEmpty && !showNull) {
       return Center(
         child: Padding(
@@ -384,16 +535,16 @@ class _PickerSheetState extends State<_PickerSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                widget.emptyMessage,
+                emptyMessage,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: _muted, fontSize: 14),
               ),
-              if (widget.createAction != null) ...[
+              if (createAction != null) ...[
                 const SizedBox(height: 16),
                 FilledButton.icon(
-                  onPressed: () => _handleCreate(context),
+                  onPressed: onCreateTap,
                   icon: const Icon(Icons.add_rounded, size: 18),
-                  label: Text(widget.createAction!.label),
+                  label: Text(createAction!.label),
                   style: FilledButton.styleFrom(
                     backgroundColor: _black,
                     foregroundColor: Colors.white,
@@ -420,7 +571,7 @@ class _PickerSheetState extends State<_PickerSheet> {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 4),
       itemCount: items.length + (showNull ? 1 : 0),
-      separatorBuilder: (_, __) => const Divider(
+      separatorBuilder: (_, index) => const Divider(
         height: 1,
         thickness: 1,
         color: Color(0xFFF3F4F6),
@@ -430,8 +581,8 @@ class _PickerSheetState extends State<_PickerSheet> {
       itemBuilder: (context, index) {
         if (showNull && index == 0) {
           return _PickerRow(
-            item: widget.nullOption!,
-            selected: widget.selectedId == null,
+            item: nullOption!,
+            selected: selectedId == null,
             onTap: () => Navigator.of(context).pop<String?>(null),
             asNullOption: true,
           );
@@ -440,7 +591,7 @@ class _PickerSheetState extends State<_PickerSheet> {
         final item = items[effectiveIndex];
         return _PickerRow(
           item: item,
-          selected: item.id == widget.selectedId,
+          selected: item.id == selectedId,
           onTap: () => Navigator.of(context).pop<String?>(item.id),
         );
       },

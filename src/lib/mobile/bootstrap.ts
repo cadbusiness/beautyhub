@@ -68,6 +68,21 @@ export async function fetchMobileBootstrapByBundleId(
     throw new Error("NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY requis.");
   }
 
+  const baseUrl = apiBaseUrl();
+  const branding = resolveMobileBranding({
+    brandBranding: row.brand_branding as Record<string, unknown>,
+    tenantBranding: row.tenant_branding as Record<string, unknown> | null,
+    appBranding: row.branding as Record<string, unknown>,
+    sitePrimaryColor: siteHints.primaryColor,
+    siteLogoUrl: siteHints.logoUrl,
+  });
+  if (!branding.logoUrl) {
+    branding.logoUrl = `${baseUrl}/brand/logo-header.png`;
+  }
+  if (!branding.iconUrl) {
+    branding.iconUrl = `${baseUrl}/brand/icon.png`;
+  }
+
   return {
     appId: row.app_id,
     audience: row.audience as MobileBootstrap["audience"],
@@ -75,13 +90,7 @@ export async function fetchMobileBootstrapByBundleId(
     appName: row.app_name,
     appSlug: row.app_slug,
     deepLinkScheme: row.deep_link_scheme,
-    branding: resolveMobileBranding({
-      brandBranding: row.brand_branding as Record<string, unknown>,
-      tenantBranding: row.tenant_branding as Record<string, unknown> | null,
-      appBranding: row.branding as Record<string, unknown>,
-      sitePrimaryColor: siteHints.primaryColor,
-      siteLogoUrl: siteHints.logoUrl,
-    }),
+    branding,
     brand: {
       id: row.brand_id,
       name: row.brand_name,
@@ -96,7 +105,7 @@ export async function fetchMobileBootstrapByBundleId(
           }
         : null,
     api: {
-      baseUrl: apiBaseUrl(),
+      baseUrl,
       supabaseUrl,
       supabaseAnonKey,
     },

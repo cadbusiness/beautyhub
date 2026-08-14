@@ -75,6 +75,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               appName: bootstrap.appName,
               brandName: bootstrap.brand.name,
               initial: brandInitial,
+              logoUrl: bootstrap.branding.logoUrl,
             ),
             Expanded(
               child: SafeArea(
@@ -255,16 +256,19 @@ class _BrandHeader extends StatelessWidget {
     required this.appName,
     required this.brandName,
     required this.initial,
+    this.logoUrl,
   });
 
   final Color primary;
   final String appName;
   final String brandName;
   final String initial;
+  final String? logoUrl;
 
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
+    final hasLogo = logoUrl != null && logoUrl!.isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -283,25 +287,10 @@ class _BrandHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
-            ),
-            child: Text(
-              initial,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-            ),
-          ),
+          if (hasLogo)
+            _LogoBadge(url: logoUrl!, fallbackInitial: initial)
+          else
+            _InitialBadge(initial: initial),
           const SizedBox(height: 20),
           Text(
             appName,
@@ -323,6 +312,74 @@ class _BrandHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _InitialBadge extends StatelessWidget {
+  const _InitialBadge({required this.initial});
+
+  final String initial;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        initial,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          height: 1,
+        ),
+      ),
+    );
+  }
+}
+
+class _LogoBadge extends StatelessWidget {
+  const _LogoBadge({required this.url, required this.fallbackInitial});
+
+  final String url;
+  final String fallbackInitial;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Image.network(
+        url,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => _InitialBadge(initial: fallbackInitial),
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          );
+        },
       ),
     );
   }

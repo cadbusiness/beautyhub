@@ -4,7 +4,7 @@ import type { Database } from "@/lib/db/database.types";
 import { createServiceClient } from "@/lib/supabase/service";
 import { decryptCredentials } from "@/lib/connections/crypto";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
-import type { WooProduct } from "@/lib/woocommerce/client";
+import type { WooProduct, WooProductVariation } from "@/lib/woocommerce/client";
 
 type Db = SupabaseClient<Database>;
 
@@ -137,6 +137,8 @@ export function mapWooProductToRow(
     tenant_id: tenantId,
     connection_id: connectionId,
     woo_id: product.id,
+    parent_woo_id: null,
+    variation_attributes: {} as Record<string, string>,
     name: product.name,
     sku: product.sku || null,
     price_cents: priceToCents(product.price),
@@ -150,6 +152,88 @@ export function mapWooProductToRow(
     gift_template_id: templateId,
     gift_variation_templates: giftVariationTemplates,
   };
+}
+
+/**
+ * Convertit une variation Woo en row `inst_products`.
+ *
+ * On la stocke dans la meme table que les produits parents (meme besoins pour
+ * l'app : image, prix, stock, categories, sku). On lie au parent via
+ * `parent_woo_id` pour pouvoir grouper si besoin, et on herite des categories
+ * du parent (les variations n'en portent pas cote Woo).
+ */
+export function mapWooVariationToRow(
+  tenantId: string,
+  connectionId: string,
+  parent: WooProduct,
+  variation: WooProductVariation,
+) {
+  const parentCategories = Array.isArray(parent.categories)
+    ? parent.categories
+        .map((c) => (typeof c?.name === "string" ? c.name.trim() : ""))
+        .filter((n): n is string => n.length > 0)
+    : [];
+
+  const attributes: Record<string, string> = {};
+  for (const attr of variation.attributes ?? []) {
+    const key = attr.name?.trim();
+    const value = attr.option?.trim();
+    if (key && value) attributes[key] = value;
+  }
+
+  const attrSuffix = Object.values(attributes).filter(Boolean).join(" / ");
+  const derivedName = attrSuffix ? `${parent.name} — ${attrSuffix}` : parent.name;
+
+  const variationImage = variation.image?.src ?? null;
+  const fallbackImage = parent.images?.[0]?.src ?? null;
+
+  return {
+    tenant_id: tenantId,
+    connection_id: connectionId,
+    woo_id: variation.id,
+    parent_woo_id: parent.id,
+    variation_attributes: attributes,
+    name:
+      typeof variation.name === "string" && variation.name.trim()
+        ? variation.name.trim()
+        : derivedName,
+    sku: variation.sku?.trim() || parent.sku?.trim() || null,
+    price_cents: priceToCents(variation.price ?? parent.price ?? "0"),
+    stock_quantity:
+      typeof variation.stock_quantity === "number"
+        ? variation.stock_quantity
+        : parent.stock_quantity,
+    image_url: variationImage ?? fallbackImage,
+    woo_categories: parentCategories,
+    status:
+      (variation.status ?? parent.status) === "publish"
+        ? "active"
+        : (variation.status ?? parent.status),
+    source: "woocommerce" as const,
+    synced_at: new Date().toISOString(),
+    is_gift_card: false,
+    gift_template_id: null,
+    gift_variation_templates: {} as Record<string, string>,
+  };
+}
+
+/** Upsert en batch de variations pour un produit parent. */
+export async function upsertWooVariations(
+  supabase: Db,
+  tenantId: string,
+  connectionId: string,
+  parent: WooProduct,
+  variations: WooProductVariation[],
+): Promise<number> {
+  if (variations.length === 0) return 0;
+  const rows = variations.map((v) =>
+    mapWooVariationToRow(tenantId, connectionId, parent, v),
+  );
+  const { error } = await supabase
+    .from("inst_products")
+    .upsert(rows, { onConflict: "tenant_id,connection_id,woo_id" });
+  if (error) throw new Error(error.message);
+  return rows.length;
 }
 
 /** Upsert un produit WooCommerce dans inst_products. */
@@ -207,6 +291,203 @@ export async function deactivateWooProduct(
     .eq("tenant_id", tenantId)
     .eq("connection_id", connectionId)
     .eq("woo_id", wooId);
+}
+
+/**
+ * Rattache les `sale_items` orphelins (`product_id is null`) à leur produit
+ * Woo. Stratégie en 3 passes :
+ *  1. Lookup direct par `woo_id` extrait du placeholder `Woo #<id>` en base.
+ *  2. Fetch à la volée du produit `wooId` s'il n'est pas retrouvé (peut
+ *     échouer si `wooId` est en fait une variation).
+ *  3. Refetch de la commande Woo originale (via `notes = "WooCommerce #<id>"`)
+ *     pour récupérer les vrais `product_id` (parent) + `variation_id` de
+ *     chaque ligne, puis upsert parent + variations et re-tenter le lookup.
+ *
+ * @returns nombre de sale_items ré-associés
+ */
+export async function backfillOrphanWooSaleItems(
+  supabase: Db,
+  tenantId: string,
+  opts?: { fetchMissingFromWoo?: boolean; connectionId?: string },
+): Promise<number> {
+  const { data: orphans } = await supabase
+    .from("inst_sale_items")
+    .select("id, sale_id, name")
+    .eq("tenant_id", tenantId)
+    .eq("item_type", "product")
+    .is("product_id", null)
+    .ilike("name", "%Woo #%");
+  if (!orphans || orphans.length === 0) return 0;
+
+  const rx = /Woo\s*#(\d+)/i;
+  const idByItem = new Map<string, { wooId: number; saleId: string }>();
+  const wooIds = new Set<number>();
+  const saleIds = new Set<string>();
+  for (const row of orphans) {
+    const m = row.name?.match(rx);
+    if (!m) continue;
+    const wooId = Number.parseInt(m[1], 10);
+    if (!Number.isFinite(wooId) || wooId <= 0) continue;
+    idByItem.set(row.id, { wooId, saleId: row.sale_id });
+    wooIds.add(wooId);
+    saleIds.add(row.sale_id);
+  }
+  if (wooIds.size === 0) return 0;
+
+  const productByWooId = new Map<
+    number,
+    { id: string; name: string; parent_woo_id: number | null }
+  >();
+  const loadMissing = async () => {
+    const missing = Array.from(wooIds).filter((id) => !productByWooId.has(id));
+    if (missing.length === 0) return;
+    const { data } = await supabase
+      .from("inst_products")
+      .select("id, name, woo_id, parent_woo_id")
+      .eq("tenant_id", tenantId)
+      .in("woo_id", missing);
+    for (const p of data ?? []) {
+      if (p.woo_id != null) {
+        productByWooId.set(Number(p.woo_id), {
+          id: p.id,
+          name: p.name,
+          parent_woo_id: p.parent_woo_id,
+        });
+      }
+    }
+  };
+  await loadMissing();
+
+  const shouldFetch = opts?.fetchMissingFromWoo && opts.connectionId;
+  let woo: import("./client").WooClient | null = null;
+  if (shouldFetch) {
+    try {
+      const creds = await getWooCredentialsForTenant(tenantId, supabase);
+      if (creds) {
+        const { WooClient } = await import("./client");
+        woo = new WooClient(creds);
+      }
+    } catch {
+      woo = null;
+    }
+  }
+
+  // Passe 2 : essai fetch direct (parents seulement).
+  if (woo && opts?.connectionId) {
+    const stillMissing = Array.from(wooIds).filter((id) => !productByWooId.has(id));
+    for (const wooId of stillMissing) {
+      try {
+        const product = await woo.getProduct(wooId);
+        await supabase
+          .from("inst_products")
+          .upsert(mapWooProductToRow(tenantId, opts.connectionId, product), {
+            onConflict: "tenant_id,connection_id,woo_id",
+          });
+      } catch {
+        // Ignoré : peut-être une variation → passe 3.
+      }
+    }
+    await loadMissing();
+  }
+
+  // Passe 3 : refetch des commandes Woo pour récupérer parent + variation.
+  if (woo && opts?.connectionId) {
+    const stillMissingWooIds = Array.from(wooIds).filter(
+      (id) => !productByWooId.has(id),
+    );
+    if (stillMissingWooIds.length > 0 && saleIds.size > 0) {
+      const { data: sales } = await supabase
+        .from("inst_sales")
+        .select("id, notes, woo_order_id")
+        .eq("tenant_id", tenantId)
+        .in("id", Array.from(saleIds));
+
+      const rxOrder = /WooCommerce\s*#(\d+)/i;
+      const orderIds = new Set<number>();
+      for (const s of sales ?? []) {
+        if (s.woo_order_id) {
+          orderIds.add(Number(s.woo_order_id));
+          continue;
+        }
+        const m = s.notes?.match(rxOrder);
+        if (m) {
+          const oid = Number.parseInt(m[1], 10);
+          if (Number.isFinite(oid) && oid > 0) orderIds.add(oid);
+        }
+      }
+
+      for (const orderId of orderIds) {
+        try {
+          const order = await woo.getOrder(orderId);
+          const lineItems = order.line_items ?? [];
+          for (const line of lineItems) {
+            const productId = Number(line.product_id ?? 0);
+            const variationId = Number(line.variation_id ?? 0);
+            if (productId <= 0) continue;
+            try {
+              const parent = await woo.getProduct(productId);
+              await supabase
+                .from("inst_products")
+                .upsert(
+                  mapWooProductToRow(tenantId, opts.connectionId, parent),
+                  { onConflict: "tenant_id,connection_id,woo_id" },
+                );
+              if (variationId > 0) {
+                try {
+                  const variation = await woo.getProductVariation(
+                    productId,
+                    variationId,
+                  );
+                  await supabase
+                    .from("inst_products")
+                    .upsert(
+                      mapWooVariationToRow(
+                        tenantId,
+                        opts.connectionId,
+                        parent,
+                        variation,
+                      ),
+                      { onConflict: "tenant_id,connection_id,woo_id" },
+                    );
+                } catch (err) {
+                  console.warn("[backfill] variation refetch failed", {
+                    productId,
+                    variationId,
+                    message: (err as Error).message,
+                  });
+                }
+              }
+            } catch (err) {
+              console.warn("[backfill] parent refetch failed", {
+                productId,
+                message: (err as Error).message,
+              });
+            }
+          }
+        } catch (err) {
+          console.warn("[backfill] order refetch failed", {
+            orderId,
+            message: (err as Error).message,
+          });
+        }
+      }
+      await loadMissing();
+    }
+  }
+
+  let updated = 0;
+  for (const [itemId, { wooId }] of idByItem) {
+    const match = productByWooId.get(wooId);
+    if (!match) continue;
+    const { error } = await supabase
+      .from("inst_sale_items")
+      .update({ product_id: match.id })
+      .eq("tenant_id", tenantId)
+      .eq("id", itemId)
+      .is("product_id", null);
+    if (!error) updated += 1;
+  }
+  return updated;
 }
 
 /** Décrémente le stock local après vente caisse (interne ou Woo miroir). */

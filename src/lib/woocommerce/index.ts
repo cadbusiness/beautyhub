@@ -104,14 +104,22 @@ export async function listWooConnectionsForTenant(
 
 export {
   applyWooStockUpdate,
+  backfillOrphanWooSaleItems,
   decrementLocalProductStock,
   generateWebhookCredentials,
   getWooCredentialsForTenant,
   mapWooProductToRow,
+  mapWooVariationToRow,
   upsertWooProduct,
+  upsertWooVariations,
   deactivateWooProduct,
   resolveWooWebhookConnection,
   verifyWebhookSignature,
 } from "./sync";
 export { WooClient };
-export type { WooCredentials, WooCustomer } from "./client";
+export type {
+  WooCredentials,
+  WooCustomer,
+  WooProduct,
+  WooProductVariation,
+} from "./client";

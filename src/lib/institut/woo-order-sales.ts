@@ -3,6 +3,12 @@ import type { Database } from "@/lib/db/database.types";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import { findOrCreateClientFromExternal } from "@/lib/institut/clients-dedup";
 import { deriveWooCustomerNames } from "@/lib/woocommerce/customer-names";
+import {
+  WooClient,
+  getWooCredentialsForTenant,
+  mapWooProductToRow,
+  mapWooVariationToRow,
+} from "@/lib/woocommerce";
 
 type Db = SupabaseClient<Database>;
 
@@ -177,9 +183,10 @@ export async function ingestWooCompletedOrder(
 
   const lineItems = Array.isArray(payload.line_items) ? payload.line_items : [];
   if (lineItems.length > 0) {
-    // On collecte à la fois les variation_id et les product_id (parent) : on ne
-    // stocke que les produits parents dans `inst_products`, donc si la ligne
-    // référence une variation, on veut retrouver le parent en fallback.
+    // On collecte à la fois les variation_id et les product_id (parent) pour
+    // pouvoir matcher soit une variation, soit son parent. Depuis la mig
+    // `woo_variations`, les variations sont stockées comme rows séparées avec
+    // `parent_woo_id`, donc idealement la variation_id matche directement.
     const wooIds = new Set<number>();
     for (const line of lineItems) {
       const variationId = Number(line.variation_id ?? 0);
@@ -189,14 +196,14 @@ export async function ingestWooCompletedOrder(
     }
 
     const productByWooId = new Map<number, { id: string; name: string | null }>();
-    if (wooIds.size > 0) {
+    const loadFromDb = async (ids: number[]) => {
+      if (ids.length === 0) return;
       const { data: products } = await supabase
         .from("inst_products")
         .select("id, woo_id, name")
         .eq("tenant_id", tenantId)
         .eq("connection_id", connectionId)
-        .in("woo_id", Array.from(wooIds));
-
+        .in("woo_id", ids);
       for (const product of products ?? []) {
         if (product.woo_id != null) {
           productByWooId.set(Number(product.woo_id), {
@@ -204,6 +211,70 @@ export async function ingestWooCompletedOrder(
             name: product.name,
           });
         }
+      }
+    };
+    await loadFromDb(Array.from(wooIds));
+
+    // Fallback à la volée : pour chaque ligne dont on n'a pas retrouvé le
+    // produit (variation ni parent), on fetch directement Woo et on upsert.
+    // Ça garantit qu'une commande sur un produit tout juste créé ne devient
+    // pas un placeholder "Produit Woo #xxx" en base.
+    const orphanLines = lineItems.filter((line) => {
+      const variationId = Number(line.variation_id ?? 0);
+      const productId = Number(line.product_id ?? 0);
+      const hasVariation = variationId > 0 && productByWooId.has(variationId);
+      const hasParent = productId > 0 && productByWooId.has(productId);
+      return !hasVariation && !hasParent && (variationId > 0 || productId > 0);
+    });
+    if (orphanLines.length > 0) {
+      try {
+        const creds = await getWooCredentialsForTenant(tenantId, supabase);
+        if (creds) {
+          const woo = new WooClient(creds);
+          const fetched = new Set<number>();
+          for (const line of orphanLines) {
+            const productId = Number(line.product_id ?? 0);
+            const variationId = Number(line.variation_id ?? 0);
+            if (productId <= 0 || fetched.has(productId)) continue;
+            fetched.add(productId);
+            try {
+              const parent = await woo.getProduct(productId);
+              await supabase
+                .from("inst_products")
+                .upsert(mapWooProductToRow(tenantId, connectionId, parent), {
+                  onConflict: "tenant_id,connection_id,woo_id",
+                });
+              if (variationId > 0) {
+                try {
+                  const variation = await woo.getProductVariation(
+                    productId,
+                    variationId,
+                  );
+                  await supabase.from("inst_products").upsert(
+                    mapWooVariationToRow(tenantId, connectionId, parent, variation),
+                    { onConflict: "tenant_id,connection_id,woo_id" },
+                  );
+                } catch (err) {
+                  console.warn(
+                    "[woo-order-sales] on-demand variation fetch failed",
+                    { productId, variationId, message: (err as Error).message },
+                  );
+                }
+              }
+            } catch (err) {
+              console.warn("[woo-order-sales] on-demand product fetch failed", {
+                productId,
+                message: (err as Error).message,
+              });
+            }
+          }
+          // Recharge la map avec les rows fraîchement inserées.
+          await loadFromDb(Array.from(wooIds));
+        }
+      } catch (err) {
+        console.warn("[woo-order-sales] on-demand backfill skipped", {
+          message: (err as Error).message,
+        });
       }
     }
 

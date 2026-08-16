@@ -11,8 +11,24 @@ export interface WooProduct {
   price: string;
   stock_quantity: number | null;
   status: string;
+  /** `simple` | `variable` | `grouped` | `external` — controle si on doit fetcher les variations. */
+  type?: string;
+  /** Liste des variation ids pour un produit variable (present sur GET /products). */
+  variations?: number[];
   images?: Array<{ src: string }>;
   categories?: Array<{ id: number; name: string; slug: string }>;
+  meta_data?: Array<{ key: string; value: unknown }>;
+}
+
+export interface WooProductVariation {
+  id: number;
+  name?: string;
+  sku?: string;
+  price?: string;
+  stock_quantity?: number | null;
+  status?: string;
+  image?: { src: string } | null;
+  attributes?: Array<{ id?: number; name?: string; option?: string }>;
   meta_data?: Array<{ key: string; value: unknown }>;
 }
 
@@ -28,6 +44,7 @@ export interface WooOrder {
   id: number;
   total: string;
   status: string;
+  line_items?: Array<WooOrderLineItem & { name?: string }>;
 }
 
 export interface WooCustomer {
@@ -187,6 +204,10 @@ export class WooClient {
     return this.request<WooProduct>(`/products/${id}`);
   }
 
+  async getOrder(id: number): Promise<WooOrder> {
+    return this.request<WooOrder>(`/orders/${id}`);
+  }
+
   async updateProductStock(
     id: number,
     stockQuantity: number,
@@ -223,10 +244,35 @@ export class WooClient {
 
   async listProductVariations(
     productId: number,
-  ): Promise<Array<{ id: number; name: string; sku: string; meta_data?: Array<{ key: string; value: unknown }> }>> {
-    return this.request(`/products/${productId}/variations`, {
-      query: { per_page: 100 },
-    });
+    page = 1,
+    perPage = 100,
+  ): Promise<WooProductVariation[]> {
+    return this.request<WooProductVariation[]>(
+      `/products/${productId}/variations`,
+      { query: { per_page: perPage, page } },
+    );
+  }
+
+  /** Retourne toutes les variations d'un produit (paginé, jusqu'a 500). */
+  async listAllProductVariations(
+    productId: number,
+  ): Promise<WooProductVariation[]> {
+    const all: WooProductVariation[] = [];
+    for (let page = 1; page <= 5; page++) {
+      const batch = await this.listProductVariations(productId, page, 100);
+      all.push(...batch);
+      if (batch.length < 100) break;
+    }
+    return all;
+  }
+
+  async getProductVariation(
+    productId: number,
+    variationId: number,
+  ): Promise<WooProductVariation> {
+    return this.request<WooProductVariation>(
+      `/products/${productId}/variations/${variationId}`,
+    );
   }
 
   async updateVariationMeta(

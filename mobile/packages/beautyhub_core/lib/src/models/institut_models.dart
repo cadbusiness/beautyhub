@@ -63,16 +63,71 @@ class InstSaleItem {
     required this.name,
     required this.quantity,
     required this.unitPriceCents,
+    required this.lineTotalCents,
+    required this.lineVatCents,
+    required this.discountCents,
+    required this.itemType,
+    required this.wooCategories,
+    required this.isGiftCard,
+    this.imageUrl,
+    this.sku,
+    this.durationMin,
+    this.color,
+    this.description,
+    this.source,
+    this.wooId,
+    this.stockQuantity,
   });
 
   final String name;
   final int quantity;
   final int unitPriceCents;
+  final int lineTotalCents;
+  final int lineVatCents;
+  final int discountCents;
+
+  /// `service`, `product`, `extra`, `giftcard`, `custom`…
+  final String itemType;
+
+  final String? imageUrl;
+
+  /// Produit uniquement.
+  final String? sku;
+  final String? source;
+  final int? wooId;
+  final int? stockQuantity;
+  final List<String> wooCategories;
+  final bool isGiftCard;
+
+  /// Prestation uniquement.
+  final int? durationMin;
+  final String? color;
+  final String? description;
+
+  bool get isService => itemType == 'service';
+  bool get isProduct => itemType == 'product' || itemType == 'giftcard';
 
   factory InstSaleItem.fromJson(Map<String, dynamic> json) => InstSaleItem(
         name: json['name'] as String? ?? '',
         quantity: json['quantity'] as int? ?? 0,
         unitPriceCents: json['unitPriceCents'] as int? ?? 0,
+        lineTotalCents: json['lineTotalCents'] as int? ?? 0,
+        lineVatCents: json['lineVatCents'] as int? ?? 0,
+        discountCents: json['discountCents'] as int? ?? 0,
+        itemType: json['itemType'] as String? ?? '',
+        imageUrl: json['imageUrl'] as String?,
+        sku: json['sku'] as String?,
+        durationMin: json['durationMin'] as int?,
+        color: json['color'] as String?,
+        description: json['description'] as String?,
+        source: json['source'] as String?,
+        wooId: json['wooId'] as int?,
+        stockQuantity: json['stockQuantity'] as int?,
+        wooCategories: (json['wooCategories'] as List?)
+                ?.whereType<String>()
+                .toList(growable: false) ??
+            const <String>[],
+        isGiftCard: json['isGiftCard'] as bool? ?? false,
       );
 }
 

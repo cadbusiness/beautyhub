@@ -187,16 +187,30 @@ export function mapWooVariationToRow(
   const variationImage = variation.image?.src ?? null;
   const fallbackImage = parent.images?.[0]?.src ?? null;
 
+  // Woo renvoie souvent variation.name = "150€, Par Email" (résumé des attrs),
+  // ce qui n'est pas parlant seul. Si le nom du parent n'y figure pas, on
+  // prefixe pour rendre la ligne comprehensible dans un historique.
+  const rawVarName =
+    typeof variation.name === "string" && variation.name.trim()
+      ? variation.name.trim()
+      : "";
+  const parentNameTrim = parent.name?.trim() ?? "";
+  let finalName: string;
+  if (!rawVarName) {
+    finalName = derivedName;
+  } else if (parentNameTrim && !rawVarName.toLowerCase().includes(parentNameTrim.toLowerCase())) {
+    finalName = `${parentNameTrim} — ${rawVarName}`;
+  } else {
+    finalName = rawVarName;
+  }
+
   return {
     tenant_id: tenantId,
     connection_id: connectionId,
     woo_id: variation.id,
     parent_woo_id: parent.id,
     variation_attributes: attributes,
-    name:
-      typeof variation.name === "string" && variation.name.trim()
-        ? variation.name.trim()
-        : derivedName,
+    name: finalName,
     sku: variation.sku?.trim() || parent.sku?.trim() || null,
     price_cents: priceToCents(variation.price ?? parent.price ?? "0"),
     stock_quantity:

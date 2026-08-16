@@ -177,26 +177,32 @@ export async function ingestWooCompletedOrder(
 
   const lineItems = Array.isArray(payload.line_items) ? payload.line_items : [];
   if (lineItems.length > 0) {
-    const wooIds = lineItems
-      .map((line) => {
-        const variationId = line.variation_id ?? 0;
-        const productId = line.product_id ?? 0;
-        return variationId > 0 ? variationId : productId;
-      })
-      .filter((id) => id > 0);
+    // On collecte à la fois les variation_id et les product_id (parent) : on ne
+    // stocke que les produits parents dans `inst_products`, donc si la ligne
+    // référence une variation, on veut retrouver le parent en fallback.
+    const wooIds = new Set<number>();
+    for (const line of lineItems) {
+      const variationId = Number(line.variation_id ?? 0);
+      const productId = Number(line.product_id ?? 0);
+      if (variationId > 0) wooIds.add(variationId);
+      if (productId > 0) wooIds.add(productId);
+    }
 
-    const productByWooId = new Map<number, string>();
-    if (wooIds.length > 0) {
+    const productByWooId = new Map<number, { id: string; name: string | null }>();
+    if (wooIds.size > 0) {
       const { data: products } = await supabase
         .from("inst_products")
-        .select("id, woo_id")
+        .select("id, woo_id, name")
         .eq("tenant_id", tenantId)
         .eq("connection_id", connectionId)
-        .in("woo_id", wooIds);
+        .in("woo_id", Array.from(wooIds));
 
       for (const product of products ?? []) {
         if (product.woo_id != null) {
-          productByWooId.set(Number(product.woo_id), product.id);
+          productByWooId.set(Number(product.woo_id), {
+            id: product.id,
+            name: product.name,
+          });
         }
       }
     }
@@ -206,20 +212,29 @@ export async function ingestWooCompletedOrder(
       const lineTotalCents = parseLineTotalCents(line.total);
       const unitPriceCents =
         quantity > 0 ? Math.round(lineTotalCents / quantity) : lineTotalCents;
-      const wooId =
-        (line.variation_id ?? 0) > 0
-          ? Number(line.variation_id)
-          : Number(line.product_id ?? 0);
+      const variationId = Number(line.variation_id ?? 0);
+      const productId = Number(line.product_id ?? 0);
+
+      // Priorité : variation → parent. Le parent est la source de vérité en
+      // base (image, catégories…).
+      const matched =
+        (variationId > 0 ? productByWooId.get(variationId) : undefined) ??
+        (productId > 0 ? productByWooId.get(productId) : undefined) ??
+        null;
+
+      const displayId = variationId > 0 ? variationId : productId;
+      const wooName =
+        typeof line.name === "string" && line.name.trim()
+          ? line.name.trim()
+          : null;
 
       return {
         tenant_id: tenantId,
         sale_id: sale.id,
         item_type: "product" as const,
-        product_id: wooId > 0 ? (productByWooId.get(wooId) ?? null) : null,
+        product_id: matched?.id ?? null,
         name:
-          typeof line.name === "string" && line.name.trim()
-            ? line.name.trim()
-            : `Produit Woo #${wooId || "?"}`,
+          wooName ?? matched?.name ?? `Produit Woo #${displayId || "?"}`,
         quantity,
         unit_price_cents: unitPriceCents,
         vat_rate_bps: posSettings.product_vat_rate_bps,

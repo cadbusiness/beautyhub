@@ -103,25 +103,37 @@ export async function GET(request: Request) {
     const hasMore = rows.length > limit;
     const pageRows = hasMore ? rows.slice(0, limit) : rows;
 
-    // Collecte des ids produits/services à enrichir.
+    // Collecte des ids produits/services à enrichir. On collecte aussi les
+    // `woo_id` extraits des noms placeholder ("Produit Woo #12345") pour
+    // rattraper les anciennes ventes importées avant que le parent produit
+    // ne soit syncé (ou pour les lignes variation qui pointent vers le parent).
     const productIds = new Set<string>();
     const serviceIds = new Set<string>();
+    const wooIdsFromNames = new Set<number>();
+    const wooPlaceholderRe = /Woo\s*#(\d+)/i;
     for (const sale of pageRows) {
       const items = (sale.inst_sale_items ?? []) as SaleItemRow[];
       for (const it of items) {
         if (it.product_id) productIds.add(it.product_id);
         if (it.service_id) serviceIds.add(it.service_id);
+        if (!it.product_id && it.item_type === "product") {
+          const m = it.name?.match(wooPlaceholderRe);
+          if (m) {
+            const id = Number.parseInt(m[1], 10);
+            if (Number.isFinite(id) && id > 0) wooIdsFromNames.add(id);
+          }
+        }
       }
     }
 
     // Requêtes séparées (pas d'embed PostgREST fragile).
-    const [productsRes, servicesRes] = await Promise.all([
+    const productSelect =
+      "id, name, image_url, sku, source, woo_categories, woo_id, stock_quantity, is_gift_card";
+    const [productsRes, servicesRes, productsByWooRes] = await Promise.all([
       productIds.size > 0
         ? session.supabase
             .from("inst_products")
-            .select(
-              "id, image_url, sku, source, woo_categories, woo_id, stock_quantity, is_gift_card",
-            )
+            .select(productSelect)
             .eq("tenant_id", session.tenant.id)
             .in("id", Array.from(productIds))
         : Promise.resolve({ data: [], error: null }),
@@ -132,11 +144,32 @@ export async function GET(request: Request) {
             .eq("tenant_id", session.tenant.id)
             .in("id", Array.from(serviceIds))
         : Promise.resolve({ data: [], error: null }),
+      wooIdsFromNames.size > 0
+        ? session.supabase
+            .from("inst_products")
+            .select(productSelect)
+            .eq("tenant_id", session.tenant.id)
+            .in("woo_id", Array.from(wooIdsFromNames))
+        : Promise.resolve({ data: [], error: null }),
     ]);
 
-    const productMap = new Map<string, ProductDetails>();
-    for (const p of productsRes.data ?? []) {
-      productMap.set(p.id, {
+    type ProductRow = {
+      id: string;
+      name: string;
+      image_url: string | null;
+      sku: string | null;
+      source: string | null;
+      woo_categories: string[] | null;
+      woo_id: number | null;
+      stock_quantity: number | null;
+      is_gift_card: boolean;
+    };
+
+    const productMap = new Map<string, ProductDetails & { name: string }>();
+    const productByWooId = new Map<number, ProductDetails & { name: string }>();
+    const registerProduct = (p: ProductRow) => {
+      const details = {
+        name: p.name,
         imageUrl: p.image_url,
         sku: p.sku,
         source: p.source,
@@ -144,8 +177,12 @@ export async function GET(request: Request) {
         wooId: p.woo_id,
         stockQuantity: p.stock_quantity,
         isGiftCard: p.is_gift_card,
-      });
-    }
+      };
+      productMap.set(p.id, details);
+      if (p.woo_id != null) productByWooId.set(Number(p.woo_id), details);
+    };
+    for (const p of (productsRes.data ?? []) as ProductRow[]) registerProduct(p);
+    for (const p of (productsByWooRes.data ?? []) as ProductRow[]) registerProduct(p);
     const serviceMap = new Map<string, ServiceDetails>();
     for (const s of servicesRes.data ?? []) {
       serviceMap.set(s.id, {
@@ -167,10 +204,26 @@ export async function GET(request: Request) {
         : null;
 
       const enrichedItems = saleItems.map((i) => {
-        const product = i.product_id ? productMap.get(i.product_id) : null;
-        const service = i.service_id ? serviceMap.get(i.service_id) : null;
+        let product = i.product_id ? productMap.get(i.product_id) : undefined;
+        if (!product && i.item_type === "product") {
+          const m = i.name?.match(wooPlaceholderRe);
+          if (m) {
+            const wooId = Number.parseInt(m[1], 10);
+            if (Number.isFinite(wooId)) {
+              product = productByWooId.get(wooId);
+            }
+          }
+        }
+        const service = i.service_id ? serviceMap.get(i.service_id) : undefined;
+
+        // Si on n'avait qu'un placeholder "Produit Woo #xxx", on préfère le
+        // vrai nom du produit retrouvé.
+        const isPlaceholderName = wooPlaceholderRe.test(i.name ?? "");
+        const displayName =
+          isPlaceholderName && product?.name ? product.name : i.name;
+
         return {
-          name: i.name,
+          name: displayName,
           quantity: i.quantity,
           unitPriceCents: i.unit_price_cents,
           lineTotalCents: i.line_total_cents,

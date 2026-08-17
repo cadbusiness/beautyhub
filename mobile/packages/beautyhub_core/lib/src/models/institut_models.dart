@@ -1117,3 +1117,73 @@ class InstLoyaltyAdminSnapshot {
     );
   }
 }
+
+class InstPromo {
+  const InstPromo({
+    required this.id,
+    required this.code,
+    required this.name,
+    required this.discountType,
+    required this.isActive,
+    required this.status,
+    required this.channelWoo,
+    required this.channelBooking,
+    required this.channelPos,
+    required this.usageCount,
+    required this.minOrderCents,
+    this.description,
+    this.discountPercent,
+    this.discountCents,
+    this.startsAt,
+    this.endsAt,
+    this.usageLimit,
+    this.usageLimitPerClient,
+  });
+
+  final String id;
+  final String code;
+  final String name;
+  final String? description;
+  final String discountType;
+  final int? discountPercent;
+  final int? discountCents;
+  final int minOrderCents;
+  final String? startsAt;
+  final String? endsAt;
+  final int usageCount;
+  final int? usageLimit;
+  final int? usageLimitPerClient;
+  final bool channelWoo;
+  final bool channelBooking;
+  final bool channelPos;
+  final bool isActive;
+  final String status;
+
+  factory InstPromo.fromJson(Map<String, dynamic> json) => InstPromo(
+        id: json['id'] as String? ?? '',
+        code: json['code'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        description: json['description'] as String?,
+        discountType: json['discountType'] as String? ?? 'percent',
+        discountPercent: json['discountPercent'] == null
+            ? null
+            : _asInt(json['discountPercent']),
+        discountCents: json['discountCents'] == null
+            ? null
+            : _asInt(json['discountCents']),
+        minOrderCents: _asInt(json['minOrderCents']),
+        startsAt: json['startsAt'] as String?,
+        endsAt: json['endsAt'] as String?,
+        usageCount: _asInt(json['usageCount']),
+        usageLimit:
+            json['usageLimit'] == null ? null : _asInt(json['usageLimit']),
+        usageLimitPerClient: json['usageLimitPerClient'] == null
+            ? null
+            : _asInt(json['usageLimitPerClient']),
+        channelWoo: json['channelWoo'] as bool? ?? false,
+        channelBooking: json['channelBooking'] as bool? ?? false,
+        channelPos: json['channelPos'] as bool? ?? false,
+        isActive: json['isActive'] as bool? ?? false,
+        status: json['status'] as String? ?? 'inactive',
+      );
+}

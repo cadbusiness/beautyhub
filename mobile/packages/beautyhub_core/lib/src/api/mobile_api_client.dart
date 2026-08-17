@@ -1037,6 +1037,88 @@ class MobileApiClient {
     await _decode(response);
   }
 
+  Future<List<InstPromo>> fetchPromos({
+    required String accessToken,
+    required String tenantId,
+    String? query,
+  }) async {
+    final response = await _http.get(
+      _uri(
+        '/api/mobile/institut/promos',
+        {if (query != null && query.isNotEmpty) 'q': query},
+      ),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return (body['promos'] as List? ?? const [])
+        .whereType<Map>()
+        .map((e) => InstPromo.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
+  }
+
+  Future<void> savePromo({
+    required String accessToken,
+    required String tenantId,
+    String? promoId,
+    required String code,
+    required String name,
+    String? description,
+    required String discountType,
+    int? discountPercent,
+    int? discountCents,
+    int minOrderCents = 0,
+    String? startsAt,
+    String? endsAt,
+    int? usageLimit,
+    int? usageLimitPerClient,
+    required bool channelWoo,
+    required bool channelBooking,
+    required bool channelPos,
+    required bool isActive,
+  }) async {
+    final payload = {
+      'code': code,
+      'name': name,
+      'description': description,
+      'discountType': discountType,
+      'discountPercent': discountPercent,
+      'discountCents': discountCents,
+      'minOrderCents': minOrderCents,
+      'startsAt': startsAt,
+      'endsAt': endsAt,
+      'usageLimit': usageLimit,
+      'usageLimitPerClient': usageLimitPerClient,
+      'channelWoo': channelWoo,
+      'channelBooking': channelBooking,
+      'channelPos': channelPos,
+      'isActive': isActive,
+    };
+    final response = promoId == null
+        ? await _http.post(
+            _uri('/api/mobile/institut/promos'),
+            headers: _headers(accessToken: accessToken, tenantId: tenantId),
+            body: jsonEncode(payload),
+          )
+        : await _http.patch(
+            _uri('/api/mobile/institut/promos/$promoId'),
+            headers: _headers(accessToken: accessToken, tenantId: tenantId),
+            body: jsonEncode(payload),
+          );
+    await _decode(response);
+  }
+
+  Future<void> deletePromo({
+    required String accessToken,
+    required String tenantId,
+    required String promoId,
+  }) async {
+    final response = await _http.delete(
+      _uri('/api/mobile/institut/promos/$promoId'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    await _decode(response);
+  }
+
   Future<void> applyLoyaltyStarter({
     required String accessToken,
     required String tenantId,

@@ -13,6 +13,7 @@ import 'features/home/home_screen.dart';
 import 'features/institut/institut_screen.dart';
 import 'features/loyalty/loyalty_screen.dart';
 import 'features/more/more_screen.dart';
+import 'features/promos/promos_screen.dart';
 import 'features/shell/institut_shell.dart';
 import 'features/team/team_screen.dart';
 import 'features/tenant/tenant_picker_screen.dart';
@@ -146,6 +147,10 @@ class _InstitutRouterAppState extends ConsumerState<_InstitutRouterApp> {
                     GoRoute(
                       path: 'loyalty',
                       builder: (_, _) => const LoyaltyScreen(),
+                    ),
+                    GoRoute(
+                      path: 'promos',
+                      builder: (_, _) => const PromosScreen(),
                     ),
                     GoRoute(
                       path: 'team',

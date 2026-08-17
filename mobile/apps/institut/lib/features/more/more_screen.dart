@@ -15,9 +15,12 @@ class MoreScreen extends ConsumerStatefulWidget {
   ConsumerState<MoreScreen> createState() => _MoreScreenState();
 }
 
+enum _MoreTab { gestion, marketing, parametres }
+
 class _MoreScreenState extends ConsumerState<MoreScreen> {
   final _picker = ImagePicker();
   bool _uploadingLogo = false;
+  _MoreTab _tab = _MoreTab.gestion;
 
   static const _bg = Color(0xFFF5F5F5);
   static const _black = Color(0xFF0A0A0A);
@@ -173,7 +176,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               data: (session) {
                 if (session == null) return const SizedBox.shrink();
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 24),
+                  padding: const EdgeInsets.only(bottom: 20),
                   child: _SectionGroup(
                     title: 'Caisse',
                     children: [
@@ -192,121 +195,218 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 );
               },
             ),
-            _SectionGroup(
-              title: 'Gestion',
-              children: [
-                _MenuRow(
-                  leading: _IconTile(icon: Icons.people_outline_rounded),
-                  title: 'Clientes',
-                  subtitle: 'Créer, rechercher et modifier les fiches',
-                  onTap: () => context.go('/app/more/clients'),
-                ),
-                _MenuRow(
-                  leading: _IconTile(icon: Icons.loyalty_outlined),
-                  title: 'Fidélité',
-                  subtitle: 'Programmes, règles et récompenses',
-                  onTap: () => context.go('/app/more/loyalty'),
-                ),
-                _MenuRow(
-                  leading: _IconTile(icon: Icons.groups_2_outlined),
-                  title: 'Équipe',
-                  subtitle: 'Praticiennes de l’institut',
-                  onTap: () => context.go('/app/more/team'),
-                ),
-                _MenuRow(
-                  leading: _IconTile(icon: Icons.store_mall_directory_outlined),
-                  title: 'Institut',
-                  subtitle: 'Nom, contact, adresse & horaires',
-                  onTap: () => context.go('/app/more/institut'),
-                ),
-              ],
+            _MoreTabBar(
+              selected: _tab,
+              onChanged: (tab) => setState(() => _tab = tab),
             ),
-            const SizedBox(height: 24),
-            _SectionGroup(
-              title: 'Espace',
-              children: [
-                _MenuRow(
-                  leading: _LogoAvatar(
-                    logoUrl: logoUrl,
-                    label: displayName,
-                    loading: _uploadingLogo,
-                  ),
-                  title: 'Logo institut',
-                  subtitle: _uploadingLogo
-                      ? 'Envoi en cours…'
-                      : 'Appuyez pour changer',
-                  onTap: _uploadingLogo ? null : _pickAndUploadLogo,
-                ),
-                _MenuRow(
-                  leading: _IconTile(icon: Icons.storefront_outlined),
-                  title: 'Changer d’institut',
-                  subtitle: tenants.length > 1
-                      ? '${tenants.length} instituts disponibles'
-                      : 'Sélectionner un autre espace',
-                  onTap: () => context.go('/tenants'),
-                ),
-                if (roleText != null)
-                  _MenuRow(
-                    leading: _IconTile(icon: Icons.badge_outlined),
-                    title: 'Rôle',
-                    subtitle: roleText,
-                    showChevron: false,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            _SectionGroup(
-              title: 'Compte',
-              children: [
-                if (email != null)
-                  _MenuRow(
-                    leading: _IconTile(icon: Icons.mail_outline_rounded),
-                    title: email,
-                    subtitle: 'Adresse de connexion',
-                    showChevron: false,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            _SectionGroup(
-              title: 'Application',
-              children: [
-                _MenuRow(
-                  leading: _IconTile(icon: Icons.info_outline_rounded),
-                  title: bootstrap.appName,
-                  subtitle: 'Version 1.0.0',
-                  showChevron: false,
-                ),
-              ],
-            ),
-            const SizedBox(height: 28),
-            OutlinedButton(
-              onPressed: _logout,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFDC2626),
-                side: const BorderSide(color: Color(0xFFFECACA)),
-                backgroundColor: _rowBg,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            const SizedBox(height: 20),
+            if (_tab == _MoreTab.gestion)
+              _SectionGroup(
+                title: 'Gestion',
                 children: [
-                  Icon(Icons.logout_rounded, size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'Se déconnecter',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.people_outline_rounded),
+                    title: 'Clientes',
+                    subtitle: 'Créer, rechercher et modifier les fiches',
+                    onTap: () => context.go('/app/more/clients'),
+                  ),
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.groups_2_outlined),
+                    title: 'Équipe',
+                    subtitle: 'Praticiennes de l’institut',
+                    onTap: () => context.go('/app/more/team'),
+                  ),
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.store_mall_directory_outlined),
+                    title: 'Institut',
+                    subtitle: 'Nom, contact, adresse & horaires',
+                    onTap: () => context.go('/app/more/institut'),
+                  ),
+                ],
+              )
+            else if (_tab == _MoreTab.marketing)
+              _SectionGroup(
+                title: 'Marketing',
+                children: [
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.loyalty_outlined),
+                    title: 'Fidélité',
+                    subtitle: 'Bon en euros, programmes et récompenses',
+                    onTap: () => context.go('/app/more/loyalty'),
+                  ),
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.local_offer_outlined),
+                    title: 'Promos',
+                    subtitle: 'Codes, remises et canaux',
+                    onTap: () => context.go('/app/more/promos'),
+                  ),
+                ],
+              )
+            else ...[
+              _SectionGroup(
+                title: 'Espace',
+                children: [
+                  _MenuRow(
+                    leading: _LogoAvatar(
+                      logoUrl: logoUrl,
+                      label: displayName,
+                      loading: _uploadingLogo,
+                    ),
+                    title: 'Logo institut',
+                    subtitle: _uploadingLogo
+                        ? 'Envoi en cours…'
+                        : 'Appuyez pour changer',
+                    onTap: _uploadingLogo ? null : _pickAndUploadLogo,
+                  ),
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.storefront_outlined),
+                    title: 'Changer d’institut',
+                    subtitle: tenants.length > 1
+                        ? '${tenants.length} instituts disponibles'
+                        : 'Sélectionner un autre espace',
+                    onTap: () => context.go('/tenants'),
+                  ),
+                  if (roleText != null)
+                    _MenuRow(
+                      leading: _IconTile(icon: Icons.badge_outlined),
+                      title: 'Rôle',
+                      subtitle: roleText,
+                      showChevron: false,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _SectionGroup(
+                title: 'Compte',
+                children: [
+                  if (email != null)
+                    _MenuRow(
+                      leading: _IconTile(icon: Icons.mail_outline_rounded),
+                      title: email,
+                      subtitle: 'Adresse de connexion',
+                      showChevron: false,
+                    ),
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.info_outline_rounded),
+                    title: bootstrap.appName,
+                    subtitle: 'Version 1.0.0',
+                    showChevron: false,
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 28),
+              OutlinedButton(
+                onPressed: _logout,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFDC2626),
+                  side: const BorderSide(color: Color(0xFFFECACA)),
+                  backgroundColor: _rowBg,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.logout_rounded, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Se déconnecter',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             SizedBox(
               height: MediaQuery.viewPaddingOf(context).bottom + 16,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MoreTabBar extends StatelessWidget {
+  const _MoreTabBar({required this.selected, required this.onChanged});
+
+  final _MoreTab selected;
+  final ValueChanged<_MoreTab> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFECECEC),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          for (final tab in _MoreTab.values)
+            Expanded(
+              child: _MoreTabChip(
+                label: switch (tab) {
+                  _MoreTab.gestion => 'Gestion',
+                  _MoreTab.marketing => 'Marketing',
+                  _MoreTab.parametres => 'Paramètres',
+                },
+                selected: selected == tab,
+                onTap: () => onChanged(tab),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MoreTabChip extends StatelessWidget {
+  const _MoreTabChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? Colors.white : Colors.transparent,
+      borderRadius: BorderRadius.circular(9),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(9),
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(9),
+            boxShadow: selected
+                ? const [
+                    BoxShadow(
+                      color: Color(0x14000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: selected
+                  ? _MoreScreenState._black
+                  : _MoreScreenState._muted,
+            ),
+          ),
         ),
       ),
     );

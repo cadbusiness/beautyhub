@@ -115,7 +115,7 @@ export async function fetchPosContext(supabase: Db, tenantId: string) {
       .from("inst_cash_sessions")
       .select("id, status, opening_float_cents, opened_at")
       .eq("tenant_id", tenantId)
-      .eq("status", "open")
+      .in("status", ["open", "paused"])
       .maybeSingle(),
     supabase
       .from("inst_sales")
@@ -154,6 +154,7 @@ export function posCheckoutErrorMessage(code: string): string {
     no_payments: "Aucun paiement.",
     overpaid: "Montant payé supérieur au total.",
     no_open_session: "Aucune session caisse ouverte.",
+    session_paused: "La caisse est en pause.",
     gift_card_invalid: "Bon cadeau invalide.",
     gift_card_insufficient: "Solde bon cadeau insuffisant.",
     gift_card_expired: "Bon cadeau expiré.",

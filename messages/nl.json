@@ -2879,6 +2879,9 @@
       "sessionPreviousDayTitle": "Sessie van gisteren nog open",
       "sessionPreviousDayBody": "Sluit ze af om de dagen duidelijk te scheiden. U kunt nog afrekenen.",
       "sessionPreviousDayCta": "Ga afsluiten →",
+      "sessionPausedTitle": "Kassa gepauzeerd",
+      "sessionPausedBody": "Hervat de sessie om af te rekenen.",
+      "sessionPausedCta": "Hervatten →",
       "openSession": "Kassa openen →",
       "noSessionHint": "Kassa gesloten — openen voor contant follow-up",
       "cart": {

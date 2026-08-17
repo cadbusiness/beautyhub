@@ -69,6 +69,7 @@ export function PosTerminal({
   settings,
   sessionOpen,
   sessionPreviousDay = false,
+  sessionPaused = false,
   requireSession,
   defaultOpeningFloatCents = 0,
   stripeEnabled,
@@ -85,6 +86,7 @@ export function PosTerminal({
   settings: PosSettings;
   sessionOpen: boolean;
   sessionPreviousDay?: boolean;
+  sessionPaused?: boolean;
   requireSession: boolean;
   defaultOpeningFloatCents?: number;
   stripeEnabled?: boolean;
@@ -827,6 +829,17 @@ export function PosTerminal({
               compact
             />
           </div>
+        ) : sessionPaused ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p className="text-sm font-medium text-amber-950">{t("sessionPausedTitle")}</p>
+            <p className="mt-0.5 text-sm text-amber-900/80">{t("sessionPausedBody")}</p>
+            <Link
+              href="/institut/caisse/session"
+              className="mt-2 inline-flex h-8 items-center rounded-lg bg-amber-900 px-3 text-xs font-medium text-white hover:bg-amber-950"
+            >
+              {t("sessionPausedCta")}
+            </Link>
+          </div>
         ) : sessionPreviousDay ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
             <p className="text-sm font-medium text-amber-950">{t("sessionPreviousDayTitle")}</p>
@@ -1180,7 +1193,7 @@ export function PosTerminal({
             stripeEnabled={Boolean(stripeEnabled)}
             stripePublishableKey={stripePublishableKey}
             stripeAccountId={stripeAccountId}
-            disabled={cartEmpty || (requireSession && !sessionOpen)}
+            disabled={cartEmpty || sessionPaused || (requireSession && !sessionOpen)}
             checkoutAction={checkoutAction}
             checkoutPending={checkoutPending}
             checkoutState={checkoutState}

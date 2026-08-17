@@ -27,6 +27,7 @@ export interface MobilePosContext {
   clients: MobilePosClientOption[];
   staff: MobilePosStaffOption[];
   sessionOpen: boolean;
+  sessionPaused: boolean;
   sessionOpenedAt: string | null;
   sessionIsPreviousDay: boolean;
   requireOpenSession: boolean;
@@ -128,6 +129,7 @@ export async function loadMobilePosContext(
     clients,
     staff,
     sessionOpen: Boolean(cashSession),
+    sessionPaused: cashSession?.status === "paused",
     sessionOpenedAt: cashSession?.opened_at ?? null,
     sessionIsPreviousDay: cashSession
       ? isPreviousCalendarDay(cashSession.opened_at)
@@ -159,6 +161,7 @@ export function serializeMobilePosContext(ctx: MobilePosContextLoaded) {
     clients: ctx.clients,
     staff: ctx.staff,
     sessionOpen: ctx.sessionOpen,
+    sessionPaused: ctx.sessionPaused,
     sessionOpenedAt: ctx.sessionOpenedAt,
     sessionIsPreviousDay: ctx.sessionIsPreviousDay,
     requireOpenSession: ctx.requireOpenSession,

@@ -313,8 +313,9 @@ export async function executePosCheckout(
   if (totals.total_cents <= 0) throw new Error("invalid_amount");
 
   let sessionId = input.cashSessionId ?? null;
+  const open = await getOpenCashSession(supabase, tenantId);
+  if (open?.status === "paused") throw new Error("session_paused");
   if (!sessionId) {
-    const open = await getOpenCashSession(supabase, tenantId);
     if (open) sessionId = open.id;
     else await requireOpenSessionIfNeeded(supabase, tenantId);
   }

@@ -200,6 +200,7 @@ class PosContext {
     this.productCategories = const [],
     this.sessionOpenedAt,
     this.sessionIsPreviousDay = false,
+    this.sessionPaused = false,
   });
 
   final List<PosCatalogItem> catalog;
@@ -213,6 +214,7 @@ class PosContext {
   final List<PosOption> productCategories;
   final DateTime? sessionOpenedAt;
   final bool sessionIsPreviousDay;
+  final bool sessionPaused;
 
   factory PosContext.fromJson(Map<String, dynamic> json) {
     final catalog = (json['catalog'] as List? ?? const [])
@@ -254,6 +256,7 @@ class PosContext {
           ? DateTime.tryParse(json['sessionOpenedAt'] as String)?.toLocal()
           : null,
       sessionIsPreviousDay: json['sessionIsPreviousDay'] as bool? ?? false,
+      sessionPaused: json['sessionPaused'] as bool? ?? false,
     );
   }
 }

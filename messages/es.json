@@ -3056,6 +3056,9 @@
       "sessionPreviousDayTitle": "La sesión de ayer sigue abierta",
       "sessionPreviousDayBody": "Ciérrala para separar bien los días. Aún puedes cobrar.",
       "sessionPreviousDayCta": "Ir a cerrar →",
+      "sessionPausedTitle": "Caja en pausa",
+      "sessionPausedBody": "Reanuda la sesión para cobrar.",
+      "sessionPausedCta": "Reanudar →",
       "tabs": {
         "all": "Todo",
         "internal": "Productos internos",

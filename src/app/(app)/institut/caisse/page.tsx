@@ -191,6 +191,7 @@ export default async function CaissePage({
             initialAppointmentId={initialAppointmentId ?? undefined}
             settings={posSettings}
             sessionOpen={Boolean(cashSession)}
+            sessionPaused={cashSession?.status === "paused"}
             sessionPreviousDay={
               cashSession ? isPreviousCalendarDay(cashSession.opened_at) : false
             }

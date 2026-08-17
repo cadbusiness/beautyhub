@@ -3059,6 +3059,9 @@
       "sessionPreviousDayTitle": "Session d'hier encore ouverte",
       "sessionPreviousDayBody": "Clôturez-la pour séparer nettement les journées. Vous pouvez encore encaisser.",
       "sessionPreviousDayCta": "Aller clôturer →",
+      "sessionPausedTitle": "Caisse en pause",
+      "sessionPausedBody": "Reprenez la session pour encaisser.",
+      "sessionPausedCta": "Reprendre →",
       "openSession": "Ouvrir la caisse →",
       "noSessionHint": "Session fermée — ouvrir pour le suivi espèces",
       "checkout": {

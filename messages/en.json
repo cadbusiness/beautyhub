@@ -3482,6 +3482,9 @@
       "sessionPreviousDayTitle": "Yesterday's session still open",
       "sessionPreviousDayBody": "Close it to keep days clearly separate. You can still take payments.",
       "sessionPreviousDayCta": "Go close →",
+      "sessionPausedTitle": "Checkout paused",
+      "sessionPausedBody": "Resume the session to take payments.",
+      "sessionPausedCta": "Resume →",
       "tabs": {
         "all": "All",
         "internal": "Internal products",

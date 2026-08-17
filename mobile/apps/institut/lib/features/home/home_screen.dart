@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../state/session_providers.dart';
 import '../agenda/widgets/appointment_form_sheet.dart';
+import '../cash/session_duration.dart';
 import '../shared/money.dart';
 import '../shared/tenant_logo.dart';
 import 'widgets/dashboard_bar_chart.dart';
@@ -244,12 +245,18 @@ class HomeScreen extends ConsumerWidget {
                       );
                     }
                     return _SectionCard(
-                      title: session.previousDay
-                          ? 'Session d’hier encore ouverte'
-                          : 'Caisse ouverte',
+                      title: session.paused
+                          ? 'Caisse en pause'
+                          : session.previousDay
+                              ? 'Session d’hier encore ouverte'
+                              : 'Caisse ouverte',
                       subtitle: session.previousDay
                           ? 'Clôturez-la pour démarrer nettement aujourd’hui'
-                          : 'Depuis ${timeFmt.format(session.openedAt)}',
+                          : sessionOpenedCaption(
+                              openedAt: session.openedAt,
+                              previousDay: false,
+                              paused: session.paused,
+                            ),
                       child: Row(
                         children: [
                           Expanded(
@@ -266,7 +273,9 @@ class HomeScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${session.salesCount} ventes',
+                                  session.itemsSoldQty > 0
+                                      ? '${session.salesCount} ventes · ${session.itemsSoldQty} art.'
+                                      : '${session.salesCount} ventes',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     color: _muted,
@@ -275,13 +284,13 @@ class HomeScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          if (session.previousDay)
+                          if (session.previousDay || session.paused)
                             TextButton(
                               onPressed: () {
                                 ref.read(cashInitialTabProvider.notifier).state = 0;
                                 context.go('/app/cash');
                               },
-                              child: const Text('Session'),
+                              child: Text(session.paused ? 'Reprendre' : 'Session'),
                             )
                           else
                             FilledButton.icon(

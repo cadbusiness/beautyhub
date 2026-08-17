@@ -86,6 +86,15 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "checkout_failed";
+    if (message === "session_paused") {
+      return Response.json(
+        {
+          error: message,
+          message: "La caisse est en pause — reprenez la session pour encaisser.",
+        },
+        { status: 409 },
+      );
+    }
     if (
       message === "empty_cart" ||
       message === "invalid_cart" ||

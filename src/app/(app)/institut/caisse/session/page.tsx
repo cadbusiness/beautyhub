@@ -13,6 +13,7 @@ import { OpenSessionForm } from "./open-session-form";
 import { MovementForm } from "./movement-form";
 import { CloseSessionForm } from "./close-session-form";
 import { XReportButton } from "./x-report-button";
+import { PauseResumeButton } from "./pause-resume-button";
 
 export default async function CaisseSessionPage() {
   const t = await getTranslations("pos.session");
@@ -126,20 +127,26 @@ export default async function CaisseSessionPage() {
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={
-                previousDay
+                cashSession.status === "paused"
                   ? "inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-950"
-                  : "inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-900"
+                  : previousDay
+                    ? "inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-950"
+                    : "inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-900"
               }
             >
               <span
                 className={
-                  previousDay
+                  cashSession.status === "paused" || previousDay
                     ? "h-1.5 w-1.5 rounded-full bg-amber-500"
                     : "h-1.5 w-1.5 rounded-full bg-green-500"
                 }
                 aria-hidden
               />
-              {previousDay ? t("previousDayBadge") : t("sessionOpen")}
+              {cashSession.status === "paused"
+                ? t("sessionPaused")
+                : previousDay
+                  ? t("previousDayBadge")
+                  : t("sessionOpen")}
             </span>
             <span className="text-xs text-slate-500">
               {format.dateTime(new Date(cashSession.opened_at), {
@@ -149,14 +156,23 @@ export default async function CaisseSessionPage() {
             </span>
           </div>
           <p className="mt-1 text-sm text-slate-600">
-            {previousDay ? t("previousDayWorkflow") : t("workflowIntro")}
+            {cashSession.status === "paused"
+              ? t("pauseHint")
+              : previousDay
+                ? t("previousDayWorkflow")
+                : t("workflowIntro")}
           </p>
         </div>
-        <Link href="/institut/caisse">
-          <span className="inline-flex h-9 items-center rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800">
-            {t("goToPos")}
-          </span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <PauseResumeButton paused={cashSession.status === "paused"} />
+          {cashSession.status === "paused" ? null : (
+            <Link href="/institut/caisse">
+              <span className="inline-flex h-9 items-center rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800">
+                {t("goToPos")}
+              </span>
+            </Link>
+          )}
+        </div>
       </div>
 
       <nav aria-label={t("workflowAria")} className="grid gap-2 sm:grid-cols-3">
@@ -204,7 +220,11 @@ export default async function CaisseSessionPage() {
             <p className="mt-0.5 text-xs text-slate-500">{t("movementsHint")}</p>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <MovementForm />
+            {cashSession.status === "paused" ? (
+              <p className="text-sm text-slate-600">{t("pauseHint")}</p>
+            ) : (
+              <MovementForm />
+            )}
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-4">
             <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">

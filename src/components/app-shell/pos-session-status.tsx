@@ -12,6 +12,7 @@ export type PosSessionStatusData = {
   total_cents: number;
   expected_cash_cents: number;
   is_previous_day?: boolean;
+  paused?: boolean;
   currency?: string;
 };
 
@@ -55,6 +56,7 @@ export function PosSessionHeaderBadge({
 }) {
   const t = useTranslations("shell.posSession");
   const previousDay = Boolean(session.is_previous_day);
+  const paused = Boolean(session.paused);
 
   if (previousDay) {
     return (
@@ -66,6 +68,18 @@ export function PosSessionHeaderBadge({
         <span>{t("previousDay")}</span>
         <span className="text-amber-800">·</span>
         <span>{t("previousDayCta")}</span>
+      </Link>
+    );
+  }
+
+  if (paused) {
+    return (
+      <Link
+        href="/institut/caisse/session"
+        className="hidden items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-950 transition-colors hover:bg-amber-100 md:inline-flex"
+      >
+        <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden />
+        <span>{t("paused")}</span>
       </Link>
     );
   }
@@ -131,6 +145,23 @@ export function PosSessionBanner({
   }
 
   if (!session) return null;
+
+  if (session.paused) {
+    return (
+      <div className="flex flex-col gap-3 border-b border-amber-200 bg-amber-50/80 px-4 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-6">
+        <div>
+          <p className="text-sm font-medium text-amber-950">{t("pausedTitle")}</p>
+          <p className="mt-0.5 text-sm text-amber-900/80">{t("pausedDescription")}</p>
+        </div>
+        <Link
+          href="/institut/caisse/session"
+          className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-amber-900 px-4 text-sm font-medium text-white hover:bg-amber-950"
+        >
+          {t("resumeSession")}
+        </Link>
+      </div>
+    );
+  }
 
   if (session.is_previous_day) {
     return (

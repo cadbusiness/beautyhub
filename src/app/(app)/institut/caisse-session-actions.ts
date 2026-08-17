@@ -8,7 +8,11 @@ import { requireInstitutSettingsModule } from "@/lib/auth/institut-settings";
 import {
   computeSessionSnapshot,
   getOpenCashSession,
+  isCashSessionPaused,
   nextReportNumber,
+  closeOpenCashSession,
+  pauseOpenCashSession,
+  resumePausedCashSession,
 } from "@/lib/institut/pos-session";
 import type { Json } from "@/lib/db/database.types";
 import type { ActionResult } from "./caisse-actions";
@@ -67,6 +71,7 @@ export async function addCashMovement(
 
   const cashSession = await getOpenCashSession(supabase, session.tenant.id);
   if (!cashSession) return { error: t("noOpenSession") };
+  if (isCashSessionPaused(cashSession)) return { error: t("sessionPaused") };
 
   const movementType = String(formData.get("movement_type") ?? "out");
   const amount = parseEurosCents(formData.get("amount"));
@@ -128,6 +133,36 @@ export async function generateXReport(): Promise<ActionResult & { reportId?: str
   return { ok: true, message: reportNumber, reportId: data.id };
 }
 
+export async function pauseCashSession(): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  try {
+    await pauseOpenCashSession(supabase, session.tenant.id);
+  } catch (e) {
+    const msg = (e as Error).message;
+    if (msg === "no_open_session") return { error: t("noOpenSession") };
+    return { error: msg };
+  }
+  revalidateSession();
+  return { ok: true, message: t("sessionPausedOk") };
+}
+
+export async function resumeCashSession(): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  try {
+    await resumePausedCashSession(supabase, session.tenant.id);
+  } catch (e) {
+    const msg = (e as Error).message;
+    if (msg === "no_open_session") return { error: t("noOpenSession") };
+    return { error: msg };
+  }
+  revalidateSession();
+  return { ok: true, message: t("sessionResumed") };
+}
+
 export async function closeCashSession(
   _prev: ActionResult,
   formData: FormData,
@@ -136,63 +171,27 @@ export async function closeCashSession(
   const session = await requireModule("institut");
   const supabase = await createClient();
 
-  const cashSession = await getOpenCashSession(supabase, session.tenant.id);
-  if (!cashSession) return { error: t("noOpenSession") };
-
   const countedCash = parseEurosCents(formData.get("counted_cash"));
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
-  const snapshot = await computeSessionSnapshot(
-    supabase,
-    session.tenant.id,
-    cashSession.id,
-    "z",
-  );
-  const reportNumber = await nextReportNumber(
-    supabase,
-    session.tenant.id,
-    "z",
-    "Z",
-  );
-
-  const variance = countedCash - snapshot.expected_cash_cents;
-
-  if (variance !== 0 && !notes) {
-    return { error: t("varianceNotesRequired") };
-  }
-
-  const { data: report, error: reportErr } = await supabase
-    .from("inst_cash_reports")
-    .insert({
-      tenant_id: session.tenant.id,
-      session_id: cashSession.id,
-      report_type: "z",
-      report_number: reportNumber,
-      snapshot: { ...snapshot, closing_counted_cents: countedCash, variance_cents: variance } as unknown as Json,
-    })
-    .select("id")
-    .single();
-  if (reportErr || !report) {
-    return { error: reportErr?.message ?? t("reportFailed") };
-  }
-
-  const { error: closeErr } = await supabase
-    .from("inst_cash_sessions")
-    .update({
-      status: "closed",
-      closed_at: new Date().toISOString(),
-      closing_counted_cents: countedCash,
-      closing_expected_cents: snapshot.expected_cash_cents,
-      closing_variance_cents: variance,
-      z_report_number: reportNumber,
+  try {
+    const result = await closeOpenCashSession(supabase, session.tenant.id, {
+      countedCashCents: countedCash,
       notes,
-    })
-    .eq("id", cashSession.id)
-    .eq("tenant_id", session.tenant.id);
-  if (closeErr) return { error: closeErr.message };
-
-  revalidateSession();
-  return { ok: true, message: `${t("sessionClosed")} · ${reportNumber}`, reportId: report.id };
+    });
+    revalidateSession();
+    return {
+      ok: true,
+      message: `${t("sessionClosed")} · ${result.reportNumber}`,
+      reportId: result.reportId,
+    };
+  } catch (e) {
+    const msg = (e as Error).message;
+    if (msg === "no_open_session") return { error: t("noOpenSession") };
+    if (msg === "variance_notes_required") return { error: t("varianceNotesRequired") };
+    if (msg === "report_failed") return { error: t("reportFailed") };
+    return { error: msg };
+  }
 }
 
 export async function issueGiftCardAction(

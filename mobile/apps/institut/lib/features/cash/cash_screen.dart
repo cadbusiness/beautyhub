@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../state/session_providers.dart';
-import '../shared/money.dart';
 import 'cash_header.dart';
+import 'cash_session_tab.dart';
 import 'pos_sale_tab.dart';
 import 'sales_history_tab.dart';
 
@@ -100,75 +99,7 @@ class _CashScreenState extends ConsumerState<CashScreen> {
                     ),
                     data: (session) {
                       if (session != null) {
-                        return ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                            _SessionCard(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                          color: session.previousDay
-                                              ? const Color(0xFFF59E0B)
-                                              : const Color(0xFF22C55E),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                  const Text(
-                                    'Session ouverte',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      color: _black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                session.previousDay
-                                    ? 'Ouverte un jour précédent — clôturez-la pour démarrer aujourd’hui.'
-                                    : 'Depuis ${DateFormat.Hm().format(session.openedAt)}',
-                                style: TextStyle(
-                                  color: session.previousDay
-                                      ? const Color(0xFFB45309)
-                                      : _muted,
-                                  fontSize: 13,
-                                ),
-                              ),
-                                  const SizedBox(height: 16),
-                                  _StatRow(
-                                    label: 'Fond de caisse',
-                                    value: formatEuros(session.openingFloatCents),
-                                  ),
-                                  _StatRow(label: 'Ventes', value: '${session.salesCount}'),
-                                  _StatRow(
-                                    label: 'Total encaissé',
-                                    value: formatEuros(session.totalCents),
-                                  ),
-                                  _StatRow(
-                                    label: 'Cash attendu',
-                                    value: formatEuros(session.expectedCashCents),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Clôture Z et bons avancés restent sur le web.',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: _muted,
-                                  ),
-                            ),
-                          ],
-                        );
+                        return CashOpenSessionView(session: session);
                       }
 
                       return ListView(
@@ -305,34 +236,6 @@ class _SessionCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFEBEBEB)),
       ),
       child: child,
-    );
-  }
-}
-
-class _StatRow extends StatelessWidget {
-  const _StatRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(color: Color(0xFF525252), fontSize: 14),
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          ),
-        ],
-      ),
     );
   }
 }

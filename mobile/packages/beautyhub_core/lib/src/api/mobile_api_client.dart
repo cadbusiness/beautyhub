@@ -19,6 +19,16 @@ class MobileApiException implements Exception {
   String toString() => message;
 }
 
+class ClosedCashSessionResult {
+  const ClosedCashSessionResult({
+    required this.reportNumber,
+    required this.varianceCents,
+  });
+
+  final String reportNumber;
+  final int varianceCents;
+}
+
 /// Credentials retournés quand on créé un compte cliente à la volée.
 class ClientAccountCredentials {
   const ClientAccountCredentials({required this.loginId, required this.pinCode});
@@ -295,6 +305,62 @@ class MobileApiClient {
     final raw = body['session'];
     if (raw is! Map) return null;
     return CashSessionSummary.fromJson(Map<String, dynamic>.from(raw));
+  }
+
+  Future<CashSessionSummary?> pauseCashSession({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/cash-session/pause'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode(const {}),
+    );
+    final body = await _decode(response);
+    final raw = body['session'];
+    if (raw is! Map) return null;
+    return CashSessionSummary.fromJson(Map<String, dynamic>.from(raw));
+  }
+
+  Future<CashSessionSummary?> resumeCashSession({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/cash-session/resume'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode(const {}),
+    );
+    final body = await _decode(response);
+    final raw = body['session'];
+    if (raw is! Map) return null;
+    return CashSessionSummary.fromJson(Map<String, dynamic>.from(raw));
+  }
+
+  Future<ClosedCashSessionResult> closeCashSession({
+    required String accessToken,
+    required String tenantId,
+    required int countedCashCents,
+    String? notes,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/cash-session/close'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'countedCashCents': countedCashCents,
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+      }),
+    );
+    final body = await _decode(response);
+    final variance = body['varianceCents'];
+    return ClosedCashSessionResult(
+      reportNumber: body['reportNumber'] as String? ?? '',
+      varianceCents: variance is int
+          ? variance
+          : variance is num
+              ? variance.round()
+              : 0,
+    );
   }
 
   Future<PosContext> fetchPosContext({

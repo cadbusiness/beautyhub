@@ -341,6 +341,14 @@ class CashSessionSummary {
     required this.salesCount,
     required this.totalCents,
     required this.expectedCashCents,
+    this.itemsSoldQty = 0,
+    this.servicesQty = 0,
+    this.productsQty = 0,
+    this.amountPaidCents = 0,
+    this.cashSalesCents = 0,
+    this.cardSalesCents = 0,
+    this.byPaymentMethod = const {},
+    this.paused = false,
     this.previousDay = false,
     this.openedCalendarDate,
   });
@@ -349,8 +357,16 @@ class CashSessionSummary {
   final DateTime openedAt;
   final int openingFloatCents;
   final int salesCount;
+  final int itemsSoldQty;
+  final int servicesQty;
+  final int productsQty;
   final int totalCents;
+  final int amountPaidCents;
   final int expectedCashCents;
+  final int cashSalesCents;
+  final int cardSalesCents;
+  final Map<String, int> byPaymentMethod;
+  final bool paused;
   final bool previousDay;
   final String? openedCalendarDate;
 
@@ -358,12 +374,34 @@ class CashSessionSummary {
     return CashSessionSummary(
       id: json['id'] as String,
       openedAt: DateTime.parse(json['openedAt'] as String).toLocal(),
-      openingFloatCents: json['openingFloatCents'] as int? ?? 0,
-      salesCount: json['salesCount'] as int? ?? 0,
-      totalCents: json['totalCents'] as int? ?? 0,
-      expectedCashCents: json['expectedCashCents'] as int? ?? 0,
+      openingFloatCents: _asInt(json['openingFloatCents']),
+      salesCount: _asInt(json['salesCount']),
+      itemsSoldQty: _asInt(json['itemsSoldQty']),
+      servicesQty: _asInt(json['servicesQty']),
+      productsQty: _asInt(json['productsQty']),
+      totalCents: _asInt(json['totalCents']),
+      amountPaidCents: _asInt(json['amountPaidCents']),
+      expectedCashCents: _asInt(json['expectedCashCents']),
+      cashSalesCents: _asInt(json['cashSalesCents']),
+      cardSalesCents: _asInt(json['cardSalesCents']),
+      byPaymentMethod: _asIntMap(json['byPaymentMethod']),
+      paused: json['paused'] as bool? ?? false,
       previousDay: json['previousDay'] as bool? ?? false,
       openedCalendarDate: json['openedCalendarDate'] as String?,
     );
   }
+}
+
+int _asInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.round();
+  return 0;
+}
+
+Map<String, int> _asIntMap(dynamic raw) {
+  if (raw is! Map) return const {};
+  return {
+    for (final entry in raw.entries)
+      entry.key.toString(): _asInt(entry.value),
+  };
 }

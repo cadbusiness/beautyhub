@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/db/database.types";
+import type { Database, Json } from "@/lib/db/database.types";
 import { calendarDateString, isPreviousCalendarDay } from "@/lib/date";
 import { formatTicketNumber, getPosSettings } from "./pos-settings";
 
@@ -11,6 +11,9 @@ export interface CashReportSnapshot {
   report_type: "x" | "z";
   opening_float_cents: number;
   sales_count: number;
+  items_sold_qty: number;
+  services_qty: number;
+  products_qty: number;
   partial_count: number;
   total_cents: number;
   vat_cents: number;
@@ -27,9 +30,15 @@ export async function getOpenCashSession(supabase: Db, tenantId: string) {
     .from("inst_cash_sessions")
     .select("*")
     .eq("tenant_id", tenantId)
-    .eq("status", "open")
+    .in("status", ["open", "paused"])
     .maybeSingle();
   return data;
+}
+
+export function isCashSessionPaused(
+  session: { status: string } | null | undefined,
+): boolean {
+  return session?.status === "paused";
 }
 
 export interface PosSessionSummary {
@@ -37,8 +46,16 @@ export interface PosSessionSummary {
   opened_at: string;
   opening_float_cents: number;
   sales_count: number;
+  items_sold_qty: number;
+  services_qty: number;
+  products_qty: number;
   total_cents: number;
+  amount_paid_cents: number;
   expected_cash_cents: number;
+  cash_sales_cents: number;
+  card_sales_cents: number;
+  by_payment_method: Record<string, number>;
+  paused: boolean;
   opened_calendar_date: string;
   is_previous_day: boolean;
   currency: string;
@@ -49,8 +66,16 @@ export type MobileCashSessionJson = {
   openedAt: string;
   openingFloatCents: number;
   salesCount: number;
+  itemsSoldQty: number;
+  servicesQty: number;
+  productsQty: number;
   totalCents: number;
+  amountPaidCents: number;
   expectedCashCents: number;
+  cashSalesCents: number;
+  cardSalesCents: number;
+  byPaymentMethod: Record<string, number>;
+  paused: boolean;
   openedCalendarDate: string;
   previousDay: boolean;
 };
@@ -63,8 +88,16 @@ export function serializeCashSession(
     openedAt: summary.opened_at,
     openingFloatCents: summary.opening_float_cents,
     salesCount: summary.sales_count,
+    itemsSoldQty: summary.items_sold_qty,
+    servicesQty: summary.services_qty,
+    productsQty: summary.products_qty,
     totalCents: summary.total_cents,
+    amountPaidCents: summary.amount_paid_cents,
     expectedCashCents: summary.expected_cash_cents,
+    cashSalesCents: summary.cash_sales_cents,
+    cardSalesCents: summary.card_sales_cents,
+    byPaymentMethod: summary.by_payment_method,
+    paused: summary.paused,
     openedCalendarDate: summary.opened_calendar_date,
     previousDay: summary.is_previous_day,
   };
@@ -84,13 +117,24 @@ export async function getPosSessionSummary(
   ]);
 
   const openedCalendarDate = calendarDateString(cashSession.opened_at);
+  const cashSalesCents = snapshot.by_payment_method.cash ?? 0;
+  const cardSalesCents =
+    (snapshot.by_payment_method.card ?? 0) + (snapshot.by_payment_method.stripe ?? 0);
   return {
     id: cashSession.id,
     opened_at: cashSession.opened_at,
     opening_float_cents: cashSession.opening_float_cents,
     sales_count: snapshot.sales_count,
+    items_sold_qty: snapshot.items_sold_qty,
+    services_qty: snapshot.services_qty,
+    products_qty: snapshot.products_qty,
     total_cents: snapshot.total_cents,
+    amount_paid_cents: snapshot.amount_paid_cents,
     expected_cash_cents: snapshot.expected_cash_cents,
+    cash_sales_cents: cashSalesCents,
+    card_sales_cents: cardSalesCents,
+    by_payment_method: snapshot.by_payment_method,
+    paused: isCashSessionPaused(cashSession),
     opened_calendar_date: openedCalendarDate,
     is_previous_day: isPreviousCalendarDay(cashSession.opened_at),
     currency: settings.currency,
@@ -102,8 +146,9 @@ export async function requireOpenSessionIfNeeded(
   tenantId: string,
 ): Promise<string | null> {
   const settings = await getPosSettings(supabase, tenantId);
-  if (!settings.require_open_session) return null;
   const session = await getOpenCashSession(supabase, tenantId);
+  if (isCashSessionPaused(session)) throw new Error("session_paused");
+  if (!settings.require_open_session) return session?.id ?? null;
   if (!session) throw new Error("no_open_session");
   return session.id;
 }
@@ -131,14 +176,30 @@ export async function computeSessionSnapshot(
 
   const saleIds = (sales ?? []).map((s) => s.id);
   let byMethod: Record<string, number> = {};
+  let itemsSoldQty = 0;
+  let servicesQty = 0;
+  let productsQty = 0;
   if (saleIds.length > 0) {
-    const { data: payments } = await supabase
-      .from("inst_sale_payments")
-      .select("method, amount_cents")
-      .eq("tenant_id", tenantId)
-      .in("sale_id", saleIds);
+    const [{ data: payments }, { data: items }] = await Promise.all([
+      supabase
+        .from("inst_sale_payments")
+        .select("method, amount_cents")
+        .eq("tenant_id", tenantId)
+        .in("sale_id", saleIds),
+      supabase
+        .from("inst_sale_items")
+        .select("quantity, item_type")
+        .eq("tenant_id", tenantId)
+        .in("sale_id", saleIds),
+    ]);
     for (const p of payments ?? []) {
       byMethod[p.method] = (byMethod[p.method] ?? 0) + p.amount_cents;
+    }
+    for (const item of items ?? []) {
+      const qty = Number(item.quantity) || 0;
+      itemsSoldQty += qty;
+      if (item.item_type === "service") servicesQty += qty;
+      else productsQty += qty;
     }
   }
 
@@ -167,6 +228,9 @@ export async function computeSessionSnapshot(
     report_type: reportType,
     opening_float_cents: session.opening_float_cents,
     sales_count: sales?.length ?? 0,
+    items_sold_qty: itemsSoldQty,
+    services_qty: servicesQty,
+    products_qty: productsQty,
     partial_count: (sales ?? []).filter((s) => s.status === "partial").length,
     total_cents: (sales ?? []).reduce((s, r) => s + r.total_cents, 0),
     vat_cents: (sales ?? []).reduce((s, r) => s + (r.vat_cents ?? 0), 0),
@@ -200,4 +264,93 @@ export function generateGiftCardCode(prefix: string): string {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
   return `${prefix}-${code}`;
+}
+
+export async function pauseOpenCashSession(supabase: Db, tenantId: string) {
+  const session = await getOpenCashSession(supabase, tenantId);
+  if (!session) throw new Error("no_open_session");
+  if (session.status === "paused") return { id: session.id, paused: true as const };
+
+  const { error } = await supabase
+    .from("inst_cash_sessions")
+    .update({ status: "paused" })
+    .eq("id", session.id)
+    .eq("tenant_id", tenantId)
+    .eq("status", "open");
+  if (error) throw new Error(error.message);
+  return { id: session.id, paused: true as const };
+}
+
+export async function resumePausedCashSession(supabase: Db, tenantId: string) {
+  const session = await getOpenCashSession(supabase, tenantId);
+  if (!session) throw new Error("no_open_session");
+  if (session.status === "open") return { id: session.id, paused: false as const };
+
+  const { error } = await supabase
+    .from("inst_cash_sessions")
+    .update({ status: "open" })
+    .eq("id", session.id)
+    .eq("tenant_id", tenantId)
+    .eq("status", "paused");
+  if (error) throw new Error(error.message);
+  return { id: session.id, paused: false as const };
+}
+
+export async function closeOpenCashSession(
+  supabase: Db,
+  tenantId: string,
+  input: { countedCashCents: number; notes?: string | null },
+): Promise<{ reportId: string; reportNumber: string; varianceCents: number }> {
+  const cashSession = await getOpenCashSession(supabase, tenantId);
+  if (!cashSession) throw new Error("no_open_session");
+
+  const countedCash = Math.max(0, Math.round(input.countedCashCents));
+  const notes = input.notes?.trim() || null;
+
+  const snapshot = await computeSessionSnapshot(
+    supabase,
+    tenantId,
+    cashSession.id,
+    "z",
+  );
+  const reportNumber = await nextReportNumber(supabase, tenantId, "z", "Z");
+  const variance = countedCash - snapshot.expected_cash_cents;
+
+  if (variance !== 0 && !notes) throw new Error("variance_notes_required");
+
+  const { data: report, error: reportErr } = await supabase
+    .from("inst_cash_reports")
+    .insert({
+      tenant_id: tenantId,
+      session_id: cashSession.id,
+      report_type: "z",
+      report_number: reportNumber,
+      snapshot: {
+        ...snapshot,
+        closing_counted_cents: countedCash,
+        variance_cents: variance,
+      } as unknown as Json,
+    })
+    .select("id")
+    .single();
+  if (reportErr || !report) {
+    throw new Error(reportErr?.message ?? "report_failed");
+  }
+
+  const { error: closeErr } = await supabase
+    .from("inst_cash_sessions")
+    .update({
+      status: "closed",
+      closed_at: new Date().toISOString(),
+      closing_counted_cents: countedCash,
+      closing_expected_cents: snapshot.expected_cash_cents,
+      closing_variance_cents: variance,
+      z_report_number: reportNumber,
+      notes,
+    })
+    .eq("id", cashSession.id)
+    .eq("tenant_id", tenantId);
+  if (closeErr) throw new Error(closeErr.message);
+
+  return { reportId: report.id, reportNumber, varianceCents: variance };
 }

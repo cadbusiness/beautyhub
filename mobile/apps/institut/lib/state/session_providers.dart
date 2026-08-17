@@ -201,3 +201,53 @@ Future<void> openInstitutCashDay(
   ref.invalidate(cashSessionProvider);
   ref.invalidate(posContextProvider);
 }
+
+Future<void> pauseInstitutCashDay(WidgetRef ref) async {
+  final token = ref.read(accessTokenProvider);
+  final tenantId = ref.read(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  await ref.read(mobileApiProvider).pauseCashSession(
+        accessToken: token,
+        tenantId: tenantId,
+      );
+  ref.invalidate(cashSessionProvider);
+  ref.invalidate(posContextProvider);
+}
+
+Future<void> resumeInstitutCashDay(WidgetRef ref) async {
+  final token = ref.read(accessTokenProvider);
+  final tenantId = ref.read(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  await ref.read(mobileApiProvider).resumeCashSession(
+        accessToken: token,
+        tenantId: tenantId,
+      );
+  ref.invalidate(cashSessionProvider);
+  ref.invalidate(posContextProvider);
+}
+
+Future<String> closeInstitutCashDay(
+  WidgetRef ref, {
+  required int countedCashCents,
+  String? notes,
+}) async {
+  final token = ref.read(accessTokenProvider);
+  final tenantId = ref.read(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  final result = await ref.read(mobileApiProvider).closeCashSession(
+        accessToken: token,
+        tenantId: tenantId,
+        countedCashCents: countedCashCents,
+        notes: notes,
+      );
+  ref.invalidate(cashSessionProvider);
+  ref.invalidate(posContextProvider);
+  ref.invalidate(institutSalesFirstPageProvider);
+  return result.reportNumber;
+}

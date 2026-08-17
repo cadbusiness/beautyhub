@@ -23,6 +23,7 @@ class PosSaleTab extends ConsumerStatefulWidget {
 
 class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   PickerItem? _selectedClient;
+  PickerItem? _selectedStaff;
   String _paymentMethod = 'cash';
   bool _openingDay = false;
 
@@ -203,6 +204,8 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     String? discountReason,
     String? loyaltyRewardId,
     int loyaltyCreditCents = 0,
+    String? staffId,
+    String paymentMethod = 'cash',
   }) async {
     final cart = ref.read(posCartProvider);
     if (cart.isEmpty) return false;
@@ -243,6 +246,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             tenantId: tenantId,
             cart: cart,
             clientId: _selectedClient?.id,
+            staffId: staffId,
             notes: notes,
             cartDiscountCents: discountCents > 0 ? discountCents : null,
             discountReason: discountReason,
@@ -251,7 +255,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                 loyaltyCreditCents > 0 ? loyaltyCreditCents : null,
             payments: totalCents > 0
                 ? [
-                    {'method': _paymentMethod, 'amountCents': totalCents},
+                    {'method': paymentMethod, 'amountCents': totalCents},
                   ]
                 : const [],
           );
@@ -310,8 +314,10 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       builder: (context) => _CartSheet(
         ctx: ctx,
         selectedClient: _selectedClient,
+        selectedStaff: _selectedStaff,
         paymentMethod: _paymentMethod,
         onClientChanged: (item) => setState(() => _selectedClient = item),
+        onStaffChanged: (item) => setState(() => _selectedStaff = item),
         onPaymentChanged: (m) => setState(() => _paymentMethod = m),
         onCheckout: ({
           discountCents = 0,
@@ -320,6 +326,8 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
           discountReason,
           loyaltyRewardId,
           loyaltyCreditCents = 0,
+          staffId,
+          paymentMethod = 'cash',
         }) =>
             _checkout(
               ctx,
@@ -329,6 +337,8 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
               discountReason: discountReason,
               loyaltyRewardId: loyaltyRewardId,
               loyaltyCreditCents: loyaltyCreditCents,
+              staffId: staffId,
+              paymentMethod: paymentMethod,
             ),
         sessionBlocked: ctx.sessionPaused ||
             (ctx.requireOpenSession && !ctx.sessionOpen),
@@ -1005,8 +1015,10 @@ class _CartSheet extends ConsumerStatefulWidget {
   const _CartSheet({
     required this.ctx,
     required this.selectedClient,
+    required this.selectedStaff,
     required this.paymentMethod,
     required this.onClientChanged,
+    required this.onStaffChanged,
     required this.onPaymentChanged,
     required this.onCheckout,
     this.sessionBlocked = false,
@@ -1014,8 +1026,10 @@ class _CartSheet extends ConsumerStatefulWidget {
 
   final PosContext ctx;
   final PickerItem? selectedClient;
+  final PickerItem? selectedStaff;
   final String paymentMethod;
   final ValueChanged<PickerItem?> onClientChanged;
+  final ValueChanged<PickerItem?> onStaffChanged;
   final ValueChanged<String> onPaymentChanged;
   final   Future<bool> Function({
     int discountCents,
@@ -1024,6 +1038,8 @@ class _CartSheet extends ConsumerStatefulWidget {
     String? discountReason,
     String? loyaltyRewardId,
     int loyaltyCreditCents,
+    String? staffId,
+    String paymentMethod,
   }) onCheckout;
   final bool sessionBlocked;
 
@@ -1033,6 +1049,8 @@ class _CartSheet extends ConsumerStatefulWidget {
 
 class _CartSheetState extends ConsumerState<_CartSheet> {
   late PickerItem? _client = widget.selectedClient;
+  late PickerItem? _staff = widget.selectedStaff;
+  late String _paymentMethod = widget.paymentMethod;
   bool _showDiscount = false;
   String _discountKind = 'percent';
   String? _pickedReason;
@@ -1129,8 +1147,6 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
   @override
   Widget build(BuildContext context) {
     final ctx = widget.ctx;
-    final paymentMethod = widget.paymentMethod;
-    final onPaymentChanged = widget.onPaymentChanged;
     final onCheckout = widget.onCheckout;
     final sessionBlocked = widget.sessionBlocked;
     final cart = ref.watch(posCartProvider);
@@ -1363,6 +1379,32 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                 await _loadLoyalty(next?.id);
               },
             ),
+            const SizedBox(height: 12),
+            SearchablePickerField(
+              label: 'Praticienne (optionnel)',
+              value: _staff?.title,
+              placeholder: 'Aucune praticienne',
+              onOpen: () async {
+                final picked = await showSearchablePicker(
+                  context: context,
+                  title: 'Choisir une praticienne',
+                  items: ctx.staff
+                      .map((s) => PickerItem(id: s.id, title: s.label))
+                      .toList(),
+                  selectedId: _staff?.id,
+                  searchHint: 'Rechercher…',
+                  nullOption: const PickerItem(
+                    id: '__none__',
+                    title: 'Aucune praticienne',
+                  ),
+                  emptyMessage: 'Aucune praticienne dans l’équipe.',
+                );
+                if (picked == null) return;
+                final next = picked.id == '__none__' ? null : picked;
+                setState(() => _staff = next);
+                widget.onStaffChanged(next);
+              },
+            ),
             if (_client != null) ...[
               const SizedBox(height: 12),
               if (_loyaltyLoading)
@@ -1434,9 +1476,14 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                 if (ctx.settings.paymentMethods.cash)
                   (id: 'cash', label: 'Espèces'),
                 if (ctx.settings.paymentMethods.card) (id: 'card', label: 'CB'),
+                if (ctx.settings.paymentMethods.transfer)
+                  (id: 'transfer', label: 'Virement'),
               ],
-              selected: paymentMethod,
-              onSelected: onPaymentChanged,
+              selected: _paymentMethod,
+              onSelected: (m) {
+                setState(() => _paymentMethod = m);
+                widget.onPaymentChanged(m);
+              },
             ),
             const SizedBox(height: 16),
             if (sessionBlocked) ...[
@@ -1464,6 +1511,8 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                           loyaltyCreditCents: creditCents,
                           notes: reason.isEmpty ? null : 'Remise : $reason',
                           discountReason: reason.isEmpty ? null : reason,
+                          staffId: _staff?.id,
+                          paymentMethod: _paymentMethod,
                         );
                         if (ok && context.mounted) {
                           Navigator.pop(context);

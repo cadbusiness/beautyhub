@@ -202,6 +202,12 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   onTap: () => context.go('/app/more/clients'),
                 ),
                 _MenuRow(
+                  leading: _IconTile(icon: Icons.loyalty_outlined),
+                  title: 'Fidélité',
+                  subtitle: 'Programmes, règles et récompenses',
+                  onTap: () => context.go('/app/more/loyalty'),
+                ),
+                _MenuRow(
                   leading: _IconTile(icon: Icons.groups_2_outlined),
                   title: 'Équipe',
                   subtitle: 'Praticiennes de l’institut',

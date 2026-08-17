@@ -783,5 +783,265 @@ class MobileApiClient {
     await _decode(response);
   }
 
+  Future<InstClientDossier> fetchClientDossier({
+    required String accessToken,
+    required String tenantId,
+    required String clientId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/clients/$clientId'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return InstClientDossier.fromJson(body);
+  }
+
+  Future<InstClientAppointmentsPage> fetchClientAppointments({
+    required String accessToken,
+    required String tenantId,
+    required String clientId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/clients/$clientId/appointments'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return InstClientAppointmentsPage.fromJson(body);
+  }
+
+  Future<List<InstClientSale>> fetchClientSalesHistory({
+    required String accessToken,
+    required String tenantId,
+    required String clientId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/clients/$clientId/sales'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return (body['sales'] as List? ?? const [])
+        .whereType<Map>()
+        .map((e) => InstClientSale.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
+  }
+
+  Future<InstClientLoyaltyDetail> fetchClientLoyaltyDossier({
+    required String accessToken,
+    required String tenantId,
+    required String clientId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/clients/$clientId/loyalty'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return InstClientLoyaltyDetail.fromJson(body);
+  }
+
+  Future<InstClientLoyaltyDetail> assignClientLoyaltyProgram({
+    required String accessToken,
+    required String tenantId,
+    required String clientId,
+    String? loyaltyProgramId,
+  }) async {
+    final response = await _http.patch(
+      _uri('/api/mobile/institut/clients/$clientId/loyalty'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({'loyaltyProgramId': loyaltyProgramId}),
+    );
+    final body = await _decode(response);
+    return InstClientLoyaltyDetail.fromJson(body);
+  }
+
+  Future<InstLoyaltyAdminSnapshot> fetchLoyaltyAdmin({
+    required String accessToken,
+    required String tenantId,
+    String? programId,
+  }) async {
+    final response = await _http.get(
+      _uri(
+        '/api/mobile/institut/loyalty',
+        {if (programId != null && programId.isNotEmpty) 'programId': programId},
+      ),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return InstLoyaltyAdminSnapshot.fromJson(body);
+  }
+
+  Future<String> createLoyaltyProgram({
+    required String accessToken,
+    required String tenantId,
+    required String name,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/loyalty/programs'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({'name': name}),
+    );
+    final body = await _decode(response);
+    return body['programId'] as String? ?? '';
+  }
+
+  Future<void> setLoyaltyProgramActive({
+    required String accessToken,
+    required String tenantId,
+    required String programId,
+    required bool isActive,
+  }) async {
+    final response = await _http.patch(
+      _uri('/api/mobile/institut/loyalty/programs/$programId'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({'isActive': isActive}),
+    );
+    await _decode(response);
+  }
+
+  Future<void> saveLoyaltyProgramSettings({
+    required String accessToken,
+    required String tenantId,
+    required String programId,
+    required String name,
+    required String pointsLabel,
+    required bool isActive,
+    required int birthdayBonusPoints,
+    required bool birthdayAutoEnabled,
+    required bool portalVisible,
+    required int referralPoints,
+    required int sameDayRebookPoints,
+  }) async {
+    final response = await _http.patch(
+      _uri('/api/mobile/institut/loyalty/programs/$programId'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'name': name,
+        'pointsLabel': pointsLabel,
+        'isActive': isActive,
+        'birthdayBonusPoints': birthdayBonusPoints,
+        'birthdayAutoEnabled': birthdayAutoEnabled,
+        'portalVisible': portalVisible,
+        'referralPoints': referralPoints,
+        'sameDayRebookPoints': sameDayRebookPoints,
+      }),
+    );
+    await _decode(response);
+  }
+
+  Future<String> duplicateLoyaltyProgram({
+    required String accessToken,
+    required String tenantId,
+    required String programId,
+    required String name,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/loyalty/programs/$programId'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({'action': 'duplicate', 'name': name}),
+    );
+    final body = await _decode(response);
+    return body['programId'] as String? ?? '';
+  }
+
+  Future<void> saveLoyaltyRule({
+    required String accessToken,
+    required String tenantId,
+    required String name,
+    required String sourceType,
+    required String calcMode,
+    required num pointsValue,
+    required int minAmountCents,
+    required bool isActive,
+    String? programId,
+    String? id,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/loyalty/rules'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        if (programId != null) 'programId': programId,
+        if (id != null) 'id': id,
+        'name': name,
+        'sourceType': sourceType,
+        'calcMode': calcMode,
+        'pointsValue': pointsValue,
+        'minAmountCents': minAmountCents,
+        'isActive': isActive,
+      }),
+    );
+    await _decode(response);
+  }
+
+  Future<void> deleteLoyaltyRule({
+    required String accessToken,
+    required String tenantId,
+    required String ruleId,
+  }) async {
+    final response = await _http.delete(
+      _uri('/api/mobile/institut/loyalty/rules/$ruleId'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    await _decode(response);
+  }
+
+  Future<void> saveLoyaltyReward({
+    required String accessToken,
+    required String tenantId,
+    required String name,
+    required String rewardType,
+    required num pointsCost,
+    required bool isActive,
+    required bool newServiceOnly,
+    String? programId,
+    String? id,
+    String? description,
+    int? discountPercent,
+    int? discountCents,
+    String? serviceId,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/loyalty/rewards'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        if (programId != null) 'programId': programId,
+        if (id != null) 'id': id,
+        'name': name,
+        'description': description,
+        'rewardType': rewardType,
+        'pointsCost': pointsCost,
+        'isActive': isActive,
+        'newServiceOnly': newServiceOnly,
+        'discountPercent': discountPercent,
+        'discountCents': discountCents,
+        'serviceId': serviceId,
+      }),
+    );
+    await _decode(response);
+  }
+
+  Future<void> deleteLoyaltyReward({
+    required String accessToken,
+    required String tenantId,
+    required String rewardId,
+  }) async {
+    final response = await _http.delete(
+      _uri('/api/mobile/institut/loyalty/rewards/$rewardId'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    await _decode(response);
+  }
+
+  Future<void> applyLoyaltyStarter({
+    required String accessToken,
+    required String tenantId,
+    String? programId,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/loyalty/starter'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({if (programId != null) 'programId': programId}),
+    );
+    await _decode(response);
+  }
+
   void close() => _http.close();
 }

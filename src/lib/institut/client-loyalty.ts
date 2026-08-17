@@ -128,6 +128,41 @@ export async function loadClientLoyaltyCard(
   };
 }
 
+export type ClientLoyaltyLedgerEntry = {
+  id: string;
+  type: string;
+  pointsDelta: number;
+  balanceAfter: number;
+  createdAt: string;
+  source: string | null;
+};
+
+export async function loadClientLoyaltyLedger(
+  supabase: Db,
+  tenantId: string,
+  clientId: string,
+  limit = 40,
+): Promise<ClientLoyaltyLedgerEntry[]> {
+  const program = await resolveLoyaltyProgramForClient(supabase, tenantId, clientId);
+  if (!program) return [];
+  const { data } = await supabase
+    .from("inst_loyalty_transactions")
+    .select("id, type, points_delta, balance_after, created_at, source_type, notes")
+    .eq("tenant_id", tenantId)
+    .eq("client_id", clientId)
+    .eq("program_id", program.id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    type: row.type,
+    pointsDelta: row.points_delta,
+    balanceAfter: row.balance_after,
+    createdAt: row.created_at,
+    source: row.source_type,
+  }));
+}
+
 export async function assignClientLoyaltyProgram(
   supabase: Db,
   tenantId: string,

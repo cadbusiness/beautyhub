@@ -610,3 +610,498 @@ class InstTenantInfo {
     );
   }
 }
+
+int _asInt(Object? value) => (value as num?)?.toInt() ?? 0;
+
+class InstLoyaltyProgramRef {
+  const InstLoyaltyProgramRef({
+    required this.id,
+    required this.name,
+    required this.isActive,
+    required this.pointsLabel,
+  });
+
+  final String id;
+  final String name;
+  final bool isActive;
+  final String pointsLabel;
+
+  factory InstLoyaltyProgramRef.fromJson(Map<String, dynamic> json) =>
+      InstLoyaltyProgramRef(
+        id: json['id'] as String,
+        name: json['name'] as String? ?? '',
+        isActive: json['isActive'] as bool? ?? false,
+        pointsLabel: json['pointsLabel'] as String? ?? 'points',
+      );
+}
+
+class InstLoyaltyNextReward {
+  const InstLoyaltyNextReward({
+    required this.name,
+    required this.pointsCost,
+    required this.missing,
+  });
+
+  final String name;
+  final int pointsCost;
+  final int missing;
+
+  factory InstLoyaltyNextReward.fromJson(Map<String, dynamic> json) =>
+      InstLoyaltyNextReward(
+        name: json['name'] as String? ?? '',
+        pointsCost: _asInt(json['pointsCost']),
+        missing: _asInt(json['missing']),
+      );
+}
+
+class InstClientLoyaltyCard {
+  const InstClientLoyaltyCard({
+    required this.balance,
+    required this.pointsLabel,
+    required this.lifetimeEarned,
+    required this.lifetimeRedeemed,
+    required this.valueCents,
+    required this.programs,
+    this.assignedProgramId,
+    this.programId,
+    this.programName,
+    this.nextReward,
+  });
+
+  final String? assignedProgramId;
+  final String? programId;
+  final String? programName;
+  final String pointsLabel;
+  final int balance;
+  final int lifetimeEarned;
+  final int lifetimeRedeemed;
+  final InstLoyaltyNextReward? nextReward;
+  final int valueCents;
+  final List<InstLoyaltyProgramRef> programs;
+
+  factory InstClientLoyaltyCard.fromJson(Map<String, dynamic> json) {
+    final next = json['nextReward'];
+    return InstClientLoyaltyCard(
+      assignedProgramId: json['assignedProgramId'] as String?,
+      programId: json['programId'] as String?,
+      programName: json['programName'] as String?,
+      pointsLabel: json['pointsLabel'] as String? ?? 'points',
+      balance: _asInt(json['balance']),
+      lifetimeEarned: _asInt(json['lifetimeEarned']),
+      lifetimeRedeemed: _asInt(json['lifetimeRedeemed']),
+      valueCents: _asInt(json['valueCents']),
+      nextReward: next is Map
+          ? InstLoyaltyNextReward.fromJson(Map<String, dynamic>.from(next))
+          : null,
+      programs: (json['programs'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => InstLoyaltyProgramRef.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+    );
+  }
+}
+
+class InstLoyaltyLedgerEntry {
+  const InstLoyaltyLedgerEntry({
+    required this.id,
+    required this.type,
+    required this.pointsDelta,
+    required this.balanceAfter,
+    required this.createdAt,
+    this.source,
+  });
+
+  final String id;
+  final String type;
+  final int pointsDelta;
+  final int balanceAfter;
+  final DateTime createdAt;
+  final String? source;
+
+  factory InstLoyaltyLedgerEntry.fromJson(Map<String, dynamic> json) =>
+      InstLoyaltyLedgerEntry(
+        id: json['id'] as String,
+        type: json['type'] as String? ?? '',
+        pointsDelta: _asInt(json['pointsDelta']),
+        balanceAfter: _asInt(json['balanceAfter']),
+        createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
+        source: json['source'] as String?,
+      );
+}
+
+class InstClientLoyaltyDetail {
+  const InstClientLoyaltyDetail({
+    required this.card,
+    required this.ledger,
+  });
+
+  final InstClientLoyaltyCard card;
+  final List<InstLoyaltyLedgerEntry> ledger;
+
+  factory InstClientLoyaltyDetail.fromJson(Map<String, dynamic> json) =>
+      InstClientLoyaltyDetail(
+        card: InstClientLoyaltyCard.fromJson(
+          Map<String, dynamic>.from((json['card'] as Map?) ?? const {}),
+        ),
+        ledger: (json['ledger'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => InstLoyaltyLedgerEntry.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false),
+      );
+}
+
+class InstClientStats {
+  const InstClientStats({
+    required this.appointmentCount,
+    required this.completedCount,
+    required this.upcomingCount,
+    required this.totalSpentCents,
+    required this.saleCount,
+    required this.loyaltyPoints,
+    this.bookingRate,
+  });
+
+  final int appointmentCount;
+  final int completedCount;
+  final int upcomingCount;
+  final int? bookingRate;
+  final int totalSpentCents;
+  final int saleCount;
+  final int loyaltyPoints;
+
+  factory InstClientStats.fromJson(Map<String, dynamic> json) => InstClientStats(
+        appointmentCount: _asInt(json['appointmentCount']),
+        completedCount: _asInt(json['completedCount']),
+        upcomingCount: _asInt(json['upcomingCount']),
+        bookingRate: (json['bookingRate'] as num?)?.toInt(),
+        totalSpentCents: _asInt(json['totalSpentCents']),
+        saleCount: _asInt(json['saleCount']),
+        loyaltyPoints: _asInt(json['loyaltyPoints']),
+      );
+}
+
+class InstClientTopService {
+  const InstClientTopService({
+    required this.serviceName,
+    required this.count,
+  });
+
+  final String serviceName;
+  final int count;
+
+  factory InstClientTopService.fromJson(Map<String, dynamic> json) =>
+      InstClientTopService(
+        serviceName: json['serviceName'] as String? ?? '',
+        count: _asInt(json['count']),
+      );
+}
+
+class InstClientDossier {
+  const InstClientDossier({
+    required this.client,
+    required this.stats,
+    required this.loyalty,
+    this.topServices = const [],
+  });
+
+  final InstClient client;
+  final InstClientStats stats;
+  final InstClientLoyaltyCard loyalty;
+  final List<InstClientTopService> topServices;
+
+  factory InstClientDossier.fromJson(Map<String, dynamic> json) =>
+      InstClientDossier(
+        client: InstClient.fromJson(
+          Map<String, dynamic>.from((json['client'] as Map?) ?? const {}),
+        ),
+        stats: InstClientStats.fromJson(
+          Map<String, dynamic>.from((json['stats'] as Map?) ?? const {}),
+        ),
+        loyalty: InstClientLoyaltyCard.fromJson(
+          Map<String, dynamic>.from((json['loyalty'] as Map?) ?? const {}),
+        ),
+        topServices: (json['topServices'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => InstClientTopService.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false),
+      );
+}
+
+class InstClientAppointment {
+  const InstClientAppointment({
+    required this.id,
+    required this.startsAt,
+    required this.status,
+    this.endsAt,
+    this.priceCents,
+    this.serviceName,
+    this.staffName,
+  });
+
+  final String id;
+  final DateTime startsAt;
+  final DateTime? endsAt;
+  final String status;
+  final int? priceCents;
+  final String? serviceName;
+  final String? staffName;
+
+  factory InstClientAppointment.fromJson(Map<String, dynamic> json) =>
+      InstClientAppointment(
+        id: json['id'] as String,
+        startsAt: DateTime.parse(json['startsAt'] as String).toLocal(),
+        endsAt: json['endsAt'] is String
+            ? DateTime.parse(json['endsAt'] as String).toLocal()
+            : null,
+        status: json['status'] as String? ?? '',
+        priceCents: (json['priceCents'] as num?)?.toInt(),
+        serviceName: json['serviceName'] as String?,
+        staffName: json['staffName'] as String?,
+      );
+}
+
+class InstClientAppointmentsPage {
+  const InstClientAppointmentsPage({
+    required this.upcoming,
+    required this.past,
+  });
+
+  final List<InstClientAppointment> upcoming;
+  final List<InstClientAppointment> past;
+
+  factory InstClientAppointmentsPage.fromJson(Map<String, dynamic> json) =>
+      InstClientAppointmentsPage(
+        upcoming: (json['upcoming'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => InstClientAppointment.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false),
+        past: (json['past'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => InstClientAppointment.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false),
+      );
+}
+
+class InstClientSaleItem {
+  const InstClientSaleItem({
+    required this.name,
+    required this.quantity,
+    required this.unitPriceCents,
+  });
+
+  final String name;
+  final int quantity;
+  final int unitPriceCents;
+
+  factory InstClientSaleItem.fromJson(Map<String, dynamic> json) =>
+      InstClientSaleItem(
+        name: json['name'] as String? ?? '',
+        quantity: _asInt(json['quantity']),
+        unitPriceCents: _asInt(json['unitPriceCents']),
+      );
+}
+
+class InstClientSale {
+  const InstClientSale({
+    required this.id,
+    required this.totalCents,
+    required this.status,
+    required this.createdAt,
+    this.ticketNumber,
+    this.paymentMethod,
+    this.items = const [],
+  });
+
+  final String id;
+  final String? ticketNumber;
+  final int totalCents;
+  final String status;
+  final String? paymentMethod;
+  final DateTime createdAt;
+  final List<InstClientSaleItem> items;
+
+  factory InstClientSale.fromJson(Map<String, dynamic> json) => InstClientSale(
+        id: json['id'] as String,
+        ticketNumber: json['ticketNumber'] as String?,
+        totalCents: _asInt(json['totalCents']),
+        status: json['status'] as String? ?? '',
+        paymentMethod: json['paymentMethod'] as String?,
+        createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
+        items: (json['items'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => InstClientSaleItem.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false),
+      );
+}
+
+class InstLoyaltyEarnRule {
+  const InstLoyaltyEarnRule({
+    required this.id,
+    required this.name,
+    required this.isActive,
+    required this.sourceType,
+    required this.calcMode,
+    required this.pointsValue,
+    required this.minAmountCents,
+  });
+
+  final String id;
+  final String name;
+  final bool isActive;
+  final String sourceType;
+  final String calcMode;
+  final int pointsValue;
+  final int minAmountCents;
+
+  factory InstLoyaltyEarnRule.fromJson(Map<String, dynamic> json) =>
+      InstLoyaltyEarnRule(
+        id: json['id'] as String,
+        name: json['name'] as String? ?? '',
+        isActive: json['isActive'] as bool? ?? true,
+        sourceType: json['sourceType'] as String? ?? '',
+        calcMode: json['calcMode'] as String? ?? '',
+        pointsValue: _asInt(json['pointsValue']),
+        minAmountCents: _asInt(json['minAmountCents']),
+      );
+}
+
+class InstLoyaltyRewardAdmin {
+  const InstLoyaltyRewardAdmin({
+    required this.id,
+    required this.name,
+    required this.isActive,
+    required this.rewardType,
+    required this.pointsCost,
+    required this.newServiceOnly,
+    this.description,
+    this.discountPercent,
+    this.discountCents,
+    this.serviceId,
+  });
+
+  final String id;
+  final String name;
+  final String? description;
+  final bool isActive;
+  final String rewardType;
+  final int pointsCost;
+  final int? discountPercent;
+  final int? discountCents;
+  final String? serviceId;
+  final bool newServiceOnly;
+
+  factory InstLoyaltyRewardAdmin.fromJson(Map<String, dynamic> json) =>
+      InstLoyaltyRewardAdmin(
+        id: json['id'] as String,
+        name: json['name'] as String? ?? '',
+        description: json['description'] as String?,
+        isActive: json['isActive'] as bool? ?? true,
+        rewardType: json['rewardType'] as String? ?? '',
+        pointsCost: _asInt(json['pointsCost']),
+        discountPercent: (json['discountPercent'] as num?)?.toInt(),
+        discountCents: (json['discountCents'] as num?)?.toInt(),
+        serviceId: json['serviceId'] as String?,
+        newServiceOnly: json['newServiceOnly'] as bool? ?? false,
+      );
+}
+
+class InstLoyaltyServiceOption {
+  const InstLoyaltyServiceOption({required this.id, required this.name});
+  final String id;
+  final String name;
+
+  factory InstLoyaltyServiceOption.fromJson(Map<String, dynamic> json) =>
+      InstLoyaltyServiceOption(
+        id: json['id'] as String,
+        name: json['name'] as String? ?? '',
+      );
+}
+
+class InstLoyaltyProgramAdmin {
+  const InstLoyaltyProgramAdmin({
+    required this.id,
+    required this.name,
+    required this.isActive,
+    required this.pointsLabel,
+    required this.birthdayBonusPoints,
+    required this.portalVisible,
+    required this.referralPoints,
+    required this.sameDayRebookPoints,
+    required this.birthdayAutoEnabled,
+  });
+
+  final String id;
+  final String name;
+  final bool isActive;
+  final String pointsLabel;
+  final int birthdayBonusPoints;
+  final bool portalVisible;
+  final int referralPoints;
+  final int sameDayRebookPoints;
+  final bool birthdayAutoEnabled;
+
+  factory InstLoyaltyProgramAdmin.fromJson(Map<String, dynamic> json) =>
+      InstLoyaltyProgramAdmin(
+        id: json['id'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        isActive: json['isActive'] as bool? ?? false,
+        pointsLabel: json['pointsLabel'] as String? ?? 'points',
+        birthdayBonusPoints: _asInt(json['birthdayBonusPoints']),
+        portalVisible: json['portalVisible'] as bool? ?? true,
+        referralPoints: _asInt(json['referralPoints']),
+        sameDayRebookPoints: _asInt(json['sameDayRebookPoints']),
+        birthdayAutoEnabled: json['birthdayAutoEnabled'] as bool? ?? false,
+      );
+}
+
+class InstLoyaltyAdminSnapshot {
+  const InstLoyaltyAdminSnapshot({
+    required this.program,
+    required this.programs,
+    required this.rules,
+    required this.rewards,
+    required this.wooConnected,
+    this.services = const [],
+    this.clientsWithPoints = 0,
+    this.totalPointsOutstanding = 0,
+  });
+
+  final InstLoyaltyProgramAdmin program;
+  final List<InstLoyaltyProgramRef> programs;
+  final List<InstLoyaltyEarnRule> rules;
+  final List<InstLoyaltyRewardAdmin> rewards;
+  final bool wooConnected;
+  final List<InstLoyaltyServiceOption> services;
+  final int clientsWithPoints;
+  final int totalPointsOutstanding;
+
+  factory InstLoyaltyAdminSnapshot.fromJson(Map<String, dynamic> json) {
+    final stats = Map<String, dynamic>.from((json['stats'] as Map?) ?? const {});
+    final integrations =
+        Map<String, dynamic>.from((json['integrations'] as Map?) ?? const {});
+    return InstLoyaltyAdminSnapshot(
+      program: InstLoyaltyProgramAdmin.fromJson(
+        Map<String, dynamic>.from((json['program'] as Map?) ?? const {}),
+      ),
+      programs: (json['programs'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => InstLoyaltyProgramRef.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+      rules: (json['rules'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => InstLoyaltyEarnRule.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+      rewards: (json['rewards'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => InstLoyaltyRewardAdmin.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+      wooConnected: integrations['woocommerce'] as bool? ?? false,
+      services: (json['services'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => InstLoyaltyServiceOption.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+      clientsWithPoints: _asInt(stats['clientsWithPoints']),
+      totalPointsOutstanding: _asInt(stats['totalPointsOutstanding']),
+    );
+  }
+}

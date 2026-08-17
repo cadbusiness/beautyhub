@@ -344,49 +344,147 @@ class _FiltersBar extends StatelessWidget {
   final ValueChanged<String> onPeriod;
   final ValueChanged<String> onStatus;
 
+  static const _border = Color(0xFFE8E8E8);
+
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      child: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: _border)),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                _Chip(label: 'Aujourd’hui', selected: period == 'today', onTap: () => onPeriod('today')),
-                _Chip(label: 'Hier', selected: period == 'yesterday', onTap: () => onPeriod('yesterday')),
-                _Chip(label: '7 j', selected: period == 'week', onTap: () => onPeriod('week')),
-                _Chip(label: 'Tout', selected: period == 'all', onTap: () => onPeriod('all')),
+            _SegmentedRow(
+              items: const [
+                (id: 'sales', label: 'Ventes'),
+                (id: 'invoice', label: 'Factures'),
+                (id: 'delivery_note', label: 'Bons'),
+                (id: 'credit_note', label: 'Avoirs'),
               ],
+              selected: view,
+              onSelected: onView,
             ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                _Chip(label: 'Ventes', selected: view == 'sales', onTap: () => onView('sales')),
-                _Chip(label: 'Factures', selected: view == 'invoice', onTap: () => onView('invoice')),
-                _Chip(label: 'Bons', selected: view == 'delivery_note', onTap: () => onView('delivery_note')),
-                _Chip(label: 'Avoirs', selected: view == 'credit_note', onTap: () => onView('credit_note')),
-              ],
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _Chip(
+                    label: 'Aujourd’hui',
+                    selected: period == 'today',
+                    onTap: () => onPeriod('today'),
+                  ),
+                  _Chip(
+                    label: 'Hier',
+                    selected: period == 'yesterday',
+                    onTap: () => onPeriod('yesterday'),
+                  ),
+                  _Chip(
+                    label: '7 jours',
+                    selected: period == 'week',
+                    onTap: () => onPeriod('week'),
+                  ),
+                  _Chip(
+                    label: 'Tout',
+                    selected: period == 'all',
+                    onTap: () => onPeriod('all'),
+                  ),
+                ],
+              ),
             ),
             if (view == 'sales') ...[
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  _Chip(label: 'Tous', selected: status.isEmpty, onTap: () => onStatus('')),
-                  _Chip(label: 'Payé', selected: status == 'paid', onTap: () => onStatus('paid')),
-                  _Chip(label: 'Acompte', selected: status == 'partial', onTap: () => onStatus('partial')),
+              const SizedBox(height: 10),
+              _SegmentedRow(
+                items: const [
+                  (id: '', label: 'Tous'),
+                  (id: 'paid', label: 'Payé'),
+                  (id: 'partial', label: 'Acompte'),
                 ],
+                selected: status,
+                onSelected: onStatus,
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SegmentedRow extends StatelessWidget {
+  const _SegmentedRow({
+    required this.items,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<({String id, String label})> items;
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F3F3),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          for (final item in items)
+            Expanded(
+              child: _SegmentCell(
+                label: item.label,
+                selected: selected == item.id,
+                onTap: () => onSelected(item.id),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SegmentCell extends StatelessWidget {
+  const _SegmentCell({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? Colors.white : Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      elevation: selected ? 0.5 : 0,
+      shadowColor: Colors.black26,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected ? const Color(0xFF0A0A0A) : const Color(0xFF737373),
+            ),
+          ),
         ),
       ),
     );
@@ -400,22 +498,34 @@ class _Chip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
+  static const _black = Color(0xFF0A0A0A);
+  static const _muted = Color(0xFF737373);
+
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? const Color(0xFF0A0A0A) : const Color(0xFFF3F3F3),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : const Color(0xFF525252),
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: Material(
+        color: selected ? _black : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: selected ? _black : const Color(0xFFE5E5E5),
+              ),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: selected ? Colors.white : _muted,
+              ),
             ),
           ),
         ),

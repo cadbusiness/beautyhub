@@ -10,12 +10,26 @@ class InstClient {
     required this.tags,
     required this.hasAccount,
     required this.createdAt,
+    this.dateOfBirth,
+    this.addressLine1,
+    this.addressLine2,
+    this.city,
+    this.postalCode,
+    this.country,
+    this.notes,
   });
 
   final String id;
   final String? fullName;
   final String? email;
   final String? phone;
+  final String? dateOfBirth;
+  final String? addressLine1;
+  final String? addressLine2;
+  final String? city;
+  final String? postalCode;
+  final String? country;
+  final String? notes;
   final bool marketingOptIn;
   final List<String> tags;
   final bool hasAccount;
@@ -31,11 +45,36 @@ class InstClient {
       fullName: json['fullName'] as String?,
       email: json['email'] as String?,
       phone: json['phone'] as String?,
+      dateOfBirth: json['dateOfBirth'] as String?,
+      addressLine1: json['addressLine1'] as String?,
+      addressLine2: json['addressLine2'] as String?,
+      city: json['city'] as String?,
+      postalCode: json['postalCode'] as String?,
+      country: json['country'] as String?,
+      notes: json['notes'] as String?,
       marketingOptIn: json['marketingOptIn'] as bool? ?? false,
       tags: tags,
       hasAccount: json['hasAccount'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
     );
+  }
+
+  Map<String, dynamic> toWriteJson({bool includeCreateAccount = false}) {
+    return {
+      'fullName': fullName,
+      'email': email,
+      'phone': phone,
+      'dateOfBirth': dateOfBirth,
+      'addressLine1': addressLine1,
+      'addressLine2': addressLine2,
+      'city': city,
+      'postalCode': postalCode,
+      'country': country,
+      'notes': notes,
+      'tags': tags,
+      'marketingOptIn': marketingOptIn,
+      if (includeCreateAccount) 'createAccount': true,
+    };
   }
 
   String get displayName {
@@ -50,6 +89,21 @@ class InstClient {
     if (phone != null && phone!.isNotEmpty) return phone;
     return null;
   }
+
+  String get addressOneLine {
+    final parts = <String>[];
+    if (addressLine1 != null && addressLine1!.isNotEmpty) parts.add(addressLine1!);
+    if (addressLine2 != null && addressLine2!.isNotEmpty) parts.add(addressLine2!);
+    final cityLine = [
+      if (postalCode != null && postalCode!.isNotEmpty) postalCode!,
+      if (city != null && city!.isNotEmpty) city!,
+    ].join(' ');
+    if (cityLine.isNotEmpty) parts.add(cityLine);
+    if (country != null && country!.isNotEmpty) parts.add(country!);
+    return parts.join(', ');
+  }
+
+  bool get hasAddress => addressOneLine.isNotEmpty;
 }
 
 class InstClientPage {

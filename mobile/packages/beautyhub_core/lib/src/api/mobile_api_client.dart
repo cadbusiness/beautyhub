@@ -35,6 +35,13 @@ class CreatedClientResult {
   final ClientAccountCredentials? account;
 }
 
+class SavedClientResult {
+  const SavedClientResult({required this.client, this.account});
+
+  final InstClient client;
+  final ClientAccountCredentials? account;
+}
+
 /// Client HTTP authentifié pour les routes `/api/mobile/*`.
 class MobileApiClient {
   MobileApiClient({
@@ -331,6 +338,45 @@ class MobileApiClient {
           .map((e) => InstClient.fromJson(Map<String, dynamic>.from(e)))
           .toList(growable: false),
       nextCursor: body['nextCursor'] as String?,
+    );
+  }
+
+  /// Crée ou met à jour une fiche cliente complète.
+  Future<SavedClientResult> saveInstitutClient({
+    required String accessToken,
+    required String tenantId,
+    String? clientId,
+    required Map<String, dynamic> fields,
+  }) async {
+    final isCreate = clientId == null || clientId.isEmpty;
+    final response = isCreate
+        ? await _http.post(
+            _uri('/api/mobile/institut/clients'),
+            headers: _headers(accessToken: accessToken, tenantId: tenantId),
+            body: jsonEncode(fields),
+          )
+        : await _http.patch(
+            _uri('/api/mobile/institut/clients/$clientId'),
+            headers: _headers(accessToken: accessToken, tenantId: tenantId),
+            body: jsonEncode(fields),
+          );
+    final body = await _decode(response);
+    final itemRaw = body['item'];
+    if (itemRaw is! Map) {
+      throw MobileApiException('Réponse invalide');
+    }
+    ClientAccountCredentials? account;
+    final accountRaw = body['account'];
+    if (accountRaw is Map) {
+      final m = Map<String, dynamic>.from(accountRaw);
+      account = ClientAccountCredentials(
+        loginId: m['loginId'] as String? ?? '',
+        pinCode: m['pinCode'] as String? ?? '',
+      );
+    }
+    return SavedClientResult(
+      client: InstClient.fromJson(Map<String, dynamic>.from(itemRaw)),
+      account: account,
     );
   }
 

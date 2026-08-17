@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../state/session_providers.dart';
 import '../../widgets/screen_scaffold.dart';
 import 'client_detail_sheet.dart';
+import 'client_editor_sheet.dart';
 
 class ClientsScreen extends ConsumerStatefulWidget {
   const ClientsScreen({super.key});
@@ -129,6 +130,12 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
         subtitle: _items.isEmpty
             ? null
             : '${_items.length}${_cursor != null ? '+' : ''} au total',
+        trailing: IconButton(
+          onPressed: _createClient,
+          icon: const Icon(Icons.add_rounded),
+          color: const Color(0xFF0A0A0A),
+          tooltip: 'Nouvelle cliente',
+        ),
         bottom: InstitutSearchBar(
           controller: _searchController,
           onChanged: _onQueryChanged,
@@ -185,6 +192,18 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: _muted, fontSize: 14),
               ),
+              if (_query.isEmpty) ...[
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: _createClient,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Ajouter une cliente'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF0A0A0A),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -225,7 +244,33 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   }
 
   Future<void> _openDetail(InstClient client) async {
-    await showClientDetailSheet(context: context, client: client);
+    await showClientDetailSheet(
+      context: context,
+      client: client,
+      onChanged: _upsertClient,
+    );
+  }
+
+  Future<void> _createClient() async {
+    final result = await showClientEditorSheet(context: context);
+    if (result == null) return;
+    _upsertClient(result.client, insert: true);
+    if (result.account != null && mounted) {
+      showClientAccountCreatedSnackBar(context, result.account!);
+    }
+  }
+
+  void _upsertClient(InstClient client, {bool insert = false}) {
+    setState(() {
+      final index = _items.indexWhere((c) => c.id == client.id);
+      if (index >= 0) {
+        final next = [..._items];
+        next[index] = client;
+        _items = next;
+      } else if (insert || _query.isEmpty) {
+        _items = [client, ..._items];
+      }
+    });
   }
 }
 

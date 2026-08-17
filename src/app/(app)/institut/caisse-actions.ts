@@ -21,6 +21,7 @@ import {
 } from "@/lib/institut/pos";
 import {
   getPosSettings,
+  parseDiscountReasons,
   vatRateForLineType,
   type PosPaymentMethodsConfig,
   DEFAULT_POS_PAYMENT_METHODS,
@@ -323,6 +324,7 @@ export async function savePosSettings(
     late_payment_penalty_text:
       String(formData.get("late_payment_penalty_text") ?? "").trim() || null,
     fixed_recovery_fee_cents: parseEurosCents(formData.get("fixed_recovery_fee")),
+    discount_reasons: parseDiscountReasons(String(formData.get("discount_reasons") ?? "")),
     fiscal_regime: fiscalRegime,
     require_open_session: formData.get("require_open_session") === "on",
     default_opening_float_cents: parseEurosCents(formData.get("default_opening_float")),
@@ -365,6 +367,7 @@ export async function checkoutPos(
       staffId: String(formData.get("staff_id") ?? "") || null,
       appointmentId: String(formData.get("appointment_id") ?? "") || null,
       notes: String(formData.get("notes") ?? "").trim() || undefined,
+      discountReason: String(formData.get("discount_reason") ?? "").trim() || null,
       cartDiscountCents: parseCartDiscountCents(
         String(formData.get("cart_discount") ?? "0"),
       ),

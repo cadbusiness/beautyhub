@@ -605,6 +605,7 @@ class MobileApiClient {
     String? staffId,
     String? notes,
     int? cartDiscountCents,
+    String? discountReason,
     String? loyaltyRewardId,
   }) async {
     final response = await _http.post(
@@ -618,6 +619,8 @@ class MobileApiClient {
         if (notes != null && notes.isNotEmpty) 'notes': notes,
         if (cartDiscountCents != null && cartDiscountCents > 0)
           'cartDiscountCents': cartDiscountCents,
+        if (discountReason != null && discountReason.isNotEmpty)
+          'discountReason': discountReason,
         if (loyaltyRewardId != null && loyaltyRewardId.isNotEmpty)
           'loyaltyRewardId': loyaltyRewardId,
       }),

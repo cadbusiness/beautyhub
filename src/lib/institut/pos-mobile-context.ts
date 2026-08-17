@@ -154,6 +154,7 @@ export function serializeMobilePosContext(ctx: MobilePosContextLoaded) {
       priceDisplay: ctx.settings.price_display,
       requireOpenSession: ctx.settings.require_open_session,
       paymentMethods: ctx.settings.payment_methods,
+      discountReasons: ctx.settings.discount_reasons,
     },
     clients: ctx.clients,
     staff: ctx.staff,

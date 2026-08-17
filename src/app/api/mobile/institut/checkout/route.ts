@@ -20,6 +20,7 @@ const bodySchema = z.object({
   staffId: z.string().uuid().nullable().optional(),
   notes: z.string().max(2000).optional(),
   cartDiscountCents: z.number().int().min(0).optional(),
+  discountReason: z.string().max(80).optional(),
   loyaltyRewardId: z.string().uuid().nullable().optional(),
   payments: z.array(paymentSchema).min(1),
 });
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
       staffId,
       notes,
       cartDiscountCents,
+      discountReason,
       loyaltyRewardId,
       payments,
     } = parsed.data;
@@ -69,6 +71,7 @@ export async function POST(request: Request) {
         staffId: staffId ?? null,
         notes,
         cartDiscountCents: cartDiscountCents ?? 0,
+        discountReason: discountReason ?? null,
         loyaltyRewardId: loyaltyRewardId ?? null,
         payments: salePayments,
       },

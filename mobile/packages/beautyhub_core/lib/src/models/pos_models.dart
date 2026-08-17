@@ -152,14 +152,28 @@ class PosSettingsSummary {
     required this.priceDisplay,
     required this.requireOpenSession,
     required this.paymentMethods,
+    this.discountReasons = defaultDiscountReasons,
   });
+
+  static const defaultDiscountReasons = [
+    'Geste commercial',
+    'Promotion',
+    'Fidélité',
+    'Erreur de prix',
+    'Personnel',
+  ];
 
   final String currency;
   final String priceDisplay;
   final bool requireOpenSession;
   final PosPaymentMethods paymentMethods;
+  final List<String> discountReasons;
 
   factory PosSettingsSummary.fromJson(Map<String, dynamic> json) {
+    final raw = json['discountReasons'];
+    final reasons = raw is List
+        ? raw.whereType<String>().map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
+        : const <String>[];
     return PosSettingsSummary(
       currency: json['currency'] as String? ?? 'eur',
       priceDisplay: json['priceDisplay'] as String? ?? 'ttc',
@@ -167,6 +181,8 @@ class PosSettingsSummary {
       paymentMethods: PosPaymentMethods.fromJson(
         json['paymentMethods'] as Map<String, dynamic>?,
       ),
+      discountReasons:
+          reasons.isNotEmpty ? reasons : defaultDiscountReasons,
     );
   }
 }

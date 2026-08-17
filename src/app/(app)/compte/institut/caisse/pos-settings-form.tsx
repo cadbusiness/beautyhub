@@ -436,6 +436,17 @@ export function PosSettingsForm({ settings }: { settings: PosSettings }) {
       </section>
 
       <section className="space-y-4">
+        <h3 className="text-sm font-medium text-slate-900">{t("discountReasonsTitle")}</h3>
+        <p className="text-xs text-slate-500">{t("discountReasonsHelp")}</p>
+        <Textarea
+          id="discount_reasons"
+          name="discount_reasons"
+          rows={5}
+          defaultValue={settings.discount_reasons.join("\n")}
+        />
+      </section>
+
+      <section className="space-y-4">
         <h3 className="text-sm font-medium text-slate-900">{t("sessionTitle")}</h3>
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <input

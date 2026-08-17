@@ -200,6 +200,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     int discountCents = 0,
     int loyaltyDiscountCents = 0,
     String? notes,
+    String? discountReason,
     String? loyaltyRewardId,
   }) async {
     final cart = ref.read(posCartProvider);
@@ -232,6 +233,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             clientId: _selectedClient?.id,
             notes: notes,
             cartDiscountCents: discountCents > 0 ? discountCents : null,
+            discountReason: discountReason,
             loyaltyRewardId: loyaltyRewardId,
             payments: [
               {'method': _paymentMethod, 'amountCents': totalCents},
@@ -284,9 +286,10 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => _CartSheet(
         ctx: ctx,
@@ -298,6 +301,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
           discountCents = 0,
           loyaltyDiscountCents = 0,
           notes,
+          discountReason,
           loyaltyRewardId,
         }) =>
             _checkout(
@@ -305,6 +309,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
               discountCents: discountCents,
               loyaltyDiscountCents: loyaltyDiscountCents,
               notes: notes,
+              discountReason: discountReason,
               loyaltyRewardId: loyaltyRewardId,
             ),
         sessionBlocked: ctx.requireOpenSession && !ctx.sessionOpen,
@@ -752,6 +757,98 @@ class _SourceSegmented extends StatelessWidget {
   }
 }
 
+class _MiniSegmented extends StatelessWidget {
+  const _MiniSegmented({
+    required this.items,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<({String id, String label})> items;
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F3F3),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          for (final item in items)
+            Expanded(
+              child: Material(
+                color: selected == item.id ? Colors.white : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                elevation: selected == item.id ? 0.5 : 0,
+                shadowColor: Colors.black26,
+                child: InkWell(
+                  onTap: () => onSelected(item.id),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      item.label,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: selected == item.id
+                            ? const Color(0xFF0A0A0A)
+                            : const Color(0xFF737373),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PosChip extends StatelessWidget {
+  const _PosChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? const Color(0xFF0A0A0A) : const Color(0xFFF5F5F5),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : const Color(0xFF0A0A0A),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _InlineActionChip extends StatelessWidget {
   const _InlineActionChip({
     required this.label,
@@ -853,10 +950,11 @@ class _CartSheet extends ConsumerStatefulWidget {
   final String paymentMethod;
   final ValueChanged<PickerItem?> onClientChanged;
   final ValueChanged<String> onPaymentChanged;
-  final Future<bool> Function({
+  final   Future<bool> Function({
     int discountCents,
     int loyaltyDiscountCents,
     String? notes,
+    String? discountReason,
     String? loyaltyRewardId,
   }) onCheckout;
   final bool sessionBlocked;
@@ -869,6 +967,8 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
   late PickerItem? _client = widget.selectedClient;
   bool _showDiscount = false;
   String _discountKind = 'percent';
+  String? _pickedReason;
+  bool _customReason = false;
   final _discountValue = TextEditingController();
   final _discountReason = TextEditingController();
   PosClientLoyalty? _loyalty;
@@ -1029,54 +1129,104 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Panier', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
+            const Text(
+              'Panier',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0A0A0A),
+              ),
+            ),
+            const SizedBox(height: 16),
             ...lines,
-            const Divider(height: 24),
+            const SizedBox(height: 8),
             if (!_showDiscount)
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
                   onPressed: () => setState(() => _showDiscount = true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF0A0A0A),
+                    padding: EdgeInsets.zero,
+                  ),
                   child: const Text('Ajouter une réduction'),
                 ),
               )
             else ...[
               const Text(
                 'Réduction',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF404040),
+                ),
               ),
               const SizedBox(height: 8),
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'percent', label: Text('%')),
-                  ButtonSegment(value: 'fixed', label: Text('€')),
+              _MiniSegmented(
+                items: const [
+                  (id: 'percent', label: '%'),
+                  (id: 'fixed', label: '€'),
                 ],
-                selected: {_discountKind},
-                onSelectionChanged: (s) =>
-                    setState(() => _discountKind = s.first),
+                selected: _discountKind,
+                onSelected: (value) => setState(() => _discountKind = value),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               TextField(
                 controller: _discountValue,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: _discountKind == 'percent'
-                      ? 'Pourcentage'
-                      : 'Montant (€)',
-                  hintText: _discountKind == 'percent' ? '10' : '15',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: _cartFieldDecoration(
+                  hint: _discountKind == 'percent' ? '10' : '15,00',
                 ),
                 onChanged: (_) => setState(() {}),
               ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _discountReason,
-                decoration: const InputDecoration(
-                  labelText: 'Motif (optionnel)',
-                  hintText: 'Bon, promotion, geste commercial…',
+              const SizedBox(height: 14),
+              const Text(
+                'Motif',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF404040),
                 ),
               ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final reason in ctx.settings.discountReasons)
+                    _PosChip(
+                      label: reason,
+                      selected: !_customReason && _pickedReason == reason,
+                      onTap: () => setState(() {
+                        _customReason = false;
+                        _pickedReason = _pickedReason == reason ? null : reason;
+                        if (_pickedReason != null) {
+                          _discountReason.text = _pickedReason!;
+                        }
+                      }),
+                    ),
+                  _PosChip(
+                    label: 'Autre',
+                    selected: _customReason,
+                    onTap: () => setState(() {
+                      _customReason = true;
+                      _pickedReason = null;
+                    }),
+                  ),
+                ],
+              ),
+              if (_customReason) ...[
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _discountReason,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: _cartFieldDecoration(
+                    hint: 'Geste commercial, promotion…',
+                  ),
+                ),
+              ],
               if (discountCents > 0) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -1149,30 +1299,37 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                 ],
               ),
             ],
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Row(
               children: [
-                const Text('Total', style: TextStyle(fontSize: 15)),
+                const Text(
+                  'Total',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF0A0A0A),
+                  ),
+                ),
                 const Spacer(),
                 Text(
                   formatEuros(payable),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 18,
+                    fontSize: 22,
+                    color: Color(0xFF0A0A0A),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            SegmentedButton<String>(
-              segments: [
+            const SizedBox(height: 14),
+            _MiniSegmented(
+              items: [
                 if (ctx.settings.paymentMethods.cash)
-                  const ButtonSegment(value: 'cash', label: Text('Espèces')),
-                if (ctx.settings.paymentMethods.card)
-                  const ButtonSegment(value: 'card', label: Text('CB')),
+                  (id: 'cash', label: 'Espèces'),
+                if (ctx.settings.paymentMethods.card) (id: 'card', label: 'CB'),
               ],
-              selected: {paymentMethod},
-              onSelectionChanged: (s) => onPaymentChanged(s.first),
+              selected: paymentMethod,
+              onSelected: onPaymentChanged,
             ),
             const SizedBox(height: 16),
             if (sessionBlocked) ...[
@@ -1182,35 +1339,79 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
               ),
               const SizedBox(height: 12),
             ],
-            FilledButton(
-              onPressed: checkingOut || sessionBlocked || payable <= 0
-                  ? null
-                  : () async {
-                      final reason = _discountReason.text.trim();
-                      final ok = await onCheckout(
-                        discountCents: discountCents,
-                        loyaltyDiscountCents: loyaltyDiscountCents,
-                        loyaltyRewardId: _loyaltyRewardId,
-                        notes: reason.isEmpty ? null : 'Remise : $reason',
-                      );
-                      if (ok && context.mounted) {
-                        Navigator.pop(context);
-                        ref.read(posCartProvider.notifier).clear();
-                      }
-                    },
-              child: checkingOut
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text('Encaisser · ${formatEuros(payable)}'),
+            SizedBox(
+              height: 48,
+              child: FilledButton(
+                onPressed: checkingOut || sessionBlocked || payable <= 0
+                    ? null
+                    : () async {
+                        final reason = _customReason
+                            ? _discountReason.text.trim()
+                            : (_pickedReason ?? '').trim();
+                        final ok = await onCheckout(
+                          discountCents: discountCents,
+                          loyaltyDiscountCents: loyaltyDiscountCents,
+                          loyaltyRewardId: _loyaltyRewardId,
+                          notes: reason.isEmpty ? null : 'Remise : $reason',
+                          discountReason: reason.isEmpty ? null : reason,
+                        );
+                        if (ok && context.mounted) {
+                          Navigator.pop(context);
+                          ref.read(posCartProvider.notifier).clear();
+                        }
+                      },
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF0A0A0A),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                child: checkingOut
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text('Encaisser · ${formatEuros(payable)}'),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+InputDecoration _cartFieldDecoration({required String hint}) {
+  const black = Color(0xFF0A0A0A);
+  return InputDecoration(
+    hintText: hint,
+    hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+    filled: true,
+    fillColor: const Color(0xFFF5F5F5),
+    isDense: true,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide.none,
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: black, width: 1.2),
+    ),
+  );
 }
 
 class _LoyaltyPaymentCard extends StatelessWidget {
@@ -1305,18 +1506,17 @@ class _LoyaltyPaymentCard extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                ChoiceChip(
-                  label: const Text('Ne pas utiliser'),
+                _PosChip(
+                  label: 'Ne pas utiliser',
                   selected: selectedRewardId == null,
-                  onSelected: (_) => onSelect(null),
+                  onTap: () => onSelect(null),
                 ),
                 for (final reward in eligibleRewards)
-                  ChoiceChip(
-                    label: Text(
-                      '${reward.name} · −${formatEuros(reward.discountForSubtotal(subtotalCents))}',
-                    ),
+                  _PosChip(
+                    label:
+                        '${reward.name} · −${formatEuros(reward.discountForSubtotal(subtotalCents))}',
                     selected: selectedRewardId == reward.id,
-                    onSelected: (_) => onSelect(reward.id),
+                    onTap: () => onSelect(reward.id),
                   ),
               ],
             ),

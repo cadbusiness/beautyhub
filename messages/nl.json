@@ -1970,6 +1970,8 @@
         "ticketHeader": "Ticketkop",
         "ticketFooter": "Ticketvoettekst",
         "sessionTitle": "Kassasessie",
+        "discountReasonsTitle": "Kortingsredenen",
+        "discountReasonsHelp": "Eén reden per regel. Ze verschijnen met een tik in de kassa; een reden bij het afrekenen wordt automatisch bewaard.",
         "requireOpenSession": "Sessie verplicht om af te rekenen",
         "defaultOpeningFloat": "Standaard kassafonds"
       }
@@ -2833,6 +2835,7 @@
         "discountValue": "Kortingswaarde",
         "discountReason": "Reden (optioneel)",
         "discountReasonPlaceholder": "Bon, actie, commerciële geste…",
+        "discountReasonOther": "Andere reden…",
         "discountReasonPrefix": "Korting",
         "discountApplied": "−{amount} · nieuw totaal {total}",
         "promoCode": "Promocode",

@@ -487,6 +487,7 @@ export type Database = {
       }
       inst_appointments: {
         Row: {
+          bookly_id: number | null
           client_id: string | null
           created_at: string
           ends_at: string
@@ -504,6 +505,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bookly_id?: number | null
           client_id?: string | null
           created_at?: string
           ends_at: string
@@ -521,6 +523,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bookly_id?: number | null
           client_id?: string | null
           created_at?: string
           ends_at?: string
@@ -1557,6 +1560,7 @@ export type Database = {
           ticket_prefix: string
           updated_at: string
           vat_number: string | null
+          discount_reasons: string[]
         }
         Insert: {
           country_code?: string
@@ -1588,6 +1592,7 @@ export type Database = {
           ticket_prefix?: string
           updated_at?: string
           vat_number?: string | null
+          discount_reasons?: string[]
         }
         Update: {
           country_code?: string
@@ -1619,6 +1624,7 @@ export type Database = {
           ticket_prefix?: string
           updated_at?: string
           vat_number?: string | null
+          discount_reasons?: string[]
         }
         Relationships: [
           {
@@ -2682,6 +2688,7 @@ export type Database = {
         Row: {
           archived_at: string | null
           avatar_url: string | null
+          bookly_id: number | null
           color: string | null
           created_at: string
           email: string | null
@@ -2696,6 +2703,7 @@ export type Database = {
         Insert: {
           archived_at?: string | null
           avatar_url?: string | null
+          bookly_id?: number | null
           color?: string | null
           created_at?: string
           email?: string | null
@@ -2710,6 +2718,7 @@ export type Database = {
         Update: {
           archived_at?: string | null
           avatar_url?: string | null
+          bookly_id?: number | null
           color?: string | null
           created_at?: string
           email?: string | null

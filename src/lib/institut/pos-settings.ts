@@ -55,6 +55,7 @@ export interface PosSettings {
   payment_terms_days: number;
   late_payment_penalty_text: string | null;
   fixed_recovery_fee_cents: number;
+  discount_reasons: string[];
 }
 
 export const DEFAULT_POS_PAYMENT_METHODS: PosPaymentMethodsConfig = {
@@ -64,6 +65,14 @@ export const DEFAULT_POS_PAYMENT_METHODS: PosPaymentMethodsConfig = {
   gift_card: false,
   stripe: true,
 };
+
+export const DEFAULT_DISCOUNT_REASONS = [
+  "Geste commercial",
+  "Promotion",
+  "Fidélité",
+  "Erreur de prix",
+  "Personnel",
+] as const;
 
 export const DEFAULT_POS_SETTINGS: Omit<PosSettings, "tenant_id"> = {
   country_code: "FR",
@@ -92,6 +101,7 @@ export const DEFAULT_POS_SETTINGS: Omit<PosSettings, "tenant_id"> = {
   payment_terms_days: 0,
   late_payment_penalty_text: null,
   fixed_recovery_fee_cents: 4000,
+  discount_reasons: [...DEFAULT_DISCOUNT_REASONS],
 };
 
 function parsePaymentMethods(raw: unknown): PosPaymentMethodsConfig {
@@ -104,6 +114,46 @@ function parsePaymentMethods(raw: unknown): PosPaymentMethodsConfig {
     }
   }
   return base;
+}
+
+export function parseDiscountReasons(raw: unknown): string[] {
+  const source = Array.isArray(raw)
+    ? raw
+    : typeof raw === "string"
+      ? raw.split("\n")
+      : DEFAULT_DISCOUNT_REASONS;
+  const seen = new Set<string>();
+  const reasons: string[] = [];
+  for (const item of source) {
+    if (typeof item !== "string") continue;
+    const value = item.trim().replace(/\s+/g, " ");
+    if (!value || value.length > 80) continue;
+    const key = value.toLocaleLowerCase("fr");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    reasons.push(value);
+    if (reasons.length >= 24) break;
+  }
+  return reasons.length > 0 ? reasons : [...DEFAULT_DISCOUNT_REASONS];
+}
+
+export async function rememberDiscountReason(
+  supabase: Db,
+  tenantId: string,
+  reason: string | null | undefined,
+): Promise<void> {
+  const value = reason?.trim().replace(/\s+/g, " ") ?? "";
+  if (!value || value.length > 80) return;
+  const settings = await getPosSettings(supabase, tenantId);
+  const key = value.toLocaleLowerCase("fr");
+  if (settings.discount_reasons.some((item) => item.toLocaleLowerCase("fr") === key)) {
+    return;
+  }
+  const next = parseDiscountReasons([...settings.discount_reasons, value]);
+  await supabase.from("inst_pos_settings").upsert(
+    { tenant_id: tenantId, discount_reasons: next },
+    { onConflict: "tenant_id" },
+  );
 }
 
 export function rowToPosSettings(
@@ -145,6 +195,7 @@ export function rowToPosSettings(
     payment_terms_days: row.payment_terms_days ?? 0,
     late_payment_penalty_text: row.late_payment_penalty_text ?? null,
     fixed_recovery_fee_cents: row.fixed_recovery_fee_cents ?? 4000,
+    discount_reasons: parseDiscountReasons(row.discount_reasons),
   };
 }
 

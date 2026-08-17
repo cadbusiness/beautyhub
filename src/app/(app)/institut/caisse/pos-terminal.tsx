@@ -1045,10 +1045,35 @@ export function PosTerminal({
                     aria-label={t("cart.discountValue")}
                   />
                 </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {settings.discount_reasons.map((reason) => {
+                    const selected = cartDiscountReason === reason;
+                    return (
+                      <button
+                        key={reason}
+                        type="button"
+                        onClick={() =>
+                          setCartDiscountReason(selected ? "" : reason)
+                        }
+                        className={
+                          selected
+                            ? "rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white"
+                            : "rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 hover:border-slate-300"
+                        }
+                      >
+                        {reason}
+                      </button>
+                    );
+                  })}
+                </div>
                 <Input
-                  value={cartDiscountReason}
+                  value={
+                    settings.discount_reasons.includes(cartDiscountReason)
+                      ? ""
+                      : cartDiscountReason
+                  }
                   onChange={(e) => setCartDiscountReason(e.target.value)}
-                  placeholder={t("cart.discountReasonPlaceholder")}
+                  placeholder={t("cart.discountReasonOther")}
                   aria-label={t("cart.discountReason")}
                 />
                 {discountCents > 0 ? (
@@ -1145,6 +1170,7 @@ export function PosTerminal({
             ]
               .filter(Boolean)
               .join("\n")}
+            discountReason={!promoCode ? cartDiscountReason.trim() : ""}
             cartDiscountEuros={(discountCents / 100).toFixed(2)}
             loyaltyRewardId={loyaltyRewardId}
             promoCode={promoCode}

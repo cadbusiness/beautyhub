@@ -23,6 +23,7 @@ interface CheckoutPanelProps {
   staffId: string;
   appointmentId: string;
   notes: string;
+  discountReason?: string;
   cartDiscountEuros: string;
   loyaltyRewardId?: string;
   promoCode?: string;
@@ -65,6 +66,7 @@ export function CheckoutPanel({
   staffId,
   appointmentId,
   notes,
+  discountReason = "",
   cartDiscountEuros,
   loyaltyRewardId = "",
   promoCode = "",
@@ -298,6 +300,7 @@ export function CheckoutPanel({
         <input type="hidden" name="staff_id" value={staffId} />
         <input type="hidden" name="appointment_id" value={appointmentId} />
         <input type="hidden" name="notes" value={notes} />
+        <input type="hidden" name="discount_reason" value={discountReason} />
         <input type="hidden" name="cart_discount" value={cartDiscountEuros} />
         <input type="hidden" name="loyalty_reward_id" value={loyaltyRewardId} />
         <input type="hidden" name="promo_code" value={promoCode} />

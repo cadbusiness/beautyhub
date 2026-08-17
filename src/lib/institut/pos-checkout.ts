@@ -6,6 +6,7 @@ import { applyPriceOverrides, parsePosCart, resolveCartLines } from "./pos";
 import {
   formatTicketNumber,
   getPosSettings,
+  rememberDiscountReason,
   vatRateForLineType,
   type PosSettings,
 } from "./pos-settings";
@@ -75,6 +76,8 @@ export interface PosCheckoutInput {
    * spécifique à un client sans modifier le catalogue.
    */
   priceOverrides?: Record<string, number> | null;
+  /** Motif de remise manuelle — mémorisé dans la bibliothèque de l'institut. */
+  discountReason?: string | null;
 }
 
 export interface PosCheckoutResult {
@@ -525,6 +528,14 @@ export async function executePosCheckout(
     });
   } catch {
     // La vente est déjà enregistrée : ne pas bloquer l'encaissement mobile.
+  }
+
+  if ((input.cartDiscountCents ?? 0) > 0) {
+    try {
+      await rememberDiscountReason(supabase, tenantId, input.discountReason);
+    } catch {
+      // Bibliothèque de motifs : ne pas bloquer la vente.
+    }
   }
 
   return {

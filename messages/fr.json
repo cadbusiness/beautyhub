@@ -423,6 +423,7 @@
     },
     "list": {
       "new": "Nouveau rendez-vous",
+      "importCsv": "Importer Bookly",
       "searchPlaceholder": "Recherche prestation, client, praticien…",
       "empty": "Aucun rendez-vous.",
       "noResults": "Aucun résultat pour cette recherche.",
@@ -436,6 +437,41 @@
         "actions": "Actions"
       },
       "confirmStatus": "OK"
+    },
+    "import": {
+      "title": "Importer les rendez-vous Bookly",
+      "doneTitle": "Import terminé",
+      "intro": "Importez le CSV (ou JSON) exporté depuis WordPress → Outils → Export Bookly. Les prestations doivent déjà avoir été importées. Les clients sont créés ou rattachés par téléphone / e-mail. Réimporter met à jour via l’ID Bookly.",
+      "hint": "Fichier bookly-appointments.csv (séparateur ;) ou export JSON complet.",
+      "chooseFile": "Choisir le fichier",
+      "fileHint": "CSV Bookly BeautyHub ou JSON",
+      "fileLabel": "Fichier",
+      "analyzing": "Analyse du fichier…",
+      "previewIntro": "Vérifiez le résumé avant d’importer. Les noms de l’équipe doivent correspondre à ceux de Bookly.",
+      "upcomingOnly": "Importer uniquement les rendez-vous à partir d’aujourd’hui (recommandé pour une bascule).",
+      "stats": {
+        "total": "Rendez-vous",
+        "create": "À créer",
+        "update": "À mettre à jour",
+        "missingService": "Prestation introuvable",
+        "unmatchedStaff": "Praticien non rattaché",
+        "skip": "Ignorés"
+      },
+      "missingServiceHint": "Importez d’abord le catalogue Bookly (Prestations). Prestations manquantes",
+      "unmatchedStaffHint": "Aucun praticien BeautyHub au même nom — le RDV sera importé sans colonne. Harmonisez les noms dans Équipe",
+      "samples": "Exemples",
+      "back": "Choisir un autre fichier",
+      "confirmImport": "Lancer l’import",
+      "importing": "Import en cours…",
+      "progress": "{processed} / {total} traités",
+      "doneMessage": "{created} créés · {updated} mis à jour · {clientsCreated} clients créés · {unmatchedStaff} sans praticien · {missingService} sans prestation.",
+      "errorsCount": "Alertes ({count})",
+      "errors": {
+        "missingColumns": "Colonnes attendues introuvables (bookly_ca_id, starts_at, service_bookly_id).",
+        "invalidFile": "Fichier invalide. Utilisez l’export BeautyHub (CSV rendez-vous ou JSON).",
+        "emptyFile": "Aucun rendez-vous dans ce fichier.",
+        "importFailed": "L’import des rendez-vous a échoué."
+      }
     },
     "calendar": {
       "editTitle": "Modifier le rendez-vous",
@@ -2042,6 +2078,8 @@
         "ticketHeader": "En-tête ticket",
         "ticketFooter": "Pied de ticket",
         "sessionTitle": "Session de caisse",
+        "discountReasonsTitle": "Motifs de remise",
+        "discountReasonsHelp": "Un motif par ligne. Ils apparaissent en un tap à la caisse ; un motif saisi à l’encaissement est ajouté automatiquement.",
         "requireOpenSession": "Session obligatoire pour encaisser",
         "defaultOpeningFloat": "Fond de caisse par défaut"
       }
@@ -2951,6 +2989,7 @@
         "discountValue": "Valeur de la réduction",
         "discountReason": "Motif (optionnel)",
         "discountReasonPlaceholder": "Bon, promotion, geste commercial…",
+        "discountReasonOther": "Autre motif…",
         "discountReasonPrefix": "Remise",
         "discountApplied": "−{amount} · nouveau total {total}",
         "promoCode": "Code promo",

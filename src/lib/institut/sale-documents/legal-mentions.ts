@@ -1,6 +1,8 @@
 import type { PosSettings } from "@/lib/institut/pos-settings";
+import { getTaxCountry, isVatExemptRegime } from "@/lib/institut/tax-catalog";
 
 export type LegalMentionBlock = {
+  vatExemption: string;
   paymentDiscount: string;
   latePaymentPenalty: string;
   fixedRecoveryFee: string;
@@ -15,13 +17,24 @@ function formatMoney(cents: number, currency: string, locale: string): string {
   }).format(cents / 100);
 }
 
+export function getVatExemptionMention(settings: PosSettings): string {
+  if (!isVatExemptRegime(settings.fiscal_regime)) return "";
+  if (settings.country_code === "FR") {
+    return "TVA non applicable, article 293 B du CGI (franchise en base de TVA).";
+  }
+  return "TVA non applicable (régime de franchise).";
+}
+
 export function getLegalMentions(
   settings: PosSettings,
   locale = "fr-FR",
 ): LegalMentionBlock {
+  const vatExemption = getVatExemptionMention(settings);
+
   if (settings.legal_mentions?.trim()) {
     const lines = settings.legal_mentions.trim().split("\n").filter(Boolean);
     return {
+      vatExemption,
       paymentDiscount: lines[0] ?? "",
       latePaymentPenalty: lines[1] ?? "",
       fixedRecoveryFee: lines[2] ?? "",
@@ -31,10 +44,11 @@ export function getLegalMentions(
   }
 
   const recoveryFee = formatMoney(settings.fixed_recovery_fee_cents, settings.currency, locale);
-  const isBelgium = settings.country_code === "BE";
+  const country = getTaxCountry(settings.country_code).code;
 
-  if (isBelgium) {
+  if (country === "BE") {
     return {
+      vatExemption,
       paymentDiscount:
         "Aucun escompte ne sera accordé pour paiement anticipé. Tout retard de paiement engendre des pénalités exigibles le jour suivant, calculées sur la base du taux légal +5 %.",
       latePaymentPenalty:
@@ -48,26 +62,40 @@ export function getLegalMentions(
     };
   }
 
+  if (country === "FR") {
+    return {
+      vatExemption,
+      paymentDiscount:
+        "Aucun escompte ne sera accordé en cas de paiement anticipé (art. L441-10 du Code de commerce).",
+      latePaymentPenalty:
+        settings.late_payment_penalty_text?.trim() ||
+        "En cas de retard de paiement, des pénalités de retard au taux légal majoré de 10 points seront exigibles (art. L441-10 et D441-4 du Code de commerce).",
+      fixedRecoveryFee: `Indemnité forfaitaire pour frais de recouvrement : ${recoveryFee} (art. L441-10 et D441-5 du Code de commerce).`,
+      retentionOfTitle:
+        "Clause de réserve de propriété : les biens demeurent la propriété du vendeur jusqu'au paiement intégral du prix (art. 2367 du Code civil).",
+      jurisdiction:
+        "En cas de litige, compétence exclusive est attribuée au tribunal du ressort du siège social du vendeur.",
+    };
+  }
+
   return {
-    paymentDiscount:
-      "Aucun escompte ne sera accordé en cas de paiement anticipé (art. L441-10 du Code de commerce).",
+    vatExemption,
+    paymentDiscount: "Aucun escompte n'est accordé pour paiement anticipé.",
     latePaymentPenalty:
       settings.late_payment_penalty_text?.trim() ||
-      "En cas de retard de paiement, des pénalités de retard au taux légal majoré de 10 points seront exigibles (art. L441-10 et D441-4 du Code de commerce).",
-    fixedRecoveryFee: `Indemnité forfaitaire pour frais de recouvrement : ${recoveryFee} (art. L441-10 et D441-5 du Code de commerce).`,
+      "Tout retard de paiement peut entraîner des pénalités selon le droit applicable au siège de l'entreprise.",
+    fixedRecoveryFee: `Indemnité forfaitaire de recouvrement : ${recoveryFee}.`,
     retentionOfTitle:
-      "Clause de réserve de propriété : les biens demeurent la propriété du vendeur jusqu'au paiement intégral du prix (art. 2367 du Code civil).",
+      "Les biens restent la propriété du vendeur jusqu'au paiement intégral du prix.",
     jurisdiction:
-      "En cas de litige, compétence exclusive est attribuée au tribunal du ressort du siège social du vendeur.",
+      "En cas de litige, le tribunal du ressort du siège social du vendeur est compétent.",
   };
 }
 
 export function getVatLabel(settings: PosSettings): string {
-  if (settings.country_code === "BE") return "TVA Intra";
-  return "N° TVA";
+  return getTaxCountry(settings.country_code).vatNumberLabel;
 }
 
 export function getCompanyIdLabel(settings: PosSettings): string {
-  if (settings.country_code === "BE") return "BCE / RPM";
-  return "SIRET";
+  return getTaxCountry(settings.country_code).companyIdLabel;
 }

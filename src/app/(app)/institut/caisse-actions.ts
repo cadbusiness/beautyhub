@@ -25,6 +25,13 @@ import {
   type PosPaymentMethodsConfig,
   DEFAULT_POS_PAYMENT_METHODS,
 } from "@/lib/institut/pos-settings";
+import {
+  getTaxCountry,
+  isVatExemptRegime,
+  resolvePosCurrency,
+  resolvePosRegime,
+  suggestedVatRates,
+} from "@/lib/institut/tax-catalog";
 
 export interface ActionResult {
   error?: string;
@@ -181,23 +188,32 @@ export async function savePosSettings(
   const session = await requireInstitutSettingsModule();
   const supabase = await createClient();
 
-  const fiscalRegime = String(formData.get("fiscal_regime") ?? "standard");
-  const validRegimes = ["standard", "nf525", "be_vat", "be_gks"] as const;
+  const countryCode = getTaxCountry(String(formData.get("country_code") ?? "FR")).code;
+  const fiscalRegime = resolvePosRegime(
+    countryCode,
+    String(formData.get("fiscal_regime") ?? ""),
+  );
+  const currency = resolvePosCurrency(
+    countryCode,
+    String(formData.get("currency") ?? ""),
+  );
+  const exempt = isVatExemptRegime(fiscalRegime);
+  const suggested = suggestedVatRates(getTaxCountry(countryCode));
+  const parseVat = (key: string, fallbackBps: number) => {
+    if (exempt) return 0;
+    const raw = Number.parseFloat(String(formData.get(key) ?? ""));
+    if (!Number.isFinite(raw)) return fallbackBps;
+    return Math.min(10000, Math.max(0, Math.round(raw * 100)));
+  };
 
   const payload = {
     tenant_id: session.tenant.id,
-    country_code: String(formData.get("country_code") ?? "FR").trim() || "FR",
-    currency: String(formData.get("currency") ?? "eur").trim().toLowerCase() || "eur",
+    country_code: countryCode,
+    currency,
     price_display: String(formData.get("price_display") ?? "ttc") === "ht" ? "ht" : "ttc",
-    default_vat_rate_bps: Math.round(
-      Number.parseFloat(String(formData.get("default_vat_rate") ?? "20")) * 100,
-    ),
-    service_vat_rate_bps: Math.round(
-      Number.parseFloat(String(formData.get("service_vat_rate") ?? "20")) * 100,
-    ),
-    product_vat_rate_bps: Math.round(
-      Number.parseFloat(String(formData.get("product_vat_rate") ?? "20")) * 100,
-    ),
+    default_vat_rate_bps: parseVat("default_vat_rate", suggested.defaultBps),
+    service_vat_rate_bps: parseVat("service_vat_rate", suggested.serviceBps),
+    product_vat_rate_bps: parseVat("product_vat_rate", suggested.productBps),
     payment_methods: parsePaymentMethodsForm(formData) as unknown as Json,
     ticket_header: String(formData.get("ticket_header") ?? "").trim() || null,
     ticket_footer: String(formData.get("ticket_footer") ?? "").trim() || null,
@@ -218,9 +234,7 @@ export async function savePosSettings(
     late_payment_penalty_text:
       String(formData.get("late_payment_penalty_text") ?? "").trim() || null,
     fixed_recovery_fee_cents: parseEurosCents(formData.get("fixed_recovery_fee")),
-    fiscal_regime: validRegimes.includes(fiscalRegime as (typeof validRegimes)[number])
-      ? fiscalRegime
-      : "standard",
+    fiscal_regime: fiscalRegime,
     require_open_session: formData.get("require_open_session") === "on",
     default_opening_float_cents: parseEurosCents(formData.get("default_opening_float")),
   };

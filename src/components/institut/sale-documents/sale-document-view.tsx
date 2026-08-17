@@ -141,6 +141,9 @@ function FormalDocument({
       </table>
 
       <div className="space-y-2 border-t border-slate-200 pt-4 text-xs leading-relaxed text-slate-600">
+        {payload.legalMentions.vatExemption ? (
+          <p className="font-medium text-slate-800">{payload.legalMentions.vatExemption}</p>
+        ) : null}
         <p>{payload.legalMentions.paymentDiscount}</p>
         <p>{payload.legalMentions.latePaymentPenalty}</p>
         <p>{payload.legalMentions.fixedRecoveryFee}</p>

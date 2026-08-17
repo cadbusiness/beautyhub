@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatPrice } from "@/lib/utils";
 import { computeRewardDiscountCents } from "@/lib/institut/loyalty-redeem";
 import { cn } from "@/lib/utils";
@@ -29,13 +29,16 @@ export function PosLoyaltyPicker({
   subtotalCents,
   selectedRewardId,
   onRewardChange,
+  currency = "eur",
 }: {
   clientId: string;
   subtotalCents: number;
   selectedRewardId: string;
   onRewardChange: (rewardId: string, discountCents: number) => void;
+  currency?: string;
 }) {
   const t = useTranslations("pos.loyalty");
+  const locale = useLocale();
   const [snapshot, setSnapshot] = useState<LoyaltySnapshot | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -150,7 +153,7 @@ export function PosLoyaltyPicker({
                   <span className="font-medium">{reward.name}</span>
                   <span className="mt-0.5 block text-violet-700/90">
                     {t("cost", { count: reward.points_cost, label: pointsLabel })}
-                    {discount > 0 ? ` · −${formatPrice(discount)}` : null}
+                    {discount > 0 ? ` · −${formatPrice(discount, currency, locale)}` : null}
                   </span>
                 </button>
               </li>

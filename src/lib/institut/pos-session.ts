@@ -41,6 +41,7 @@ export interface PosSessionSummary {
   expected_cash_cents: number;
   opened_calendar_date: string;
   is_previous_day: boolean;
+  currency: string;
 }
 
 export type MobileCashSessionJson = {
@@ -77,12 +78,10 @@ export async function getPosSessionSummary(
   const cashSession = await getOpenCashSession(supabase, tenantId);
   if (!cashSession) return null;
 
-  const snapshot = await computeSessionSnapshot(
-    supabase,
-    tenantId,
-    cashSession.id,
-    "x",
-  );
+  const [snapshot, settings] = await Promise.all([
+    computeSessionSnapshot(supabase, tenantId, cashSession.id, "x"),
+    getPosSettings(supabase, tenantId),
+  ]);
 
   const openedCalendarDate = calendarDateString(cashSession.opened_at);
   return {
@@ -94,6 +93,7 @@ export async function getPosSessionSummary(
     expected_cash_cents: snapshot.expected_cash_cents,
     opened_calendar_date: openedCalendarDate,
     is_previous_day: isPreviousCalendarDay(cashSession.opened_at),
+    currency: settings.currency,
   };
 }
 

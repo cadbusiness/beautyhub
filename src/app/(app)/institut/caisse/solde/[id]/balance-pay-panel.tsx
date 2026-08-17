@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { payBalanceAction } from "../../../caisse-session-actions";
 import type { ActionResult } from "../../../caisse-actions";
@@ -24,6 +24,7 @@ export function BalancePayPanel({
 }) {
   const t = useTranslations("pos.checkout");
   const tBalance = useTranslations("pos.balance");
+  const locale = useLocale();
   const pm = settings.payment_methods;
   const enabledMethods = METHOD_KEYS.filter((key) => {
     if (key === "credit_note") return true;
@@ -77,7 +78,7 @@ export function BalancePayPanel({
         className="w-full"
         disabled={pending || amountCents <= 0 || amountCents > remainingCents}
       >
-        {pending ? t("submitting") : tBalance("pay", { amount: formatPrice(amountCents) })}
+        {pending ? t("submitting") : tBalance("pay", { amount: formatPrice(amountCents, settings.currency, locale) })}
       </Button>
       {state.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
       {state.ok ? (

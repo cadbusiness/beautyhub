@@ -45,10 +45,12 @@ export function VouchersManager({
   vouchers,
   templates,
   sales,
+  currency = "eur",
 }: {
   vouchers: UnifiedVoucherRow[];
   templates: VoucherTemplateRow[];
   sales: IssueDialogSale[];
+  currency?: string;
 }) {
   const t = useTranslations("pos.vouchers");
   const tCommon = useTranslations("common");
@@ -171,8 +173,8 @@ export function VouchersManager({
                   {v.code}
                 </td>
                 <td className={`tabular-nums ${dataTableCellCompact}`}>
-                  <span className="text-slate-900">{formatPrice(v.balance_cents)}</span>
-                  <span className="text-slate-400"> / {formatPrice(v.initial_cents)}</span>
+                  <span className="text-slate-900">{formatPrice(v.balance_cents, currency)}</span>
+                  <span className="text-slate-400"> / {formatPrice(v.initial_cents, currency)}</span>
                 </td>
                 <td className={`hidden text-slate-600 md:table-cell ${dataTableCellCompact}`}>
                   {v.recipient_or_reason ?? tCommon("dash")}

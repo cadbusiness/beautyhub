@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { checkoutPos, type ActionResult } from "../caisse-actions";
 import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/input";
-import { formatPrice } from "@/lib/utils";
 import {
   applyPriceOverrides,
   type PosCatalogItem,
@@ -14,6 +13,7 @@ import {
 } from "@/lib/institut/pos";
 import { computeCartTotals } from "@/lib/institut/pos-totals";
 import {
+  formatPosMoney,
   vatRateForLineType,
   type PosSettings,
 } from "@/lib/institut/pos-settings";
@@ -63,6 +63,8 @@ export function PosTerminal({
   stripeAccountId?: string;
 }) {
   const t = useTranslations("pos.terminal");
+  const locale = useLocale();
+  const money = (cents: number) => formatPosMoney(cents, settings, locale);
   const initialAppt = initialAppointmentId
     ? appointments.find((a) => a.id === initialAppointmentId)
     : undefined;
@@ -537,7 +539,7 @@ export function PosTerminal({
                   {item.name}
                 </p>
                 <p className="text-sm text-slate-500">
-                  {formatPrice(item.price_cents)}
+                  {money(item.price_cents)}
                   {item.duration_min ? ` · ${item.duration_min} min` : ""}
                 </p>
               </button>
@@ -591,6 +593,7 @@ export function PosTerminal({
             </div>
             <OpenSessionForm
               defaultFloat={defaultOpeningFloatCents}
+              currency={settings.currency}
               compact
             />
           </div>
@@ -714,7 +717,7 @@ export function PosTerminal({
                         onClick={() => resetPrice(key)}
                         className="text-[11px] text-slate-500 underline decoration-dotted hover:text-slate-700"
                         title={t("cart.resetPriceTitle", {
-                          price: formatPrice(defaultCents),
+                          price: money(defaultCents),
                         })}
                       >
                         {t("cart.resetPrice")}
@@ -723,7 +726,7 @@ export function PosTerminal({
                     <span className="ml-auto tabular-nums text-slate-500">
                       {qty > 1 ? (
                         <span className="font-medium text-slate-700">
-                          = {formatPrice(lineTotalCents)}
+                          = {money(lineTotalCents)}
                         </span>
                       ) : null}
                     </span>
@@ -771,7 +774,7 @@ export function PosTerminal({
               <p className="text-xs text-emerald-700">
                 {t("cart.promoApplied", {
                   code: promoCode,
-                  amount: formatPrice(promoDiscountCents),
+                  amount: money(promoDiscountCents),
                 })}
               </p>
             ) : null}
@@ -865,6 +868,7 @@ export function PosTerminal({
             subtotalCents={subtotalForLoyalty}
             selectedRewardId={loyaltyRewardId}
             onRewardChange={handleLoyaltyChange}
+            currency={settings.currency}
           />
         ) : null}
 

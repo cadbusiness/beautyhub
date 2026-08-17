@@ -39,9 +39,13 @@ export function buildCashBreakdownLines(
 export function CashBreakdownTable({
   lines,
   compact = false,
+  currency = "eur",
+  locale = "fr",
 }: {
   lines: CashBreakdownLine[];
   compact?: boolean;
+  currency?: string;
+  locale?: string;
 }) {
   return (
     <dl className={compact ? "space-y-1.5 text-sm" : "space-y-2 text-sm"}>
@@ -64,7 +68,7 @@ export function CashBreakdownTable({
               )}
               <span>{line.label}</span>
             </dt>
-            <dd className="shrink-0 tabular-nums">{formatPrice(line.cents)}</dd>
+            <dd className="shrink-0 tabular-nums">{formatPrice(line.cents, currency, locale)}</dd>
           </div>
         );
       })}

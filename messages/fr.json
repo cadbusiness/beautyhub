@@ -1935,13 +1935,33 @@
     },
     "posSettings": {
       "title": "Paramètres caisse",
-      "description": "TVA, moyens de paiement, mentions légales et modèle de ticket.",
+      "description": "Pays d'imposition, devise, TVA, moyens de paiement et mentions légales.",
       "configured": "Configurable",
       "form": {
         "saved": "Paramètres enregistrés.",
         "generalTitle": "Général",
-        "country": "Pays",
+        "taxIntro": "Le pays d'imposition détermine les taux de TVA proposés, la devise par défaut et les mentions légales. Vous pouvez ensuite affiner chaque champ.",
+        "country": "Pays d'imposition",
         "currency": "Devise",
+        "currencyHint": "Devise suggérée pour ce pays : {suggested}. Vous pouvez en choisir une autre si vous facturez hors zone.",
+        "countries": {
+          "FR": "France",
+          "BE": "Belgique",
+          "LU": "Luxembourg",
+          "CH": "Suisse",
+          "NL": "Pays-Bas",
+          "DE": "Allemagne",
+          "ES": "Espagne",
+          "IT": "Italie",
+          "PT": "Portugal",
+          "GB": "Royaume-Uni"
+        },
+        "currencies": {
+          "eur": "Euro (EUR)",
+          "chf": "Franc suisse (CHF)",
+          "gbp": "Livre sterling (GBP)",
+          "usd": "Dollar US (USD)"
+        },
         "priceDisplay": "Affichage des prix",
         "priceTtc": "TTC (prix catalogue incluant la TVA)",
         "priceHt": "HT (TVA ajoutée à l'encaissement)",
@@ -1950,10 +1970,28 @@
         "regimeNf525": "France — préparation NF525",
         "regimeBeVat": "Belgique — TVA",
         "regimeBeGks": "Belgique — GKS (horeca)",
+        "regimes": {
+          "standard": "Standard",
+          "nf525": "France — préparation NF525",
+          "be_vat": "Belgique — TVA",
+          "be_gks": "Belgique — GKS (horeca)",
+          "franchise": "Franchise en base de TVA"
+        },
         "vatTitle": "TVA",
-        "defaultVat": "Taux par défaut (%)",
-        "serviceVat": "Prestations (%)",
-        "productVat": "Produits (%)",
+        "vatHint": "Barèmes {vat} en vigueur pour {country}. Choisissez le taux applicable aux prestations et aux produits.",
+        "vatExemptHint": "Franchise en base : les tickets et factures sortent à 0 % de TVA, avec la mention d'exonération.",
+        "bands": {
+          "standard": "taux normal",
+          "intermediate": "taux intermédiaire",
+          "reduced": "taux réduit",
+          "super_reduced": "taux super réduit",
+          "parking": "taux parking",
+          "zero": "exonération / 0 %",
+          "custom": "personnalisé"
+        },
+        "defaultVat": "Taux par défaut",
+        "serviceVat": "Prestations",
+        "productVat": "Produits",
         "paymentsTitle": "Moyens de paiement",
         "paymentMethods": {
           "cash": "Espèces",
@@ -1974,16 +2012,16 @@
         "legalDocsTitle": "Mentions légales documents",
         "legalEmail": "E-mail légal",
         "paymentTermsDays": "Délai de paiement (jours)",
-        "fixedRecoveryFee": "Indemnité forfaitaire recouvrement (€)",
+        "fixedRecoveryFee": "Indemnité forfaitaire recouvrement",
         "latePaymentPenalty": "Pénalités de retard (texte libre)",
         "legalMentionsOverride": "Mentions légales personnalisées",
-        "legalMentionsPlaceholder": "Laissez vide pour utiliser les mentions BE/FR automatiques selon le pays.",
+        "legalMentionsPlaceholder": "Laissez vide pour générer les mentions selon le pays d'imposition.",
         "ticketTitle": "Ticket de caisse",
         "ticketHeader": "En-tête ticket",
         "ticketFooter": "Pied de ticket",
         "sessionTitle": "Session de caisse",
         "requireOpenSession": "Session obligatoire pour encaisser",
-        "defaultOpeningFloat": "Fond de caisse par défaut (€)"
+        "defaultOpeningFloat": "Fond de caisse par défaut"
       }
     },
     "settings": {

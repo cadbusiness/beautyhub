@@ -1,10 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import { formatPrice } from "@/lib/utils";
+import {
+  getTaxCountry,
+  isVatExemptRegime,
+  resolvePosCurrency,
+  type PosFiscalRegime,
+} from "./tax-catalog";
 
 type Db = SupabaseClient<Database>;
 
+export type { PosFiscalRegime };
 export type PosPriceDisplay = "ttc" | "ht";
-export type PosFiscalRegime = "standard" | "nf525" | "be_vat" | "be_gks";
 export type PosPaymentMethodKey =
   | "cash"
   | "card"
@@ -108,8 +115,8 @@ export function rowToPosSettings(
   }
   return {
     tenant_id: row.tenant_id,
-    country_code: row.country_code,
-    currency: row.currency,
+    country_code: getTaxCountry(row.country_code).code,
+    currency: resolvePosCurrency(row.country_code, row.currency),
     price_display: row.price_display as PosPriceDisplay,
     default_vat_rate_bps: row.default_vat_rate_bps,
     service_vat_rate_bps: row.service_vat_rate_bps,
@@ -122,7 +129,11 @@ export function rowToPosSettings(
     vat_number: row.vat_number,
     siret: row.siret,
     ticket_prefix: row.ticket_prefix,
-    fiscal_regime: row.fiscal_regime as PosFiscalRegime,
+    fiscal_regime: (["standard", "nf525", "be_vat", "be_gks", "franchise"] as const).includes(
+      row.fiscal_regime as PosFiscalRegime,
+    )
+      ? (row.fiscal_regime as PosFiscalRegime)
+      : "standard",
     require_open_session: row.require_open_session ?? false,
     default_opening_float_cents: row.default_opening_float_cents ?? 0,
     credit_note_prefix: row.credit_note_prefix ?? "AV",
@@ -153,9 +164,18 @@ export function vatRateForLineType(
   settings: PosSettings,
   lineType: "service" | "product",
 ): number {
+  if (isVatExemptRegime(settings.fiscal_regime)) return 0;
   return lineType === "service"
     ? settings.service_vat_rate_bps
     : settings.product_vat_rate_bps;
+}
+
+export function formatPosMoney(
+  cents: number,
+  settings: Pick<PosSettings, "currency">,
+  locale = "fr",
+): string {
+  return formatPrice(cents, settings.currency, locale);
 }
 
 export function formatTicketNumber(

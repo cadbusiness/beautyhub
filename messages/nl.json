@@ -1863,13 +1863,33 @@
     },
     "posSettings": {
       "title": "Kassa-instellingen",
-      "description": "BTW, betaalmethoden, wettelijke vermeldingen en ticketmodel.",
+      "description": "Belastingland, valuta, BTW, betaalmethoden en wettelijke vermeldingen.",
       "configured": "Configureerbaar",
       "form": {
         "saved": "Instellingen opgeslagen.",
         "generalTitle": "Algemeen",
-        "country": "Land",
+        "taxIntro": "Het belastingland bepaalt de voorgestelde BTW-tarieven, de standaardvaluta en de wettelijke vermeldingen. U kunt elk veld daarna nog aanpassen.",
+        "country": "Belastingland",
         "currency": "Valuta",
+        "currencyHint": "Voorgestelde valuta voor dit land: {suggested}. U kunt een andere kiezen als u buiten die zone factureert.",
+        "countries": {
+          "FR": "Frankrijk",
+          "BE": "België",
+          "LU": "Luxemburg",
+          "CH": "Zwitserland",
+          "NL": "Nederland",
+          "DE": "Duitsland",
+          "ES": "Spanje",
+          "IT": "Italië",
+          "PT": "Portugal",
+          "GB": "Verenigd Koninkrijk"
+        },
+        "currencies": {
+          "eur": "Euro (EUR)",
+          "chf": "Zwitserse frank (CHF)",
+          "gbp": "Pond sterling (GBP)",
+          "usd": "Amerikaanse dollar (USD)"
+        },
         "priceDisplay": "Prijsweergave",
         "priceTtc": "Incl. BTW (catalogusprijs incl. BTW)",
         "priceHt": "Excl. BTW (BTW toegevoegd bij afrekenen)",
@@ -1878,10 +1898,28 @@
         "regimeNf525": "Frankrijk — NF525-voorbereiding",
         "regimeBeVat": "België — BTW",
         "regimeBeGks": "België — GKS (horeca)",
+        "regimes": {
+          "standard": "Standaard",
+          "nf525": "Frankrijk — NF525-voorbereiding",
+          "be_vat": "België — BTW",
+          "be_gks": "België — GKS (horeca)",
+          "franchise": "BTW-vrijstelling (franchise)"
+        },
         "vatTitle": "BTW",
-        "defaultVat": "Standaardtarief (%)",
-        "serviceVat": "Behandelingen (%)",
-        "productVat": "Producten (%)",
+        "vatHint": "Officiële {vat}-tarieven voor {country}. Kies het tarief voor behandelingen en producten.",
+        "vatExemptHint": "Franchise: tickets en facturen gaan uit tegen 0% BTW, met een vrijstellingsvermelding.",
+        "bands": {
+          "standard": "normaal tarief",
+          "intermediate": "tussentarief",
+          "reduced": "verlaagd tarief",
+          "super_reduced": "superverlaagd tarief",
+          "parking": "parkingtarief",
+          "zero": "vrijgesteld / 0%",
+          "custom": "aangepast"
+        },
+        "defaultVat": "Standaardtarief",
+        "serviceVat": "Behandelingen",
+        "productVat": "Producten",
         "paymentsTitle": "Betaalmethoden",
         "paymentMethods": {
           "cash": "Contant",
@@ -1896,12 +1934,22 @@
         "vatNumber": "BTW-nummer",
         "siret": "SIRET / KBO",
         "ticketTitle": "Kassaticket",
-        "ticketPrefix": "Nummerprefix",
+        "ticketPrefix": "Ticketprefix (TIC)",
+        "invoicePrefix": "Factuurprefix (FAC)",
+        "deliveryPrefix": "Leveringsbonprefix (BLC)",
+        "documentsTitle": "Documentnummering",
+        "legalDocsTitle": "Wettelijke vermeldingen documenten",
+        "legalEmail": "Juridisch e-mailadres",
+        "paymentTermsDays": "Betalingstermijn (dagen)",
+        "fixedRecoveryFee": "Forfaitaire invorderingsvergoeding",
+        "latePaymentPenalty": "Achterstandsrente (vrije tekst)",
+        "legalMentionsOverride": "Aangepaste wettelijke vermeldingen",
+        "legalMentionsPlaceholder": "Laat leeg om de vermeldingen automatisch te genereren volgens het belastingland.",
         "ticketHeader": "Ticketkop",
         "ticketFooter": "Ticketvoettekst",
         "sessionTitle": "Kassasessie",
         "requireOpenSession": "Sessie verplicht om af te rekenen",
-        "defaultOpeningFloat": "Standaard kassafonds (€)"
+        "defaultOpeningFloat": "Standaard kassafonds"
       }
     },
     "settings": {

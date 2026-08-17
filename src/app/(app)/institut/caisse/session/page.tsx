@@ -70,7 +70,10 @@ export default async function CaisseSessionPage() {
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-white p-4 lg:sticky lg:top-4">
-            <OpenSessionForm defaultFloat={settings.default_opening_float_cents} />
+            <OpenSessionForm
+              defaultFloat={settings.default_opening_float_cents}
+              currency={settings.currency}
+            />
           </div>
         </div>
 
@@ -184,7 +187,7 @@ export default async function CaisseSessionPage() {
               <li key={method} className="flex justify-between gap-4 text-slate-600">
                 <span>{t(`methods.${method as "cash"}`, { defaultValue: method })}</span>
                 <span className="tabular-nums font-medium text-slate-900">
-                  {formatPrice(cents)}
+                  {formatPrice(cents, settings.currency)}
                 </span>
               </li>
             ))}
@@ -227,7 +230,7 @@ export default async function CaisseSessionPage() {
                     </div>
                     <span className="shrink-0 tabular-nums font-medium text-slate-900">
                       {m.movement_type === "in" ? "+" : "−"}
-                      {formatPrice(m.amount_cents)}
+                      {formatPrice(m.amount_cents, settings.currency)}
                     </span>
                   </li>
                 ))}
@@ -244,7 +247,9 @@ export default async function CaisseSessionPage() {
               <h3 className="text-sm font-semibold text-slate-900">{t("closeTitle")}</h3>
               <p className="mt-0.5 text-xs text-slate-500">{t("closeDescription")}</p>
             </div>
-            {breakdown ? <CloseSessionForm breakdown={breakdown} /> : null}
+            {breakdown ? (
+              <CloseSessionForm breakdown={breakdown} currency={settings.currency} />
+            ) : null}
           </div>
         </section>
       </div>

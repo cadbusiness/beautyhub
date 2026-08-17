@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
+import { getPosSettings } from "@/lib/institut/pos-settings";
 import { formatPrice } from "@/lib/utils";
 export default async function VoucherDocumentPage({
   params,
@@ -15,7 +16,7 @@ export default async function VoucherDocumentPage({
   const session = await requireModule("institut");
   const supabase = await createClient();
 
-  const [{ data: voucher }, { data: events }] = await Promise.all([
+  const [{ data: voucher }, { data: events }, settings] = await Promise.all([
     supabase
       .from("inst_vouchers")
       .select("*")
@@ -29,6 +30,7 @@ export default async function VoucherDocumentPage({
       .eq("voucher_id", id)
       .order("created_at", { ascending: false })
       .limit(30),
+    getPosSettings(supabase, session.tenant.id),
   ]);
 
   if (!voucher) notFound();
@@ -57,9 +59,9 @@ export default async function VoucherDocumentPage({
         <div className="rounded border border-slate-200 p-3">
           <p className="text-xs uppercase tracking-wide text-slate-500">{t("columns.balance")}</p>
           <p className="mt-1 text-lg font-semibold text-slate-900">
-            {formatPrice(voucher.current_balance_cents)}
+            {formatPrice(voucher.current_balance_cents, settings.currency)}
           </p>
-          <p className="text-xs text-slate-500">/ {formatPrice(voucher.initial_amount_cents)}</p>
+          <p className="text-xs text-slate-500">/ {formatPrice(voucher.initial_amount_cents, settings.currency)}</p>
         </div>
         <div className="rounded border border-slate-200 p-3">
           <p className="text-xs uppercase tracking-wide text-slate-500">{t("columns.date")}</p>
@@ -81,7 +83,7 @@ export default async function VoucherDocumentPage({
             {(events ?? []).map((ev) => (
               <li key={ev.id} className="flex justify-between py-2">
                 <span className="text-slate-700">
-                  {t(`events.${ev.event_type as "issue"}`)} · {formatPrice(ev.amount_cents)}
+                  {t(`events.${ev.event_type as "issue"}`)} · {formatPrice(ev.amount_cents, settings.currency)}
                 </span>
                 <span className="text-xs text-slate-400">
                   {format.dateTime(new Date(ev.created_at), {

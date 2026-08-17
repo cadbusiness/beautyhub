@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { closeCashSession } from "../../caisse-session-actions";
 import type { ActionResult } from "../../caisse-actions";
 import {
@@ -18,6 +18,7 @@ const initial: ActionResult = {};
 
 export function CloseSessionForm({
   breakdown,
+  currency = "eur",
 }: {
   breakdown: {
     openingFloatCents: number;
@@ -27,10 +28,12 @@ export function CloseSessionForm({
     movementsExpenseCents: number;
     expectedCashCents: number;
   };
+  currency?: string;
 }) {
   const t = useTranslations("pos.session.closeForm");
   const tBreakdown = useTranslations("pos.session.breakdown");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [state, action, pending] = useActionState(closeCashSession, initial);
   const [countedEuros, setCountedEuros] = useState(
     () => (breakdown.expectedCashCents / 100).toFixed(2),
@@ -59,7 +62,7 @@ export function CloseSessionForm({
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
           {t("theoreticalTitle")}
         </p>
-        <CashBreakdownTable lines={breakdownLines} compact />
+        <CashBreakdownTable lines={breakdownLines} currency={currency} locale={locale} compact />
       </div>
 
       <Field label={t("counted")} htmlFor="counted_cash">
@@ -89,7 +92,7 @@ export function CloseSessionForm({
           {hasVariance ? (
             <>
               {varianceCents > 0 ? t("varianceSurplus") : t("varianceShortage")}{" "}
-              <span className="font-semibold">{formatPrice(Math.abs(varianceCents))}</span>
+              <span className="font-semibold">{formatPrice(Math.abs(varianceCents), currency, locale)}</span>
             </>
           ) : (
             t("balancedHint")

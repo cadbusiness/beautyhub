@@ -12,6 +12,7 @@ export type PosSessionStatusData = {
   total_cents: number;
   expected_cash_cents: number;
   is_previous_day?: boolean;
+  currency?: string;
 };
 
 function formatDuration(
@@ -172,8 +173,14 @@ export function PosSessionBanner({
           </div>
           <div className="mt-3 grid grid-cols-3 gap-3 sm:max-w-lg">
             <BannerStat label={t("sales")} value={String(session.sales_count)} />
-            <BannerStat label={t("revenue")} value={formatPrice(session.total_cents)} />
-            <BannerStat label={t("expectedCash")} value={formatPrice(session.expected_cash_cents)} />
+            <BannerStat
+              label={t("revenue")}
+              value={formatPrice(session.total_cents, session.currency ?? "eur")}
+            />
+            <BannerStat
+              label={t("expectedCash")}
+              value={formatPrice(session.expected_cash_cents, session.currency ?? "eur")}
+            />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">

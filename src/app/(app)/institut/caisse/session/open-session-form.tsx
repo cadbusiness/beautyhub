@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { openCashSession } from "../../caisse-session-actions";
 import type { ActionResult } from "../../caisse-actions";
 import { Button } from "@/components/ui/button";
@@ -13,14 +13,17 @@ const initial: ActionResult = {};
 
 export function OpenSessionForm({
   defaultFloat,
+  currency = "eur",
   compact = false,
 }: {
   defaultFloat: number;
+  currency?: string;
   compact?: boolean;
 }) {
   const t = useTranslations("pos.session.openForm");
   const tSession = useTranslations("pos.session");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [state, action, pending] = useActionState(openCashSession, initial);
   const [withFloat, setWithFloat] = useState(defaultFloat > 0);
 
@@ -57,7 +60,7 @@ export function OpenSessionForm({
           <p className="text-xs text-slate-500">{t("floatHelp")}</p>
           {defaultFloat > 0 ? (
             <p className="text-xs text-slate-400">
-              {t("defaultHint", { amount: formatPrice(defaultFloat) })}
+              {t("defaultHint", { amount: formatPrice(defaultFloat, currency, locale) })}
             </p>
           ) : null}
           <div className="flex flex-wrap gap-2">

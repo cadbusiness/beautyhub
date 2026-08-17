@@ -1,16 +1,51 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { savePosSettings, type ActionResult } from "@/app/(app)/institut/caisse-actions";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
-import type { PosSettings } from "@/lib/institut/pos-settings";
+import type { PosFiscalRegime, PosSettings } from "@/lib/institut/pos-settings";
+import { vatRateLabel } from "@/lib/institut/pos-settings";
+import {
+  POS_CURRENCIES,
+  TAX_COUNTRY_CODES,
+  getTaxCountry,
+  isVatExemptRegime,
+  suggestedVatRates,
+  type TaxCountryCode,
+} from "@/lib/institut/tax-catalog";
 
 const initial: ActionResult = {};
 
-function bpsToPercent(bps: number): string {
-  return String(bps / 100);
+function bpsToInput(bps: number): string {
+  const pct = bps / 100;
+  return Number.isInteger(pct) ? String(pct) : pct.toFixed(1);
+}
+
+const BAND_IDS = [
+  "standard",
+  "intermediate",
+  "reduced",
+  "super_reduced",
+  "parking",
+  "zero",
+  "custom",
+] as const;
+
+function vatOptions(profile: ReturnType<typeof getTaxCountry>, currentBps: number) {
+  const rates: Array<{ id: string; bps: number }> = [];
+  if (!profile.rates.some((r) => r.bps === currentBps)) {
+    rates.push({ id: "custom", bps: currentBps });
+  }
+  rates.push(...profile.rates);
+  return rates;
+}
+
+function bandKey(id: string): `bands.${(typeof BAND_IDS)[number]}` {
+  return BAND_IDS.includes(id as (typeof BAND_IDS)[number])
+    ? `bands.${id as (typeof BAND_IDS)[number]}`
+    : "bands.custom";
 }
 
 export function PosSettingsForm({ settings }: { settings: PosSettings }) {
@@ -18,6 +53,51 @@ export function PosSettingsForm({ settings }: { settings: PosSettings }) {
   const tCommon = useTranslations("common");
   const [state, action, pending] = useActionState(savePosSettings, initial);
   const pm = settings.payment_methods;
+
+  const [countryCode, setCountryCode] = useState(settings.country_code);
+  const [currency, setCurrency] = useState(settings.currency);
+  const [fiscalRegime, setFiscalRegime] = useState<PosFiscalRegime>(settings.fiscal_regime);
+  const [defaultVat, setDefaultVat] = useState(bpsToInput(settings.default_vat_rate_bps));
+  const [serviceVat, setServiceVat] = useState(bpsToInput(settings.service_vat_rate_bps));
+  const [productVat, setProductVat] = useState(bpsToInput(settings.product_vat_rate_bps));
+
+  const profile = useMemo(() => getTaxCountry(countryCode), [countryCode]);
+  const exempt = isVatExemptRegime(fiscalRegime);
+
+  function applyCountry(next: string) {
+    const nextProfile = getTaxCountry(next);
+    const suggested = suggestedVatRates(nextProfile);
+    setCountryCode(next);
+    setCurrency(nextProfile.currency);
+    setFiscalRegime(nextProfile.defaultRegime);
+    if (isVatExemptRegime(nextProfile.defaultRegime)) {
+      setDefaultVat("0");
+      setServiceVat("0");
+      setProductVat("0");
+      return;
+    }
+    setDefaultVat(bpsToInput(suggested.defaultBps));
+    setServiceVat(bpsToInput(suggested.serviceBps));
+    setProductVat(bpsToInput(suggested.productBps));
+  }
+
+  function applyRegime(next: PosFiscalRegime) {
+    setFiscalRegime(next);
+    if (isVatExemptRegime(next)) {
+      setDefaultVat("0");
+      setServiceVat("0");
+      setProductVat("0");
+    } else if (exempt) {
+      const suggested = suggestedVatRates(profile);
+      setDefaultVat(bpsToInput(suggested.defaultBps));
+      setServiceVat(bpsToInput(suggested.serviceBps));
+      setProductVat(bpsToInput(suggested.productBps));
+    }
+  }
+
+  const defaultOptions = vatOptions(profile, Math.round(Number.parseFloat(defaultVat) * 100) || 0);
+  const serviceOptions = vatOptions(profile, Math.round(Number.parseFloat(serviceVat) * 100) || 0);
+  const productOptions = vatOptions(profile, Math.round(Number.parseFloat(productVat) * 100) || 0);
 
   return (
     <form action={action} className="space-y-8">
@@ -28,26 +108,44 @@ export function PosSettingsForm({ settings }: { settings: PosSettings }) {
 
       <section className="space-y-4">
         <h3 className="text-sm font-medium text-slate-900">{t("generalTitle")}</h3>
+        <p className="text-sm text-slate-500">{t("taxIntro")}</p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs text-slate-500" htmlFor="country_code">
               {t("country")}
             </label>
-            <Select id="country_code" name="country_code" defaultValue={settings.country_code}>
-              <option value="FR">France</option>
-              <option value="BE">Belgique</option>
-              <option value="CH">Suisse</option>
-              <option value="LU">Luxembourg</option>
+            <Select
+              id="country_code"
+              name="country_code"
+              value={countryCode}
+              onChange={(e) => applyCountry(e.target.value)}
+            >
+              {TAX_COUNTRY_CODES.map((code) => (
+                <option key={code} value={code}>
+                  {t(`countries.${code as TaxCountryCode}`)}
+                </option>
+              ))}
             </Select>
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-500" htmlFor="currency">
               {t("currency")}
             </label>
-            <Select id="currency" name="currency" defaultValue={settings.currency}>
-              <option value="eur">EUR</option>
-              <option value="chf">CHF</option>
+            <Select
+              id="currency"
+              name="currency"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+            >
+              {POS_CURRENCIES.map((code) => (
+                <option key={code} value={code}>
+                  {t(`currencies.${code}`)}
+                </option>
+              ))}
             </Select>
+            <p className="mt-1 text-xs text-slate-400">
+              {t("currencyHint", { suggested: profile.currency.toUpperCase() })}
+            </p>
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-500" htmlFor="price_display">
@@ -62,11 +160,17 @@ export function PosSettingsForm({ settings }: { settings: PosSettings }) {
             <label className="mb-1 block text-xs text-slate-500" htmlFor="fiscal_regime">
               {t("fiscalRegime")}
             </label>
-            <Select id="fiscal_regime" name="fiscal_regime" defaultValue={settings.fiscal_regime}>
-              <option value="standard">{t("regimeStandard")}</option>
-              <option value="nf525">{t("regimeNf525")}</option>
-              <option value="be_vat">{t("regimeBeVat")}</option>
-              <option value="be_gks">{t("regimeBeGks")}</option>
+            <Select
+              id="fiscal_regime"
+              name="fiscal_regime"
+              value={fiscalRegime}
+              onChange={(e) => applyRegime(e.target.value as PosFiscalRegime)}
+            >
+              {profile.regimes.map((regime) => (
+                <option key={regime} value={regime}>
+                  {t(`regimes.${regime}`)}
+                </option>
+              ))}
             </Select>
           </div>
         </div>
@@ -74,50 +178,75 @@ export function PosSettingsForm({ settings }: { settings: PosSettings }) {
 
       <section className="space-y-4">
         <h3 className="text-sm font-medium text-slate-900">{t("vatTitle")}</h3>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <label className="mb-1 block text-xs text-slate-500" htmlFor="default_vat_rate">
-              {t("defaultVat")}
-            </label>
-            <Input
-              id="default_vat_rate"
-              name="default_vat_rate"
-              type="number"
-              min={0}
-              max={100}
-              step="0.1"
-              defaultValue={bpsToPercent(settings.default_vat_rate_bps)}
-            />
+        <p className="text-sm text-slate-500">
+          {exempt
+            ? t("vatExemptHint")
+            : t("vatHint", {
+                country: t(`countries.${profile.code}`),
+                vat: profile.vatName,
+              })}
+        </p>
+        {exempt ? (
+          <>
+            <input type="hidden" name="default_vat_rate" value="0" />
+            <input type="hidden" name="service_vat_rate" value="0" />
+            <input type="hidden" name="product_vat_rate" value="0" />
+          </>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-xs text-slate-500" htmlFor="default_vat_rate">
+                {t("defaultVat")}
+              </label>
+              <Select
+                id="default_vat_rate"
+                name="default_vat_rate"
+                value={defaultVat}
+                onChange={(e) => setDefaultVat(e.target.value)}
+              >
+                {defaultOptions.map((rate) => (
+                  <option key={`d-${rate.bps}`} value={bpsToInput(rate.bps)}>
+                    {vatRateLabel(rate.bps)} · {t(bandKey(rate.id))}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-slate-500" htmlFor="service_vat_rate">
+                {t("serviceVat")}
+              </label>
+              <Select
+                id="service_vat_rate"
+                name="service_vat_rate"
+                value={serviceVat}
+                onChange={(e) => setServiceVat(e.target.value)}
+              >
+                {serviceOptions.map((rate) => (
+                  <option key={`s-${rate.bps}`} value={bpsToInput(rate.bps)}>
+                    {vatRateLabel(rate.bps)} · {t(bandKey(rate.id))}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-slate-500" htmlFor="product_vat_rate">
+                {t("productVat")}
+              </label>
+              <Select
+                id="product_vat_rate"
+                name="product_vat_rate"
+                value={productVat}
+                onChange={(e) => setProductVat(e.target.value)}
+              >
+                {productOptions.map((rate) => (
+                  <option key={`p-${rate.bps}`} value={bpsToInput(rate.bps)}>
+                    {vatRateLabel(rate.bps)} · {t(bandKey(rate.id))}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
-          <div>
-            <label className="mb-1 block text-xs text-slate-500" htmlFor="service_vat_rate">
-              {t("serviceVat")}
-            </label>
-            <Input
-              id="service_vat_rate"
-              name="service_vat_rate"
-              type="number"
-              min={0}
-              max={100}
-              step="0.1"
-              defaultValue={bpsToPercent(settings.service_vat_rate_bps)}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-slate-500" htmlFor="product_vat_rate">
-              {t("productVat")}
-            </label>
-            <Input
-              id="product_vat_rate"
-              name="product_vat_rate"
-              type="number"
-              min={0}
-              max={100}
-              step="0.1"
-              defaultValue={bpsToPercent(settings.product_vat_rate_bps)}
-            />
-          </div>
-        </div>
+        )}
       </section>
 
       <section className="space-y-4">
@@ -159,13 +288,13 @@ export function PosSettingsForm({ settings }: { settings: PosSettings }) {
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-500" htmlFor="vat_number">
-              {t("vatNumber")}
+              {profile.vatNumberLabel}
             </label>
             <Input id="vat_number" name="vat_number" defaultValue={settings.vat_number ?? ""} />
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-500" htmlFor="siret">
-              {t("siret")}
+              {profile.companyIdLabel}
             </label>
             <Input id="siret" name="siret" defaultValue={settings.siret ?? ""} />
           </div>

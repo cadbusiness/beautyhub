@@ -22,7 +22,13 @@ type ProductRow = {
   stock_quantity: number | null;
 };
 
-export function ProductsManager({ products }: { products: ProductRow[] }) {
+export function ProductsManager({
+  products,
+  currency = "eur",
+}: {
+  products: ProductRow[];
+  currency?: string;
+}) {
   const t = useTranslations("pos.products");
   const tCommon = useTranslations("common");
   const [query, setQuery] = useState("");
@@ -79,7 +85,7 @@ export function ProductsManager({ products }: { products: ProductRow[] }) {
                   {p.stock_quantity ?? tCommon("dash")}
                 </td>
                 <td className={`whitespace-nowrap text-right tabular-nums ${dataTableCell}`}>
-                  {formatPrice(p.price_cents)}
+                  {formatPrice(p.price_cents, currency)}
                 </td>
                 <td className={`text-right ${dataTableCell}`}>
                   <form action={deleteInternalProduct}>

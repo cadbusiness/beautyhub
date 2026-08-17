@@ -67,6 +67,7 @@ export type SaleDocumentPayload = {
   creditReason: string | null;
   paymentTermsDays: number;
   legalMentions: {
+    vatExemption: string;
     paymentDiscount: string;
     latePaymentPenalty: string;
     fixedRecoveryFee: string;

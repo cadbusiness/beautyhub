@@ -1,5 +1,6 @@
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
+import { getPosSettings } from "@/lib/institut/pos-settings";
 import { VouchersManager, type UnifiedVoucherRow } from "./vouchers-manager";
 
 export default async function CaisseBonsPage() {
@@ -13,6 +14,7 @@ export default async function CaisseBonsPage() {
     { data: creditNotes },
     { data: partialSales },
     { data: templates },
+    settings,
   ] = await Promise.all([
     supabase
       .from("inst_vouchers")
@@ -51,6 +53,7 @@ export default async function CaisseBonsPage() {
       .select("*")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false }),
+    getPosSettings(supabase, tenantId),
   ]);
 
   const unified: UnifiedVoucherRow[] = [
@@ -105,6 +108,7 @@ export default async function CaisseBonsPage() {
       vouchers={unified}
       templates={templates ?? []}
       sales={sales}
+      currency={settings.currency}
     />
   );
 }

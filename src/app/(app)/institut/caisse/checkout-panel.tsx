@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
-import { formatPrice } from "@/lib/utils";
+import { formatPosMoney } from "@/lib/institut/pos-settings";
 import type { PosPaymentMethodsConfig, PosSettings } from "@/lib/institut/pos-settings";
 import type { ActionResult } from "../caisse-actions";
 import { StripePosPayment } from "./stripe-pos-payment";
@@ -81,6 +81,8 @@ export function CheckoutPanel({
   onSuccess,
 }: CheckoutPanelProps) {
   const t = useTranslations("pos.checkout");
+  const locale = useLocale();
+  const money = (cents: number) => formatPosMoney(cents, settings, locale);
   const pm = settings.payment_methods;
 
   const enabledMethods = useMemo(() => {
@@ -164,23 +166,23 @@ export function CheckoutPanel({
       <div className="space-y-1 text-sm">
         <div className="flex justify-between text-slate-500">
           <span>{t("subtotalHt")}</span>
-          <span className="tabular-nums">{formatPrice(totals.subtotal_cents)}</span>
+          <span className="tabular-nums">{money(totals.subtotal_cents)}</span>
         </div>
         <div className="flex justify-between text-slate-500">
           <span>{t("vat")}</span>
-          <span className="tabular-nums">{formatPrice(totals.vat_cents)}</span>
+          <span className="tabular-nums">{money(totals.vat_cents)}</span>
         </div>
         {totals.cart_discount_cents > 0 ? (
           <div className="flex justify-between text-green-700">
             <span>{t("discount")}</span>
             <span className="tabular-nums">
-              −{formatPrice(totals.cart_discount_cents)}
+              −{money(totals.cart_discount_cents)}
             </span>
           </div>
         ) : null}
         <div className="flex justify-between font-semibold text-slate-900">
           <span>{t("totalTtc")}</span>
-          <span className="tabular-nums">{formatPrice(totals.total_cents)}</span>
+          <span className="tabular-nums">{money(totals.total_cents)}</span>
         </div>
       </div>
 
@@ -267,9 +269,9 @@ export function CheckoutPanel({
           className={`text-sm ${isOverpaid ? "text-red-600" : isPartial ? "text-amber-600" : "text-slate-500"}`}
         >
           {isOverpaid
-            ? t("overpaid", { amount: formatPrice(Math.abs(remainingCents)) })
+            ? t("overpaid", { amount: money(Math.abs(remainingCents)) })
             : isPartial
-              ? t("remaining", { amount: formatPrice(remainingCents) })
+              ? t("remaining", { amount: money(remainingCents) })
               : null}
         </p>
       ) : null}
@@ -310,10 +312,10 @@ export function CheckoutPanel({
             ? t("submitting")
             : isPartial
               ? t("submitPartial", {
-                  paid: formatPrice(paymentsTotalCents),
-                  total: formatPrice(totals.total_cents),
+                  paid: money(paymentsTotalCents),
+                  total: money(totals.total_cents),
                 })
-              : t("submit", { total: formatPrice(totals.total_cents) })}
+              : t("submit", { total: money(totals.total_cents) })}
         </Button>
       </form>
 
@@ -332,6 +334,7 @@ export function CheckoutPanel({
           priceOverridesJson={priceOverridesJson}
           publishableKey={stripePublishableKey}
           stripeAccountId={stripeAccountId}
+          currency={settings.currency}
           disabled={disabled || totals.total_cents <= 0}
           onSuccess={onSuccess}
         />

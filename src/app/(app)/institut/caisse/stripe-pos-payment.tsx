@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -24,6 +24,7 @@ function PaymentForm({
   promoCode,
   priceOverridesJson,
   totalCents,
+  currency,
   onSuccess,
   onCancel,
 }: {
@@ -34,11 +35,13 @@ function PaymentForm({
   promoCode: string;
   priceOverridesJson: string;
   totalCents: number;
+  currency: string;
   onSuccess: (message: string) => void;
   onCancel: () => void;
 }) {
   const t = useTranslations("pos.stripe");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +95,7 @@ function PaymentForm({
           {tCommon("cancel")}
         </Button>
         <Button type="submit" className="flex-1" disabled={pending || !stripe}>
-          {pending ? t("payPending") : t("pay", { total: formatPrice(totalCents) })}
+          {pending ? t("payPending") : t("pay", { total: formatPrice(totalCents, currency, locale) })}
         </Button>
       </div>
     </form>
@@ -109,6 +112,7 @@ export function StripePosPayment({
   priceOverridesJson = "",
   publishableKey,
   stripeAccountId,
+  currency = "eur",
   disabled,
   onSuccess,
 }: {
@@ -121,11 +125,13 @@ export function StripePosPayment({
   priceOverridesJson?: string;
   publishableKey: string;
   stripeAccountId: string;
+  currency?: string;
   disabled: boolean;
   onSuccess: (message: string) => void;
 }) {
   const t = useTranslations("pos.stripe");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -166,6 +172,7 @@ export function StripePosPayment({
           promoCode={promoCode}
           priceOverridesJson={priceOverridesJson}
           totalCents={totalCents}
+          currency={currency}
           onSuccess={onSuccess}
           onCancel={() => setClientSecret(null)}
         />
@@ -185,7 +192,7 @@ export function StripePosPayment({
       >
         {loading
           ? tCommon("prepare")
-          : `${tCommon("stripe")} · ${formatPrice(totalCents)}`}
+          : `${tCommon("stripe")} · ${formatPrice(totalCents, currency, locale)}`}
       </Button>
     </div>
   );

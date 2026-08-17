@@ -22,7 +22,7 @@ export default async function SoldePage({
     supabase
       .from("inst_sales")
       .select(
-        "id, ticket_number, total_cents, amount_paid_cents, status, clients(full_name, email)",
+        "id, ticket_number, total_cents, amount_paid_cents, status, currency, clients(full_name, email)",
       )
       .eq("tenant_id", session.tenant.id)
       .eq("id", id)
@@ -46,15 +46,15 @@ export default async function SoldePage({
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-slate-500">{t("total")}</span>
-          <span className="tabular-nums">{formatPrice(sale.total_cents)}</span>
+          <span className="tabular-nums">{formatPrice(sale.total_cents, sale.currency)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-slate-500">{t("paid")}</span>
-          <span className="tabular-nums">{formatPrice(sale.amount_paid_cents)}</span>
+          <span className="tabular-nums">{formatPrice(sale.amount_paid_cents, sale.currency)}</span>
         </div>
         <div className="flex justify-between font-semibold">
           <span>{t("remaining")}</span>
-          <span className="tabular-nums text-amber-700">{formatPrice(remaining)}</span>
+          <span className="tabular-nums text-amber-700">{formatPrice(remaining, sale.currency)}</span>
         </div>
         <BalancePayPanel saleId={sale.id} remainingCents={remaining} settings={settings} />
       </Card>

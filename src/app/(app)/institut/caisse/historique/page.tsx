@@ -44,6 +44,7 @@ export default async function CaisseHistoriquePage({
  status,
  notes,
  created_at,
+ currency,
  clients ( full_name, email ),
  inst_sale_items ( name, quantity ),
  inst_sale_payments ( method, amount_cents ),
@@ -197,14 +198,14 @@ export default async function CaisseHistoriquePage({
                     </span>
                     {sale.status === "partial" ? (
                       <p className="text-xs text-amber-600">
-                        {formatPrice(sale.amount_paid_cents)} {t("paidShort")}
+                        {formatPrice(sale.amount_paid_cents, sale.currency)} {t("paidShort")}
                       </p>
                     ) : null}
                   </td>
                   <td
                     className={`whitespace-nowrap text-right font-medium tabular-nums text-slate-900 ${dataTableCellCompact}`}
                   >
-                    {formatPrice(sale.total_cents)}
+                    {formatPrice(sale.total_cents, sale.currency)}
                   </td>
                   <td className={dataTableCellCompact}>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">

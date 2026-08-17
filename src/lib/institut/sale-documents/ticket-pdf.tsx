@@ -112,6 +112,24 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#475569",
   },
+  exemption: {
+    marginTop: 8,
+    fontSize: 7,
+    color: "#334155",
+    textAlign: "center",
+  },
+  legalBlock: {
+    marginTop: 12,
+    paddingTop: 8,
+    borderTopWidth: 0.6,
+    borderTopColor: "#cbd5e1",
+  },
+  legalLine: {
+    marginBottom: 4,
+    fontSize: 6.5,
+    color: "#475569",
+    lineHeight: 1.35,
+  },
 });
 
 function documentKindLabel(docType: SaleDocumentPayload["docType"]): string {
@@ -210,6 +228,14 @@ function TicketPdfDocument({ payload }: { payload: SaleDocumentPayload }) {
           </View>
         ) : null}
         <View style={styles.totalRow}>
+          <Text>Total HT</Text>
+          <Text>{pdfPrice(payload.subtotalCents, payload.currency)}</Text>
+        </View>
+        <View style={styles.totalRow}>
+          <Text>TVA</Text>
+          <Text>{pdfPrice(payload.vatCents, payload.currency)}</Text>
+        </View>
+        <View style={styles.totalRow}>
           <Text>Montant TTC</Text>
           <Text>{pdfPrice(payload.totalCents, payload.currency)}</Text>
         </View>
@@ -233,6 +259,11 @@ function TicketPdfDocument({ payload }: { payload: SaleDocumentPayload }) {
             </Text>
           </View>
         ))}
+        {payload.legalMentions.vatExemption ? (
+          <Text style={styles.exemption}>
+            {pdfSafe(payload.legalMentions.vatExemption)}
+          </Text>
+        ) : null}
 
         {payload.payments.length > 0 ? (
           <>
@@ -252,6 +283,35 @@ function TicketPdfDocument({ payload }: { payload: SaleDocumentPayload }) {
         ) : null}
 
         <Text style={styles.thanks}>Merci de votre visite !</Text>
+        {payload.docType === "invoice" || payload.docType === "credit_note" ? (
+          <View style={styles.legalBlock}>
+            {payload.legalMentions.paymentDiscount ? (
+              <Text style={styles.legalLine}>
+                {pdfSafe(payload.legalMentions.paymentDiscount)}
+              </Text>
+            ) : null}
+            {payload.legalMentions.latePaymentPenalty ? (
+              <Text style={styles.legalLine}>
+                {pdfSafe(payload.legalMentions.latePaymentPenalty)}
+              </Text>
+            ) : null}
+            {payload.legalMentions.fixedRecoveryFee ? (
+              <Text style={styles.legalLine}>
+                {pdfSafe(payload.legalMentions.fixedRecoveryFee)}
+              </Text>
+            ) : null}
+            {payload.legalMentions.retentionOfTitle ? (
+              <Text style={styles.legalLine}>
+                {pdfSafe(payload.legalMentions.retentionOfTitle)}
+              </Text>
+            ) : null}
+            {payload.legalMentions.jurisdiction ? (
+              <Text style={styles.legalLine}>
+                {pdfSafe(payload.legalMentions.jurisdiction)}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
       </Page>
     </Document>
   );

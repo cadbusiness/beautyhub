@@ -9,6 +9,7 @@ import 'features/agenda/agenda_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/cash/cash_screen.dart';
 import 'features/clients/clients_screen.dart';
+import 'features/fiscal/fiscal_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/institut/institut_screen.dart';
 import 'features/loyalty/loyalty_screen.dart';
@@ -159,6 +160,10 @@ class _InstitutRouterAppState extends ConsumerState<_InstitutRouterApp> {
                     GoRoute(
                       path: 'institut',
                       builder: (_, _) => const InstitutScreen(),
+                    ),
+                    GoRoute(
+                      path: 'fiscalite',
+                      builder: (_, _) => const FiscalScreen(),
                     ),
                   ],
                 ),

@@ -341,10 +341,10 @@ export async function loadSaleDocumentPayload(
     lines,
     payments,
     vatRows: buildVatRows(
-      lines.map((line) => ({
-        vatRateBps: line.vatRateBps,
-        lineSubtotalCents: line.lineTotalCents - Math.round(line.lineTotalCents * line.vatRateBps / (10000 + line.vatRateBps)),
-        lineVatCents: Math.round(line.lineTotalCents * line.vatRateBps / (10000 + line.vatRateBps)),
+      filteredItems.map((item) => ({
+        vatRateBps: item.vat_rate_bps,
+        lineSubtotalCents: item.line_subtotal_cents,
+        lineVatCents: item.line_vat_cents,
       })),
     ),
     relatedDocuments: (relatedDocs ?? []).map((related) => ({

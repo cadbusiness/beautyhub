@@ -1,11 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/db/database.types";
+import type { Database, Json } from "@/lib/db/database.types";
 import { formatPrice } from "@/lib/utils";
 import {
   getTaxCountry,
   isVatExemptRegime,
   resolvePosCurrency,
+  resolvePosRegime,
+  suggestedVatRates,
+  TAX_COUNTRY_CODES,
   type PosFiscalRegime,
+  type TaxCountryCode,
 } from "./tax-catalog";
 
 type Db = SupabaseClient<Database>;
@@ -245,4 +249,205 @@ export function formatDocumentNumber(prefix: string, seq: number): string {
 
 export function vatRateLabel(bps: number): string {
   return `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 1)} %`;
+}
+
+const COUNTRY_LABELS: Record<TaxCountryCode, string> = {
+  FR: "France",
+  BE: "Belgique",
+  LU: "Luxembourg",
+  CH: "Suisse",
+  NL: "Pays-Bas",
+  DE: "Allemagne",
+  ES: "Espagne",
+  IT: "Italie",
+  PT: "Portugal",
+  GB: "Royaume-Uni",
+};
+
+const REGIME_LABELS: Record<PosFiscalRegime, string> = {
+  standard: "TVA applicable",
+  nf525: "Caisse certifiée NF525",
+  be_vat: "TVA belge",
+  be_gks: "Caisse / GKS belge",
+  franchise: "Franchise en base (TVA non applicable)",
+};
+
+const BAND_LABELS: Record<string, string> = {
+  standard: "Taux normal",
+  intermediate: "Taux intermédiaire",
+  reduced: "Taux réduit",
+  super_reduced: "Taux super réduit",
+  parking: "Taux parking",
+  zero: "Exonéré",
+  custom: "Personnalisé",
+};
+
+export type PosFiscalPatch = {
+  countryCode?: string;
+  currency?: string;
+  fiscalRegime?: string;
+  priceDisplay?: PosPriceDisplay;
+  defaultVatRateBps?: number;
+  serviceVatRateBps?: number;
+  productVatRateBps?: number;
+  legalName?: string | null;
+  legalAddress?: string | null;
+  vatNumber?: string | null;
+  siret?: string | null;
+  ticketHeader?: string | null;
+  ticketFooter?: string | null;
+};
+
+function clampVatBps(value: number | undefined, fallback: number): number {
+  if (value == null || !Number.isFinite(value)) return fallback;
+  return Math.min(10000, Math.max(0, Math.round(value)));
+}
+
+function emptyToNull(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+export async function updatePosFiscalSettings(
+  supabase: Db,
+  tenantId: string,
+  patch: PosFiscalPatch,
+): Promise<PosSettings> {
+  const current = await getPosSettings(supabase, tenantId);
+  const countryCode = getTaxCountry(patch.countryCode ?? current.country_code).code;
+  const countryChanged = countryCode !== current.country_code;
+  const fiscalRegime = resolvePosRegime(
+    countryCode,
+    patch.fiscalRegime ?? (countryChanged ? undefined : current.fiscal_regime),
+  );
+  const currency = resolvePosCurrency(countryCode, patch.currency ?? current.currency);
+  const exempt = isVatExemptRegime(fiscalRegime);
+  const suggested = suggestedVatRates(getTaxCountry(countryCode));
+
+  const payload = {
+    tenant_id: tenantId,
+    country_code: countryCode,
+    currency,
+    price_display: patch.priceDisplay ?? current.price_display,
+    default_vat_rate_bps: exempt
+      ? 0
+      : clampVatBps(
+          patch.defaultVatRateBps,
+          countryChanged ? suggested.defaultBps : current.default_vat_rate_bps || suggested.defaultBps,
+        ),
+    service_vat_rate_bps: exempt
+      ? 0
+      : clampVatBps(
+          patch.serviceVatRateBps,
+          countryChanged ? suggested.serviceBps : current.service_vat_rate_bps || suggested.serviceBps,
+        ),
+    product_vat_rate_bps: exempt
+      ? 0
+      : clampVatBps(
+          patch.productVatRateBps,
+          countryChanged ? suggested.productBps : current.product_vat_rate_bps || suggested.productBps,
+        ),
+    payment_methods: current.payment_methods as unknown as Json,
+    ticket_header:
+      patch.ticketHeader !== undefined ? emptyToNull(patch.ticketHeader) : current.ticket_header,
+    ticket_footer:
+      patch.ticketFooter !== undefined ? emptyToNull(patch.ticketFooter) : current.ticket_footer,
+    legal_name: patch.legalName !== undefined ? emptyToNull(patch.legalName) : current.legal_name,
+    legal_address:
+      patch.legalAddress !== undefined ? emptyToNull(patch.legalAddress) : current.legal_address,
+    vat_number: patch.vatNumber !== undefined ? emptyToNull(patch.vatNumber) : current.vat_number,
+    siret: patch.siret !== undefined ? emptyToNull(patch.siret) : current.siret,
+    ticket_prefix: current.ticket_prefix,
+    fiscal_regime: fiscalRegime,
+    require_open_session: current.require_open_session,
+    default_opening_float_cents: current.default_opening_float_cents,
+    credit_note_prefix: current.credit_note_prefix,
+    gift_card_prefix: current.gift_card_prefix,
+    invoice_prefix: current.invoice_prefix,
+    delivery_note_prefix: current.delivery_note_prefix,
+    legal_email: current.legal_email,
+    legal_mentions: current.legal_mentions,
+    payment_terms_days: current.payment_terms_days,
+    late_payment_penalty_text: current.late_payment_penalty_text,
+    fixed_recovery_fee_cents: current.fixed_recovery_fee_cents,
+    discount_reasons: current.discount_reasons,
+  };
+
+  const { error } = await supabase.from("inst_pos_settings").upsert(payload, {
+    onConflict: "tenant_id",
+  });
+  if (error) throw new Error(error.message);
+  return getPosSettings(supabase, tenantId);
+}
+
+export function serializePosFiscalSettings(settings: PosSettings) {
+  const profile = getTaxCountry(settings.country_code);
+  const rates: Array<{ id: string; bps: number; label: string; band: string }> =
+    profile.rates.map((rate) => ({
+      id: rate.id,
+      bps: rate.bps,
+      label: vatRateLabel(rate.bps),
+      band: BAND_LABELS[rate.id] ?? BAND_LABELS.custom,
+    }));
+  for (const bps of [
+    settings.default_vat_rate_bps,
+    settings.service_vat_rate_bps,
+    settings.product_vat_rate_bps,
+  ]) {
+    if (!rates.some((rate) => rate.bps === bps)) {
+      rates.unshift({
+        id: "custom",
+        bps,
+        label: vatRateLabel(bps),
+        band: BAND_LABELS.custom,
+      });
+    }
+  }
+
+  return {
+    countryCode: settings.country_code,
+    currency: settings.currency,
+    fiscalRegime: settings.fiscal_regime,
+    priceDisplay: settings.price_display,
+    vatExempt: isVatExemptRegime(settings.fiscal_regime),
+    defaultVatRateBps: settings.default_vat_rate_bps,
+    serviceVatRateBps: settings.service_vat_rate_bps,
+    productVatRateBps: settings.product_vat_rate_bps,
+    legalName: settings.legal_name,
+    legalAddress: settings.legal_address,
+    vatNumber: settings.vat_number,
+    siret: settings.siret,
+    ticketHeader: settings.ticket_header,
+    ticketFooter: settings.ticket_footer,
+    catalog: {
+      vatName: profile.vatName,
+      companyIdLabel: profile.companyIdLabel,
+      vatNumberLabel: profile.vatNumberLabel,
+      countries: TAX_COUNTRY_CODES.map((code) => {
+        const country = getTaxCountry(code);
+        return {
+          code,
+          label: COUNTRY_LABELS[code],
+          vatName: country.vatName,
+          companyIdLabel: country.companyIdLabel,
+          vatNumberLabel: country.vatNumberLabel,
+          regimes: country.regimes.map((regime) => ({
+            id: regime,
+            label: REGIME_LABELS[regime],
+          })),
+          rates: country.rates.map((rate) => ({
+            id: rate.id,
+            bps: rate.bps,
+            label: vatRateLabel(rate.bps),
+            band: BAND_LABELS[rate.id] ?? BAND_LABELS.custom,
+          })),
+        };
+      }),
+      regimes: profile.regimes.map((regime) => ({
+        id: regime,
+        label: REGIME_LABELS[regime],
+      })),
+      rates,
+    },
+  };
 }

@@ -2,6 +2,7 @@ import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../state/session_providers.dart';
@@ -210,6 +211,18 @@ class _InstitutScreenState extends ConsumerState<InstitutScreen> {
                         info: info,
                       ),
                     ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _Section(
+                title: 'Factures & TVA',
+                onEdit: () => context.push('/app/more/fiscalite'),
+                children: [
+                  _EmptyRow(
+                    label:
+                        'Taux de TVA, SIRET et n° TVA pour les tickets et factures. Pas visible sur la fiche publique.',
+                    onTap: () => context.push('/app/more/fiscalite'),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),

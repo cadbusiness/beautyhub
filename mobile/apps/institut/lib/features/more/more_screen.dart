@@ -222,6 +222,12 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                     subtitle: 'Nom, contact, adresse & horaires',
                     onTap: () => context.go('/app/more/institut'),
                   ),
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.receipt_long_outlined),
+                    title: 'Fiscalité & TVA',
+                    subtitle: 'Taux, SIRET et mentions des factures',
+                    onTap: () => context.go('/app/more/fiscalite'),
+                  ),
                 ],
               )
             else if (_tab == _MoreTab.marketing)
@@ -257,6 +263,12 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                         ? 'Envoi en cours…'
                         : 'Appuyez pour changer',
                     onTap: _uploadingLogo ? null : _pickAndUploadLogo,
+                  ),
+                  _MenuRow(
+                    leading: _IconTile(icon: Icons.receipt_long_outlined),
+                    title: 'Fiscalité & TVA',
+                    subtitle: 'Taux, n° TVA et mentions légales',
+                    onTap: () => context.go('/app/more/fiscalite'),
                   ),
                   _MenuRow(
                     leading: _IconTile(icon: Icons.storefront_outlined),

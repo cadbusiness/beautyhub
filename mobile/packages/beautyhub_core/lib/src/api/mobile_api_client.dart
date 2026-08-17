@@ -1119,6 +1119,50 @@ class MobileApiClient {
     await _decode(response);
   }
 
+  Future<InstPosFiscalSettings> fetchPosSettings({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/pos-settings'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return InstPosFiscalSettings.fromJson(body);
+  }
+
+  Future<InstPosFiscalSettings> savePosSettings({
+    required String accessToken,
+    required String tenantId,
+    required String countryCode,
+    required String fiscalRegime,
+    required int defaultVatRateBps,
+    required int serviceVatRateBps,
+    required int productVatRateBps,
+    String? legalName,
+    String? legalAddress,
+    String? vatNumber,
+    String? siret,
+  }) async {
+    final response = await _http.patch(
+      _uri('/api/mobile/institut/pos-settings'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'countryCode': countryCode,
+        'fiscalRegime': fiscalRegime,
+        'defaultVatRateBps': defaultVatRateBps,
+        'serviceVatRateBps': serviceVatRateBps,
+        'productVatRateBps': productVatRateBps,
+        'legalName': legalName,
+        'legalAddress': legalAddress,
+        'vatNumber': vatNumber,
+        'siret': siret,
+      }),
+    );
+    final body = await _decode(response);
+    return InstPosFiscalSettings.fromJson(body);
+  }
+
   Future<void> applyLoyaltyStarter({
     required String accessToken,
     required String tenantId,

@@ -194,12 +194,23 @@ class _SaleDetailSheet extends StatelessWidget {
                           value: formatEuros(sale.amountPaidCents),
                         ),
                       const Divider(height: 16, thickness: 1, color: _border),
+                      if (sale.items.any((item) => item.lineVatCents > 0)) ...[
+                        _KVRow(
+                          label: 'TVA',
+                          value: formatEuros(
+                            sale.items.fold<int>(
+                              0,
+                              (sum, item) => sum + item.lineVatCents,
+                            ),
+                          ),
+                        ),
+                      ],
                       _KVRow(
                         label: 'Total encaissé',
                         value: formatEuros(sale.amountPaidCents),
                       ),
                       _KVRow(
-                        label: 'Total ticket',
+                        label: 'Total TTC',
                         value: formatEuros(sale.totalCents),
                         bold: true,
                       ),

@@ -1187,3 +1187,167 @@ class InstPromo {
         status: json['status'] as String? ?? 'inactive',
       );
 }
+
+class InstTaxOption {
+  const InstTaxOption({
+    required this.id,
+    required this.label,
+    this.bps,
+    this.band,
+  });
+
+  final String id;
+  final String label;
+  final int? bps;
+  final String? band;
+
+  factory InstTaxOption.fromJson(Map<String, dynamic> json) => InstTaxOption(
+        id: json['id'] as String? ?? json['code'] as String? ?? '',
+        label: json['label'] as String? ?? '',
+        bps: json['bps'] == null ? null : _asInt(json['bps']),
+        band: json['band'] as String?,
+      );
+}
+
+class InstTaxCountry {
+  const InstTaxCountry({
+    required this.code,
+    required this.label,
+    required this.vatName,
+    required this.companyIdLabel,
+    required this.vatNumberLabel,
+    required this.regimes,
+    required this.rates,
+  });
+
+  final String code;
+  final String label;
+  final String vatName;
+  final String companyIdLabel;
+  final String vatNumberLabel;
+  final List<InstTaxOption> regimes;
+  final List<InstTaxOption> rates;
+
+  factory InstTaxCountry.fromJson(Map<String, dynamic> json) => InstTaxCountry(
+        code: json['code'] as String? ?? '',
+        label: json['label'] as String? ?? '',
+        vatName: json['vatName'] as String? ?? 'TVA',
+        companyIdLabel: json['companyIdLabel'] as String? ?? 'SIRET',
+        vatNumberLabel: json['vatNumberLabel'] as String? ?? 'N° TVA',
+        regimes: (json['regimes'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => InstTaxOption.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false),
+        rates: (json['rates'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => InstTaxOption.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false),
+      );
+}
+
+class InstPosFiscalCatalog {
+  const InstPosFiscalCatalog({
+    required this.vatName,
+    required this.companyIdLabel,
+    required this.vatNumberLabel,
+    required this.countries,
+    required this.regimes,
+    required this.rates,
+  });
+
+  final String vatName;
+  final String companyIdLabel;
+  final String vatNumberLabel;
+  final List<InstTaxCountry> countries;
+  final List<InstTaxOption> regimes;
+  final List<InstTaxOption> rates;
+
+  InstTaxCountry? country(String code) {
+    for (final item in countries) {
+      if (item.code == code) return item;
+    }
+    return countries.isEmpty ? null : countries.first;
+  }
+
+  factory InstPosFiscalCatalog.fromJson(Map<String, dynamic> json) =>
+      InstPosFiscalCatalog(
+        vatName: json['vatName'] as String? ?? 'TVA',
+        companyIdLabel: json['companyIdLabel'] as String? ?? 'SIRET',
+        vatNumberLabel: json['vatNumberLabel'] as String? ?? 'N° TVA',
+        countries: (json['countries'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => InstTaxCountry.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false),
+        regimes: (json['regimes'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => InstTaxOption.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false),
+        rates: (json['rates'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => InstTaxOption.fromJson(Map<String, dynamic>.from(e)))
+            .toList(growable: false),
+      );
+}
+
+class InstPosFiscalSettings {
+  const InstPosFiscalSettings({
+    required this.countryCode,
+    required this.currency,
+    required this.fiscalRegime,
+    required this.priceDisplay,
+    required this.vatExempt,
+    required this.defaultVatRateBps,
+    required this.serviceVatRateBps,
+    required this.productVatRateBps,
+    required this.catalog,
+    this.legalName,
+    this.legalAddress,
+    this.vatNumber,
+    this.siret,
+    this.ticketHeader,
+    this.ticketFooter,
+  });
+
+  final String countryCode;
+  final String currency;
+  final String fiscalRegime;
+  final String priceDisplay;
+  final bool vatExempt;
+  final int defaultVatRateBps;
+  final int serviceVatRateBps;
+  final int productVatRateBps;
+  final String? legalName;
+  final String? legalAddress;
+  final String? vatNumber;
+  final String? siret;
+  final String? ticketHeader;
+  final String? ticketFooter;
+  final InstPosFiscalCatalog catalog;
+
+  String get serviceVatLabel =>
+      '${(serviceVatRateBps / 100).toStringAsFixed(serviceVatRateBps % 100 == 0 ? 0 : 1)} %';
+
+  String get productVatLabel =>
+      '${(productVatRateBps / 100).toStringAsFixed(productVatRateBps % 100 == 0 ? 0 : 1)} %';
+
+  factory InstPosFiscalSettings.fromJson(Map<String, dynamic> json) =>
+      InstPosFiscalSettings(
+        countryCode: json['countryCode'] as String? ?? 'FR',
+        currency: json['currency'] as String? ?? 'eur',
+        fiscalRegime: json['fiscalRegime'] as String? ?? 'standard',
+        priceDisplay: json['priceDisplay'] as String? ?? 'ttc',
+        vatExempt: json['vatExempt'] as bool? ?? false,
+        defaultVatRateBps: _asInt(json['defaultVatRateBps']),
+        serviceVatRateBps: _asInt(json['serviceVatRateBps']),
+        productVatRateBps: _asInt(json['productVatRateBps']),
+        legalName: json['legalName'] as String?,
+        legalAddress: json['legalAddress'] as String?,
+        vatNumber: json['vatNumber'] as String?,
+        siret: json['siret'] as String?,
+        ticketHeader: json['ticketHeader'] as String?,
+        ticketFooter: json['ticketFooter'] as String?,
+        catalog: InstPosFiscalCatalog.fromJson(
+          Map<String, dynamic>.from(json['catalog'] as Map? ?? const {}),
+        ),
+      );
+}

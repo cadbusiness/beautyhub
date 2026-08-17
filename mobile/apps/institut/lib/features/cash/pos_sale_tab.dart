@@ -464,60 +464,21 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                   ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                    child: Row(
-                      children: [
-                        if (ctx.wooConnected)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFECFDF3),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFFBBF7D0)),
-                            ),
-                            child: const Text(
-                              'WooCommerce',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF166534),
-                              ),
-                            ),
-                          ),
-                        if (ctx.wooConnected) const SizedBox(width: 8),
-                        Text(
-                          '${items.length} article${items.length > 1 ? 's' : ''}',
-                          style: const TextStyle(fontSize: 12, color: _muted),
-                        ),
-                      ],
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+                    child: _SourceSegmented(
+                      selected: filter,
+                      onSelected: (value) {
+                        ref.read(posCategoryFilterProvider.notifier).state =
+                            value;
+                        ref.read(posCatalogFacetProvider.notifier).state = 'all';
+                      },
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Row(
-                      children: [
-                        _FilterChip(label: 'Tout', value: 'all', selected: filter),
-                        _FilterChip(
-                          label: 'Prestations',
-                          value: 'service',
-                          selected: filter,
-                        ),
-                        _FilterChip(label: 'Woo', value: 'woocommerce', selected: filter),
-                        _FilterChip(label: 'Internes', value: 'internal', selected: filter),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                     child: Row(
                       children: [
                         _FacetChip(label: 'Toutes', value: 'all', selected: facet),
@@ -526,6 +487,25 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                           value: 'bestsellers',
                           selected: facet,
                         ),
+                        if (filter == 'internal') ...[
+                          _InlineActionChip(
+                            label: '+ Produit',
+                            onTap: () => showCreateInternalProductSheet(
+                              context,
+                              ref,
+                              categories: ctx.productCategories,
+                              defaultCategoryId: selectedProductCategoryId,
+                            ),
+                          ),
+                          _InlineActionChip(
+                            label: '+ Catégorie',
+                            onTap: () =>
+                                showCreateInternalProductCategorySheet(
+                              context,
+                              ref,
+                            ),
+                          ),
+                        ],
                         for (final category in serviceFacets)
                           _FacetChip(
                             label: category.label,
@@ -600,35 +580,6 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                               value: child.id,
                               selected: facet,
                             ),
-                        ],
-                      ),
-                    ),
-                  ),
-                if (filter == 'internal')
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          OutlinedButton(
-                            onPressed: () =>
-                                showCreateInternalProductCategorySheet(
-                              context,
-                              ref,
-                            ),
-                            child: const Text('Catégories internes'),
-                          ),
-                          FilledButton(
-                            onPressed: () => showCreateInternalProductSheet(
-                              context,
-                              ref,
-                              categories: ctx.productCategories,
-                              defaultCategoryId: selectedProductCategoryId,
-                            ),
-                            child: const Text('+ Produit interne'),
-                          ),
                         ],
                       ),
                     ),
@@ -740,46 +691,99 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   }
 }
 
-class _FilterChip extends ConsumerWidget {
-  const _FilterChip({
-    required this.label,
-    required this.value,
+class _SourceSegmented extends StatelessWidget {
+  const _SourceSegmented({
     required this.selected,
+    required this.onSelected,
+  });
+
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  static const _items = <({String id, String label})>[
+    (id: 'all', label: 'Tout'),
+    (id: 'service', label: 'Prestations'),
+    (id: 'woocommerce', label: 'Woo'),
+    (id: 'internal', label: 'Internes'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F3F3),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          for (final item in _items)
+            Expanded(
+              child: Material(
+                color: selected == item.id ? Colors.white : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                elevation: selected == item.id ? 0.5 : 0,
+                shadowColor: Colors.black26,
+                child: InkWell(
+                  onTap: () => onSelected(item.id),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      item.label,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: selected == item.id
+                            ? const Color(0xFF0A0A0A)
+                            : const Color(0xFF737373),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InlineActionChip extends StatelessWidget {
+  const _InlineActionChip({
+    required this.label,
+    required this.onTap,
   });
 
   final String label;
-  final String value;
-  final String selected;
-
-  static const _black = Color(0xFF0A0A0A);
-  static const _muted = Color(0xFF737373);
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isSelected = selected == value;
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 6),
-      child: InkWell(
-        onTap: () {
-          ref.read(posCategoryFilterProvider.notifier).state = value;
-          ref.read(posCatalogFacetProvider.notifier).state = 'all';
-        },
+      child: Material(
+        color: const Color(0xFFF5F5F5),
         borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          decoration: BoxDecoration(
-            color: isSelected ? _black : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isSelected ? _black : const Color(0xFFE5E5E5),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE5E5E5)),
             ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : _muted,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0A0A0A),
+              ),
             ),
           ),
         ),

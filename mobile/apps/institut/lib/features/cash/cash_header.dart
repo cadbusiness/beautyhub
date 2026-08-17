@@ -48,7 +48,7 @@ class _CashScreenHeaderState extends ConsumerState<CashScreenHeader> {
                         bottom: BorderSide(color: CashScreenHeader._border),
                       ),
                     ),
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
               child: Row(
                 children: [
                   const Text(
@@ -113,7 +113,7 @@ class _PinnedCatalogSearch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: _border)),

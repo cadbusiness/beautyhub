@@ -244,9 +244,12 @@ class HomeScreen extends ConsumerWidget {
                       );
                     }
                     return _SectionCard(
-                      title: 'Caisse ouverte',
-                      subtitle:
-                          'Depuis ${timeFmt.format(session.openedAt)}',
+                      title: session.previousDay
+                          ? 'Session d’hier encore ouverte'
+                          : 'Caisse ouverte',
+                      subtitle: session.previousDay
+                          ? 'Clôturez-la pour démarrer nettement aujourd’hui'
+                          : 'Depuis ${timeFmt.format(session.openedAt)}',
                       child: Row(
                         children: [
                           Expanded(
@@ -272,10 +275,19 @@ class HomeScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          TextButton(
-                            onPressed: () => _openCashSale(ref, context),
-                            child: const Text('Encaisser'),
-                          ),
+                          if (session.previousDay)
+                            TextButton(
+                              onPressed: () {
+                                ref.read(cashInitialTabProvider.notifier).state = 0;
+                                context.go('/app/cash');
+                              },
+                              child: const Text('Session'),
+                            )
+                          else
+                            TextButton(
+                              onPressed: () => _openCashSale(ref, context),
+                              child: const Text('Encaisser'),
+                            ),
                         ],
                       ),
                     );

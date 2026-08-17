@@ -10,6 +10,7 @@ import { buildCatalog } from "@/lib/institut/pos";
 import { buildPosAppointmentOption } from "@/lib/institut/pos-appointment";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import { getOpenCashSession } from "@/lib/institut/pos-session";
+import { isPreviousCalendarDay, todayDateString, zonedDayBoundsUtc } from "@/lib/date";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PosTerminal } from "./pos-terminal";
@@ -29,8 +30,9 @@ export default async function CaissePage({
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
-  const dayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
-  const dayEnd = new Date(new Date().setHours(23, 59, 59, 999)).toISOString();
+  const { start: dayStart, endExclusive: dayEnd } = zonedDayBoundsUtc(
+    todayDateString(),
+  );
 
   const [woo, stripeAccount, servicesRes, productsRes, clientsRes, posSettings, staffRes, apptsRes, cashSession, linkedApptRes] =
     await Promise.all([
@@ -64,8 +66,8 @@ export default async function CaissePage({
       .from("inst_appointments")
       .select(APPOINTMENT_SELECT)
       .eq("tenant_id", tenantId)
-      .gte("starts_at", dayStart)
-      .lte("starts_at", dayEnd)
+      .gte("starts_at", dayStart.toISOString())
+      .lt("starts_at", dayEnd.toISOString())
       .in("status", ["booked", "confirmed", "completed"])
       .order("starts_at"),
     getOpenCashSession(supabase, tenantId),
@@ -161,6 +163,9 @@ export default async function CaissePage({
             initialAppointmentId={initialAppointmentId ?? undefined}
             settings={posSettings}
             sessionOpen={Boolean(cashSession)}
+            sessionPreviousDay={
+              cashSession ? isPreviousCalendarDay(cashSession.opened_at) : false
+            }
             requireSession={posSettings.require_open_session}
             defaultOpeningFloatCents={posSettings.default_opening_float_cents}
             stripeEnabled={stripeEnabled}

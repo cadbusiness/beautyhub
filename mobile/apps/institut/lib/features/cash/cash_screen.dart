@@ -113,27 +113,36 @@ class _CashScreenState extends ConsumerState<CashScreen> {
                                       Container(
                                         width: 8,
                                         height: 8,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF22C55E),
+                                        decoration: BoxDecoration(
+                                          color: session.previousDay
+                                              ? const Color(0xFFF59E0B)
+                                              : const Color(0xFF22C55E),
                                           shape: BoxShape.circle,
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      const Text(
-                                        'Session ouverte',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: _black,
-                                        ),
-                                      ),
-                                    ],
+                                  const Text(
+                                    'Session ouverte',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: _black,
+                                    ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Depuis ${DateFormat.Hm().format(session.openedAt)}',
-                                    style: const TextStyle(color: _muted, fontSize: 13),
-                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                session.previousDay
+                                    ? 'Ouverte un jour précédent — clôturez-la pour démarrer aujourd’hui.'
+                                    : 'Depuis ${DateFormat.Hm().format(session.openedAt)}',
+                                style: TextStyle(
+                                  color: session.previousDay
+                                      ? const Color(0xFFB45309)
+                                      : _muted,
+                                  fontSize: 13,
+                                ),
+                              ),
                                   const SizedBox(height: 16),
                                   _StatRow(
                                     label: 'Fond de caisse',

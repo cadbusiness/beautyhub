@@ -31,6 +31,7 @@ export default async function AppLayout({
   const { session, accessibleTenants, posSession } = shell;
   const t = await getTranslations("shell");
   const tNav = await getTranslations("nav");
+  const posIsPreviousDay = Boolean(posSession?.is_previous_day);
   const navGroups = getNavGroupsFor(session.enabledModuleIds, session.role).map(
     (group) => ({
       ...group,
@@ -45,7 +46,9 @@ export default async function AppLayout({
   const posCaisseHref = institutEnabled ? "/institut/caisse" : undefined;
   const posSessionState = institutEnabled
     ? posSession
-      ? "open"
+      ? posIsPreviousDay
+        ? "stale"
+        : "open"
       : "closed"
     : undefined;
   const profile = await getTeamProfile();

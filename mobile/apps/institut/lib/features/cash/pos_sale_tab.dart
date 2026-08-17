@@ -237,6 +237,54 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                       ),
                     ),
                   ),
+                if (ctx.sessionOpen && ctx.sessionIsPreviousDay)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFFBEB),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFFDE68A)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Session d’hier encore ouverte',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF78350F),
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Clôturez-la pour séparer les journées. Vous pouvez encore encaisser.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF92400E),
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                ref.read(cashInitialTabProvider.notifier).state = 0;
+                              },
+                              child: const Text('Session'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),

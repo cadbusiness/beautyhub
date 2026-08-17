@@ -387,11 +387,17 @@ class MobileApiClient {
     int limit = 40,
     String? cursor,
     String? status,
+    String? from,
+    String? to,
+    String? period,
   }) async {
     final params = <String, String>{
       'limit': '$limit',
       if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
       if (status != null && status.isNotEmpty) 'status': status,
+      if (from != null && from.isNotEmpty) 'from': from,
+      if (to != null && to.isNotEmpty) 'to': to,
+      if (period != null && period.isNotEmpty) 'period': period,
     };
     final response = await _http.get(
       _uri('/api/mobile/institut/sales', params),
@@ -405,6 +411,41 @@ class MobileApiClient {
           .map((e) => InstSale.fromJson(Map<String, dynamic>.from(e)))
           .toList(growable: false),
       nextCursor: body['nextCursor'] as String?,
+      today: body['today'] as String?,
+    );
+  }
+
+  Future<InstDocumentPage> fetchInstitutDocuments({
+    required String accessToken,
+    required String tenantId,
+    int limit = 40,
+    String? cursor,
+    String? docType,
+    String? from,
+    String? to,
+    String? period,
+  }) async {
+    final params = <String, String>{
+      'limit': '$limit',
+      if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+      if (docType != null && docType.isNotEmpty) 'docType': docType,
+      if (from != null && from.isNotEmpty) 'from': from,
+      if (to != null && to.isNotEmpty) 'to': to,
+      if (period != null && period.isNotEmpty) 'period': period,
+    };
+    final response = await _http.get(
+      _uri('/api/mobile/institut/documents', params),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    final list = body['items'] as List? ?? const [];
+    return InstDocumentPage(
+      items: list
+          .whereType<Map>()
+          .map((e) => InstSaleDocument.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+      nextCursor: body['nextCursor'] as String?,
+      today: body['today'] as String?,
     );
   }
 

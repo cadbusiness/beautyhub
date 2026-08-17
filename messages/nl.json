@@ -121,6 +121,8 @@
       "open": "Kassa open",
       "closed": "Kassa gesloten",
       "closedCta": "Openen",
+      "previousDay": "Sessie van gisteren",
+      "previousDayCta": "Afsluiten",
       "durationJustOpened": "zojuist",
       "durationMins": "sinds {mins} min",
       "durationHours": "sinds {hours} u {mins} min",
@@ -143,7 +145,7 @@
     "institutPos": "Kassa",
     "institutPosSession": "Sessie",
     "institutPosVouchers": "Bons & tegoeden",
-    "institutPosHistory": "Kassageschiedenis",
+    "institutPosSales": "Documenten",
     "institutPosProducts": "Interne producten",
     "institutMarketing": "Marketing",
     "institutMarketingLoyalty": "Loyaliteit",
@@ -328,7 +330,10 @@
       "manageSession": "Sessie beheren",
       "sales": "Verkopen",
       "revenue": "Omzet incl. btw",
-      "expectedCash": "Verwacht contant"
+      "expectedCash": "Verwacht contant",
+      "previousDayTitle": "Sessie van de vorige dag nog open",
+      "previousDayDescription": "Sluit ze af om vandaag duidelijk te starten. Verkopen blijven in deze sessie tot ze gesloten is.",
+      "closeSession": "Sessie afsluiten"
     }
   },
   "appointments": {
@@ -2725,6 +2730,9 @@
       "sessionClosedTitle": "De kassa is niet open",
       "sessionClosedBody": "Open de dag zodat u het niet vergeet. Het kassafonds is optioneel.",
       "sessionClosedGuide": "Open zonder fonds, of voeg er een toe als de lade al contant geld bevat.",
+      "sessionPreviousDayTitle": "Sessie van gisteren nog open",
+      "sessionPreviousDayBody": "Sluit ze af om de dagen duidelijk te scheiden. U kunt nog afrekenen.",
+      "sessionPreviousDayCta": "Ga afsluiten →",
       "openSession": "Kassa openen →",
       "noSessionHint": "Kassa gesloten — openen voor contant follow-up",
       "cart": {
@@ -2861,7 +2869,8 @@
         "items": "Artikelen",
         "status": "Status",
         "payment": "Betaling",
-        "total": "Totaal"
+        "total": "Totaal",
+        "actions": "Acties"
       },
       "status": {
         "paid": "Betaald",
@@ -2878,7 +2887,57 @@
         "other": "Anders",
         "credit_note": "Creditnota"
       },
-      "payBalance": "Saldo"
+      "payBalance": "Saldo",
+      "viewDocuments": "Documenten",
+      "emptyToday": "Geen verkopen vandaag.",
+      "emptyFiltered": "Geen verkopen voor deze filters.",
+      "searchPlaceholder": "Ticket, klant, artikel…",
+      "footer": "{count, plural, one {# ticket} other {# tickets}}",
+      "filters": {
+        "today": "Vandaag",
+        "yesterday": "Gisteren",
+        "week": "7 dagen",
+        "all": "Alles",
+        "statusAll": "Alle statussen"
+      }
+    },
+    "sales": {
+      "empty": "Geen verkoopdocumenten.",
+      "emptyToday": "Geen documenten vandaag.",
+      "emptyFiltered": "Geen documenten voor deze filters.",
+      "searchPlaceholder": "Referentie, klant…",
+      "footer": "{count, plural, one {# document} other {# documenten}}",
+      "open": "Openen",
+      "filters": {
+        "today": "Vandaag",
+        "yesterday": "Gisteren",
+        "week": "7 dagen",
+        "all": "Alles",
+        "typeAll": "Alle types"
+      },
+      "columns": {
+        "reference": "Referentie",
+        "type": "Documenttype",
+        "status": "Status",
+        "client": "Contact",
+        "amount": "Bedrag incl. btw",
+        "date": "Datum",
+        "actions": "Acties"
+      },
+      "types": {
+        "ticket": "Kassaticket",
+        "invoice": "Klantfactuur",
+        "delivery_note": "Leveringsbon",
+        "credit_note": "Creditnota"
+      },
+      "status": {
+        "issued": "Uitgegeven",
+        "partial": "Gedeeltelijk",
+        "paid": "Ontvangen",
+        "settled": "Voldaan",
+        "delivered": "Geleverd",
+        "cancelled": "Geannuleerd"
+      }
     },
     "ticket": {
       "noNumber": "Ticket",
@@ -2912,6 +2971,11 @@
       "openTitle": "Dag starten",
       "openDescription": "Open de sessie. Het kassafonds is optioneel.",
       "sessionOpen": "Kassa open",
+      "previousDayBadge": "Sessie van gisteren",
+      "previousDayTitle": "Deze sessie is een vorige dag geopend",
+      "previousDayBody": "Sluit ze af (Z-rapport) om vandaag duidelijk te starten. Totalen blijven die van de open sessie.",
+      "previousDayHint": "Geen automatische afsluiting — u sluit zelf.",
+      "previousDayWorkflow": "Sluit eerst de sessie van gisteren, open daarna die van vandaag.",
       "openingFloat": "Kassafonds",
       "goToPos": "Verkoop afrekenen",
       "goToPosAfterOpen": "Naar de kassa",

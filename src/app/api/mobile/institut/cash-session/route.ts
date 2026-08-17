@@ -2,7 +2,7 @@ import {
   mobileErrorResponse,
   requireMobileTenantSession,
 } from "@/lib/mobile/session";
-import { getPosSessionSummary } from "@/lib/institut/pos-session";
+import { getPosSessionSummary, serializeCashSession } from "@/lib/institut/pos-session";
 
 export async function GET(request: Request) {
   try {
@@ -14,16 +14,7 @@ export async function GET(request: Request) {
       session.tenant.id,
     );
     return Response.json({
-      session: summary
-        ? {
-            id: summary.id,
-            openedAt: summary.opened_at,
-            openingFloatCents: summary.opening_float_cents,
-            salesCount: summary.sales_count,
-            totalCents: summary.total_cents,
-            expectedCashCents: summary.expected_cash_cents,
-          }
-        : null,
+      session: summary ? serializeCashSession(summary) : null,
     });
   } catch (error) {
     return mobileErrorResponse(error);

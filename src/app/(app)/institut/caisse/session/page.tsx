@@ -2,6 +2,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
+import { isPreviousCalendarDay } from "@/lib/date";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import {
   computeSessionSnapshot,
@@ -104,15 +105,38 @@ export default async function CaisseSessionPage() {
     { n: 2, title: t("workflow.xReport"), done: reports.some((r) => r.report_type === "x") },
     { n: 3, title: t("workflow.zClose"), done: false },
   ];
+  const previousDay = isPreviousCalendarDay(cashSession.opened_at);
 
   return (
     <div className="space-y-5 px-4 py-4 lg:px-6">
+      {previousDay ? (
+        <div className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-amber-950">{t("previousDayTitle")}</p>
+            <p className="mt-0.5 text-sm text-amber-900/80">{t("previousDayBody")}</p>
+          </div>
+          <p className="shrink-0 text-xs font-medium text-amber-800">{t("previousDayHint")}</p>
+        </div>
+      ) : null}
       <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-900">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden />
-              {t("sessionOpen")}
+            <span
+              className={
+                previousDay
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-950"
+                  : "inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-900"
+              }
+            >
+              <span
+                className={
+                  previousDay
+                    ? "h-1.5 w-1.5 rounded-full bg-amber-500"
+                    : "h-1.5 w-1.5 rounded-full bg-green-500"
+                }
+                aria-hidden
+              />
+              {previousDay ? t("previousDayBadge") : t("sessionOpen")}
             </span>
             <span className="text-xs text-slate-500">
               {format.dateTime(new Date(cashSession.opened_at), {
@@ -121,7 +145,9 @@ export default async function CaisseSessionPage() {
               })}
             </span>
           </div>
-          <p className="mt-1 text-sm text-slate-600">{t("workflowIntro")}</p>
+          <p className="mt-1 text-sm text-slate-600">
+            {previousDay ? t("previousDayWorkflow") : t("workflowIntro")}
+          </p>
         </div>
         <Link href="/institut/caisse">
           <span className="inline-flex h-9 items-center rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800">

@@ -906,7 +906,10 @@
       "openSince": "Abierto",
       "openTitle": "Abrir caja",
       "revenue": "CA incluido TINA",
-      "sales": "Ventas"
+      "sales": "Ventas",
+      "previousDayTitle": "La sesión del día anterior sigue abierta",
+      "previousDayDescription": "Ciérrala para empezar hoy con claridad. Las ventas siguen en esta sesión hasta que se cierre.",
+      "closeSession": "Cerrar la sesión"
     },
     "quickActions": {
       "appointments": {
@@ -2501,7 +2504,7 @@
     "institutMarketingPromos": "Promociones",
     "institutMarketingWebsite": "Página web",
     "institutPos": "Caja",
-    "institutPosHistory": "Historial de caja registradora",
+    "institutPosSales": "Documentos",
     "institutPosProducts": "Productos internos",
     "institutPosSession": "Sesión",
     "institutPosVouchers": "Vales y créditos",
@@ -2556,9 +2559,21 @@
         "payment": "Pago",
         "status": "Estado",
         "ticket": "Boleto",
-        "total": "Total"
+        "total": "Total",
+        "actions": "Acciones"
       },
       "empty": "No se registraron ventas.",
+      "emptyToday": "Ninguna venta hoy.",
+      "emptyFiltered": "Ninguna venta para estos filtros.",
+      "searchPlaceholder": "Ticket, cliente, artículo…",
+      "footer": "{count, plural, one {# ticket} other {# tickets}}",
+      "filters": {
+        "today": "Hoy",
+        "yesterday": "Ayer",
+        "week": "7 días",
+        "all": "Todo",
+        "statusAll": "Todos los estados"
+      },
       "mixedPayments": "Pagos __UCI0__",
       "paidShort": "pagado",
       "payBalance": "Pagar",
@@ -2577,7 +2592,46 @@
         "paid": "Pagado",
         "partial": "Depósito"
       },
+      "viewDocuments": "Documentos",
       "viewTicket": "Boleto"
+    },
+    "sales": {
+      "empty": "Ningún documento de venta.",
+      "emptyToday": "Ningún documento hoy.",
+      "emptyFiltered": "Ningún documento para estos filtros.",
+      "searchPlaceholder": "Referencia, cliente…",
+      "footer": "{count, plural, one {# documento} other {# documentos}}",
+      "open": "Abrir",
+      "filters": {
+        "today": "Hoy",
+        "yesterday": "Ayer",
+        "week": "7 días",
+        "all": "Todo",
+        "typeAll": "Todos los tipos"
+      },
+      "columns": {
+        "reference": "Referencia",
+        "type": "Tipo de documento",
+        "status": "Estado",
+        "client": "Contacto",
+        "amount": "Importe TTC",
+        "date": "Fecha",
+        "actions": "Acciones"
+      },
+      "types": {
+        "ticket": "Ticket de caja",
+        "invoice": "Factura cliente",
+        "delivery_note": "Albarán",
+        "credit_note": "Nota de crédito"
+      },
+      "status": {
+        "issued": "Emitido",
+        "partial": "Parcial",
+        "paid": "Cobrado",
+        "settled": "Saldada",
+        "delivered": "Entregado",
+        "cancelled": "Anulado"
+      }
     },
     "products": {
       "columns": {
@@ -2699,6 +2753,11 @@
       "openingFloat": "fondo de efectivo",
       "reports": "Informes generados",
       "sessionOpen": "Abrir caja",
+      "previousDayBadge": "Sesión de ayer",
+      "previousDayTitle": "Esta sesión se abrió un día anterior",
+      "previousDayBody": "Ciérrala (informe Z) para empezar hoy con claridad. Los totales siguen siendo los de la sesión abierta.",
+      "previousDayHint": "Sin cierre automático — tú la cierras.",
+      "previousDayWorkflow": "Cierra primero la sesión de ayer, luego abre la de hoy.",
       "settingsLink": "Configuración de caja registradora",
       "stats": {
         "expectedCash": "Especies esperadas",
@@ -2795,6 +2854,9 @@
       "sessionClosedTitle": "La caja no está abierta",
       "sessionClosedBody": "Abra el día para no olvidarlo. El fondo de caja es opcional.",
       "sessionClosedGuide": "Abra sin fondo, o añada uno si el cajón ya tiene efectivo.",
+      "sessionPreviousDayTitle": "La sesión de ayer sigue abierta",
+      "sessionPreviousDayBody": "Ciérrala para separar bien los días. Aún puedes cobrar.",
+      "sessionPreviousDayCta": "Ir a cerrar →",
       "tabs": {
         "all": "Todo",
         "internal": "Interno",
@@ -3215,7 +3277,9 @@
       "navClosed": "Caja cerrada",
       "open": "Caja abierta",
       "closed": "Caja cerrada",
-      "closedCta": "Abrir"
+      "closedCta": "Abrir",
+      "previousDay": "Sesión de ayer",
+      "previousDayCta": "Cerrar"
     },
     "sidebar": {
       "ariaLabel": "Navegación principal",

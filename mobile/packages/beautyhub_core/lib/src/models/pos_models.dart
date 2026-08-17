@@ -147,6 +147,8 @@ class PosContext {
     required this.sessionOpen,
     required this.requireOpenSession,
     required this.wooConnected,
+    this.sessionOpenedAt,
+    this.sessionIsPreviousDay = false,
   });
 
   final List<PosCatalogItem> catalog;
@@ -156,6 +158,8 @@ class PosContext {
   final bool sessionOpen;
   final bool requireOpenSession;
   final bool wooConnected;
+  final DateTime? sessionOpenedAt;
+  final bool sessionIsPreviousDay;
 
   factory PosContext.fromJson(Map<String, dynamic> json) {
     final catalog = (json['catalog'] as List? ?? const [])
@@ -181,6 +185,10 @@ class PosContext {
       sessionOpen: json['sessionOpen'] as bool? ?? false,
       requireOpenSession: json['requireOpenSession'] as bool? ?? false,
       wooConnected: json['wooConnected'] as bool? ?? false,
+      sessionOpenedAt: json['sessionOpenedAt'] is String
+          ? DateTime.tryParse(json['sessionOpenedAt'] as String)?.toLocal()
+          : null,
+      sessionIsPreviousDay: json['sessionIsPreviousDay'] as bool? ?? false,
     );
   }
 }

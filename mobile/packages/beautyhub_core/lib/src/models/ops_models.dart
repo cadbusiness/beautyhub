@@ -341,6 +341,8 @@ class CashSessionSummary {
     required this.salesCount,
     required this.totalCents,
     required this.expectedCashCents,
+    this.previousDay = false,
+    this.openedCalendarDate,
   });
 
   final String id;
@@ -349,6 +351,8 @@ class CashSessionSummary {
   final int salesCount;
   final int totalCents;
   final int expectedCashCents;
+  final bool previousDay;
+  final String? openedCalendarDate;
 
   factory CashSessionSummary.fromJson(Map<String, dynamic> json) {
     return CashSessionSummary(
@@ -358,6 +362,8 @@ class CashSessionSummary {
       salesCount: json['salesCount'] as int? ?? 0,
       totalCents: json['totalCents'] as int? ?? 0,
       expectedCashCents: json['expectedCashCents'] as int? ?? 0,
+      previousDay: json['previousDay'] as bool? ?? false,
+      openedCalendarDate: json['openedCalendarDate'] as String?,
     );
   }
 }

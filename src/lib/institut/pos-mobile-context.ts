@@ -4,6 +4,7 @@ import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { buildCatalog, type PosCatalogItem } from "@/lib/institut/pos";
 import { getPosSettings, type PosSettings } from "@/lib/institut/pos-settings";
 import { getOpenCashSession } from "@/lib/institut/pos-session";
+import { isPreviousCalendarDay } from "@/lib/date";
 
 type Db = SupabaseClient<Database>;
 
@@ -23,6 +24,8 @@ export interface MobilePosContext {
   clients: MobilePosClientOption[];
   staff: MobilePosStaffOption[];
   sessionOpen: boolean;
+  sessionOpenedAt: string | null;
+  sessionIsPreviousDay: boolean;
   requireOpenSession: boolean;
   wooConnected: boolean;
 }
@@ -104,6 +107,10 @@ export async function loadMobilePosContext(
     clients,
     staff,
     sessionOpen: Boolean(cashSession),
+    sessionOpenedAt: cashSession?.opened_at ?? null,
+    sessionIsPreviousDay: cashSession
+      ? isPreviousCalendarDay(cashSession.opened_at)
+      : false,
     requireOpenSession: posSettings.require_open_session,
     wooConnected: wooRes.data?.status === "connected",
     _services: servicesRes.data ?? [],
@@ -128,6 +135,8 @@ export function serializeMobilePosContext(ctx: MobilePosContextLoaded) {
     clients: ctx.clients,
     staff: ctx.staff,
     sessionOpen: ctx.sessionOpen,
+    sessionOpenedAt: ctx.sessionOpenedAt,
+    sessionIsPreviousDay: ctx.sessionIsPreviousDay,
     requireOpenSession: ctx.requireOpenSession,
     wooConnected: ctx.wooConnected,
   };

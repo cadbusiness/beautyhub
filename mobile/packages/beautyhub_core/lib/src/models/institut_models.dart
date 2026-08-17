@@ -197,6 +197,40 @@ class InstSalePayment {
       );
 }
 
+class InstSaleDocumentRef {
+  const InstSaleDocumentRef({
+    required this.id,
+    required this.docType,
+    required this.docNumber,
+  });
+
+  final String id;
+  final String docType;
+  final String docNumber;
+
+  factory InstSaleDocumentRef.fromJson(Map<String, dynamic> json) =>
+      InstSaleDocumentRef(
+        id: json['id'] as String,
+        docType: json['docType'] as String? ?? '',
+        docNumber: json['docNumber'] as String? ?? '',
+      );
+
+  String get shortLabel {
+    switch (docType) {
+      case 'invoice':
+        return 'Facture';
+      case 'delivery_note':
+        return 'Bon';
+      case 'credit_note':
+        return 'Avoir';
+      case 'ticket':
+        return 'Ticket';
+      default:
+        return docType;
+    }
+  }
+}
+
 class InstSale {
   const InstSale({
     required this.id,
@@ -213,6 +247,8 @@ class InstSale {
     this.notes,
     this.clientLabel,
     this.clientEmail,
+    this.calendarDate,
+    this.documents = const [],
   });
 
   final String id;
@@ -229,6 +265,8 @@ class InstSale {
   final String itemsSummary;
   final List<InstSaleItem> items;
   final List<InstSalePayment> payments;
+  final String? calendarDate;
+  final List<InstSaleDocumentRef> documents;
 
   factory InstSale.fromJson(Map<String, dynamic> json) {
     return InstSale(
@@ -252,14 +290,88 @@ class InstSale {
           .whereType<Map>()
           .map((e) => InstSalePayment.fromJson(Map<String, dynamic>.from(e)))
           .toList(growable: false),
+      calendarDate: json['calendarDate'] as String?,
+      documents: (json['documents'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => InstSaleDocumentRef.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
     );
   }
 }
 
 class InstSalePage {
-  const InstSalePage({required this.items, required this.nextCursor});
+  const InstSalePage({
+    required this.items,
+    required this.nextCursor,
+    this.today,
+  });
   final List<InstSale> items;
   final String? nextCursor;
+  final String? today;
+}
+
+class InstSaleDocument {
+  const InstSaleDocument({
+    required this.id,
+    required this.docType,
+    required this.docNumber,
+    required this.status,
+    required this.issuedAt,
+    required this.amountCents,
+    this.saleId,
+    this.calendarDate,
+    this.clientLabel,
+  });
+
+  final String id;
+  final String docType;
+  final String docNumber;
+  final String status;
+  final DateTime issuedAt;
+  final int amountCents;
+  final String? saleId;
+  final String? calendarDate;
+  final String? clientLabel;
+
+  factory InstSaleDocument.fromJson(Map<String, dynamic> json) {
+    return InstSaleDocument(
+      id: json['id'] as String,
+      docType: json['docType'] as String? ?? '',
+      docNumber: json['docNumber'] as String? ?? '',
+      status: json['status'] as String? ?? '',
+      issuedAt: DateTime.parse(json['issuedAt'] as String).toLocal(),
+      amountCents: json['amountCents'] as int? ?? 0,
+      saleId: json['saleId'] as String?,
+      calendarDate: json['calendarDate'] as String?,
+      clientLabel: json['clientLabel'] as String?,
+    );
+  }
+
+  String get typeLabel {
+    switch (docType) {
+      case 'invoice':
+        return 'Facture';
+      case 'delivery_note':
+        return 'Bon de livraison';
+      case 'credit_note':
+        return 'Avoir';
+      case 'ticket':
+        return 'Ticket';
+      default:
+        return docType;
+    }
+  }
+}
+
+class InstDocumentPage {
+  const InstDocumentPage({
+    required this.items,
+    required this.nextCursor,
+    this.today,
+  });
+  final List<InstSaleDocument> items;
+  final String? nextCursor;
+  final String? today;
 }
 
 class InstStaffMember {

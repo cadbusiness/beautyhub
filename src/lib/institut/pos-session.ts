@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import { calendarDateString, isPreviousCalendarDay } from "@/lib/date";
 import { formatTicketNumber, getPosSettings } from "./pos-settings";
 
 type Db = SupabaseClient<Database>;
@@ -38,6 +39,34 @@ export interface PosSessionSummary {
   sales_count: number;
   total_cents: number;
   expected_cash_cents: number;
+  opened_calendar_date: string;
+  is_previous_day: boolean;
+}
+
+export type MobileCashSessionJson = {
+  id: string;
+  openedAt: string;
+  openingFloatCents: number;
+  salesCount: number;
+  totalCents: number;
+  expectedCashCents: number;
+  openedCalendarDate: string;
+  previousDay: boolean;
+};
+
+export function serializeCashSession(
+  summary: PosSessionSummary,
+): MobileCashSessionJson {
+  return {
+    id: summary.id,
+    openedAt: summary.opened_at,
+    openingFloatCents: summary.opening_float_cents,
+    salesCount: summary.sales_count,
+    totalCents: summary.total_cents,
+    expectedCashCents: summary.expected_cash_cents,
+    openedCalendarDate: summary.opened_calendar_date,
+    previousDay: summary.is_previous_day,
+  };
 }
 
 /** Résumé session ouverte pour header / accueil (null si fermée). */
@@ -55,6 +84,7 @@ export async function getPosSessionSummary(
     "x",
   );
 
+  const openedCalendarDate = calendarDateString(cashSession.opened_at);
   return {
     id: cashSession.id,
     opened_at: cashSession.opened_at,
@@ -62,6 +92,8 @@ export async function getPosSessionSummary(
     sales_count: snapshot.sales_count,
     total_cents: snapshot.total_cents,
     expected_cash_cents: snapshot.expected_cash_cents,
+    opened_calendar_date: openedCalendarDate,
+    is_previous_day: isPreviousCalendarDay(cashSession.opened_at),
   };
 }
 

@@ -41,6 +41,7 @@ export function PosTerminal({
   initialAppointmentId,
   settings,
   sessionOpen,
+  sessionPreviousDay = false,
   requireSession,
   defaultOpeningFloatCents = 0,
   stripeEnabled,
@@ -54,6 +55,7 @@ export function PosTerminal({
   initialAppointmentId?: string;
   settings: PosSettings;
   sessionOpen: boolean;
+  sessionPreviousDay?: boolean;
   requireSession: boolean;
   defaultOpeningFloatCents?: number;
   stripeEnabled?: boolean;
@@ -591,6 +593,17 @@ export function PosTerminal({
               defaultFloat={defaultOpeningFloatCents}
               compact
             />
+          </div>
+        ) : sessionPreviousDay ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p className="text-sm font-medium text-amber-950">{t("sessionPreviousDayTitle")}</p>
+            <p className="mt-0.5 text-sm text-amber-900/80">{t("sessionPreviousDayBody")}</p>
+            <Link
+              href="/institut/caisse/session"
+              className="mt-2 inline-flex h-8 items-center rounded-lg bg-amber-900 px-3 text-xs font-medium text-white hover:bg-amber-950"
+            >
+              {t("sessionPreviousDayCta")}
+            </Link>
           </div>
         ) : null}
 

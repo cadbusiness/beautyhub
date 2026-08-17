@@ -24,7 +24,7 @@ export function AppSidebar({
   homeLabel: string;
   navGroups: NavGroup[];
   posCaisseHref?: string;
-  posSessionState?: "open" | "closed";
+  posSessionState?: "open" | "closed" | "stale";
 }) {
   const t = useTranslations("shell");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

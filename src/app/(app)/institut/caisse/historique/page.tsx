@@ -2,17 +2,37 @@ import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/components/ui/data-table";
+import {
+  DataTable,
+  dataTableCellCompact,
+  dataTableHeadCompact,
+  dataTableRow,
+} from "@/components/ui/data-table";
+import { ListPanelFooter } from "@/components/ui/list-panel";
 import { formatPrice } from "@/lib/utils";
+import { historyPeriodBoundsUtc, parseHistoryPeriod } from "@/lib/date";
+import { HistoryFilterBar } from "../history-filter-bar";
 
-export default async function CaisseHistoriquePage() {
+type SaleDoc = { id: string; doc_type: string; doc_number: string };
+
+export default async function CaisseHistoriquePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string; status?: string; q?: string }>;
+}) {
   const t = await getTranslations("pos.history");
+  const tDocs = await getTranslations("pos.sales");
   const tCommon = await getTranslations("common");
   const format = await getFormatter();
   const session = await requireModule("institut");
   const supabase = await createClient();
+  const params = await searchParams;
+  const period = parseHistoryPeriod(params.period);
+  const status = params.status === "partial" || params.status === "paid" ? params.status : "all";
+  const q = (params.q ?? "").trim().toLowerCase();
+  const bounds = historyPeriodBoundsUtc(period);
 
-  const { data: sales } = await supabase
+  let query = supabase
     .from("inst_sales")
     .select(
       `
@@ -20,39 +40,92 @@ export default async function CaisseHistoriquePage() {
  ticket_number,
  total_cents,
  amount_paid_cents,
- vat_cents,
- discount_cents,
  payment_method,
  status,
- woo_order_id,
  notes,
  created_at,
  clients ( full_name, email ),
- inst_sale_items ( name, quantity, unit_price_cents, item_type ),
- inst_sale_payments ( method, amount_cents )
+ inst_sale_items ( name, quantity ),
+ inst_sale_payments ( method, amount_cents ),
+ inst_sale_documents ( id, doc_type, doc_number )
  `,
     )
     .eq("tenant_id", session.tenant.id)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(150);
+
+  if (bounds) {
+    query = query
+      .gte("created_at", bounds.start.toISOString())
+      .lt("created_at", bounds.endExclusive.toISOString());
+  }
+  if (status !== "all") {
+    query = query.eq("status", status);
+  }
+
+  const { data: sales } = await query;
+  const filtered = (sales ?? []).filter((sale) => {
+    if (!q) return true;
+    const client = sale.clients as { full_name: string | null; email: string } | null;
+    const items = (sale.inst_sale_items ?? []) as Array<{ name: string }>;
+    const hay = [
+      sale.ticket_number ?? "",
+      client?.full_name ?? "",
+      client?.email ?? "",
+      ...items.map((i) => i.name),
+    ]
+      .join(" ")
+      .toLowerCase();
+    return hay.includes(q);
+  });
+
+  const emptyMessage =
+    filtered.length === 0
+      ? q || status !== "all"
+        ? t("emptyFiltered")
+        : period === "today"
+          ? t("emptyToday")
+          : t("empty")
+      : undefined;
 
   return (
     <>
-      <DataTable empty={(sales ?? []).length === 0 ? t("empty") : undefined}>
+      <HistoryFilterBar
+        pathname="/institut/caisse/historique"
+        period={period}
+        status={status}
+        q={params.q ?? ""}
+        searchPlaceholder={t("searchPlaceholder")}
+        periodOptions={[
+          { value: "today", label: t("filters.today") },
+          { value: "yesterday", label: t("filters.yesterday") },
+          { value: "week", label: t("filters.week") },
+          { value: "all", label: t("filters.all") },
+        ]}
+        statusOptions={[
+          { value: "all", label: t("filters.statusAll") },
+          { value: "paid", label: t("status.paid") },
+          { value: "partial", label: t("status.partial") },
+        ]}
+      />
+
+      <DataTable empty={emptyMessage}>
         <table className="w-full text-sm">
           <thead className="border-b border-slate-200">
             <tr>
-              <th className={dataTableHead}>{t("columns.date")}</th>
-              <th className={dataTableHead}>{t("columns.ticket")}</th>
-              <th className={dataTableHead}>{t("columns.client")}</th>
-              <th className={dataTableHead}>{t("columns.items")}</th>
-              <th className={`w-24 ${dataTableHead}`}>{t("columns.status")}</th>
-              <th className={`w-28 ${dataTableHead}`}>{t("columns.payment")}</th>
-              <th className={`w-28 text-right ${dataTableHead}`}>{t("columns.total")}</th>
+              <th className={dataTableHeadCompact}>{t("columns.date")}</th>
+              <th className={dataTableHeadCompact}>{t("columns.ticket")}</th>
+              <th className={dataTableHeadCompact}>{t("columns.client")}</th>
+              <th className={`hidden sm:table-cell ${dataTableHeadCompact}`}>
+                {t("columns.items")}
+              </th>
+              <th className={`w-24 ${dataTableHeadCompact}`}>{t("columns.status")}</th>
+              <th className={`w-28 text-right ${dataTableHeadCompact}`}>{t("columns.total")}</th>
+              <th className={`w-36 ${dataTableHeadCompact}`}>{t("columns.actions")}</th>
             </tr>
           </thead>
           <tbody>
-            {(sales ?? []).map((sale) => {
+            {filtered.map((sale) => {
               const client = sale.clients as {
                 full_name: string | null;
                 email: string;
@@ -65,8 +138,10 @@ export default async function CaisseHistoriquePage() {
                 method: string;
                 amount_cents: number;
               }>;
+              const documents = (sale.inst_sale_documents ?? []) as SaleDoc[];
+              const extraDocs = documents.filter((d) => d.doc_type !== "ticket");
               const date = format.dateTime(new Date(sale.created_at), {
-                dateStyle: "medium",
+                dateStyle: period === "today" ? undefined : "medium",
                 timeStyle: "short",
               });
               const paymentSummary =
@@ -86,75 +161,80 @@ export default async function CaisseHistoriquePage() {
 
               return (
                 <tr key={sale.id} className={dataTableRow}>
-                  <td className={`whitespace-nowrap text-slate-900 ${dataTableCell}`}>
+                  <td className={`whitespace-nowrap text-slate-900 ${dataTableCellCompact}`}>
                     {date}
                   </td>
-                  <td className={dataTableCell}>
-                    {sale.ticket_number ? (
-                      <Link
-                        href={`/institut/caisse/ticket/${sale.id}`}
-                        className="font-medium text-slate-900 underline"
-                      >
-                        {sale.ticket_number}
-                      </Link>
-                    ) : (
-                      <Link
-                        href={`/institut/caisse/ticket/${sale.id}`}
-                        className="text-slate-500 underline"
-                      >
-                        {t("viewTicket")}
-                      </Link>
-                    )}
+                  <td className={dataTableCellCompact}>
+                    <Link
+                      href={`/institut/caisse/ticket/${sale.id}`}
+                      className="font-medium text-slate-900 underline"
+                    >
+                      {sale.ticket_number ?? t("viewTicket")}
+                    </Link>
+                    <p className="text-xs text-slate-500">{paymentSummary}</p>
                   </td>
-                  <td className={dataTableCell}>
+                  <td className={dataTableCellCompact}>
                     {client ? (
-                      <>
-                        <p className="text-slate-900">{client.full_name ?? client.email}</p>
-                        {client.full_name ? (
-                          <p className="text-xs text-slate-500">{client.email}</p>
-                        ) : null}
-                      </>
+                      <p className="truncate text-slate-900">
+                        {client.full_name ?? client.email}
+                      </p>
                     ) : (
                       <span className="text-slate-400">{tCommon("dash")}</span>
                     )}
                   </td>
-                  <td className={`max-w-0 ${dataTableCell}`}>
+                  <td className={`hidden max-w-0 sm:table-cell ${dataTableCellCompact}`}>
                     <p className="truncate text-slate-600" title={itemsSummary}>
                       {itemsSummary || tCommon("dash")}
                     </p>
-                    {sale.notes ? (
-                      <p className="truncate text-xs italic text-slate-400">{sale.notes}</p>
-                    ) : null}
                   </td>
-                  <td className={dataTableCell}>
+                  <td className={dataTableCellCompact}>
                     <span
                       className={
-                        statusKey === "partial"
-                          ? "text-amber-600"
-                          : "text-slate-600"
+                        statusKey === "partial" ? "text-amber-600" : "text-slate-600"
                       }
                     >
                       {t(`status.${statusKey}`, { defaultValue: sale.status })}
                     </span>
                     {sale.status === "partial" ? (
-                      <Link
-                        href={`/institut/caisse/solde/${sale.id}`}
-                        className="ml-2 text-xs underline"
-                      >
-                        {t("payBalance")}
-                      </Link>
-                    ) : null}
-                  </td>
-                  <td className={`text-slate-600 ${dataTableCell}`}>{paymentSummary}</td>
-                  <td
-                    className={`whitespace-nowrap text-right font-medium tabular-nums text-slate-900 ${dataTableCell}`}
-                  >
-                    {formatPrice(sale.total_cents)}
-                    {sale.status === "partial" ? (
-                      <p className="text-xs font-normal text-amber-600">
+                      <p className="text-xs text-amber-600">
                         {formatPrice(sale.amount_paid_cents)} {t("paidShort")}
                       </p>
                     ) : null}
+                  </td>
+                  <td
+                    className={`whitespace-nowrap text-right font-medium tabular-nums text-slate-900 ${dataTableCellCompact}`}
+                  >
+                    {formatPrice(sale.total_cents)}
+                  </td>
+                  <td className={dataTableCellCompact}>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+                      <Link
+                        href={`/institut/caisse/ticket/${sale.id}`}
+                        className="text-slate-700 underline"
+                      >
+                        {t("viewTicket")}
+                      </Link>
+                      {extraDocs.map((doc) => (
+                        <Link
+                          key={doc.id}
+                          href={`/institut/caisse/documents/${doc.id}`}
+                          className="text-slate-700 underline"
+                          title={doc.doc_number}
+                        >
+                          {tDocs(`types.${doc.doc_type as "invoice"}`, {
+                            defaultValue: doc.doc_type,
+                          })}
+                        </Link>
+                      ))}
+                      {sale.status === "partial" ? (
+                        <Link
+                          href={`/institut/caisse/solde/${sale.id}`}
+                          className="font-medium text-amber-700 underline"
+                        >
+                          {t("payBalance")}
+                        </Link>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               );
@@ -162,6 +242,9 @@ export default async function CaisseHistoriquePage() {
           </tbody>
         </table>
       </DataTable>
+      <ListPanelFooter>
+        {t("footer", { count: filtered.length })}
+      </ListPanelFooter>
     </>
   );
 }

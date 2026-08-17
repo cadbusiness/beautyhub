@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import {
+  addCalendarDays,
+  calendarDateString,
+  zonedDayBoundsUtc,
+  zonedDayStartUtc,
+} from "@/lib/date";
 
 type Db = SupabaseClient<Database>;
 
@@ -69,12 +75,6 @@ function startOfDay(d: Date): Date {
   return x;
 }
 
-function endOfDay(d: Date): Date {
-  const x = new Date(d);
-  x.setHours(23, 59, 59, 999);
-  return x;
-}
-
 function addDays(d: Date, days: number): Date {
   const x = new Date(d);
   x.setDate(x.getDate() + days);
@@ -88,48 +88,52 @@ function addMonths(d: Date, months: number): Date {
 }
 
 function getRange(period: DashboardPeriod, now = new Date()): DateRange {
+  const today = calendarDateString(now);
   const end = now;
   switch (period) {
     case "today":
-      return { start: startOfDay(now), end };
+      return { start: zonedDayStartUtc(today), end };
     case "week":
-      return { start: startOfDay(addDays(now, -6)), end };
+      return { start: zonedDayStartUtc(addCalendarDays(today, -6)), end };
     case "month":
-      return { start: startOfDay(addDays(now, -29)), end };
+      return { start: zonedDayStartUtc(addCalendarDays(today, -29)), end };
     case "year": {
-      const start = startOfDay(now);
-      start.setDate(1);
-      start.setMonth(start.getMonth() - 11);
-      return { start, end };
+      const [y, m] = today.split("-").map(Number);
+      let startMonth = m - 11;
+      let startYear = y;
+      while (startMonth <= 0) {
+        startMonth += 12;
+        startYear -= 1;
+      }
+      const startYmd = `${startYear}-${String(startMonth).padStart(2, "0")}-01`;
+      return { start: zonedDayStartUtc(startYmd), end };
     }
   }
 }
 
 function getPreviousRange(period: DashboardPeriod, now = new Date()): DateRange {
+  const today = calendarDateString(now);
   switch (period) {
     case "today": {
-      const yesterday = addDays(now, -1);
-      return { start: startOfDay(yesterday), end: endOfDay(yesterday) };
+      const { start, endExclusive } = zonedDayBoundsUtc(addCalendarDays(today, -1));
+      return { start, end: new Date(endExclusive.getTime() - 1) };
     }
-    case "week":
-      return {
-        start: startOfDay(addDays(now, -13)),
-        end: endOfDay(addDays(now, -7)),
-      };
-    case "month":
-      return {
-        start: startOfDay(addDays(now, -59)),
-        end: endOfDay(addDays(now, -30)),
-      };
+    case "week": {
+      const { start } = zonedDayBoundsUtc(addCalendarDays(today, -13));
+      const { endExclusive } = zonedDayBoundsUtc(addCalendarDays(today, -7));
+      return { start, end: new Date(endExclusive.getTime() - 1) };
+    }
+    case "month": {
+      const { start } = zonedDayBoundsUtc(addCalendarDays(today, -59));
+      const { endExclusive } = zonedDayBoundsUtc(addCalendarDays(today, -30));
+      return { start, end: new Date(endExclusive.getTime() - 1) };
+    }
     case "year": {
-      const end = endOfDay(now);
-      end.setFullYear(end.getFullYear() - 1);
-      end.setMonth(11);
-      end.setDate(31);
-      const start = startOfDay(end);
-      start.setMonth(0);
-      start.setDate(1);
-      return { start, end };
+      const y = Number(today.slice(0, 4)) - 1;
+      return {
+        start: zonedDayStartUtc(`${y}-01-01`),
+        end: new Date(zonedDayStartUtc(`${y + 1}-01-01`).getTime() - 1),
+      };
     }
   }
 }

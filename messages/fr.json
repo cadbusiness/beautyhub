@@ -122,6 +122,8 @@
       "open": "Caisse ouverte",
       "closed": "Caisse fermée",
       "closedCta": "Ouvrir",
+      "previousDay": "Session d'hier",
+      "previousDayCta": "Clôturer",
       "durationJustOpened": "à l'instant",
       "durationMins": "depuis {mins} min",
       "durationHours": "depuis {hours} h {mins} min",
@@ -145,7 +147,7 @@
     "institutPosSession": "Session",
     "institutPosVouchers": "Bons & avoirs",
     "institutPosHistory": "Historique caisse",
-    "institutPosSales": "Ventes",
+    "institutPosSales": "Documents",
     "institutPosProducts": "Produits internes",
     "institutMarketing": "Marketing",
     "institutMarketingLoyalty": "Fidélité",
@@ -378,7 +380,10 @@
       "manageSession": "Gérer la session",
       "sales": "Ventes",
       "revenue": "CA TTC",
-      "expectedCash": "Espèces attendues"
+      "expectedCash": "Espèces attendues",
+      "previousDayTitle": "Session du jour précédent encore ouverte",
+      "previousDayDescription": "Clôturez-la pour démarrer nettement aujourd'hui. Les ventes restent dans cette session tant qu'elle n'est pas fermée.",
+      "closeSession": "Clôturer la session"
     }
   },
   "appointments": {
@@ -2907,6 +2912,9 @@
       "sessionClosedTitle": "La caisse n'est pas ouverte",
       "sessionClosedBody": "Ouvrez la journée pour ne pas l'oublier. Le fond de caisse est facultatif.",
       "sessionClosedGuide": "Ouvrir sans fond, ou ajouter un fond si le tiroir a déjà des espèces.",
+      "sessionPreviousDayTitle": "Session d'hier encore ouverte",
+      "sessionPreviousDayBody": "Clôturez-la pour séparer nettement les journées. Vous pouvez encore encaisser.",
+      "sessionPreviousDayCta": "Aller clôturer →",
       "openSession": "Ouvrir la caisse →",
       "noSessionHint": "Session fermée — ouvrir pour le suivi espèces",
       "checkout": {
@@ -2990,11 +2998,22 @@
     },
     "history": {
       "empty": "Aucune vente enregistrée.",
+      "emptyToday": "Aucune vente aujourd'hui.",
+      "emptyFiltered": "Aucune vente pour ces filtres.",
+      "searchPlaceholder": "Ticket, cliente, article…",
+      "footer": "{count, plural, one {# ticket} other {# tickets}}",
       "viewTicket": "Ticket",
       "viewDocuments": "Documents",
       "paidShort": "payé",
       "payBalance": "Solde",
       "mixedPayments": "{count} paiements",
+      "filters": {
+        "today": "Aujourd'hui",
+        "yesterday": "Hier",
+        "week": "7 jours",
+        "all": "Tout",
+        "statusAll": "Tous statuts"
+      },
       "columns": {
         "date": "Date",
         "ticket": "Ticket",
@@ -3002,7 +3021,8 @@
         "items": "Articles",
         "status": "Statut",
         "payment": "Paiement",
-        "total": "Total"
+        "total": "Total",
+        "actions": "Actions"
       },
       "status": {
         "paid": "Payé",
@@ -3022,7 +3042,18 @@
     },
     "sales": {
       "empty": "Aucun document de vente.",
+      "emptyToday": "Aucun document aujourd'hui.",
+      "emptyFiltered": "Aucun document pour ces filtres.",
+      "searchPlaceholder": "Référence, cliente…",
+      "footer": "{count, plural, one {# document} other {# documents}}",
       "open": "Ouvrir",
+      "filters": {
+        "today": "Aujourd'hui",
+        "yesterday": "Hier",
+        "week": "7 jours",
+        "all": "Tout",
+        "typeAll": "Tous types"
+      },
       "columns": {
         "reference": "Référence",
         "type": "Type de document",
@@ -3134,6 +3165,11 @@
       "openTitle": "Démarrer la journée",
       "openDescription": "Ouvrez la session. Le fond de caisse est facultatif.",
       "sessionOpen": "Caisse ouverte",
+      "previousDayBadge": "Session d'hier",
+      "previousDayTitle": "Cette session a été ouverte un jour précédent",
+      "previousDayBody": "Clôturez-la (rapport Z) pour démarrer nettement aujourd'hui. Les totaux restent ceux de la session ouverte.",
+      "previousDayHint": "Pas de clôture automatique — à vous de fermer.",
+      "previousDayWorkflow": "Clôturez d'abord la session d'hier, puis ouvrez celle d'aujourd'hui.",
       "openingFloat": "Fond de caisse",
       "goToPos": "Encaisser une vente",
       "goToPosAfterOpen": "Aller encaisser",

@@ -258,24 +258,50 @@ class _SaleDetailSheet extends StatelessWidget {
             top: false,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton.icon(
-                  onPressed: () => openSaleTicketPdf(
-                    context,
-                    saleId: sale.id,
-                    title: sale.ticketNumber != null
-                        ? 'Ticket #${sale.ticketNumber}'
-                        : 'Ticket',
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  FilledButton.icon(
+                    onPressed: () => openSaleTicketPdf(
+                      context,
+                      saleId: sale.id,
+                      title: sale.ticketNumber != null
+                          ? 'Ticket #${sale.ticketNumber}'
+                          : 'Ticket',
+                    ),
+                    icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+                    label: const Text('Ticket'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _black,
+                      foregroundColor: Colors.white,
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
-                  icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                  label: const Text('Voir le ticket'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _black,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
+                  for (final doc in sale.documents.where((d) => d.docType != 'ticket'))
+                    OutlinedButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${doc.shortLabel} ${doc.docNumber}'),
+                          ),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: Text(doc.shortLabel),
+                    ),
+                  if (sale.status == 'partial')
+                    Text(
+                      'Solde ${formatEuros(sale.totalCents - sale.amountPaidCents)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFB45309),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),

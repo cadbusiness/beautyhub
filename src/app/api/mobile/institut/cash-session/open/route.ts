@@ -5,6 +5,7 @@ import {
 import {
   getOpenCashSession,
   getPosSessionSummary,
+  serializeCashSession,
 } from "@/lib/institut/pos-session";
 
 export async function POST(request: Request) {
@@ -57,16 +58,7 @@ export async function POST(request: Request) {
     );
     return Response.json({
       ok: true,
-      session: summary
-        ? {
-            id: summary.id,
-            openedAt: summary.opened_at,
-            openingFloatCents: summary.opening_float_cents,
-            salesCount: summary.sales_count,
-            totalCents: summary.total_cents,
-            expectedCashCents: summary.expected_cash_cents,
-          }
-        : null,
+      session: summary ? serializeCashSession(summary) : null,
     });
   } catch (error) {
     return mobileErrorResponse(error);

@@ -2,6 +2,15 @@ import {
   mobileErrorResponse,
   requireMobileTenantSession,
 } from "@/lib/mobile/session";
+import {
+  addCalendarDays,
+  calendarDateString,
+  historyPeriodBoundsUtc,
+  isYmd,
+  parseHistoryPeriod,
+  todayDateString,
+  zonedDayStartUtc,
+} from "@/lib/date";
 
 const DEFAULT_LIMIT = 40;
 const MAX_LIMIT = 100;
@@ -51,7 +60,7 @@ type ServiceDetails = {
 /**
  * GET /api/mobile/institut/sales
  * Historique des ventes de caisse pour l'app mobile.
- * ?limit=40&cursor=<created_at ISO>&status=paid|partial|refunded
+ * ?limit=40&cursor=<created_at ISO>&status=paid|partial|refunded&from=YYYY-MM-DD&to=YYYY-MM-DD
  *
  * Enrichit chaque article avec les détails produit/prestation (image, sku,
  * catégorie, durée…) via requêtes séparées + join JS.
@@ -71,6 +80,13 @@ export async function GET(request: Request) {
       : DEFAULT_LIMIT;
     const cursor = url.searchParams.get("cursor");
     const status = url.searchParams.get("status");
+    const from = url.searchParams.get("from");
+    const to = url.searchParams.get("to");
+    const periodParam = url.searchParams.get("period");
+    const periodBounds =
+      periodParam && periodParam !== "all"
+        ? historyPeriodBoundsUtc(parseHistoryPeriod(periodParam))
+        : null;
 
     let query = session.supabase
       .from("inst_sales")
@@ -86,6 +102,21 @@ export async function GET(request: Request) {
 
     if (status) {
       query = query.eq("status", status);
+    }
+    if (periodBounds) {
+      query = query
+        .gte("created_at", periodBounds.start.toISOString())
+        .lt("created_at", periodBounds.endExclusive.toISOString());
+    } else {
+      if (isYmd(from)) {
+        query = query.gte("created_at", zonedDayStartUtc(from).toISOString());
+      }
+      if (isYmd(to)) {
+        query = query.lt(
+          "created_at",
+          zonedDayStartUtc(addCalendarDays(to, 1)).toISOString(),
+        );
+      }
     }
     if (cursor) {
       query = query.lt("created_at", cursor);
@@ -193,6 +224,36 @@ export async function GET(request: Request) {
       });
     }
 
+    const saleIds = pageRows.map((sale) => sale.id as string);
+    const docsRes =
+      saleIds.length > 0
+        ? await session.supabase
+            .from("inst_sale_documents")
+            .select("id, sale_id, doc_type, doc_number")
+            .eq("tenant_id", session.tenant.id)
+            .in("sale_id", saleIds)
+        : { data: [] as Array<{
+            id: string;
+            sale_id: string | null;
+            doc_type: string;
+            doc_number: string;
+          }> };
+
+    const docsBySale = new Map<
+      string,
+      Array<{ id: string; docType: string; docNumber: string }>
+    >();
+    for (const doc of docsRes.data ?? []) {
+      if (!doc.sale_id) continue;
+      const list = docsBySale.get(doc.sale_id) ?? [];
+      list.push({
+        id: doc.id,
+        docType: doc.doc_type,
+        docNumber: doc.doc_number,
+      });
+      docsBySale.set(doc.sale_id, list);
+    }
+
     const items = pageRows.map((sale) => {
       const client = sale.clients as ClientRow;
       const saleItems = (sale.inst_sale_items ?? []) as SaleItemRow[];
@@ -252,6 +313,7 @@ export async function GET(request: Request) {
         paymentMethod: sale.payment_method,
         notes: sale.notes,
         createdAt: sale.created_at,
+        calendarDate: calendarDateString(sale.created_at),
         clientLabel,
         clientEmail,
         itemsCount: saleItems.reduce((sum, i) => sum + (i.quantity ?? 0), 0),
@@ -264,11 +326,12 @@ export async function GET(request: Request) {
           method: p.method,
           amountCents: p.amount_cents,
         })),
+        documents: docsBySale.get(sale.id) ?? [],
       };
     });
     const nextCursor = hasMore ? rows[limit - 1].created_at : null;
 
-    return Response.json({ items, nextCursor });
+    return Response.json({ items, nextCursor, today: todayDateString() });
   } catch (error) {
     return mobileErrorResponse(error);
   }

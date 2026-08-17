@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../state/session_providers.dart';
 import '../shared/money.dart';
 import 'sale_detail_sheet.dart';
+import 'sale_ticket_pdf_screen.dart';
 
 class SalesHistoryTab extends ConsumerStatefulWidget {
   const SalesHistoryTab({super.key, this.active = false});
@@ -23,12 +22,19 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
   static const _muted = Color(0xFF737373);
 
   final _scrollController = ScrollController();
-  List<InstSale> _items = const [];
+  List<InstSale> _sales = const [];
+  List<InstSaleDocument> _docs = const [];
   String? _cursor;
   bool _loading = false;
   bool _loadingMore = false;
   String? _error;
   bool _loadedOnce = false;
+  String? _today;
+
+  String _kind = 'tickets';
+  String _period = 'today';
+  String _status = '';
+  String _docType = '';
 
   @override
   void initState() {
@@ -75,17 +81,39 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
       if (token == null || tenantId == null) {
         throw StateError('Session ou institut manquant');
       }
-      final page = await ref.read(mobileApiProvider).fetchInstitutSales(
-            accessToken: token,
-            tenantId: tenantId,
-          );
-      if (!mounted) return;
-      setState(() {
-        _items = page.items;
-        _cursor = page.nextCursor;
-        _loading = false;
-        _loadedOnce = true;
-      });
+      if (_kind == 'documents') {
+        final page = await ref.read(mobileApiProvider).fetchInstitutDocuments(
+              accessToken: token,
+              tenantId: tenantId,
+              period: _period,
+              docType: _docType.isEmpty ? null : _docType,
+            );
+        if (!mounted) return;
+        setState(() {
+          _docs = page.items;
+          _sales = const [];
+          _cursor = page.nextCursor;
+          _today = page.today ?? _today;
+          _loading = false;
+          _loadedOnce = true;
+        });
+      } else {
+        final page = await ref.read(mobileApiProvider).fetchInstitutSales(
+              accessToken: token,
+              tenantId: tenantId,
+              period: _period,
+              status: _status.isEmpty ? null : _status,
+            );
+        if (!mounted) return;
+        setState(() {
+          _sales = page.items;
+          _docs = const [];
+          _cursor = page.nextCursor;
+          _today = page.today ?? _today;
+          _loading = false;
+          _loadedOnce = true;
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -103,21 +131,49 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
       final token = ref.read(accessTokenProvider);
       final tenantId = ref.read(selectedTenantIdProvider);
       if (token == null || tenantId == null) return;
-      final page = await ref.read(mobileApiProvider).fetchInstitutSales(
-            accessToken: token,
-            tenantId: tenantId,
-            cursor: _cursor,
-          );
-      if (!mounted) return;
-      setState(() {
-        _items = [..._items, ...page.items];
-        _cursor = page.nextCursor;
-        _loadingMore = false;
-      });
+      if (_kind == 'documents') {
+        final page = await ref.read(mobileApiProvider).fetchInstitutDocuments(
+              accessToken: token,
+              tenantId: tenantId,
+              cursor: _cursor,
+              period: _period,
+              docType: _docType.isEmpty ? null : _docType,
+            );
+        if (!mounted) return;
+        setState(() {
+          _docs = [..._docs, ...page.items];
+          _cursor = page.nextCursor;
+          _loadingMore = false;
+        });
+      } else {
+        final page = await ref.read(mobileApiProvider).fetchInstitutSales(
+              accessToken: token,
+              tenantId: tenantId,
+              cursor: _cursor,
+              period: _period,
+              status: _status.isEmpty ? null : _status,
+            );
+        if (!mounted) return;
+        setState(() {
+          _sales = [..._sales, ...page.items];
+          _cursor = page.nextCursor;
+          _loadingMore = false;
+        });
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _loadingMore = false);
     }
+  }
+
+  void _setFilter({String? kind, String? period, String? status, String? docType}) {
+    setState(() {
+      if (kind != null) _kind = kind;
+      if (period != null) _period = period;
+      if (status != null) _status = status;
+      if (docType != null) _docType = docType;
+    });
+    _loadInitial();
   }
 
   @override
@@ -125,80 +181,129 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
     if (_loading && !_loadedOnce) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_error != null && _items.isEmpty) {
-      return _RefreshableMessage(
-        onRefresh: _loadInitial,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _error!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: _muted, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: _loadInitial,
-              child: const Text('Réessayer'),
-            ),
-          ],
-        ),
-      );
-    }
-    if (_items.isEmpty) {
-      return _RefreshableMessage(
-        onRefresh: _loadInitial,
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 44,
-              color: _muted,
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Aucune vente enregistrée.',
-              style: TextStyle(color: _muted, fontSize: 14),
-            ),
-          ],
-        ),
-      );
-    }
 
-    final grouped = _groupByDay(_items);
+    final empty = _kind == 'documents' ? _docs.isEmpty : _sales.isEmpty;
+    final emptyLabel = _kind == 'documents'
+        ? (_period == 'today'
+            ? 'Aucun document aujourd’hui.'
+            : 'Aucun document pour ces filtres.')
+        : (_period == 'today'
+            ? 'Aucune vente aujourd’hui.'
+            : 'Aucune vente pour ces filtres.');
 
     return Container(
       color: _bg,
-      child: RefreshIndicator(
-        onRefresh: _loadInitial,
-        child: ListView.builder(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.only(
-            top: 8,
-            bottom: MediaQuery.viewPaddingOf(context).bottom + 24,
+      child: Column(
+        children: [
+          _FiltersBar(
+            kind: _kind,
+            period: _period,
+            status: _status,
+            docType: _docType,
+            onKind: (v) => _setFilter(kind: v),
+            onPeriod: (v) => _setFilter(period: v),
+            onStatus: (v) => _setFilter(status: v),
+            onDocType: (v) => _setFilter(docType: v),
           ),
-          itemCount: grouped.length + (_loadingMore ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index >= grouped.length) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-              );
-            }
-            final group = grouped[index];
-            return _DayGroup(day: group);
-          },
-        ),
+          Expanded(
+            child: _error != null && empty
+                ? _RefreshableMessage(
+                    onRefresh: _loadInitial,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: _muted, fontSize: 13),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: _loadInitial,
+                          child: const Text('Réessayer'),
+                        ),
+                      ],
+                    ),
+                  )
+                : empty
+                    ? _RefreshableMessage(
+                        onRefresh: _loadInitial,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.receipt_long_outlined,
+                              size: 44,
+                              color: _muted,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              emptyLabel,
+                              style: const TextStyle(color: _muted, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadInitial,
+                        child: _kind == 'documents'
+                            ? _buildDocsList()
+                            : _buildSalesList(),
+                      ),
+          ),
+        ],
       ),
     );
   }
 
-  List<_DaySales> _groupByDay(List<InstSale> sales) {
+  Widget _buildSalesList() {
+    final grouped = _groupSales(_sales);
+    return ListView.builder(
+      controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.only(
+        top: 4,
+        bottom: MediaQuery.viewPaddingOf(context).bottom + 24,
+      ),
+      itemCount: grouped.length + (_loadingMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index >= grouped.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+        return _DayGroup(day: grouped[index], today: _today);
+      },
+    );
+  }
+
+  Widget _buildDocsList() {
+    final grouped = _groupDocs(_docs);
+    return ListView.builder(
+      controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.only(
+        top: 4,
+        bottom: MediaQuery.viewPaddingOf(context).bottom + 24,
+      ),
+      itemCount: grouped.length + (_loadingMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index >= grouped.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+        return _DocDayGroup(day: grouped[index], today: _today);
+      },
+    );
+  }
+
+  List<_DaySales> _groupSales(List<InstSale> sales) {
     final map = <String, List<InstSale>>{};
     for (final s in sales) {
-      final key = DateFormat('yyyy-MM-dd').format(s.createdAt);
+      final key = s.calendarDate ?? DateFormat('yyyy-MM-dd').format(s.createdAt);
       (map[key] ??= []).add(s);
     }
     return map.entries.map((e) {
@@ -210,6 +315,127 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
         totalCents: total,
       );
     }).toList();
+  }
+
+  List<_DayDocs> _groupDocs(List<InstSaleDocument> docs) {
+    final map = <String, List<InstSaleDocument>>{};
+    for (final d in docs) {
+      final key = d.calendarDate ?? DateFormat('yyyy-MM-dd').format(d.issuedAt);
+      (map[key] ??= []).add(d);
+    }
+    return map.entries
+        .map((e) => _DayDocs(key: e.key, date: e.value.first.issuedAt, docs: e.value))
+        .toList();
+  }
+}
+
+class _FiltersBar extends StatelessWidget {
+  const _FiltersBar({
+    required this.kind,
+    required this.period,
+    required this.status,
+    required this.docType,
+    required this.onKind,
+    required this.onPeriod,
+    required this.onStatus,
+    required this.onDocType,
+  });
+
+  final String kind;
+  final String period;
+  final String status;
+  final String docType;
+  final ValueChanged<String> onKind;
+  final ValueChanged<String> onPeriod;
+  final ValueChanged<String> onStatus;
+  final ValueChanged<String> onDocType;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _Chip(label: 'Tickets', selected: kind == 'tickets', onTap: () => onKind('tickets')),
+                _Chip(label: 'Documents', selected: kind == 'documents', onTap: () => onKind('documents')),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _Chip(label: 'Aujourd’hui', selected: period == 'today', onTap: () => onPeriod('today')),
+                _Chip(label: 'Hier', selected: period == 'yesterday', onTap: () => onPeriod('yesterday')),
+                _Chip(label: '7 j', selected: period == 'week', onTap: () => onPeriod('week')),
+                _Chip(label: 'Tout', selected: period == 'all', onTap: () => onPeriod('all')),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (kind == 'tickets')
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _Chip(label: 'Tous', selected: status.isEmpty, onTap: () => onStatus('')),
+                  _Chip(label: 'Payé', selected: status == 'paid', onTap: () => onStatus('paid')),
+                  _Chip(label: 'Acompte', selected: status == 'partial', onTap: () => onStatus('partial')),
+                ],
+              )
+            else
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _Chip(label: 'Tous', selected: docType.isEmpty, onTap: () => onDocType('')),
+                  _Chip(label: 'Ticket', selected: docType == 'ticket', onTap: () => onDocType('ticket')),
+                  _Chip(label: 'Facture', selected: docType == 'invoice', onTap: () => onDocType('invoice')),
+                  _Chip(label: 'Bon', selected: docType == 'delivery_note', onTap: () => onDocType('delivery_note')),
+                  _Chip(label: 'Avoir', selected: docType == 'credit_note', onTap: () => onDocType('credit_note')),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({required this.label, required this.selected, required this.onTap});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? const Color(0xFF0A0A0A) : const Color(0xFFF3F3F3),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : const Color(0xFF525252),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -230,7 +456,7 @@ class _RefreshableMessage extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(
-            height: MediaQuery.sizeOf(context).height * 0.45,
+            height: MediaQuery.sizeOf(context).height * 0.35,
             child: Center(child: child),
           ),
         ],
@@ -252,21 +478,33 @@ class _DaySales {
   final int totalCents;
 }
 
+class _DayDocs {
+  const _DayDocs({
+    required this.key,
+    required this.date,
+    required this.docs,
+  });
+  final String key;
+  final DateTime date;
+  final List<InstSaleDocument> docs;
+}
+
+String _formatDayLabel(String key, String? today, DateTime fallback) {
+  if (today != null) {
+    if (key == today) return 'Aujourd’hui';
+    final y = DateTime.parse(today).subtract(const Duration(days: 1));
+    if (key == DateFormat('yyyy-MM-dd').format(y)) return 'Hier';
+  }
+  return DateFormat("EEEE d MMM", 'fr_FR').format(fallback);
+}
+
 class _DayGroup extends StatelessWidget {
-  const _DayGroup({required this.day});
+  const _DayGroup({required this.day, this.today});
   final _DaySales day;
+  final String? today;
 
   static const _muted = Color(0xFF737373);
   static const _border = Color(0xFFEBEBEB);
-
-  String _formatDay(DateTime dt) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final that = DateTime(dt.year, dt.month, dt.day);
-    if (that == today) return "Aujourd'hui";
-    if (that == today.subtract(const Duration(days: 1))) return 'Hier';
-    return DateFormat("EEEE d MMM", 'fr_FR').format(dt);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -281,7 +519,7 @@ class _DayGroup extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    _formatDay(day.date),
+                    _formatDayLabel(day.key, today, day.date),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -314,6 +552,63 @@ class _DayGroup extends StatelessWidget {
                 for (var i = 0; i < day.sales.length; i++) ...[
                   _SaleRow(sale: day.sales[i]),
                   if (i < day.sales.length - 1)
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: _border,
+                      indent: 12,
+                      endIndent: 12,
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DocDayGroup extends StatelessWidget {
+  const _DocDayGroup({required this.day, this.today});
+  final _DayDocs day;
+  final String? today;
+
+  static const _muted = Color(0xFF737373);
+  static const _border = Color(0xFFEBEBEB);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+            child: Text(
+              _formatDayLabel(day.key, today, day.date),
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: _muted,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _border),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (var i = 0; i < day.docs.length; i++) ...[
+                  _DocRow(doc: day.docs[i]),
+                  if (i < day.docs.length - 1)
                     const Divider(
                       height: 1,
                       thickness: 1,
@@ -383,10 +678,11 @@ class _SaleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final extraDocs = sale.documents.where((d) => d.docType != 'ticket').toList();
     return InkWell(
       onTap: () => showSaleDetailSheet(context: context, sale: sale),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -436,7 +732,7 @@ class _SaleRow extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     sale.clientLabel ?? 'Sans cliente',
                     style: TextStyle(
@@ -458,6 +754,13 @@ class _SaleRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (extraDocs.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      extraDocs.map((d) => d.shortLabel).join(' · '),
+                      style: const TextStyle(fontSize: 11, color: _muted),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -487,4 +790,127 @@ class _SaleRow extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DocRow extends StatelessWidget {
+  const _DocRow({required this.doc});
+  final InstSaleDocument doc;
+
+  static const _muted = Color(0xFF737373);
+  static const _black = Color(0xFF0A0A0A);
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => _showDocumentSheet(context, doc),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    doc.docNumber,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: _black,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${doc.typeLabel} · ${doc.clientLabel ?? "Sans cliente"}',
+                    style: const TextStyle(fontSize: 12, color: _muted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              formatEuros(doc.amountCents),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: _black,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _showDocumentSheet(BuildContext context, InstSaleDocument doc) {
+  return showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                doc.docNumber,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${doc.typeLabel} · ${DateFormat("d MMM y HH:mm", "fr_FR").format(doc.issuedAt)}',
+                style: const TextStyle(fontSize: 13, color: Color(0xFF737373)),
+              ),
+              if (doc.clientLabel != null) ...[
+                const SizedBox(height: 8),
+                Text(doc.clientLabel!, style: const TextStyle(fontSize: 14)),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                formatEuros(doc.amountCents),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (doc.docType == 'ticket' && doc.saleId != null)
+                    FilledButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        openSaleTicketPdf(
+                          context,
+                          saleId: doc.saleId!,
+                          title: doc.docNumber,
+                        );
+                      },
+                      icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+                      label: const Text('Ticket PDF'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF0A0A0A),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

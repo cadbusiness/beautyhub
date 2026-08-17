@@ -1023,7 +1023,10 @@
       "openSince": "Open",
       "openTitle": "Open checkout",
       "revenue": "CA incl. VAT",
-      "sales": "Sales"
+      "sales": "Sales",
+      "previousDayTitle": "Previous day's session still open",
+      "previousDayDescription": "Close it to start today cleanly. Sales stay on this session until it is closed.",
+      "closeSession": "Close session"
     },
     "quickActions": {
       "appointments": {
@@ -2872,7 +2875,7 @@
     "institutPos": "Box",
     "institutPosHistory": "Cash register history",
     "institutPosProducts": "Internal products",
-    "institutPosSales": "Sales",
+    "institutPosSales": "Documents",
     "institutPosSession": "Session",
     "institutPosVouchers": "Vouchers & credits",
     "institutServices": "Services",
@@ -2981,9 +2984,21 @@
         "payment": "Payment",
         "status": "Status",
         "ticket": "Ticket",
-        "total": "Total"
+        "total": "Total",
+        "actions": "Actions"
       },
       "empty": "No sales recorded.",
+      "emptyToday": "No sales today.",
+      "emptyFiltered": "No sales for these filters.",
+      "searchPlaceholder": "Ticket, customer, item…",
+      "footer": "{count, plural, one {# ticket} other {# tickets}}",
+      "filters": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "week": "7 days",
+        "all": "All",
+        "statusAll": "All statuses"
+      },
       "mixedPayments": "{count} payments",
       "paidShort": "paid",
       "payBalance": "Pay",
@@ -3049,6 +3064,17 @@
         "type": "Document Type"
       },
       "empty": "No sales documents.",
+      "emptyToday": "No documents today.",
+      "emptyFiltered": "No documents for these filters.",
+      "searchPlaceholder": "Reference, customer…",
+      "footer": "{count, plural, one {# document} other {# documents}}",
+      "filters": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "week": "7 days",
+        "all": "All",
+        "typeAll": "All types"
+      },
       "open": "Open",
       "status": {
         "cancelled": "Canceled",
@@ -3162,6 +3188,11 @@
       "openingFloat": "Cash bottom",
       "reports": "Reports generated",
       "sessionOpen": "Open checkout",
+      "previousDayBadge": "Yesterday's session",
+      "previousDayTitle": "This session was opened on a previous day",
+      "previousDayBody": "Close it (Z report) to start today cleanly. Totals stay those of the open session.",
+      "previousDayHint": "No automatic close — you close it.",
+      "previousDayWorkflow": "Close yesterday's session first, then open today's.",
       "settingsLink": "Cash register settings",
       "stats": {
         "expectedCash": "Expected species",
@@ -3270,6 +3301,9 @@
       "sessionClosedTitle": "Checkout is not open",
       "sessionClosedBody": "Open the day so you don’t forget. The cash float is optional.",
       "sessionClosedGuide": "Open without a float, or add one if the drawer already has cash.",
+      "sessionPreviousDayTitle": "Yesterday's session still open",
+      "sessionPreviousDayBody": "Close it to keep days clearly separate. You can still take payments.",
+      "sessionPreviousDayCta": "Go close →",
       "tabs": {
         "all": "All",
         "internal": "Internal",
@@ -3704,7 +3738,9 @@
       "navClosed": "Checkout closed",
       "open": "Open checkout",
       "closed": "Checkout closed",
-      "closedCta": "Open"
+      "closedCta": "Open",
+      "previousDay": "Yesterday's session",
+      "previousDayCta": "Close"
     },
     "sidebar": {
       "ariaLabel": "Main navigation",

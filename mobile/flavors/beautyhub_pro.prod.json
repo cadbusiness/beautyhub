@@ -1,0 +1,5 @@
+{
+  "BUNDLE_ID": "app.beautyhub.pro",
+  "BOOTSTRAP_BASE_URL": "https://beautyhub-seven.vercel.app",
+  "APP_AUDIENCE": "institut"
+}

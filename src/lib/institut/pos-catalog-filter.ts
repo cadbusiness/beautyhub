@@ -1,8 +1,19 @@
 import type { PosCatalogItem, PosCategory, PosServiceCategory } from "@/lib/institut/pos";
+import type { WooSoinsChild } from "@/lib/woocommerce/product-labels";
 
 export const POS_FACET_ALL = "all";
 export const POS_FACET_BESTSELLERS = "bestsellers";
 export const POS_FACET_UNCATEGORIZED = "service:none";
+export const POS_FACET_SOINS = "woo-group:soins";
+export const POS_FACET_MARQUES = "woo-group:marques";
+
+const SOINS_ORDER: WooSoinsChild[] = ["Visage", "Corps", "Cheveux", "autres"];
+const SOINS_LABELS: Record<WooSoinsChild, string> = {
+  Visage: "Visage",
+  Corps: "Corps",
+  Cheveux: "Cheveux",
+  autres: "Autres soins",
+};
 
 export function serviceFacetId(categoryId: string) {
   return `service:${categoryId}`;
@@ -10,6 +21,14 @@ export function serviceFacetId(categoryId: string) {
 
 export function wooFacetId(name: string) {
   return `woo:${name}`;
+}
+
+export function wooSoinsFacetId(child: WooSoinsChild) {
+  return `woo-soins:${child}`;
+}
+
+export function wooBrandFacetId(name: string) {
+  return `woo-brand:${name}`;
 }
 
 export function itemMatchesTab(item: PosCatalogItem, tab: PosCategory): boolean {
@@ -26,9 +45,24 @@ export function itemMatchesFacet(item: PosCatalogItem, facet: string): boolean {
   if (facet.startsWith("service:")) {
     return item.service_category_id === facet.slice("service:".length);
   }
+  if (facet === POS_FACET_SOINS) {
+    return (item.woo_soins ?? []).length > 0;
+  }
+  if (facet === POS_FACET_MARQUES) {
+    return (item.woo_brands ?? []).length > 0;
+  }
+  if (facet.startsWith("woo-soins:")) {
+    const child = facet.slice("woo-soins:".length) as WooSoinsChild;
+    return (item.woo_soins ?? []).includes(child);
+  }
+  if (facet.startsWith("woo-brand:")) {
+    const brand = facet.slice("woo-brand:".length);
+    return (item.woo_brands ?? []).includes(brand);
+  }
   if (facet.startsWith("woo:")) {
     const name = facet.slice("woo:".length);
-    return (item.woo_categories ?? []).includes(name);
+    if ((item.woo_categories ?? []).includes(name)) return true;
+    return (item.woo_brands ?? []).includes(name);
   }
   return true;
 }
@@ -40,6 +74,7 @@ export function itemMatchesQuery(item: PosCatalogItem, query: string): boolean {
   if (item.sku?.toLowerCase().includes(q)) return true;
   if (item.service_category_name?.toLowerCase().includes(q)) return true;
   if (item.woo_categories?.some((name) => name.toLowerCase().includes(q))) return true;
+  if (item.woo_brands?.some((name) => name.toLowerCase().includes(q))) return true;
   return false;
 }
 
@@ -91,6 +126,50 @@ export function listWooCategoryFacets(
     }
   }
   return Array.from(names).sort((a, b) => a.localeCompare(b, "fr"));
+}
+
+export type WooNavChild = { id: string; name: string };
+
+export type WooNavGroups = {
+  soins: WooNavChild[];
+  marques: WooNavChild[];
+};
+
+export function listWooNavGroups(
+  catalog: PosCatalogItem[],
+  tab: PosCategory,
+): WooNavGroups {
+  if (tab !== "all" && tab !== "woocommerce") {
+    return { soins: [], marques: [] };
+  }
+  const soinsPresent = new Set<WooSoinsChild>();
+  const brands = new Set<string>();
+  for (const item of catalog) {
+    if (item.category !== "woocommerce") continue;
+    for (const child of item.woo_soins ?? []) soinsPresent.add(child);
+    for (const brand of item.woo_brands ?? []) {
+      if (brand.trim()) brands.add(brand.trim());
+    }
+  }
+  return {
+    soins: SOINS_ORDER.filter((child) => soinsPresent.has(child)).map((child) => ({
+      id: wooSoinsFacetId(child),
+      name: SOINS_LABELS[child],
+    })),
+    marques: Array.from(brands)
+      .sort((a, b) => a.localeCompare(b, "fr"))
+      .map((name) => ({ id: wooBrandFacetId(name), name })),
+  };
+}
+
+export function expandedWooGroup(
+  facet: string,
+): "soins" | "marques" | null {
+  if (facet === POS_FACET_SOINS || facet.startsWith("woo-soins:")) return "soins";
+  if (facet === POS_FACET_MARQUES || facet.startsWith("woo-brand:")) {
+    return "marques";
+  }
+  return null;
 }
 
 export function hasUncategorizedServices(

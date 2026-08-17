@@ -17,7 +17,17 @@ export interface WooProduct {
   variations?: number[];
   images?: Array<{ src: string }>;
   categories?: Array<{ id: number; name: string; slug: string }>;
+  brands?: Array<{ id: number; name: string; slug: string }>;
+  tags?: Array<{ id: number; name: string; slug: string }>;
+  attributes?: Array<{ id?: number; name?: string; options?: string[] }>;
   meta_data?: Array<{ key: string; value: unknown }>;
+}
+
+export interface WooProductCategory {
+  id: number;
+  name: string;
+  slug: string;
+  parent: number;
 }
 
 export interface WooProductVariation {
@@ -177,6 +187,30 @@ export class WooClient {
     return this.request<WooProduct[]>("/products", {
       query: { page, per_page: perPage, status: "publish" },
     });
+  }
+
+  async listProductCategories(
+    page = 1,
+    perPage = 100,
+  ): Promise<WooProductCategory[]> {
+    return this.request<WooProductCategory[]>("/products/categories", {
+      query: { page, per_page: perPage, hide_empty: "false" },
+    });
+  }
+
+  /** Arbre des catégories Woo (jusqu'à 1000). Ignore si l'endpoint n'est pas dispo. */
+  async listAllProductCategories(): Promise<WooProductCategory[]> {
+    const all: WooProductCategory[] = [];
+    try {
+      for (let page = 1; page <= 10; page++) {
+        const batch = await this.listProductCategories(page, 100);
+        all.push(...batch);
+        if (batch.length < 100) break;
+      }
+    } catch {
+      return all;
+    }
+    return all;
   }
 
   async createOrder(

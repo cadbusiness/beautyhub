@@ -182,6 +182,8 @@ function serializeCatalogItem(
     durationMin: item.duration_min ?? null,
     sku: item.sku ?? null,
     wooCategories: item.woo_categories ?? [],
+    wooBrands: item.woo_brands ?? [],
+    wooSoins: item.woo_soins ?? [],
     serviceCategoryId: item.service_category_id ?? null,
     serviceCategoryName: item.service_category_name ?? null,
     soldQty: item.sold_qty ?? 0,

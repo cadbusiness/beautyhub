@@ -4,7 +4,8 @@ import type { Database } from "@/lib/db/database.types";
 import { createServiceClient, tryCreateServiceClient } from "@/lib/supabase/service";
 import { decryptCredentials } from "@/lib/connections/crypto";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
-import { WooClient, type WooProduct, type WooProductVariation } from "@/lib/woocommerce/client";
+import { WooClient, type WooProduct, type WooProductCategory, type WooProductVariation } from "@/lib/woocommerce/client";
+import { collectWooCategoryNames } from "@/lib/woocommerce/product-labels";
 
 type Db = SupabaseClient<Database>;
 
@@ -93,16 +94,46 @@ function metaYes(value: unknown): boolean {
   return s === "yes" || s === "1" || s === "true";
 }
 
+export function categoryTreeById(
+  categories: WooProductCategory[],
+): Map<number, WooProductCategory> {
+  return new Map(categories.map((c) => [c.id, c]));
+}
+
+function ancestorNamesForProduct(
+  product: WooProduct,
+  tree?: Map<number, WooProductCategory>,
+): string[] {
+  if (!tree || tree.size === 0) return [];
+  const names: string[] = [];
+  const seen = new Set<number>();
+  const walk = (id: number) => {
+    if (!id || seen.has(id)) return;
+    seen.add(id);
+    const node = tree.get(id);
+    if (!node) return;
+    if (node.name?.trim()) names.push(node.name.trim());
+    if (node.parent) walk(node.parent);
+  };
+  for (const cat of product.categories ?? []) {
+    if (typeof cat?.id === "number") walk(cat.id);
+  }
+  return names;
+}
+
 export function mapWooProductToRow(
   tenantId: string,
   connectionId: string,
   product: WooProduct,
+  tree?: Map<number, WooProductCategory>,
 ) {
-  const categories = Array.isArray(product.categories)
-    ? product.categories
-        .map((c) => (typeof c?.name === "string" ? c.name.trim() : ""))
-        .filter((name): name is string => name.length > 0)
-    : [];
+  const categories = collectWooCategoryNames({
+    name: product.name,
+    categories: product.categories,
+    brands: product.brands,
+    attributes: product.attributes,
+    ancestorNames: ancestorNamesForProduct(product, tree),
+  });
 
   const giftFlag = metaValue(product.meta_data, "_beautyhub_gift_card");
   const templateRaw = metaValue(product.meta_data, "_beautyhub_gift_template_id");
@@ -167,12 +198,15 @@ export function mapWooVariationToRow(
   connectionId: string,
   parent: WooProduct,
   variation: WooProductVariation,
+  tree?: Map<number, WooProductCategory>,
 ) {
-  const parentCategories = Array.isArray(parent.categories)
-    ? parent.categories
-        .map((c) => (typeof c?.name === "string" ? c.name.trim() : ""))
-        .filter((n): n is string => n.length > 0)
-    : [];
+  const parentCategories = collectWooCategoryNames({
+    name: parent.name,
+    categories: parent.categories,
+    brands: parent.brands,
+    attributes: parent.attributes,
+    ancestorNames: ancestorNamesForProduct(parent, tree),
+  });
 
   const attributes: Record<string, string> = {};
   for (const attr of variation.attributes ?? []) {
@@ -238,10 +272,11 @@ export async function upsertWooVariations(
   connectionId: string,
   parent: WooProduct,
   variations: WooProductVariation[],
+  tree?: Map<number, WooProductCategory>,
 ): Promise<number> {
   if (variations.length === 0) return 0;
   const rows = variations.map((v) =>
-    mapWooVariationToRow(tenantId, connectionId, parent, v),
+    mapWooVariationToRow(tenantId, connectionId, parent, v, tree),
   );
   const { error } = await supabase
     .from("inst_products")
@@ -256,8 +291,9 @@ export async function upsertWooProduct(
   tenantId: string,
   connectionId: string,
   product: WooProduct,
+  tree?: Map<number, WooProductCategory>,
 ): Promise<void> {
-  const row = mapWooProductToRow(tenantId, connectionId, product);
+  const row = mapWooProductToRow(tenantId, connectionId, product, tree);
   let { error } = await supabase
     .from("inst_products")
     .upsert(row, { onConflict: "tenant_id,connection_id,woo_id" });

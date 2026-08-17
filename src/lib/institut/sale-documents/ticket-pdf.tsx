@@ -182,6 +182,14 @@ function TicketPdfDocument({ payload }: { payload: SaleDocumentPayload }) {
         ))}
 
         <View style={styles.dashed} />
+        {payload.discountCents > 0 ? (
+          <View style={styles.totalRow}>
+            <Text>Remise</Text>
+            <Text>
+              −{formatPrice(payload.discountCents, payload.currency, locale)}
+            </Text>
+          </View>
+        ) : null}
         <View style={styles.totalRow}>
           <Text>Montant TTC</Text>
           <Text>{formatPrice(payload.totalCents, payload.currency, locale)}</Text>

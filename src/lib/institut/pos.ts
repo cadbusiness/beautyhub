@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import { classifyWooProduct } from "@/lib/woocommerce/product-labels";
 
 type Db = SupabaseClient<Database>;
 
@@ -18,6 +19,8 @@ export interface PosCatalogItem {
   duration_min?: number;
   sku?: string | null;
   woo_categories?: string[];
+  woo_brands?: string[];
+  woo_soins?: Array<"Visage" | "Corps" | "Cheveux" | "autres">;
   service_category_id?: string | null;
   service_category_name?: string | null;
   sold_qty?: number;
@@ -286,6 +289,9 @@ export function buildCatalog(
   for (const p of products) {
     const isWoo = p.source === "woocommerce" || (p.woo_id != null && p.source !== "internal");
     const key = `product:${p.id}`;
+    const classified = isWoo
+      ? classifyWooProduct(p.name, p.woo_categories ?? [])
+      : { brands: [] as string[], soins: [] as Array<"Visage" | "Corps" | "Cheveux" | "autres"> };
     items.push({
       key,
       type: "product",
@@ -297,6 +303,8 @@ export function buildCatalog(
       category: isWoo ? "woocommerce" : "internal",
       sku: p.sku,
       woo_categories: p.woo_categories ?? [],
+      woo_brands: classified.brands,
+      woo_soins: classified.soins,
       sold_qty: soldQtyByKey.get(key) ?? 0,
     });
   }

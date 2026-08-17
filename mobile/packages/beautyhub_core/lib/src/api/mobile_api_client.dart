@@ -547,6 +547,7 @@ class MobileApiClient {
     String? clientId,
     String? staffId,
     String? notes,
+    int? cartDiscountCents,
   }) async {
     final response = await _http.post(
       _uri('/api/mobile/institut/checkout'),
@@ -557,6 +558,8 @@ class MobileApiClient {
         if (clientId != null) 'clientId': clientId,
         if (staffId != null) 'staffId': staffId,
         if (notes != null && notes.isNotEmpty) 'notes': notes,
+        if (cartDiscountCents != null && cartDiscountCents > 0)
+          'cartDiscountCents': cartDiscountCents,
       }),
     );
     final body = await _decode(response);

@@ -58,8 +58,17 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     if (facet.startsWith('service:')) {
       return item.serviceCategoryId == facet.substring('service:'.length);
     }
+    if (facet == 'woo-group:soins') return item.wooSoins.isNotEmpty;
+    if (facet == 'woo-group:marques') return item.wooBrands.isNotEmpty;
+    if (facet.startsWith('woo-soins:')) {
+      return item.wooSoins.contains(facet.substring('woo-soins:'.length));
+    }
+    if (facet.startsWith('woo-brand:')) {
+      return item.wooBrands.contains(facet.substring('woo-brand:'.length));
+    }
     if (facet.startsWith('woo:')) {
-      return item.wooCategories.contains(facet.substring('woo:'.length));
+      final name = facet.substring('woo:'.length);
+      return item.wooCategories.contains(name) || item.wooBrands.contains(name);
     }
     return true;
   }
@@ -73,6 +82,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       return true;
     }
     if (item.description?.toLowerCase().contains(q) ?? false) return true;
+    if (item.wooBrands.any((name) => name.toLowerCase().contains(q))) {
+      return true;
+    }
     return item.wooCategories.any((name) => name.toLowerCase().contains(q));
   }
 
@@ -87,18 +99,44 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     return ctx.serviceCategories.where((c) => used.contains(c.id)).toList();
   }
 
-  List<String> _wooFacets(PosContext ctx, String type) {
-    if (type != 'all' && type != 'woocommerce') return const [];
-    final names = <String>{};
+  ({List<({String id, String name})> soins, List<({String id, String name})> marques})
+      _wooNav(PosContext ctx, String type) {
+    if (type != 'all' && type != 'woocommerce') {
+      return (soins: const [], marques: const []);
+    }
+    const order = ['Visage', 'Corps', 'Cheveux', 'autres'];
+    const labels = {
+      'Visage': 'Visage',
+      'Corps': 'Corps',
+      'Cheveux': 'Cheveux',
+      'autres': 'Autres soins',
+    };
+    final soinsPresent = <String>{};
+    final brands = <String>{};
     for (final item in ctx.catalog) {
       if (item.category != 'woocommerce') continue;
-      for (final name in item.wooCategories) {
-        final trimmed = name.trim();
-        if (trimmed.isNotEmpty) names.add(trimmed);
-      }
+      soinsPresent.addAll(item.wooSoins);
+      brands.addAll(item.wooBrands.where((name) => name.trim().isNotEmpty));
     }
-    final list = names.toList()..sort();
-    return list;
+    final soins = [
+      for (final child in order)
+        if (soinsPresent.contains(child))
+          (id: 'woo-soins:$child', name: labels[child] ?? child),
+    ];
+    final marques = (brands.toList()..sort())
+        .map((name) => (id: 'woo-brand:$name', name: name))
+        .toList();
+    return (soins: soins, marques: marques);
+  }
+
+  String? _expandedWooGroup(String facet) {
+    if (facet == 'woo-group:soins' || facet.startsWith('woo-soins:')) {
+      return 'soins';
+    }
+    if (facet == 'woo-group:marques' || facet.startsWith('woo-brand:')) {
+      return 'marques';
+    }
+    return null;
   }
 
   bool _hasUncategorizedServices(PosContext ctx, String type) {
@@ -132,7 +170,11 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     }
   }
 
-  Future<bool> _checkout(PosContext ctx) async {
+  Future<bool> _checkout(
+    PosContext ctx, {
+    int discountCents = 0,
+    String? notes,
+  }) async {
     final cart = ref.read(posCartProvider);
     if (cart.isEmpty) return false;
 
@@ -147,7 +189,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       return false;
     }
 
-    final totalCents = _cartTotalCents(ctx, cart);
+    final grossCents = _cartTotalCents(ctx, cart);
+    var totalCents = grossCents - discountCents;
+    if (totalCents < 0) totalCents = 0;
     final token = ref.read(accessTokenProvider);
     final tenantId = ref.read(selectedTenantIdProvider);
     if (token == null || tenantId == null) return false;
@@ -159,6 +203,8 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             tenantId: tenantId,
             cart: cart,
             clientId: _selectedClient?.id,
+            notes: notes,
+            cartDiscountCents: discountCents > 0 ? discountCents : null,
             payments: [
               {'method': _paymentMethod, 'amountCents': totalCents},
             ],
@@ -220,7 +266,8 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         paymentMethod: _paymentMethod,
         onClientChanged: (item) => setState(() => _selectedClient = item),
         onPaymentChanged: (m) => setState(() => _paymentMethod = m),
-        onCheckout: () => _checkout(ctx),
+        onCheckout: ({discountCents = 0, notes}) =>
+            _checkout(ctx, discountCents: discountCents, notes: notes),
         sessionBlocked: ctx.requireOpenSession && !ctx.sessionOpen,
       ),
     );
@@ -248,7 +295,8 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         final items = _filtered(ctx, filter, facet, query);
         final queryTrimmed = query.trim();
         final serviceFacets = _serviceFacets(ctx, filter);
-        final wooFacets = _wooFacets(ctx, filter);
+        final wooNav = _wooNav(ctx, filter);
+        final wooGroup = _expandedWooGroup(facet);
         final showUncategorized = _hasUncategorizedServices(ctx, filter);
         return Stack(
           children: [
@@ -445,16 +493,60 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                             value: 'service:none',
                             selected: facet,
                           ),
-                        for (final name in wooFacets)
+                        if (wooNav.soins.isNotEmpty)
                           _FacetChip(
-                            label: name,
-                            value: 'woo:$name',
-                            selected: facet,
+                            label: 'Soins',
+                            value: 'woo-group:soins',
+                            selected: wooGroup == 'soins'
+                                ? 'woo-group:soins'
+                                : facet,
+                          ),
+                        if (wooNav.marques.isNotEmpty)
+                          _FacetChip(
+                            label: 'Marques',
+                            value: 'woo-group:marques',
+                            selected: wooGroup == 'marques'
+                                ? 'woo-group:marques'
+                                : facet,
                           ),
                       ],
                     ),
                   ),
                 ),
+                if (wooGroup == 'soins' && wooNav.soins.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Row(
+                        children: [
+                          for (final child in wooNav.soins)
+                            _FacetChip(
+                              label: child.name,
+                              value: child.id,
+                              selected: facet,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (wooGroup == 'marques' && wooNav.marques.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Row(
+                        children: [
+                          for (final child in wooNav.marques)
+                            _FacetChip(
+                              label: child.name,
+                              value: child.id,
+                              selected: facet,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 if (items.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
@@ -667,7 +759,7 @@ class _CartSheet extends ConsumerStatefulWidget {
   final String paymentMethod;
   final ValueChanged<PickerItem?> onClientChanged;
   final ValueChanged<String> onPaymentChanged;
-  final Future<bool> Function() onCheckout;
+  final Future<bool> Function({int discountCents, String? notes}) onCheckout;
   final bool sessionBlocked;
 
   @override
@@ -676,6 +768,29 @@ class _CartSheet extends ConsumerStatefulWidget {
 
 class _CartSheetState extends ConsumerState<_CartSheet> {
   late PickerItem? _client = widget.selectedClient;
+  bool _showDiscount = false;
+  String _discountKind = 'percent';
+  final _discountValue = TextEditingController();
+  final _discountReason = TextEditingController();
+
+  @override
+  void dispose() {
+    _discountValue.dispose();
+    _discountReason.dispose();
+    super.dispose();
+  }
+
+  int _discountCents(int gross) {
+    final n = double.tryParse(_discountValue.text.replaceAll(',', '.')) ?? 0;
+    if (n <= 0 || gross <= 0) return 0;
+    if (_discountKind == 'percent') {
+      final pct = n > 100 ? 100.0 : n;
+      final cents = (gross * pct / 100).round();
+      return cents > gross ? gross : cents;
+    }
+    final cents = (n * 100).round();
+    return cents > gross ? gross : cents;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -722,6 +837,10 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
       );
     }
 
+    final discountCents = _showDiscount ? _discountCents(total) : 0;
+    var payable = total - discountCents;
+    if (payable < 0) payable = 0;
+
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -729,98 +848,163 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
         top: 12,
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE5E5E5),
-                borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5E5E5),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text('Panier', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          ...lines,
-          const Divider(height: 24),
-          Row(
-            children: [
-              const Text('Total', style: TextStyle(fontSize: 15)),
-              const Spacer(),
-              Text(
-                formatEuros(total),
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+            const SizedBox(height: 16),
+            Text('Panier', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            ...lines,
+            const Divider(height: 24),
+            if (!_showDiscount)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => setState(() => _showDiscount = true),
+                  child: const Text('Ajouter une réduction'),
+                ),
+              )
+            else ...[
+              const Text(
+                'Réduction',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
+              const SizedBox(height: 8),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'percent', label: Text('%')),
+                  ButtonSegment(value: 'fixed', label: Text('€')),
+                ],
+                selected: {_discountKind},
+                onSelectionChanged: (s) =>
+                    setState(() => _discountKind = s.first),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _discountValue,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: _discountKind == 'percent'
+                      ? 'Pourcentage'
+                      : 'Montant (€)',
+                  hintText: _discountKind == 'percent' ? '10' : '15',
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _discountReason,
+                decoration: const InputDecoration(
+                  labelText: 'Motif (optionnel)',
+                  hintText: 'Bon, promotion, geste commercial…',
+                ),
+              ),
+              if (discountCents > 0) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '−${formatEuros(discountCents)}',
+                  style: const TextStyle(
+                    color: Color(0xFF047857),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ],
-          ),
-          const SizedBox(height: 16),
-          SearchablePickerField(
-            label: 'Cliente (optionnel)',
-            value: _client?.title,
-            selectedSubtitle: _client?.subtitle,
-            placeholder: 'Aucune cliente',
-            onOpen: () async {
-              final picked = await showSearchablePicker(
-                context: context,
-                title: 'Choisir une cliente',
-                items: const [],
-                search: (q) => searchInstitutClients(ref, q),
-                selectedId: _client?.id,
-                searchHint: 'Rechercher (nom, email, téléphone)…',
-                nullOption:
-                    const PickerItem(id: '__none__', title: 'Aucune cliente'),
-                emptyMessage: 'Aucune cliente trouvée.',
-                createAction: newClientPickerAction(ref),
-              );
-              if (picked == null) return;
-              final next = picked.id == '__none__' ? null : picked;
-              setState(() => _client = next);
-              widget.onClientChanged(next);
-            },
-          ),
-          const SizedBox(height: 12),
-          SegmentedButton<String>(
-            segments: [
-              if (ctx.settings.paymentMethods.cash)
-                const ButtonSegment(value: 'cash', label: Text('Espèces')),
-              if (ctx.settings.paymentMethods.card)
-                const ButtonSegment(value: 'card', label: Text('CB')),
-            ],
-            selected: {paymentMethod},
-            onSelectionChanged: (s) => onPaymentChanged(s.first),
-          ),
-          const SizedBox(height: 16),
-          if (sessionBlocked) ...[
-            const Text(
-              'Ouvrez la journée pour encaisser. Le fond de caisse est facultatif.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF92400E)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Text('Total', style: TextStyle(fontSize: 15)),
+                const Spacer(),
+                Text(
+                  formatEuros(payable),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SearchablePickerField(
+              label: 'Cliente (optionnel)',
+              value: _client?.title,
+              selectedSubtitle: _client?.subtitle,
+              placeholder: 'Aucune cliente',
+              onOpen: () async {
+                final picked = await showSearchablePicker(
+                  context: context,
+                  title: 'Choisir une cliente',
+                  items: const [],
+                  search: (q) => searchInstitutClients(ref, q),
+                  selectedId: _client?.id,
+                  searchHint: 'Rechercher (nom, email, téléphone)…',
+                  nullOption:
+                      const PickerItem(id: '__none__', title: 'Aucune cliente'),
+                  emptyMessage: 'Aucune cliente trouvée.',
+                  createAction: newClientPickerAction(ref),
+                );
+                if (picked == null) return;
+                final next = picked.id == '__none__' ? null : picked;
+                setState(() => _client = next);
+                widget.onClientChanged(next);
+              },
             ),
             const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: [
+                if (ctx.settings.paymentMethods.cash)
+                  const ButtonSegment(value: 'cash', label: Text('Espèces')),
+                if (ctx.settings.paymentMethods.card)
+                  const ButtonSegment(value: 'card', label: Text('CB')),
+              ],
+              selected: {paymentMethod},
+              onSelectionChanged: (s) => onPaymentChanged(s.first),
+            ),
+            const SizedBox(height: 16),
+            if (sessionBlocked) ...[
+              const Text(
+                'Ouvrez la journée pour encaisser. Le fond de caisse est facultatif.',
+                style: TextStyle(fontSize: 13, color: Color(0xFF92400E)),
+              ),
+              const SizedBox(height: 12),
+            ],
+            FilledButton(
+              onPressed: checkingOut || sessionBlocked || payable <= 0
+                  ? null
+                  : () async {
+                      final reason = _discountReason.text.trim();
+                      final ok = await onCheckout(
+                        discountCents: discountCents,
+                        notes: reason.isEmpty ? null : 'Remise : $reason',
+                      );
+                      if (ok && context.mounted) {
+                        Navigator.pop(context);
+                        ref.read(posCartProvider.notifier).clear();
+                      }
+                    },
+              child: checkingOut
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text('Encaisser · ${formatEuros(payable)}'),
+            ),
           ],
-          FilledButton(
-            onPressed: checkingOut || sessionBlocked
-                ? null
-                : () async {
-                    final ok = await onCheckout();
-                    if (ok && context.mounted) {
-                      Navigator.pop(context);
-                      ref.read(posCartProvider.notifier).clear();
-                    }
-                  },
-            child: checkingOut
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Encaisser'),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -11,6 +11,8 @@ class PosCatalogItem {
     this.durationMin,
     this.sku,
     this.wooCategories = const [],
+    this.wooBrands = const [],
+    this.wooSoins = const [],
     this.serviceCategoryId,
     this.serviceCategoryName,
     this.soldQty = 0,
@@ -32,6 +34,8 @@ class PosCatalogItem {
   final int? durationMin;
   final String? sku;
   final List<String> wooCategories;
+  final List<String> wooBrands;
+  final List<String> wooSoins;
   final String? serviceCategoryId;
   final String? serviceCategoryName;
   final int soldQty;
@@ -54,6 +58,12 @@ class PosCatalogItem {
       durationMin: json['durationMin'] as int?,
       sku: json['sku'] as String?,
       wooCategories: (json['wooCategories'] as List? ?? const [])
+          .map((e) => e.toString())
+          .toList(),
+      wooBrands: (json['wooBrands'] as List? ?? const [])
+          .map((e) => e.toString())
+          .toList(),
+      wooSoins: (json['wooSoins'] as List? ?? const [])
           .map((e) => e.toString())
           .toList(),
       serviceCategoryId: json['serviceCategoryId'] as String?,

@@ -24,6 +24,7 @@ import {
   generateWebhookCredentials,
   mapWooProductToRow,
   upsertWooVariations,
+  categoryTreeById,
 } from "@/lib/woocommerce";
 
 export interface ActionResult {
@@ -178,6 +179,10 @@ async function syncWooProductsForTenant(
   let syncedCount = 0;
 
   for (const connection of connections) {
+    const tree = categoryTreeById(
+      await connection.client.listAllProductCategories(),
+    );
+
     // La boutique Woo peut avoir plus de 250 produits. On ne veut pas rater
     // des articles qui apparaitront ensuite sur des ventes → limite haute
     // (50 pages × 50 = 2500 produits) tout en gardant un garde-fou.
@@ -186,7 +191,7 @@ async function syncWooProductsForTenant(
       if (products.length === 0) break;
 
       const rows = products.map((p) =>
-        mapWooProductToRow(tenantId, connection.connectionId, p),
+        mapWooProductToRow(tenantId, connection.connectionId, p, tree),
       );
 
       await supabase
@@ -213,6 +218,7 @@ async function syncWooProductsForTenant(
               connection.connectionId,
               parent,
               variations,
+              tree,
             );
           }
         } catch (err) {

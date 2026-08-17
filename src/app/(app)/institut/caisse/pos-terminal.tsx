@@ -16,15 +16,17 @@ import {
 import {
   POS_FACET_ALL,
   POS_FACET_BESTSELLERS,
+  POS_FACET_MARQUES,
+  POS_FACET_SOINS,
   POS_FACET_UNCATEGORIZED,
+  expandedWooGroup,
   filterPosCatalog,
   hasUncategorizedServices,
   listServiceCategoryFacets,
-  listWooCategoryFacets,
+  listWooNavGroups,
   serviceFacetId,
-  wooFacetId,
 } from "@/lib/institut/pos-catalog-filter";
-import { computeCartTotals } from "@/lib/institut/pos-totals";
+import { computeCartTotals, resolveCartDiscountCents } from "@/lib/institut/pos-totals";
 import {
   formatPosMoney,
   vatRateForLineType,
@@ -102,7 +104,9 @@ export function PosTerminal({
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoPending, setPromoPending] = useState(false);
   const [notes, setNotes] = useState("");
-  const [cartDiscountEuros, setCartDiscountEuros] = useState("0");
+  const [cartDiscountKind, setCartDiscountKind] = useState<"percent" | "fixed">("percent");
+  const [cartDiscountValue, setCartDiscountValue] = useState("");
+  const [cartDiscountReason, setCartDiscountReason] = useState("");
   const [pageSize, setPageSize] = useState(24);
   const [page, setPage] = useState(1);
   const [checkoutState, checkoutAction, checkoutPending] = useActionState(
@@ -197,10 +201,11 @@ export function PosTerminal({
     () => listServiceCategoryFacets(catalog, tab, serviceCategories),
     [catalog, tab, serviceCategories],
   );
-  const wooCategoryFacets = useMemo(
-    () => listWooCategoryFacets(catalog, tab),
+  const wooNav = useMemo(
+    () => listWooNavGroups(catalog, tab),
     [catalog, tab],
   );
+  const wooGroup = expandedWooGroup(facet);
   const showUncategorized = useMemo(
     () => hasUncategorizedServices(catalog, tab),
     [catalog, tab],
@@ -245,12 +250,6 @@ export function PosTerminal({
     return applyPriceOverrides(lines, activeOverrides);
   }, [cart, catalog, activeOverrides]);
 
-  const discountCents = useMemo(() => {
-    if (promoCode) return 0;
-    const n = Number.parseFloat(cartDiscountEuros.replace(",", "."));
-    return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0;
-  }, [cartDiscountEuros, promoCode]);
-
   const grossCents = useMemo(() => {
     if (resolvedForTotals.length === 0) return 0;
     return computeCartTotals(resolvedForTotals, {
@@ -259,6 +258,16 @@ export function PosTerminal({
       cartDiscountCents: 0,
     }).gross_cents;
   }, [resolvedForTotals, settings]);
+
+  const discountCents = useMemo(() => {
+    if (promoCode) return 0;
+    const n = Number.parseFloat(cartDiscountValue.replace(",", "."));
+    return resolveCartDiscountCents({
+      kind: cartDiscountKind,
+      value: Number.isFinite(n) ? n : 0,
+      grossCents,
+    });
+  }, [cartDiscountKind, cartDiscountValue, promoCode, grossCents]);
 
   const subtotalForLoyalty = useMemo(() => {
     if (resolvedForTotals.length === 0) return 0;
@@ -419,7 +428,9 @@ export function PosTerminal({
     setCart({});
     setPriceOverrides({});
     setPriceEdits({});
-    setCartDiscountEuros("0");
+    setCartDiscountKind("percent");
+    setCartDiscountValue("");
+    setCartDiscountReason("");
     setLoyaltyRewardId("");
     setLoyaltyPreviewCents(0);
     setNotes("");
@@ -516,22 +527,63 @@ export function PosTerminal({
               {t("filters.uncategorized")}
             </CatalogFacetChip>
           ) : null}
-          {wooCategoryFacets.map((name) => {
-            const id = wooFacetId(name);
-            return (
+          {wooNav.soins.length > 0 ? (
+            <CatalogFacetChip
+              active={wooGroup === "soins"}
+              onClick={() => {
+                setFacet(POS_FACET_SOINS);
+                setPage(1);
+              }}
+            >
+              {t("filters.soins")}
+            </CatalogFacetChip>
+          ) : null}
+          {wooNav.marques.length > 0 ? (
+            <CatalogFacetChip
+              active={wooGroup === "marques"}
+              onClick={() => {
+                setFacet(POS_FACET_MARQUES);
+                setPage(1);
+              }}
+            >
+              {t("filters.marques")}
+            </CatalogFacetChip>
+          ) : null}
+        </div>
+
+        {wooGroup === "soins" && wooNav.soins.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {wooNav.soins.map((child) => (
               <CatalogFacetChip
-                key={id}
-                active={facet === id}
+                key={child.id}
+                active={facet === child.id}
                 onClick={() => {
-                  setFacet(id);
+                  setFacet(child.id);
                   setPage(1);
                 }}
               >
-                {name}
+                {child.id === "woo-soins:autres" ? t("filters.soinsOther") : child.name}
               </CatalogFacetChip>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : null}
+
+        {wooGroup === "marques" && wooNav.marques.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {wooNav.marques.map((child) => (
+              <CatalogFacetChip
+                key={child.id}
+                active={facet === child.id}
+                onClick={() => {
+                  setFacet(child.id);
+                  setPage(1);
+                }}
+              >
+                {child.name}
+              </CatalogFacetChip>
+            ))}
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
           <div className="flex items-center gap-2">
@@ -848,20 +900,49 @@ export function PosTerminal({
               </p>
             ) : null}
             {!promoCode ? (
-              <>
-                <label className="block text-xs text-slate-500" htmlFor="cart-discount">
-                  {t("cart.discount")}
-                </label>
+              <div className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  {t("cart.discountAdd")}
+                </p>
+                <div className="flex gap-2">
+                  <Select
+                    id="cart-discount-kind"
+                    value={cartDiscountKind}
+                    onChange={(e) =>
+                      setCartDiscountKind(e.target.value === "fixed" ? "fixed" : "percent")
+                    }
+                    aria-label={t("cart.discountType")}
+                  >
+                    <option value="percent">{t("cart.discountPercent")}</option>
+                    <option value="fixed">{t("cart.discountFixed")}</option>
+                  </Select>
+                  <Input
+                    id="cart-discount"
+                    type="number"
+                    min={0}
+                    step={cartDiscountKind === "percent" ? "1" : "0.01"}
+                    max={cartDiscountKind === "percent" ? "100" : (grossCents / 100).toFixed(2)}
+                    value={cartDiscountValue}
+                    onChange={(e) => setCartDiscountValue(e.target.value)}
+                    placeholder={cartDiscountKind === "percent" ? "10" : "15"}
+                    aria-label={t("cart.discountValue")}
+                  />
+                </div>
                 <Input
-                  id="cart-discount"
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  max={(grossCents / 100).toFixed(2)}
-                  value={cartDiscountEuros}
-                  onChange={(e) => setCartDiscountEuros(e.target.value)}
+                  value={cartDiscountReason}
+                  onChange={(e) => setCartDiscountReason(e.target.value)}
+                  placeholder={t("cart.discountReasonPlaceholder")}
+                  aria-label={t("cart.discountReason")}
                 />
-              </>
+                {discountCents > 0 ? (
+                  <p className="text-xs text-emerald-700">
+                    {t("cart.discountApplied", {
+                      amount: money(discountCents),
+                      total: money(Math.max(0, grossCents - discountCents)),
+                    })}
+                  </p>
+                ) : null}
+              </div>
             ) : null}
           </div>
         ) : null}
@@ -939,8 +1020,15 @@ export function PosTerminal({
             clientId={clientId}
             staffId={staffId}
             appointmentId={appointmentId}
-            notes={notes}
-            cartDiscountEuros={cartDiscountEuros}
+            notes={[
+              notes.trim(),
+              !promoCode && cartDiscountReason.trim()
+                ? `${t("cart.discountReasonPrefix")}: ${cartDiscountReason.trim()}`
+                : "",
+            ]
+              .filter(Boolean)
+              .join("\n")}
+            cartDiscountEuros={(discountCents / 100).toFixed(2)}
             loyaltyRewardId={loyaltyRewardId}
             promoCode={promoCode}
             priceOverridesJson={priceOverridesJson}

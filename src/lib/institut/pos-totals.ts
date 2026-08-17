@@ -113,3 +113,20 @@ export function parseCartDiscountCents(raw: string | number | null): number {
   if (!Number.isFinite(n) || n <= 0) return 0;
   return Math.round(n * 100);
 }
+
+export type CartDiscountKind = "percent" | "fixed";
+
+/** Convertit une remise % ou € en centimes, plafonnée au brut du panier. */
+export function resolveCartDiscountCents(options: {
+  kind: CartDiscountKind;
+  value: number;
+  grossCents: number;
+}): number {
+  const { kind, value, grossCents } = options;
+  if (!Number.isFinite(value) || value <= 0 || grossCents <= 0) return 0;
+  if (kind === "percent") {
+    const pct = Math.min(100, value);
+    return Math.min(grossCents, Math.round((grossCents * pct) / 100));
+  }
+  return Math.min(grossCents, Math.round(value * 100));
+}

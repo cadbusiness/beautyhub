@@ -126,11 +126,13 @@ export {
   deactivateWooProduct,
   resolveWooWebhookConnection,
   verifyWebhookSignature,
+  categoryTreeById,
 } from "./sync";
 export { WooClient };
 export type {
   WooCredentials,
   WooCustomer,
   WooProduct,
+  WooProductCategory,
   WooProductVariation,
 } from "./client";

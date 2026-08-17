@@ -287,7 +287,7 @@ export function ticketPdfHeaders(fileName: string, byteLength?: number): Headers
 }
 
 export function ticketPdfResponse(buffer: Buffer, fileName: string): Response {
-  return new Response(buffer, {
+  return new Response(Uint8Array.from(buffer), {
     status: 200,
     headers: ticketPdfHeaders(fileName, buffer.length),
   });

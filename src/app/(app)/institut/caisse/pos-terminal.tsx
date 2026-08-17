@@ -144,7 +144,8 @@ export function PosTerminal({
       setCart({});
       setPriceOverrides({});
       setPriceEdits({});
-      setCartDiscountEuros("0");
+      setCartDiscountValue("");
+      setCartDiscountReason("");
       setLoyaltyRewardId("");
       setLoyaltyPreviewCents(0);
       setPromoInput("");
@@ -335,7 +336,8 @@ export function PosTerminal({
       }
       setPromoCode(data.code ?? code.toUpperCase());
       setPromoDiscountCents(data.discount_cents ?? 0);
-      setCartDiscountEuros("0");
+      setCartDiscountValue("");
+      setCartDiscountReason("");
       setPromoError(null);
     } catch {
       setPromoError("promo_invalid");
@@ -405,7 +407,8 @@ export function PosTerminal({
     setCart({});
     setPriceOverrides({});
     setPriceEdits({});
-    setCartDiscountEuros("0");
+    setCartDiscountValue("");
+    setCartDiscountReason("");
   }
 
   function eurosToCents(input: string): number | null {

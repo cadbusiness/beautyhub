@@ -424,6 +424,34 @@ class MobileApiClient {
     return InstTenantInfo.fromJson(body);
   }
 
+  /// Met à jour le profil public de l'institut (nom, contact, adresse, horaires).
+  Future<InstTenantInfo> updateInstitutTenant({
+    required String accessToken,
+    required String tenantId,
+    String? displayName,
+    String? description,
+    InstTenantContact? contact,
+    InstTenantAddress? address,
+    List<InstOpeningDay>? openingHours,
+  }) async {
+    final payload = <String, dynamic>{
+      if (displayName != null) 'displayName': displayName,
+      if (description != null) 'description': description,
+      if (contact != null) 'contact': contact.toJson(),
+      if (address != null) 'address': address.toJson(),
+      if (openingHours != null)
+        'openingHours':
+            openingHours.map((d) => d.toJson()).toList(growable: false),
+    };
+    final response = await _http.patch(
+      _uri('/api/mobile/institut/tenant'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode(payload),
+    );
+    final body = await _decode(response);
+    return InstTenantInfo.fromJson(body);
+  }
+
   Future<PosCheckoutResult> checkout({
     required String accessToken,
     required String tenantId,

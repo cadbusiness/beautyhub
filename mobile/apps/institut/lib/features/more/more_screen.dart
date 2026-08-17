@@ -210,7 +210,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 _MenuRow(
                   leading: _IconTile(icon: Icons.store_mall_directory_outlined),
                   title: 'Institut',
-                  subtitle: 'Contact, adresse & horaires publics',
+                  subtitle: 'Nom, contact, adresse & horaires',
                   onTap: () => context.go('/app/more/institut'),
                 ),
               ],

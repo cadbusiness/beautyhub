@@ -20,13 +20,7 @@ const TEST_ACCOUNT_KEYS = [
   { email: "coach@demo.test", roleKey: "demoCoach" as const },
 ];
 
-export function LoginForm({
-  setupRequired,
-  showTestAccounts = false,
-}: {
-  setupRequired?: boolean;
-  showTestAccounts?: boolean;
-}) {
+export function LoginForm({ setupRequired }: { setupRequired?: boolean }) {
   const t = useTranslations("auth");
   const tCommon = useTranslations("common");
   const [state, formAction, pending] = useActionState(signIn, initialState);
@@ -103,7 +97,7 @@ export function LoginForm({
           </Button>
         </form>
 
-        {!setupRequired && showTestAccounts ? (
+        {!setupRequired ? (
           <div className="mt-6 border-t border-slate-100 pt-4">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
               {t("testAccounts.title")}

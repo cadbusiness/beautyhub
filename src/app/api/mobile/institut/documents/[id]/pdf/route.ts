@@ -7,7 +7,7 @@ import { loadSaleDocumentPayload } from "@/lib/institut/sale-documents/load";
 import {
   renderTicketPdfBuffer,
   ticketPdfFileName,
-  ticketPdfHeaders,
+  ticketPdfResponse,
 } from "@/lib/institut/sale-documents/ticket-pdf";
 
 export const runtime = "nodejs";
@@ -36,9 +36,7 @@ export async function GET(
     }
 
     const bytes = await renderTicketPdfBuffer(payload);
-    return new NextResponse(new Uint8Array(bytes), {
-      headers: ticketPdfHeaders(ticketPdfFileName(payload)),
-    });
+    return ticketPdfResponse(bytes, ticketPdfFileName(payload));
   } catch (error) {
     return mobileErrorResponse(error);
   }

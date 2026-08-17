@@ -60,14 +60,56 @@ class MobileApiClient {
   Map<String, String> _headers({
     required String accessToken,
     String? tenantId,
+    String accept = 'application/json',
+    bool jsonContentType = true,
   }) {
     return {
       'Authorization': 'Bearer $accessToken',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
+      'Accept': accept,
+      if (jsonContentType) 'Content-Type': 'application/json',
       bundleIdHeader: bundleId,
       if (tenantId != null && tenantId.isNotEmpty) tenantIdHeader: tenantId,
     };
+  }
+
+  bool _looksLikePdf(Uint8List bytes) {
+    return bytes.length >= 5 &&
+        bytes[0] == 0x25 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x44 &&
+        bytes[3] == 0x46 &&
+        bytes[4] == 0x2D;
+  }
+
+  Never _throwPdfError(http.Response response, String fallback) {
+    Map<String, dynamic> body = const {};
+    if (response.body.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) body = decoded;
+      } catch (_) {
+        // Réponse d'erreur non JSON.
+      }
+    }
+    throw MobileApiException(
+      body['message'] as String? ?? body['error'] as String? ?? fallback,
+      statusCode: response.statusCode,
+      code: body['error'] as String?,
+    );
+  }
+
+  Uint8List _requirePdfBytes(http.Response response, String fallback) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      _throwPdfError(
+        response,
+        '$fallback (${response.statusCode})',
+      );
+    }
+    final bytes = response.bodyBytes;
+    if (!_looksLikePdf(bytes)) {
+      _throwPdfError(response, 'PDF illisible. Réessayez dans un instant.');
+    }
+    return bytes;
   }
 
   Uri _uri(String path, [Map<String, String>? query]) {
@@ -454,31 +496,16 @@ class MobileApiClient {
     required String tenantId,
     required String saleId,
   }) async {
-    final headers = _headers(accessToken: accessToken, tenantId: tenantId);
-    headers['Accept'] = 'application/pdf';
     final response = await _http.get(
       _uri('/api/mobile/institut/sales/$saleId/ticket'),
-      headers: headers,
+      headers: _headers(
+        accessToken: accessToken,
+        tenantId: tenantId,
+        accept: 'application/pdf',
+        jsonContentType: false,
+      ),
     );
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      Map<String, dynamic> body = const {};
-      if (response.body.isNotEmpty) {
-        try {
-          final decoded = jsonDecode(response.body);
-          if (decoded is Map<String, dynamic>) body = decoded;
-        } catch (_) {
-          // Réponse d'erreur non JSON.
-        }
-      }
-      throw MobileApiException(
-        body['message'] as String? ??
-            body['error'] as String? ??
-            'Ticket PDF indisponible (${response.statusCode})',
-        statusCode: response.statusCode,
-        code: body['error'] as String?,
-      );
-    }
-    return response.bodyBytes;
+    return _requirePdfBytes(response, 'Ticket PDF indisponible');
   }
 
   Future<Uint8List> fetchSaleDocumentPdf({
@@ -486,31 +513,16 @@ class MobileApiClient {
     required String tenantId,
     required String documentId,
   }) async {
-    final headers = _headers(accessToken: accessToken, tenantId: tenantId);
-    headers['Accept'] = 'application/pdf';
     final response = await _http.get(
       _uri('/api/mobile/institut/documents/$documentId/pdf'),
-      headers: headers,
+      headers: _headers(
+        accessToken: accessToken,
+        tenantId: tenantId,
+        accept: 'application/pdf',
+        jsonContentType: false,
+      ),
     );
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      Map<String, dynamic> body = const {};
-      if (response.body.isNotEmpty) {
-        try {
-          final decoded = jsonDecode(response.body);
-          if (decoded is Map<String, dynamic>) body = decoded;
-        } catch (_) {
-          // Réponse d'erreur non JSON.
-        }
-      }
-      throw MobileApiException(
-        body['message'] as String? ??
-            body['error'] as String? ??
-            'PDF indisponible (${response.statusCode})',
-        statusCode: response.statusCode,
-        code: body['error'] as String?,
-      );
-    }
-    return response.bodyBytes;
+    return _requirePdfBytes(response, 'PDF indisponible');
   }
 
   /// Membres de l'équipe (staff institut).

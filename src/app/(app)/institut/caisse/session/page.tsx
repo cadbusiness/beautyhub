@@ -64,18 +64,8 @@ export default async function CaisseSessionPage() {
               </span>
               <h2 className="mt-3 text-lg font-semibold text-slate-900">{t("openTitle")}</h2>
               <p className="mt-1 text-sm leading-relaxed text-slate-600">{t("closedIntro")}</p>
+              <p className="mt-3 text-sm text-slate-500">{t("guide")}</p>
             </div>
-
-            <ol className="space-y-2.5 rounded-lg border border-slate-200 bg-slate-50/60 p-4 text-sm text-slate-700">
-              {[t("steps.count"), t("steps.declare"), t("steps.sell")].map((label, i) => (
-                <li key={i} className="flex gap-3">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200">
-                    {i + 1}
-                  </span>
-                  <span className="pt-0.5">{label}</span>
-                </li>
-              ))}
-            </ol>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-white p-4 lg:sticky lg:top-4">

@@ -18,7 +18,7 @@ export function NavLink({
   href: string;
   label: string;
   exact?: boolean;
-  indicator?: "dot-green";
+  indicator?: "dot-green" | "dot-amber";
   icon?: string;
   collapsed?: boolean;
   badge?: number;
@@ -69,6 +69,12 @@ export function NavLink({
               title={tPos("navIndicator")}
               aria-hidden
             />
+          ) : indicator === "dot-amber" ? (
+            <span
+              className="h-2 w-2 shrink-0 rounded-full bg-amber-500 ring-2 ring-amber-100"
+              title={tPos("navClosed")}
+              aria-hidden
+            />
           ) : null}
         </span>
       ) : badge != null && badge > 0 ? (
@@ -79,6 +85,12 @@ export function NavLink({
         <span
           className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-green-500 ring-2 ring-green-100"
           title={tPos("navIndicator")}
+          aria-hidden
+        />
+      ) : indicator === "dot-amber" ? (
+        <span
+          className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-amber-100"
+          title={tPos("navClosed")}
           aria-hidden
         />
       ) : null}

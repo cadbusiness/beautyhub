@@ -22,6 +22,7 @@ class PosSaleTab extends ConsumerStatefulWidget {
 class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   String? _clientId;
   String _paymentMethod = 'cash';
+  bool _openingDay = false;
 
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
@@ -40,6 +41,19 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     return total;
   }
 
+  Future<void> _openDayWithoutFloat() async {
+    setState(() => _openingDay = true);
+    try {
+      await openInstitutCashDay(ref);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    } finally {
+      if (mounted) setState(() => _openingDay = false);
+    }
+  }
+
   Future<bool> _checkout(PosContext ctx) async {
     final cart = ref.read(posCartProvider);
     if (cart.isEmpty) return false;
@@ -47,7 +61,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     if (ctx.requireOpenSession && !ctx.sessionOpen) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ouvrez la session caisse d’abord.')),
+          const SnackBar(
+            content: Text('Ouvrez d’abord la journée — le fond de caisse est facultatif.'),
+          ),
         );
       }
       return false;
@@ -127,6 +143,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         onClientChanged: (id) => setState(() => _clientId = id),
         onPaymentChanged: (m) => setState(() => _paymentMethod = m),
         onCheckout: () => _checkout(ctx),
+        sessionBlocked: ctx.requireOpenSession && !ctx.sessionOpen,
       ),
     );
   }
@@ -154,6 +171,72 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
+                if (!ctx.sessionOpen)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFFBEB),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFFDE68A)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Caisse fermée',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF78350F),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Ouvrez la journée pour ne pas l’oublier. Le fond est facultatif.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF92400E),
+                                height: 1.35,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                FilledButton(
+                                  onPressed: _openingDay ? null : _openDayWithoutFloat,
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: const Color(0xFF78350F),
+                                    foregroundColor: Colors.white,
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                  child: _openingDay
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Text('Ouvrir sans fond'),
+                                ),
+                                const SizedBox(width: 8),
+                                TextButton(
+                                  onPressed: () {
+                                    ref.read(cashInitialTabProvider.notifier).state = 0;
+                                  },
+                                  child: const Text('Ajouter un fond'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -354,6 +437,7 @@ class _CartSheet extends ConsumerWidget {
     required this.onClientChanged,
     required this.onPaymentChanged,
     required this.onCheckout,
+    this.sessionBlocked = false,
   });
 
   final PosContext ctx;
@@ -362,6 +446,7 @@ class _CartSheet extends ConsumerWidget {
   final ValueChanged<String?> onClientChanged;
   final ValueChanged<String> onPaymentChanged;
   final Future<bool> Function() onCheckout;
+  final bool sessionBlocked;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -497,8 +582,15 @@ class _CartSheet extends ConsumerWidget {
             onSelectionChanged: (s) => onPaymentChanged(s.first),
           ),
           const SizedBox(height: 16),
+          if (sessionBlocked) ...[
+            const Text(
+              'Ouvrez la journée pour encaisser. Le fond de caisse est facultatif.',
+              style: TextStyle(fontSize: 13, color: Color(0xFF92400E)),
+            ),
+            const SizedBox(height: 12),
+          ],
           FilledButton(
-            onPressed: checkingOut
+            onPressed: checkingOut || sessionBlocked
                 ? null
                 : () async {
                     final ok = await onCheckout();

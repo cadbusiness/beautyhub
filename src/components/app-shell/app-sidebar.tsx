@@ -18,11 +18,13 @@ function sectionTitleKey(moduleId: string): "institut" | "academie" | null {
 export function AppSidebar({
   homeLabel,
   navGroups,
-  posOpenHref,
+  posCaisseHref,
+  posSessionState,
 }: {
   homeLabel: string;
   navGroups: NavGroup[];
-  posOpenHref?: string;
+  posCaisseHref?: string;
+  posSessionState?: "open" | "closed";
 }) {
   const t = useTranslations("shell");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -80,7 +82,11 @@ export function AppSidebar({
                 icon={item.icon}
                 collapsed
                 indicator={
-                  posOpenHref === item.href ? "dot-green" : undefined
+                  posCaisseHref === item.href && posSessionState
+                    ? posSessionState === "open"
+                      ? "dot-green"
+                      : "dot-amber"
+                    : undefined
                 }
               />
             ))}
@@ -113,7 +119,11 @@ export function AppSidebar({
                         exact={item.exact}
                         icon={item.icon}
                         indicator={
-                          posOpenHref === item.href ? "dot-green" : undefined
+                          posCaisseHref === item.href && posSessionState
+                            ? posSessionState === "open"
+                              ? "dot-green"
+                              : "dot-amber"
+                            : undefined
                         }
                       />
                     ))}

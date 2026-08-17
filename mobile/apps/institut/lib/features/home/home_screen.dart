@@ -204,29 +204,40 @@ class HomeScreen extends ConsumerWidget {
                   data: (session) {
                     if (session == null) {
                       return _SectionCard(
-                        title: 'Caisse',
-                        subtitle: 'Fermée',
+                        title: 'Caisse fermée',
+                        subtitle: 'Fond facultatif',
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const Text(
-                              'Ouvrez une session pour encaisser.',
-                              style: TextStyle(fontSize: 13, color: _muted),
+                              'Ouvrez la journée pour encaisser. Pas besoin de fond si le tiroir est vide.',
+                              style: TextStyle(fontSize: 13, color: _muted, height: 1.35),
                             ),
                             const SizedBox(height: 14),
-                            OutlinedButton(
+                            FilledButton(
+                              onPressed: () async {
+                                try {
+                                  await openInstitutCashDay(ref);
+                                } catch (_) {
+                                  ref.read(cashInitialTabProvider.notifier).state = 0;
+                                  if (context.mounted) context.go('/app/cash');
+                                }
+                              },
+                              style: FilledButton.styleFrom(
+                                backgroundColor: _black,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              child: const Text('Ouvrir sans fond'),
+                            ),
+                            TextButton(
                               onPressed: () {
                                 ref.read(cashInitialTabProvider.notifier).state =
                                     0;
                                 context.go('/app/cash');
                               },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: _black,
-                                side: const BorderSide(color: _black),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              child: const Text('Ouvrir la caisse'),
+                              child: const Text('Ajouter un fond de caisse'),
                             ),
                           ],
                         ),

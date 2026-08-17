@@ -42,7 +42,9 @@ export async function openCashSession(
   const existing = await getOpenCashSession(supabase, session.tenant.id);
   if (existing) return { error: t("sessionAlreadyOpen") };
 
-  const openingFloat = parseEurosCents(formData.get("opening_float"));
+  const mode = String(formData.get("mode") ?? "float");
+  const openingFloat =
+    mode === "skip" ? 0 : parseEurosCents(formData.get("opening_float"));
 
   const { error } = await supabase.from("inst_cash_sessions").insert({
     tenant_id: session.tenant.id,

@@ -41,8 +41,13 @@ export default async function AppLayout({
       }),
     }),
   );
-  const posOpenHref =
-    posSession ? "/institut/caisse" : undefined;
+  const institutEnabled = session.enabledModuleIds.includes("institut");
+  const posCaisseHref = institutEnabled ? "/institut/caisse" : undefined;
+  const posSessionState = institutEnabled
+    ? posSession
+      ? "open"
+      : "closed"
+    : undefined;
   const profile = await getTeamProfile();
   const displayName = profileDisplayName(profile, user.email ?? null);
   const initial = profileInitial(displayName);
@@ -68,13 +73,15 @@ export default async function AppLayout({
         displayName={displayName}
         profileInitial={initial}
         posSession={posSession}
+        showPosSessionStatus={institutEnabled}
       />
 
       <div className="flex min-h-0 flex-1">
         <AppSidebar
           homeLabel={t("home")}
           navGroups={navGroups}
-          posOpenHref={posOpenHref}
+          posCaisseHref={posCaisseHref}
+          posSessionState={posSessionState}
         />
 
         <div className="flex min-w-0 flex-1">

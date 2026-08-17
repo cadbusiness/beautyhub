@@ -1013,7 +1013,8 @@
       "title": "Modules"
     },
     "posSession": {
-      "closedDescription": "Log in to collect and track today's cash.",
+      "closedDescription": "Open the day to take payments. The cash float is optional.",
+      "closedGuide": "Open the day → cash float if needed → checkout",
       "closedTitle": "Closed checkout",
       "expectedCash": "Expected species",
       "goToPos": "Cash in on a sale",
@@ -3097,7 +3098,8 @@
       },
       "closeTitle": "End of day closing",
       "closedBadge": "Closed checkout",
-      "closedIntro": "Log in to record your sales, track cash in hand, and close out your day neatly.",
+      "closedIntro": "Open the day to take payments. The cash float is optional — leave it empty if the drawer has no cash.",
+      "guide": "Open the day → cash float if needed → checkout",
       "generateX": "Generate the",
       "goToPos": "Cash in on a sale",
       "goToPosAfterOpen": "Go cash",
@@ -3145,12 +3147,16 @@
       "movements": "Cash movements",
       "movementsHint": "Excluding sales: currency supply, bank deposit, small expenses paid in cash.",
       "noMovements": "No movement yet.",
-      "openDescription": "Start a session with the initial cash.",
+      "openDescription": "Open the session. The cash float is optional.",
       "openForm": {
         "defaultHint": "Configured default value: {amount}",
-        "float": "Cash (€)",
-        "floatHelp": "Liquid present in the drawer when opened (coins and notes). ",
-        "submit": "Open checkout"
+        "float": "Cash float (€) — optional",
+        "floatHelp": "Cash already in the drawer. Leave empty or 0 if there is no cash.",
+        "hideFloat": "No float",
+        "skip": "Open without float",
+        "submit": "Open checkout",
+        "submitFloat": "Open with this float",
+        "withFloatToggle": "Add a cash float"
       },
       "openTitle": "Start the day",
       "openingFloat": "Cash bottom",
@@ -3261,6 +3267,9 @@
       "searchAria": "To research",
       "searchArticles": "Search for an article…",
       "sessionRequired": "Open the register to record this sale.",
+      "sessionClosedTitle": "Checkout is not open",
+      "sessionClosedBody": "Open the day so you don’t forget. The cash float is optional.",
+      "sessionClosedGuide": "Open without a float, or add one if the drawer already has cash.",
       "tabs": {
         "all": "All",
         "internal": "Internal",
@@ -3692,7 +3701,10 @@
       "durationJustOpened": "right now",
       "durationMins": "since {mins} min",
       "navIndicator": "Open checkout",
-      "open": "Open checkout"
+      "navClosed": "Checkout closed",
+      "open": "Open checkout",
+      "closed": "Checkout closed",
+      "closedCta": "Open"
     },
     "sidebar": {
       "ariaLabel": "Main navigation",

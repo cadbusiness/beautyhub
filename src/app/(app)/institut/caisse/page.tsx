@@ -162,6 +162,7 @@ export default async function CaissePage({
             settings={posSettings}
             sessionOpen={Boolean(cashSession)}
             requireSession={posSettings.require_open_session}
+            defaultOpeningFloatCents={posSettings.default_opening_float_cents}
             stripeEnabled={stripeEnabled}
             stripePublishableKey={stripePublishableKey}
             stripeAccountId={stripeAccount?.accountId}

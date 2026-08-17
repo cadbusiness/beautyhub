@@ -19,8 +19,11 @@ type LoyaltyRewardOption = {
 
 type LoyaltySnapshot = {
   active: boolean;
+  program_id?: string;
+  program_name?: string;
   points_label?: string;
   balance: number;
+  value_cents?: number;
   rewards: LoyaltyRewardOption[];
 };
 
@@ -105,16 +108,29 @@ export function PosLoyaltyPicker({
 
   const pointsLabel = snapshot.points_label ?? t("pointsDefault");
   const eligibleRewards = snapshot.rewards.filter((r) => r.eligible);
+  const valueCents = snapshot.value_cents ?? 0;
 
   return (
     <div className="rounded-lg border border-violet-200 bg-violet-50/50 p-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-violet-800">
-          {t("title")}
-        </p>
-        <p className="text-xs tabular-nums text-violet-700">
-          {t("balance", { count: snapshot.balance, label: pointsLabel })}
-        </p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-violet-800">
+            {t("title")}
+          </p>
+          {snapshot.program_name ? (
+            <p className="mt-0.5 text-xs text-violet-700">{snapshot.program_name}</p>
+          ) : null}
+        </div>
+        <div className="text-right">
+          <p className="text-xs tabular-nums text-violet-700">
+            {t("balance", { count: snapshot.balance, label: pointsLabel })}
+          </p>
+          {valueCents > 0 ? (
+            <p className="mt-0.5 text-xs font-medium tabular-nums text-violet-900">
+              {t("value", { amount: formatPrice(valueCents, currency, locale) })}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       {eligibleRewards.length === 0 ? (

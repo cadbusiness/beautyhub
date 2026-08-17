@@ -299,6 +299,17 @@ export async function createClientRecord(
   if (created) {
     const { provisionClientAccess } = await import("@/lib/institut/client-access");
     await provisionClientAccess(supabase, session.tenant.id, created.id);
+    if (fields.loyalty_program_id) {
+      const { assignClientLoyaltyProgram } = await import(
+        "@/lib/institut/client-loyalty"
+      );
+      await assignClientLoyaltyProgram(
+        supabase,
+        session.tenant.id,
+        created.id,
+        fields.loyalty_program_id,
+      );
+    }
   }
 
   revalidatePath("/institut/clients");
@@ -370,6 +381,22 @@ export async function updateClientRecord(
     return {
       error: error.code === "23505" ? t("clientEmailExists") : error.message,
     };
+  }
+
+  if (fields.loyalty_program_id !== undefined) {
+    const { assignClientLoyaltyProgram } = await import(
+      "@/lib/institut/client-loyalty"
+    );
+    try {
+      await assignClientLoyaltyProgram(
+        supabase,
+        session.tenant.id,
+        clientId,
+        fields.loyalty_program_id,
+      );
+    } catch {
+      // column already saved
+    }
   }
 
   if (before && before.marketing_opt_in !== fields.marketing_opt_in) {

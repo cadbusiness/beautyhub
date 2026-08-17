@@ -118,6 +118,7 @@
       "compliance": "Compliance",
       "domain": "Domain",
       "institut": "Institute",
+      "loyalty": "Loyalty",
       "pos": "Box",
       "profile": "Profile",
       "security": "Security",
@@ -1237,6 +1238,25 @@
         "enrollmentsTitle": "Academy training",
         "historyTitle": "Historical",
         "loginId": "Login ID",
+        "loyalty": {
+          "title": "Loyalty",
+          "group": "Group",
+          "balance": "Balance",
+          "points": "{count} {label}",
+          "value": "Value",
+          "progress": "Progress",
+          "nextReward": "{name} — {missing} {label} to go",
+          "rewardReady": "A reward is available.",
+          "noProgress": "No reward tier reached yet.",
+          "noProgram": "No program",
+          "assign": "Assign a group",
+          "assignDefault": "Institute active program",
+          "active": "active",
+          "save": "Save",
+          "saved": "Loyalty group updated.",
+          "programNotFound": "Program not found.",
+          "noProgramsHint": "No program yet. Create one in Settings → Loyalty."
+        },
         "marketingOptIn": "Marketing",
         "memberSince": "Customer since",
         "noAppointments": "No appointments recorded.",
@@ -1300,6 +1320,8 @@
         "emailPlaceholder": "marie@email.com",
         "fullName": "Full name",
         "fullNamePlaceholder": "Marie Durand",
+        "loyaltyProgram": "Loyalty group",
+        "loyaltyProgramDefault": "Institute active program",
         "marketingOptIn": "Accepts marketing communications",
         "notes": "Internal notes",
         "notesPlaceholder": "Preferences, contraindications, remarks…",
@@ -3072,7 +3094,8 @@
       "noRewards": "No rewards available for this customer.",
       "none": "Do not use points",
       "pointsDefault": "points",
-      "title": "Loyalty"
+      "title": "Loyalty",
+      "value": "up to −{amount}"
     },
     "products": {
       "columns": {

@@ -226,6 +226,82 @@ class PosContext {
   }
 }
 
+class PosLoyaltyReward {
+  const PosLoyaltyReward({
+    required this.id,
+    required this.name,
+    required this.pointsCost,
+    required this.rewardType,
+    this.discountPercent,
+    this.discountCents,
+    this.eligible = false,
+  });
+
+  final String id;
+  final String name;
+  final int pointsCost;
+  final String rewardType;
+  final int? discountPercent;
+  final int? discountCents;
+  final bool eligible;
+
+  factory PosLoyaltyReward.fromJson(Map<String, dynamic> json) {
+    return PosLoyaltyReward(
+      id: json['id'] as String,
+      name: json['name'] as String? ?? '',
+      pointsCost: (json['points_cost'] as num?)?.toInt() ?? 0,
+      rewardType: json['reward_type'] as String? ?? 'discount_fixed',
+      discountPercent: (json['discount_percent'] as num?)?.toInt(),
+      discountCents: (json['discount_cents'] as num?)?.toInt(),
+      eligible: json['eligible'] as bool? ?? false,
+    );
+  }
+
+  int discountForSubtotal(int subtotalCents) {
+    if (subtotalCents <= 0) return 0;
+    if (rewardType == 'discount_percent' && (discountPercent ?? 0) > 0) {
+      final value = (subtotalCents * discountPercent! / 100).round();
+      return value > subtotalCents ? subtotalCents : value;
+    }
+    if (rewardType == 'discount_fixed' && (discountCents ?? 0) > 0) {
+      return discountCents! > subtotalCents ? subtotalCents : discountCents!;
+    }
+    return 0;
+  }
+}
+
+class PosClientLoyalty {
+  const PosClientLoyalty({
+    required this.active,
+    required this.balance,
+    this.programName,
+    this.pointsLabel = 'points',
+    this.valueCents = 0,
+    this.rewards = const [],
+  });
+
+  final bool active;
+  final int balance;
+  final String? programName;
+  final String pointsLabel;
+  final int valueCents;
+  final List<PosLoyaltyReward> rewards;
+
+  factory PosClientLoyalty.fromJson(Map<String, dynamic> json) {
+    return PosClientLoyalty(
+      active: json['active'] as bool? ?? false,
+      balance: (json['balance'] as num?)?.toInt() ?? 0,
+      programName: json['program_name'] as String?,
+      pointsLabel: json['points_label'] as String? ?? 'points',
+      valueCents: (json['value_cents'] as num?)?.toInt() ?? 0,
+      rewards: (json['rewards'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => PosLoyaltyReward.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+    );
+  }
+}
+
 class PosCheckoutResult {
   const PosCheckoutResult({
     required this.saleId,

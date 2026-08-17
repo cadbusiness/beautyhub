@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
-import type { LoyaltyReward } from "./loyalty";
+import { estimateLoyaltyValueCents } from "./client-loyalty";
+import { resolveLoyaltyProgramForClient, type LoyaltyReward } from "./loyalty";
 import { validateLoyaltyRedemption } from "./loyalty-redeem";
 
 type Db = SupabaseClient<Database>;
@@ -18,8 +19,11 @@ export type PosLoyaltyRewardOption = {
 
 export type PosClientLoyaltySnapshot = {
   active: boolean;
+  program_id: string;
+  program_name: string;
   points_label: string;
   balance: number;
+  value_cents: number;
   rewards: PosLoyaltyRewardOption[];
 };
 
@@ -28,16 +32,8 @@ export async function loadPosClientLoyalty(
   tenantId: string,
   clientId: string,
 ): Promise<PosClientLoyaltySnapshot | null> {
-  const { data: program } = await supabase
-    .from("inst_loyalty_programs")
-    .select("id, is_active, points_label")
-    .eq("tenant_id", tenantId)
-    .eq("is_active", true)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!program?.is_active) return null;
+  const program = await resolveLoyaltyProgramForClient(supabase, tenantId, clientId);
+  if (!program) return null;
 
   const { data: balanceRow } = await supabase
     .from("inst_loyalty_balances")
@@ -88,8 +84,11 @@ export async function loadPosClientLoyalty(
 
   return {
     active: true,
+    program_id: program.id,
+    program_name: program.name,
     points_label: program.points_label || "points",
     balance,
+    value_cents: estimateLoyaltyValueCents(balance, rewardOptions),
     rewards: rewardOptions,
   };
 }

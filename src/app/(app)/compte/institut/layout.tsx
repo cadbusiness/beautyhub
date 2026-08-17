@@ -33,6 +33,11 @@ export default async function CompteInstitutLayout({
       exact: true,
     },
     {
+      href: "/compte/institut/fidelite",
+      label: t("loyalty"),
+      exact: true,
+    },
+    {
       href: "/compte/institut/conformite",
       label: t("compliance"),
       exact: true,

@@ -75,6 +75,7 @@
     "nav": {
       "ariaLabel": "Secciones de cuenta",
       "institut": "Instituto",
+      "loyalty": "Fidelidad",
       "pos": "Caja",
       "profile": "Perfil",
       "security": "Seguridad",
@@ -1114,6 +1115,25 @@
         "enrollmentsTitle": "Entrenamiento de la academia",
         "historyTitle": "Histórico",
         "loginId": "ID de inicio de sesión",
+        "loyalty": {
+          "title": "Fidelidad",
+          "group": "Grupo",
+          "balance": "Saldo",
+          "points": "{count} {label}",
+          "value": "Valor",
+          "progress": "Progreso",
+          "nextReward": "{name} — faltan {missing} {label}",
+          "rewardReady": "Hay una recompensa disponible.",
+          "noProgress": "Ningún umbral alcanzado todavía.",
+          "noProgram": "Ningún programa",
+          "assign": "Asignar un grupo",
+          "assignDefault": "Programa activo del instituto",
+          "active": "activo",
+          "save": "Guardar",
+          "saved": "Grupo de fidelidad actualizado.",
+          "programNotFound": "Programa no encontrado.",
+          "noProgramsHint": "Ningún programa. Cree uno en Ajustes → Fidelidad."
+        },
         "marketingOptIn": "Marketing",
         "memberSince": "Cliente desde",
         "noAppointments": "No hay citas registradas.",
@@ -1173,6 +1193,8 @@
         "emailPlaceholder": "marie@correo electrónico.com",
         "fullName": "nombre completo",
         "fullNamePlaceholder": "María Durand",
+        "loyaltyProgram": "Grupo de fidelidad",
+        "loyaltyProgramDefault": "Programa activo del instituto",
         "marketingOptIn": "Acepta comunicaciones de marketing.",
         "notes": "Notas internas",
         "notesPlaceholder": "Preferencias, contraindicaciones, comentarios…",
@@ -2689,6 +2711,16 @@
         "delivered": "Entregado",
         "cancelled": "Anulado"
       }
+    },
+    "loyalty": {
+      "title": "Fidelidad",
+      "loading": "Cargando puntos…",
+      "pointsDefault": "puntos",
+      "balance": "{count} {label}",
+      "noRewards": "Ninguna recompensa disponible para este cliente.",
+      "none": "No usar puntos",
+      "cost": "{count} {label}",
+      "value": "hasta −{amount}"
     },
     "products": {
       "columns": {

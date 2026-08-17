@@ -212,6 +212,7 @@ export type Database = {
           full_name: string | null
           id: string
           login_id: string | null
+          loyalty_program_id: string | null
           marketing_opt_in: boolean
           metadata: Json
           notes: string | null
@@ -238,6 +239,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           login_id?: string | null
+          loyalty_program_id?: string | null
           marketing_opt_in?: boolean
           metadata?: Json
           notes?: string | null
@@ -264,6 +266,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           login_id?: string | null
+          loyalty_program_id?: string | null
           marketing_opt_in?: boolean
           metadata?: Json
           notes?: string | null
@@ -279,6 +282,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "clients_loyalty_program_id_fkey"
+            columns: ["loyalty_program_id"]
+            isOneToOne: false
+            referencedRelation: "inst_loyalty_programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "clients_referred_by_client_id_fkey"
             columns: ["referred_by_client_id"]

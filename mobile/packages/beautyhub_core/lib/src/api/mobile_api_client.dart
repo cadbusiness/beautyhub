@@ -539,6 +539,19 @@ class MobileApiClient {
     return InstTenantInfo.fromJson(body);
   }
 
+  Future<PosClientLoyalty> fetchClientLoyalty({
+    required String accessToken,
+    required String tenantId,
+    required String clientId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/client-loyalty', {'clientId': clientId}),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return PosClientLoyalty.fromJson(body);
+  }
+
   Future<PosCheckoutResult> checkout({
     required String accessToken,
     required String tenantId,
@@ -548,6 +561,7 @@ class MobileApiClient {
     String? staffId,
     String? notes,
     int? cartDiscountCents,
+    String? loyaltyRewardId,
   }) async {
     final response = await _http.post(
       _uri('/api/mobile/institut/checkout'),
@@ -560,6 +574,8 @@ class MobileApiClient {
         if (notes != null && notes.isNotEmpty) 'notes': notes,
         if (cartDiscountCents != null && cartDiscountCents > 0)
           'cartDiscountCents': cartDiscountCents,
+        if (loyaltyRewardId != null && loyaltyRewardId.isNotEmpty)
+          'loyaltyRewardId': loyaltyRewardId,
       }),
     );
     final body = await _decode(response);

@@ -240,6 +240,32 @@ async function loadActiveLoyaltyProgram(
   return data ? normalizeLoyaltyProgram(data) : null;
 }
 
+/** Programme de la cliente si assigné, sinon le programme actif de l'institut. */
+export async function resolveLoyaltyProgramForClient(
+  supabase: Db,
+  tenantId: string,
+  clientId: string,
+): Promise<LoyaltyProgram | null> {
+  const { data: client } = await supabase
+    .from("clients")
+    .select("loyalty_program_id")
+    .eq("tenant_id", tenantId)
+    .eq("id", clientId)
+    .maybeSingle();
+
+  if (client?.loyalty_program_id) {
+    const { data: assigned } = await supabase
+      .from("inst_loyalty_programs")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .eq("id", client.loyalty_program_id)
+      .maybeSingle();
+    if (assigned) return normalizeLoyaltyProgram(assigned);
+  }
+
+  return loadActiveLoyaltyProgram(supabase, tenantId);
+}
+
 function saleSourceType(sale: { woo_order_id: number | null }): LoyaltySourceType {
   return sale.woo_order_id ? "woocommerce_order" : "pos_sale";
 }
@@ -258,8 +284,6 @@ async function applyEarnRules(
     notes?: string;
   },
 ): Promise<void> {
-  if (!program.is_active) return;
-
   const matching = rules.filter((r) => r.is_active && r.source_type === input.sourceType);
   if (matching.length === 0) return;
 
@@ -303,7 +327,11 @@ export async function processLoyaltyForCompletedAppointment(
 
   if (!appt || appt.status !== "completed" || !appt.client_id) return;
 
-  const normalizedProgram = await loadActiveLoyaltyProgram(supabase, tenantId);
+  const normalizedProgram = await resolveLoyaltyProgramForClient(
+    supabase,
+    tenantId,
+    appt.client_id,
+  );
   if (!normalizedProgram) return;
 
   const { data: rules } = await supabase
@@ -342,7 +370,11 @@ export async function processLoyaltyForPaidSale(
 
   const sourceType = saleSourceType(sale);
 
-  const normalizedProgram = await loadActiveLoyaltyProgram(supabase, tenantId);
+  const normalizedProgram = await resolveLoyaltyProgramForClient(
+    supabase,
+    tenantId,
+    sale.client_id,
+  );
   if (!normalizedProgram) return;
 
   const { data: rules } = await supabase

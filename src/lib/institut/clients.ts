@@ -44,6 +44,7 @@ export type ClientRow = {
   login_id: string | null;
   pin_code: string | null;
   referred_by_client_id: string | null;
+  loyalty_program_id: string | null;
   source: ClientSource;
   external_id: string | null;
   metadata: Record<string, unknown>;
@@ -133,7 +134,7 @@ export type ClientProfile = ClientOverview & {
 };
 
 const CLIENT_SELECT =
-  "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_code, pin_hash, password_hash, referred_by_client_id, source, external_id, metadata, created_at, updated_at";
+  "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, pin_code, pin_hash, password_hash, referred_by_client_id, loyalty_program_id, source, external_id, metadata, created_at, updated_at";
 
 const CLIENT_LIST_SELECT =
   "id, full_name, email, phone, notes, tags, marketing_opt_in, login_id, referred_by_client_id, source, external_id, metadata, created_at, updated_at";
@@ -163,6 +164,7 @@ function mapClient(row: Record<string, unknown>): ClientRow {
     login_id: (row.login_id as string | null) ?? null,
     pin_code: (row.pin_code as string | null) ?? null,
     referred_by_client_id: (row.referred_by_client_id as string | null) ?? null,
+    loyalty_program_id: (row.loyalty_program_id as string | null) ?? null,
     source,
     external_id: (row.external_id as string | null) ?? null,
     metadata:
@@ -769,5 +771,7 @@ export function clientFormFields(formData: FormData) {
     marketing_opt_in: formData.get("marketing_opt_in") === "on",
     referred_by_client_id:
       String(formData.get("referred_by_client_id") ?? "").trim() || null,
+    loyalty_program_id:
+      String(formData.get("loyalty_program_id") ?? "").trim() || null,
   };
 }

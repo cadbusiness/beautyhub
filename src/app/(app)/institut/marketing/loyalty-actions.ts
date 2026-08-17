@@ -17,7 +17,14 @@ import {
   type LoyaltySourceType,
 } from "@/lib/institut/loyalty";
 
-const LOYALTY_PATH = "/institut/marketing/fidelite";
+const LOYALTY_PATHS = [
+  "/institut/marketing/fidelite",
+  "/compte/institut/fidelite",
+] as const;
+
+function revalidateLoyalty() {
+  for (const path of LOYALTY_PATHS) revalidatePath(path);
+}
 
 export type ActionResult = {
   ok?: boolean;
@@ -103,7 +110,7 @@ export async function saveLoyaltyProgramSettings(
     .eq("tenant_id", session.tenant.id);
 
   if (error) return { error: error.message };
-  revalidatePath(LOYALTY_PATH);
+  revalidateLoyalty();
   const tSaved = await getTranslations("institut.marketing.loyalty.program");
   return { ok: true, message: tSaved("saved") };
 }
@@ -131,7 +138,7 @@ export async function setLoyaltyProgramActive(
     .eq("tenant_id", session.tenant.id);
 
   if (error) return { error: error.message };
-  revalidatePath(LOYALTY_PATH);
+  revalidateLoyalty();
   const tSaved = await getTranslations("institut.marketing.loyalty.program");
   return { ok: true, message: tSaved("saved") };
 }
@@ -198,7 +205,7 @@ export async function saveLoyaltyEarnRule(
     if (error) return { error: error.message };
   }
 
-  revalidatePath(LOYALTY_PATH);
+  revalidateLoyalty();
   return { ok: true };
 }
 
@@ -211,7 +218,7 @@ export async function deleteLoyaltyEarnRule(ruleId: string): Promise<ActionResul
     .eq("id", ruleId)
     .eq("tenant_id", session.tenant.id);
   if (error) return { error: error.message };
-  revalidatePath(LOYALTY_PATH);
+  revalidateLoyalty();
   return { ok: true };
 }
 
@@ -284,7 +291,7 @@ export async function saveLoyaltyReward(
     if (error) return { error: error.message };
   }
 
-  revalidatePath(LOYALTY_PATH);
+  revalidateLoyalty();
   return { ok: true };
 }
 
@@ -297,7 +304,7 @@ export async function deleteLoyaltyReward(rewardId: string): Promise<ActionResul
     .eq("id", rewardId)
     .eq("tenant_id", session.tenant.id);
   if (error) return { error: error.message };
-  revalidatePath(LOYALTY_PATH);
+  revalidateLoyalty();
   return { ok: true };
 }
 
@@ -348,7 +355,7 @@ export async function applyLoyaltyStarterPack(programId?: string): Promise<Actio
   });
   if (rewardError) return { error: rewardError.message };
 
-  revalidatePath(LOYALTY_PATH);
+  revalidateLoyalty();
   return { ok: true, message: t("starterApplied") };
 }
 
@@ -373,7 +380,7 @@ export async function createLoyaltyProgram(
     .single();
 
   if (error || !data) return { error: error?.message ?? t("invalidRule") };
-  revalidatePath(LOYALTY_PATH);
+  revalidateLoyalty();
   return { ok: true, createdProgramId: data.id };
 }
 
@@ -473,6 +480,36 @@ export async function duplicateLoyaltyProgram(formData: FormData): Promise<Actio
     if (error) return { error: error.message };
   }
 
-  revalidatePath(LOYALTY_PATH);
+  revalidateLoyalty();
   return { ok: true, createdProgramId: createdProgram.id };
+}
+
+export async function assignLoyaltyProgramToClient(
+  clientId: string,
+  programId: string | null,
+): Promise<ActionResult> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  const t = await getTranslations("institut.clients.detail.loyalty");
+  try {
+    const { assignClientLoyaltyProgram } = await import(
+      "@/lib/institut/client-loyalty"
+    );
+    await assignClientLoyaltyProgram(
+      supabase,
+      session.tenant.id,
+      clientId,
+      programId,
+    );
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "assign_failed";
+    if (message === "loyalty_program_not_found") {
+      return { error: t("programNotFound") };
+    }
+    return { error: message };
+  }
+  revalidatePath("/institut/clients");
+  revalidatePath(`/institut/clients/${clientId}`);
+  revalidateLoyalty();
+  return { ok: true, message: t("saved") };
 }

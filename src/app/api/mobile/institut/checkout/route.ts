@@ -20,6 +20,7 @@ const bodySchema = z.object({
   staffId: z.string().uuid().nullable().optional(),
   notes: z.string().max(2000).optional(),
   cartDiscountCents: z.number().int().min(0).optional(),
+  loyaltyRewardId: z.string().uuid().nullable().optional(),
   payments: z.array(paymentSchema).min(1),
 });
 
@@ -38,8 +39,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const { cart, clientId, staffId, notes, cartDiscountCents, payments } =
-      parsed.data;
+    const {
+      cart,
+      clientId,
+      staffId,
+      notes,
+      cartDiscountCents,
+      loyaltyRewardId,
+      payments,
+    } = parsed.data;
     const cartEntries = Object.entries(cart).filter(([, qty]) => qty > 0);
     if (cartEntries.length === 0) {
       return Response.json({ error: "empty_cart" }, { status: 400 });
@@ -61,6 +69,7 @@ export async function POST(request: Request) {
         staffId: staffId ?? null,
         notes,
         cartDiscountCents: cartDiscountCents ?? 0,
+        loyaltyRewardId: loyaltyRewardId ?? null,
         payments: salePayments,
       },
     );

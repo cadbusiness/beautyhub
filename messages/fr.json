@@ -195,6 +195,7 @@
       "woocommerce": "WooCommerce",
       "stripe": "Stripe Connect",
       "pos": "Caisse",
+      "loyalty": "Fidélité",
       "compliance": "Conformité"
     },
     "profile": {
@@ -1269,6 +1270,8 @@
         "referrer": "Parrainée par",
         "referrerNone": "— Aucune parrainage —",
         "referrerHint": "Points crédités à la parrainante après la première visite terminée.",
+        "loyaltyProgram": "Groupe de fidélité",
+        "loyaltyProgramDefault": "Programme actif de l'institut",
         "submit": "Ajouter le client",
         "submitting": "Ajout…",
         "submitEdit": "Enregistrer",
@@ -1416,6 +1419,25 @@
           "items": "Articles",
           "source": "Source",
           "total": "Total"
+        },
+        "loyalty": {
+          "title": "Fidélité",
+          "group": "Groupe",
+          "balance": "Solde",
+          "points": "{count} {label}",
+          "value": "Valeur",
+          "progress": "Progression",
+          "nextReward": "{name} — encore {missing} {label}",
+          "rewardReady": "Une récompense est disponible.",
+          "noProgress": "Pas encore de palier atteint.",
+          "noProgram": "Aucun programme",
+          "assign": "Assigner un groupe",
+          "assignDefault": "Programme actif de l'institut",
+          "active": "actif",
+          "save": "Enregistrer",
+          "saved": "Groupe de fidélité mis à jour.",
+          "programNotFound": "Programme introuvable.",
+          "noProgramsHint": "Aucun programme. Créez-en un dans Réglages → Fidélité."
         }
       }
     },
@@ -3016,7 +3038,8 @@
       "balance": "{count} {label}",
       "noRewards": "Aucune récompense disponible pour ce client.",
       "none": "Ne pas utiliser de points",
-      "cost": "{count} {label}"
+      "cost": "{count} {label}",
+      "value": "jusqu'à −{amount}"
     },
     "stripe": {
       "paymentFailed": "Paiement échoué.",

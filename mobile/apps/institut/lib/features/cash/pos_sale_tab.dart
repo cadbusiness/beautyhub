@@ -173,7 +173,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   Future<bool> _checkout(
     PosContext ctx, {
     int discountCents = 0,
+    int loyaltyDiscountCents = 0,
     String? notes,
+    String? loyaltyRewardId,
   }) async {
     final cart = ref.read(posCartProvider);
     if (cart.isEmpty) return false;
@@ -190,7 +192,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     }
 
     final grossCents = _cartTotalCents(ctx, cart);
-    var totalCents = grossCents - discountCents;
+    var totalCents = grossCents - discountCents - loyaltyDiscountCents;
     if (totalCents < 0) totalCents = 0;
     final token = ref.read(accessTokenProvider);
     final tenantId = ref.read(selectedTenantIdProvider);
@@ -205,6 +207,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             clientId: _selectedClient?.id,
             notes: notes,
             cartDiscountCents: discountCents > 0 ? discountCents : null,
+            loyaltyRewardId: loyaltyRewardId,
             payments: [
               {'method': _paymentMethod, 'amountCents': totalCents},
             ],
@@ -266,8 +269,19 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         paymentMethod: _paymentMethod,
         onClientChanged: (item) => setState(() => _selectedClient = item),
         onPaymentChanged: (m) => setState(() => _paymentMethod = m),
-        onCheckout: ({discountCents = 0, notes}) =>
-            _checkout(ctx, discountCents: discountCents, notes: notes),
+        onCheckout: ({
+          discountCents = 0,
+          loyaltyDiscountCents = 0,
+          notes,
+          loyaltyRewardId,
+        }) =>
+            _checkout(
+              ctx,
+              discountCents: discountCents,
+              loyaltyDiscountCents: loyaltyDiscountCents,
+              notes: notes,
+              loyaltyRewardId: loyaltyRewardId,
+            ),
         sessionBlocked: ctx.requireOpenSession && !ctx.sessionOpen,
       ),
     );
@@ -759,7 +773,12 @@ class _CartSheet extends ConsumerStatefulWidget {
   final String paymentMethod;
   final ValueChanged<PickerItem?> onClientChanged;
   final ValueChanged<String> onPaymentChanged;
-  final Future<bool> Function({int discountCents, String? notes}) onCheckout;
+  final Future<bool> Function({
+    int discountCents,
+    int loyaltyDiscountCents,
+    String? notes,
+    String? loyaltyRewardId,
+  }) onCheckout;
   final bool sessionBlocked;
 
   @override
@@ -772,12 +791,63 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
   String _discountKind = 'percent';
   final _discountValue = TextEditingController();
   final _discountReason = TextEditingController();
+  PosClientLoyalty? _loyalty;
+  String? _loyaltyRewardId;
+  bool _loyaltyLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final id = _client?.id;
+      if (id != null) _loadLoyalty(id);
+    });
+  }
 
   @override
   void dispose() {
     _discountValue.dispose();
     _discountReason.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadLoyalty(String? clientId) async {
+    if (clientId == null || clientId.isEmpty) {
+      setState(() {
+        _loyalty = null;
+        _loyaltyRewardId = null;
+        _loyaltyLoading = false;
+      });
+      return;
+    }
+    setState(() => _loyaltyLoading = true);
+    try {
+      final token = ref.read(accessTokenProvider);
+      final tenantId = ref.read(selectedTenantIdProvider);
+      if (token == null || tenantId == null) {
+        if (mounted) setState(() => _loyaltyLoading = false);
+        return;
+      }
+      final snap = await ref.read(mobileApiProvider).fetchClientLoyalty(
+            accessToken: token,
+            tenantId: tenantId,
+            clientId: clientId,
+          );
+      if (!mounted) return;
+      setState(() {
+        _loyalty = snap.active ? snap : null;
+        _loyaltyRewardId = null;
+        _loyaltyLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loyalty = null;
+        _loyaltyRewardId = null;
+        _loyaltyLoading = false;
+      });
+    }
   }
 
   int _discountCents(int gross) {
@@ -838,8 +908,23 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
     }
 
     final discountCents = _showDiscount ? _discountCents(total) : 0;
-    var payable = total - discountCents;
+    var afterManual = total - discountCents;
+    if (afterManual < 0) afterManual = 0;
+    PosLoyaltyReward? selectedReward;
+    if (_loyaltyRewardId != null && _loyalty != null) {
+      for (final reward in _loyalty!.rewards) {
+        if (reward.id == _loyaltyRewardId) {
+          selectedReward = reward;
+          break;
+        }
+      }
+    }
+    final loyaltyDiscountCents =
+        selectedReward?.discountForSubtotal(afterManual) ?? 0;
+    var payable = afterManual - loyaltyDiscountCents;
     if (payable < 0) payable = 0;
+    final eligibleRewards =
+        _loyalty?.rewards.where((r) => r.eligible).toList() ?? const [];
 
     return Padding(
       padding: EdgeInsets.only(
@@ -923,20 +1008,6 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                 ),
               ],
             ],
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Text('Total', style: TextStyle(fontSize: 15)),
-                const Spacer(),
-                Text(
-                  formatEuros(payable),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
-            ),
             const SizedBox(height: 16),
             SearchablePickerField(
               label: 'Cliente (optionnel)',
@@ -960,9 +1031,59 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                 final next = picked.id == '__none__' ? null : picked;
                 setState(() => _client = next);
                 widget.onClientChanged(next);
+                await _loadLoyalty(next?.id);
               },
             ),
-            const SizedBox(height: 12),
+            if (_client != null) ...[
+              const SizedBox(height: 12),
+              if (_loyaltyLoading)
+                const Text(
+                  'Chargement de la fidélité…',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF737373)),
+                )
+              else if (_loyalty != null)
+                _LoyaltyPaymentCard(
+                  loyalty: _loyalty!,
+                  eligibleRewards: eligibleRewards,
+                  selectedRewardId: _loyaltyRewardId,
+                  subtotalCents: afterManual,
+                  onSelect: (id) => setState(() => _loyaltyRewardId = id),
+                ),
+            ],
+            if (loyaltyDiscountCents > 0) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Text(
+                    'Fidélité',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF5B21B6)),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '−${formatEuros(loyaltyDiscountCents)}',
+                    style: const TextStyle(
+                      color: Color(0xFF5B21B6),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Text('Total', style: TextStyle(fontSize: 15)),
+                const Spacer(),
+                Text(
+                  formatEuros(payable),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             SegmentedButton<String>(
               segments: [
                 if (ctx.settings.paymentMethods.cash)
@@ -988,6 +1109,8 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                       final reason = _discountReason.text.trim();
                       final ok = await onCheckout(
                         discountCents: discountCents,
+                        loyaltyDiscountCents: loyaltyDiscountCents,
+                        loyaltyRewardId: _loyaltyRewardId,
                         notes: reason.isEmpty ? null : 'Remise : $reason',
                       );
                       if (ok && context.mounted) {
@@ -1005,6 +1128,120 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _LoyaltyPaymentCard extends StatelessWidget {
+  const _LoyaltyPaymentCard({
+    required this.loyalty,
+    required this.eligibleRewards,
+    required this.selectedRewardId,
+    required this.subtotalCents,
+    required this.onSelect,
+  });
+
+  final PosClientLoyalty loyalty;
+  final List<PosLoyaltyReward> eligibleRewards;
+  final String? selectedRewardId;
+  final int subtotalCents;
+  final ValueChanged<String?> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F3FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFDDD6FE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Fidélité',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.4,
+                        color: Color(0xFF5B21B6),
+                      ),
+                    ),
+                    if (loyalty.programName != null &&
+                        loyalty.programName!.isNotEmpty)
+                      Text(
+                        loyalty.programName!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6D28D9),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${loyalty.balance} ${loyalty.pointsLabel}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6D28D9),
+                    ),
+                  ),
+                  if (loyalty.valueCents > 0)
+                    Text(
+                      'jusqu’à −${formatEuros(loyalty.valueCents)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF4C1D95),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          if (eligibleRewards.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'Aucune récompense disponible pour cette cliente.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF6D28D9)),
+              ),
+            )
+          else ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  label: const Text('Ne pas utiliser'),
+                  selected: selectedRewardId == null,
+                  onSelected: (_) => onSelect(null),
+                ),
+                for (final reward in eligibleRewards)
+                  ChoiceChip(
+                    label: Text(
+                      '${reward.name} · −${formatEuros(reward.discountForSubtotal(subtotalCents))}',
+                    ),
+                    selected: selectedRewardId == reward.id,
+                    onSelected: (_) => onSelect(reward.id),
+                  ),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }

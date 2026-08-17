@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClientRecord, updateClientRecord, type ActionResult } from "../actions";
 import { Button } from "@/components/ui/button";
@@ -11,19 +11,48 @@ const initial: ActionResult = {};
 
 type ReferrerOption = { id: string; label: string };
 
+type LoyaltyProgramOption = { id: string; name: string; is_active: boolean };
+
 type ClientFormProps = {
   client?: ClientRow | null;
   referrerOptions?: ReferrerOption[];
+  loyaltyPrograms?: LoyaltyProgramOption[];
   onSuccess?: () => void;
 };
 
-export function ClientForm({ client, referrerOptions = [], onSuccess }: ClientFormProps) {
+export function ClientForm({
+  client,
+  referrerOptions = [],
+  loyaltyPrograms,
+  onSuccess,
+}: ClientFormProps) {
   const t = useTranslations("institut.clients.form");
   const tCommon = useTranslations("common");
   const isEdit = Boolean(client);
   const actionFn = isEdit ? updateClientRecord : createClientRecord;
   const [state, action, pending] = useActionState(actionFn, initial);
   const formRef = useRef<HTMLFormElement>(null);
+  const [loadedPrograms, setLoadedPrograms] = useState<LoyaltyProgramOption[]>(
+    loyaltyPrograms ?? [],
+  );
+
+  useEffect(() => {
+    if (loyaltyPrograms && loyaltyPrograms.length > 0) {
+      setLoadedPrograms(loyaltyPrograms);
+      return;
+    }
+    let cancelled = false;
+    void fetch("/api/institut/loyalty/programs")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const body = (await res.json()) as { programs?: LoyaltyProgramOption[] };
+        if (!cancelled) setLoadedPrograms(body.programs ?? []);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [loyaltyPrograms]);
 
   useEffect(() => {
     if (state.ok) {
@@ -88,6 +117,23 @@ export function ClientForm({ client, referrerOptions = [], onSuccess }: ClientFo
               ))}
           </Select>
           <p className="mt-1 text-xs text-slate-500">{t("referrerHint")}</p>
+        </Field>
+      ) : null}
+
+      {loadedPrograms.length > 0 ? (
+        <Field label={t("loyaltyProgram")} htmlFor="loyalty_program_id">
+          <Select
+            id="loyalty_program_id"
+            name="loyalty_program_id"
+            defaultValue={client?.loyalty_program_id ?? ""}
+          >
+            <option value="">{t("loyaltyProgramDefault")}</option>
+            {loadedPrograms.map((program) => (
+              <option key={program.id} value={program.id}>
+                {program.name}
+              </option>
+            ))}
+          </Select>
         </Field>
       ) : null}
 

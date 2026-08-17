@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { fetchClientOverview } from "@/lib/institut/clients";
+import { loadClientLoyaltyCard } from "@/lib/institut/client-loyalty";
 import { canManageInstitutSettings } from "@/lib/auth/institut-settings";
 import { isAnonymizedClientEmail } from "@/lib/compliance/anonymize";
 import { getWooCredentialsForTenant } from "@/lib/woocommerce";
@@ -16,6 +17,7 @@ export default async function ClientDetailPage({
   const session = await requireModule("institut");
   const supabase = await createClient();
   let overview = await fetchClientOverview(supabase, session.tenant.id, id);
+  const loyalty = await loadClientLoyaltyCard(supabase, session.tenant.id, id);
 
   if (!overview) notFound();
 
@@ -66,6 +68,7 @@ export default async function ClientDetailPage({
       isAnonymized={isAnonymizedClientEmail(overview.client.email)}
       referrerOptions={referrerOptions}
       wooShopUrl={wooShopUrl}
+      loyalty={loyalty}
     />
   );
 }

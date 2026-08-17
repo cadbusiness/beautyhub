@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import { resolveLoyaltyProgramForClient } from "./loyalty";
 import type { LoyaltyReward } from "./loyalty";
 
 type Db = SupabaseClient<Database>;
@@ -47,16 +48,8 @@ export async function validateLoyaltyRedemption(
   clientId: string,
   rewardId: string,
 ): Promise<{ reward: LoyaltyReward; programId: string; balance: number }> {
-  const { data: program } = await supabase
-    .from("inst_loyalty_programs")
-    .select("id, is_active")
-    .eq("tenant_id", tenantId)
-    .eq("is_active", true)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!program?.is_active) throw new LoyaltyRedeemError("program_inactive");
+  const program = await resolveLoyaltyProgramForClient(supabase, tenantId, clientId);
+  if (!program) throw new LoyaltyRedeemError("program_inactive");
 
   const { data: reward } = await supabase
     .from("inst_loyalty_rewards")

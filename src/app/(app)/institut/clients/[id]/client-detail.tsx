@@ -24,6 +24,8 @@ import { ClientAccessPanel } from "./client-access-panel";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { ClientPrivacyPanel } from "@/components/compliance/client-privacy-panel";
 import { ClientForm } from "../client-form";
+import { ClientLoyaltyPanel } from "./client-loyalty-panel";
+import type { ClientLoyaltyCard } from "@/lib/institut/client-loyalty";
 
 type Tab = "overview" | "appointments" | "sales" | "quotes" | "access" | "privacy";
 
@@ -69,12 +71,14 @@ export function ClientDetail({
   isAnonymized,
   referrerOptions = [],
   wooShopUrl = null,
+  loyalty,
 }: {
   overview: ClientOverview;
   canAnonymize: boolean;
   isAnonymized: boolean;
   referrerOptions?: { id: string; label: string }[];
   wooShopUrl?: string | null;
+  loyalty: ClientLoyaltyCard;
 }) {
   const t = useTranslations("institut.clients.detail");
   const tAppt = useTranslations("appointments.status");
@@ -240,9 +244,11 @@ export function ClientDetail({
               <StatCell label={t("stats.upcoming")} value={String(stats.upcoming_count)} />
               <StatCell
                 label={t("stats.loyaltyPoints")}
-                value={String(stats.loyalty_points)}
+                value={String(loyalty.balance)}
               />
             </div>
+
+            <ClientLoyaltyPanel clientId={client.id} card={loyalty} />
 
             <div className="grid divide-y divide-slate-200 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
               <section className="px-4 py-4 lg:px-6">
@@ -533,6 +539,7 @@ export function ClientDetail({
         <ClientForm
           client={client}
           referrerOptions={referrerOptions}
+          loyaltyPrograms={loyalty.programs}
           onSuccess={() => setEditOpen(false)}
         />
       </FormDialog>

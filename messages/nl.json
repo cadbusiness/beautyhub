@@ -190,6 +190,7 @@
       "woocommerce": "WooCommerce",
       "stripe": "Stripe Connect",
       "pos": "Kassa",
+      "loyalty": "Loyaliteit",
       "compliance": "Conformiteit"
     },
     "profile": {
@@ -1192,6 +1193,8 @@
         "referrer": "Doorverwezen door",
         "referrerNone": "— Geen doorverwijzing —",
         "referrerHint": "Punten voor de doorverwijzer na het eerste afgeronde bezoek.",
+        "loyaltyProgram": "Loyaliteitsgroep",
+        "loyaltyProgramDefault": "Actief programma van het instituut",
         "submit": "Klant toevoegen",
         "submitting": "Toevoegen…",
         "submitEdit": "Opslaan",
@@ -1347,6 +1350,25 @@
           "items": "Artikelen",
           "source": "Bron",
           "total": "Totaal"
+        },
+        "loyalty": {
+          "title": "Loyaliteit",
+          "group": "Groep",
+          "balance": "Saldo",
+          "points": "{count} {label}",
+          "value": "Waarde",
+          "progress": "Voortgang",
+          "nextReward": "{name} — nog {missing} {label}",
+          "rewardReady": "Er is een beloning beschikbaar.",
+          "noProgress": "Nog geen drempel bereikt.",
+          "noProgram": "Geen programma",
+          "assign": "Groep toewijzen",
+          "assignDefault": "Actief programma van het instituut",
+          "active": "actief",
+          "save": "Opslaan",
+          "saved": "Loyaliteitsgroep bijgewerkt.",
+          "programNotFound": "Programma niet gevonden.",
+          "noProgramsHint": "Nog geen programma. Maak er een in Instellingen → Loyaliteit."
         }
       }
     },
@@ -2889,7 +2911,8 @@
       "balance": "{count} {label}",
       "noRewards": "Geen beloningen beschikbaar voor deze klant.",
       "none": "Geen punten gebruiken",
-      "cost": "{count} {label}"
+      "cost": "{count} {label}",
+      "value": "tot −{amount}"
     },
     "stripe": {
       "paymentFailed": "Betaling mislukt.",

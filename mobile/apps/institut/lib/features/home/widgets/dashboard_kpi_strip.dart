@@ -19,12 +19,13 @@ class DashboardKpiStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: _KpiTile(
             label: 'CA jour',
             value: formatEuros(revenueCents),
-            hint: _changeHint(revenueChangePct),
+            hint: _changeHint(revenueChangePct) ?? 'encaissé',
           ),
         ),
         const SizedBox(width: 10),
@@ -58,12 +59,12 @@ class _KpiTile extends StatelessWidget {
   const _KpiTile({
     required this.label,
     required this.value,
-    this.hint,
+    required this.hint,
   });
 
   final String label;
   final String value;
-  final String? hint;
+  final String hint;
 
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
@@ -71,7 +72,8 @@ class _KpiTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      height: 102,
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -82,6 +84,8 @@ class _KpiTile extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -90,22 +94,35 @@ class _KpiTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: _black,
-              letterSpacing: -0.4,
+          SizedBox(
+            height: 26,
+            width: double.infinity,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: _black,
+                    letterSpacing: -0.4,
+                    height: 1.1,
+                  ),
+                ),
+              ),
             ),
           ),
-          if (hint != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              hint!,
-              style: const TextStyle(fontSize: 11, color: _muted),
-            ),
-          ],
+          const Spacer(),
+          Text(
+            hint,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11, color: _muted, height: 1.2),
+          ),
         ],
       ),
     );

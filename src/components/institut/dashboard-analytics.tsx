@@ -41,14 +41,16 @@ function StatCell({
   hint?: React.ReactNode;
 }) {
   return (
-    <div className="px-4 py-4 lg:px-5">
+    <div className="flex h-full min-h-[7.25rem] flex-col px-4 py-4 lg:px-5">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900 sm:text-3xl">
+      <p className="mt-1 truncate text-2xl font-semibold tabular-nums text-slate-900 sm:text-3xl">
         {value}
       </p>
-      {hint ? <div className="mt-1">{hint}</div> : null}
+      <div className="mt-auto pt-1 min-h-4 text-xs text-slate-500">
+        {hint ?? <span className="invisible">.</span>}
+      </div>
     </div>
   );
 }
@@ -236,7 +238,7 @@ export function DashboardAnalytics({
           <p className="text-sm font-medium text-slate-900">{t("healthTitle")}</p>
           <p className="mt-0.5 text-sm text-slate-500">{t("healthHint")}</p>
         </div>
-        <div className="grid divide-y divide-slate-200 sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
+        <div className="grid items-stretch divide-y divide-slate-200 sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
           <StatCell
             label={t("todayRevenue")}
             value={formatPrice(today.revenueCents, "eur", locale)}
@@ -283,48 +285,48 @@ export function DashboardAnalytics({
 
         <p className="mt-4 text-sm text-slate-500">{t(`periodHint.${period}`)}</p>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="mt-4 grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex min-h-[7.25rem] flex-col rounded-xl border border-slate-200 bg-white p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
               {t("revenue")}
             </p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">
+            <p className="mt-2 truncate text-2xl font-semibold tabular-nums text-slate-900">
               {formatPrice(analytics.revenueCents, "eur", locale)}
             </p>
-            <div className="mt-2">
+            <div className="mt-auto pt-2">
               <ChangeBadge value={analytics.revenueChangePct} />
             </div>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex min-h-[7.25rem] flex-col rounded-xl border border-slate-200 bg-white p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
               {t("sales")}
             </p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">
+            <p className="mt-2 truncate text-2xl font-semibold tabular-nums text-slate-900">
               {analytics.salesCount}
             </p>
-            <div className="mt-2">
+            <div className="mt-auto pt-2">
               <ChangeBadge value={analytics.salesChangePct} />
             </div>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex min-h-[7.25rem] flex-col rounded-xl border border-slate-200 bg-white p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
               {t("appointments")}
             </p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">
+            <p className="mt-2 truncate text-2xl font-semibold tabular-nums text-slate-900">
               {analytics.appointmentsTotal}
             </p>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-auto pt-2 text-xs text-slate-500">
               {t("cancellationRate", { rate: analytics.cancellationRate })}
             </p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex min-h-[7.25rem] flex-col rounded-xl border border-slate-200 bg-white p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
               {t("newClients")}
             </p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">
+            <p className="mt-2 truncate text-2xl font-semibold tabular-nums text-slate-900">
               {analytics.newClients}
             </p>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-auto pt-2 text-xs text-slate-500">
               {t("noShowCount", { count: analytics.appointmentsNoShow })}
             </p>
           </div>

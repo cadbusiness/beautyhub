@@ -896,7 +896,8 @@
       "title": "Módulos"
     },
     "posSession": {
-      "closedDescription": "Inicie sesión para cobrar y realizar un seguimiento del efectivo de hoy.",
+      "closedDescription": "Abra el día para cobrar. El fondo de caja es opcional.",
+      "closedGuide": "Abrir el día → fondo en efectivo si hace falta → cobrar",
       "closedTitle": "Caja cerrada",
       "expectedCash": "Especies esperadas",
       "goToPos": "Cobrar una venta",
@@ -2635,7 +2636,8 @@
       },
       "closeTitle": "Cierre al final del día",
       "closedBadge": "Caja cerrada",
-      "closedIntro": "Inicie sesión para registrar sus ventas, realizar un seguimiento del efectivo disponible y cerrar el día de forma ordenada.",
+      "closedIntro": "Abra el día para cobrar. El fondo de caja es opcional: déjelo vacío si no hay efectivo en el cajón.",
+      "guide": "Abrir el día → fondo en efectivo si hace falta → cobrar",
       "generateX": "Generar el",
       "goToPos": "Cobrar una venta",
       "goToPosAfterOpen": "Ir en efectivo",
@@ -2682,12 +2684,16 @@
       "movements": "Movimientos de efectivo",
       "movementsHint": "Excluyendo ventas: suministro de divisas, depósito bancario, pequeños gastos pagados en efectivo.",
       "noMovements": "Aún no hay movimiento.",
-      "openDescription": "Inicie una sesión con el efectivo inicial.",
+      "openDescription": "Abra la sesión. El fondo de caja es opcional.",
       "openForm": {
         "defaultHint": "Valor predeterminado configurado: {amount}",
-        "float": "Efectivo (€)",
-        "floatHelp": "Líquido presente en el cajón al abrirlo (monedas y billetes). Pon 0 si el cajón está vacío.",
-        "submit": "Abrir caja"
+        "float": "Fondo de caja (€) — opcional",
+        "floatHelp": "Efectivo ya en el cajón. Déjelo vacío o 0 si no hay efectivo.",
+        "hideFloat": "Sin fondo",
+        "skip": "Abrir sin fondo",
+        "submit": "Abrir caja",
+        "submitFloat": "Abrir con este fondo",
+        "withFloatToggle": "Añadir un fondo de caja"
       },
       "openTitle": "empezar el dia",
       "openingFloat": "fondo de efectivo",
@@ -2786,6 +2792,9 @@
       "searchAria": "investigar",
       "searchArticles": "Buscar un artículo…",
       "sessionRequired": "Abra el registro para registrar esta venta.",
+      "sessionClosedTitle": "La caja no está abierta",
+      "sessionClosedBody": "Abra el día para no olvidarlo. El fondo de caja es opcional.",
+      "sessionClosedGuide": "Abra sin fondo, o añada uno si el cajón ya tiene efectivo.",
       "tabs": {
         "all": "Todo",
         "internal": "Interno",
@@ -3199,11 +3208,14 @@
     "language": "Idioma",
     "myAccount": "mi cuenta",
     "posSession": {
-      "durationHours": "desde __UCI0__ h __UCI1__ min",
+      "durationHours": "desde {hours} h {mins} min",
       "durationJustOpened": "ahora mismo",
-      "durationMins": "desde __UCI0__ min",
-      "navIndicator": "Abrir caja",
-      "open": "Abrir caja"
+      "durationMins": "desde {mins} min",
+      "navIndicator": "Caja abierta",
+      "navClosed": "Caja cerrada",
+      "open": "Caja abierta",
+      "closed": "Caja cerrada",
+      "closedCta": "Abrir"
     },
     "sidebar": {
       "ariaLabel": "Navegación principal",

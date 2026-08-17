@@ -183,3 +183,21 @@ final institutSalesFirstPageProvider =
   final api = ref.watch(mobileApiProvider);
   return api.fetchInstitutSales(accessToken: token, tenantId: tenantId);
 });
+
+Future<void> openInstitutCashDay(
+  WidgetRef ref, {
+  int openingFloatCents = 0,
+}) async {
+  final token = ref.read(accessTokenProvider);
+  final tenantId = ref.read(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  await ref.read(mobileApiProvider).openCashSession(
+        accessToken: token,
+        tenantId: tenantId,
+        openingFloatCents: openingFloatCents,
+      );
+  ref.invalidate(cashSessionProvider);
+  ref.invalidate(posContextProvider);
+}

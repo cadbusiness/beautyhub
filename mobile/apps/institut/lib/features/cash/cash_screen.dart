@@ -17,8 +17,9 @@ class CashScreen extends ConsumerStatefulWidget {
 }
 
 class _CashScreenState extends ConsumerState<CashScreen> {
-  final _floatController = TextEditingController(text: '0');
+  final _floatController = TextEditingController();
   bool _opening = false;
+  bool _showFloat = false;
   String? _error;
   int _tabIndex = 1;
 
@@ -41,25 +42,17 @@ class _CashScreenState extends ConsumerState<CashScreen> {
     ]);
   }
 
-  Future<void> _open() async {
-    final token = ref.read(accessTokenProvider);
-    final tenantId = ref.read(selectedTenantIdProvider);
-    if (token == null || tenantId == null) return;
-
+  Future<void> _open({bool withFloat = false}) async {
     setState(() {
       _opening = true;
       _error = null;
     });
     try {
-      final euros = double.tryParse(_floatController.text.replaceAll(',', '.')) ?? 0;
+      final euros = withFloat
+          ? (double.tryParse(_floatController.text.replaceAll(',', '.')) ?? 0)
+          : 0.0;
       final cents = (euros * 100).round();
-      await ref.read(mobileApiProvider).openCashSession(
-            accessToken: token,
-            tenantId: tenantId,
-            openingFloatCents: cents,
-          );
-      ref.invalidate(cashSessionProvider);
-      ref.invalidate(posContextProvider);
+      await openInstitutCashDay(ref, openingFloatCents: cents);
       await _refresh();
     } catch (e) {
       setState(() => _error = e.toString());
@@ -178,7 +171,7 @@ class _CashScreenState extends ConsumerState<CashScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'Ouvrir la caisse',
+                                  'Caisse fermée',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
@@ -187,29 +180,78 @@ class _CashScreenState extends ConsumerState<CashScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 const Text(
-                                  'Indiquez le fond de caisse en euros.',
-                                  style: TextStyle(color: _muted, fontSize: 13),
+                                  'Ouvrez la journée pour encaisser. Le fond de caisse est facultatif.',
+                                  style: TextStyle(color: _muted, fontSize: 13, height: 1.35),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Ouvrir la journée → fond si besoin → encaisser',
+                                  style: TextStyle(color: _muted, fontSize: 12),
                                 ),
                                 const SizedBox(height: 16),
-                                TextField(
-                                  controller: _floatController,
-                                  keyboardType: const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.allow(
-                                      RegExp(r'[0-9.,]'),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: FilledButton(
+                                    onPressed: _opening ? null : () => _open(),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: _black,
+                                      foregroundColor: Colors.white,
                                     ),
-                                  ],
-                                  decoration: const InputDecoration(
-                                    labelText: 'Fond de caisse (€)',
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(),
+                                    child: _opening
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text('Ouvrir sans fond'),
                                   ),
                                 ),
-                                if (_error != null) ...[
+                                if (_showFloat) ...[
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: _floatController,
+                                    keyboardType: const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                        RegExp(r'[0-9.,]'),
+                                      ),
+                                    ],
+                                    decoration: const InputDecoration(
+                                      labelText: 'Fond de caisse (€) — facultatif',
+                                      hintText: '0',
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
                                   const SizedBox(height: 12),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton(
+                                      onPressed: _opening
+                                          ? null
+                                          : () => _open(withFloat: true),
+                                      child: const Text('Ouvrir avec ce fond'),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        setState(() => _showFloat = false),
+                                    child: const Text('Pas de fond'),
+                                  ),
+                                ] else
+                                  TextButton(
+                                    onPressed: () =>
+                                        setState(() => _showFloat = true),
+                                    child: const Text('Ajouter un fond de caisse'),
+                                  ),
+                                if (_error != null) ...[
+                                  const SizedBox(height: 8),
                                   Text(
                                     _error!,
                                     style: TextStyle(
@@ -217,22 +259,6 @@ class _CashScreenState extends ConsumerState<CashScreen> {
                                     ),
                                   ),
                                 ],
-                                const SizedBox(height: 16),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: FilledButton(
-                                    onPressed: _opening ? null : _open,
-                                    child: _opening
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : const Text('Ouvrir la session'),
-                                  ),
-                                ),
                               ],
                             ),
                           ),

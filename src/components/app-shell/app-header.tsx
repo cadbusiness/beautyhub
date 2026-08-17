@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { AppLogo } from "@/components/app-shell/app-logo";
 import { LocaleSwitcher } from "@/components/app-shell/locale-switcher";
 import {
+  PosSessionClosedBadge,
   PosSessionHeaderBadge,
   type PosSessionStatusData,
 } from "@/components/app-shell/pos-session-status";
@@ -19,6 +20,7 @@ export async function AppHeader({
   displayName,
   profileInitial,
   posSession = null,
+  showPosSessionStatus = false,
 }: {
   email: string | null;
   role: string;
@@ -28,6 +30,7 @@ export async function AppHeader({
   displayName: string;
   profileInitial: string;
   posSession?: PosSessionStatusData | null;
+  showPosSessionStatus?: boolean;
 }) {
   const t = await getTranslations("shell");
   const tRoles = await getTranslations("roles");
@@ -57,7 +60,13 @@ export async function AppHeader({
       <div className="flex-1" />
 
       <div className="flex items-center gap-2">
-        {posSession ? <PosSessionHeaderBadge session={posSession} /> : null}
+        {showPosSessionStatus ? (
+          posSession ? (
+            <PosSessionHeaderBadge session={posSession} />
+          ) : (
+            <PosSessionClosedBadge />
+          )
+        ) : null}
 
         {platformAdmin ? (
           <Link

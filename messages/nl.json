@@ -119,10 +119,13 @@
     },
     "posSession": {
       "open": "Kassa open",
+      "closed": "Kassa gesloten",
+      "closedCta": "Openen",
       "durationJustOpened": "zojuist",
       "durationMins": "sinds {mins} min",
       "durationHours": "sinds {hours} u {mins} min",
-      "navIndicator": "Kassa open"
+      "navIndicator": "Kassa open",
+      "navClosed": "Kassa gesloten"
     }
   },
   "roles": {
@@ -318,7 +321,8 @@
       "openTitle": "Kassa open",
       "openSince": "Open",
       "closedTitle": "Kassa gesloten",
-      "closedDescription": "Open een sessie om verkopen te registreren en contant geld te volgen.",
+      "closedDescription": "Open de dag om af te rekenen. Het kassafonds is optioneel.",
+      "closedGuide": "Dag openen → kassafonds indien nodig → afrekenen",
       "openSession": "Kassa openen",
       "goToPos": "Verkoop registreren",
       "manageSession": "Sessie beheren",
@@ -2718,6 +2722,9 @@
       "searchAria": "Zoeken",
       "emptyCategory": "Geen artikelen in deze categorie. Voeg behandelingen toe, synchroniseer WooCommerce of maak interne producten aan.",
       "sessionRequired": "Open de kassa om deze verkoop te registreren.",
+      "sessionClosedTitle": "De kassa is niet open",
+      "sessionClosedBody": "Open de dag zodat u het niet vergeet. Het kassafonds is optioneel.",
+      "sessionClosedGuide": "Open zonder fonds, of voeg er een toe als de lade al contant geld bevat.",
       "openSession": "Kassa openen →",
       "noSessionHint": "Kassa gesloten — openen voor contant follow-up",
       "cart": {
@@ -2900,9 +2907,10 @@
     },
     "session": {
       "closedBadge": "Kassa gesloten",
-      "closedIntro": "Open een sessie om verkopen te registreren, contant geld te volgen en uw dag netjes af te sluiten.",
+      "closedIntro": "Open de dag om af te rekenen. Het kassafonds is optioneel — laat leeg als er geen contant geld in de lade zit.",
+      "guide": "Dag openen → kassafonds indien nodig → afrekenen",
       "openTitle": "Dag starten",
-      "openDescription": "Start een sessie met het initiële kassafonds.",
+      "openDescription": "Open de sessie. Het kassafonds is optioneel.",
       "sessionOpen": "Kassa open",
       "openingFloat": "Kassafonds",
       "goToPos": "Verkoop afrekenen",
@@ -2962,8 +2970,12 @@
         "expense": "Onkosten"
       },
       "openForm": {
-        "float": "Kassafonds (€)",
-        "floatHelp": "Contant in de lade bij opening. Zet 0 als de lade leeg is.",
+        "float": "Kassafonds (€) — optioneel",
+        "floatHelp": "Contant al in de lade. Laat leeg of 0 als er geen contant geld is.",
+        "skip": "Openen zonder fonds",
+        "withFloatToggle": "Kassafonds toevoegen",
+        "hideFloat": "Geen fonds",
+        "submitFloat": "Openen met dit fonds",
         "submit": "Kassa openen",
         "defaultHint": "Standaardwaarde: {amount}"
       },

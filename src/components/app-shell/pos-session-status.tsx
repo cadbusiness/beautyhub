@@ -69,6 +69,22 @@ export function PosSessionHeaderBadge({
   );
 }
 
+export function PosSessionClosedBadge() {
+  const t = useTranslations("shell.posSession");
+
+  return (
+    <Link
+      href="/institut/caisse/session"
+      className="hidden items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-950 transition-colors hover:bg-amber-100 md:inline-flex"
+    >
+      <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden />
+      <span>{t("closed")}</span>
+      <span className="text-amber-800">·</span>
+      <span>{t("closedCta")}</span>
+    </Link>
+  );
+}
+
 /** Bandeau accueil / page session. */
 export function PosSessionBanner({
   session,
@@ -85,6 +101,7 @@ export function PosSessionBanner({
         <div>
           <p className="text-sm font-medium text-amber-950">{t("closedTitle")}</p>
           <p className="mt-0.5 text-sm text-amber-900/80">{t("closedDescription")}</p>
+          <p className="mt-1 text-xs text-amber-900/70">{t("closedGuide")}</p>
         </div>
         <Link
           href="/institut/caisse/session"

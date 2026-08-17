@@ -23,6 +23,7 @@ import {
 } from "@/lib/institut/pos-appointment";
 import { CheckoutPanel } from "./checkout-panel";
 import { PosLoyaltyPicker } from "./pos-loyalty-picker";
+import { OpenSessionForm } from "./session/open-session-form";
 
 interface Option {
   id: string;
@@ -41,6 +42,7 @@ export function PosTerminal({
   settings,
   sessionOpen,
   requireSession,
+  defaultOpeningFloatCents = 0,
   stripeEnabled,
   stripePublishableKey,
   stripeAccountId,
@@ -53,6 +55,7 @@ export function PosTerminal({
   settings: PosSettings;
   sessionOpen: boolean;
   requireSession: boolean;
+  defaultOpeningFloatCents?: number;
   stripeEnabled?: boolean;
   stripePublishableKey?: string;
   stripeAccountId?: string;
@@ -577,21 +580,18 @@ export function PosTerminal({
           </div>
         ) : null}
 
-        {requireSession && !sessionOpen ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            {t("sessionRequired")}{" "}
-            <Link href="/institut/caisse/session" className="underline">
-              {t("openSession")}
-            </Link>
+        {!sessionOpen ? (
+          <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <div>
+              <p className="text-sm font-medium text-amber-950">{t("sessionClosedTitle")}</p>
+              <p className="mt-0.5 text-sm text-amber-900/80">{t("sessionClosedBody")}</p>
+              <p className="mt-1 text-xs text-amber-900/70">{t("sessionClosedGuide")}</p>
+            </div>
+            <OpenSessionForm
+              defaultFloat={defaultOpeningFloatCents}
+              compact
+            />
           </div>
-        ) : null}
-
-        {!requireSession && !sessionOpen ? (
-          <p className="text-xs text-slate-400">
-            <Link href="/institut/caisse/session" className="underline">
-              {t("noSessionHint")}
-            </Link>
-          </p>
         ) : null}
 
         {initialAppt && appointmentId === initialAppt.id ? (
@@ -871,7 +871,7 @@ export function PosTerminal({
             stripeEnabled={Boolean(stripeEnabled)}
             stripePublishableKey={stripePublishableKey}
             stripeAccountId={stripeAccountId}
-            disabled={cartEmpty}
+            disabled={cartEmpty || (requireSession && !sessionOpen)}
             checkoutAction={checkoutAction}
             checkoutPending={checkoutPending}
             checkoutState={checkoutState}

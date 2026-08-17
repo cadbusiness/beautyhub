@@ -248,10 +248,10 @@ class HomeScreen extends ConsumerWidget {
                       title: session.paused
                           ? 'Caisse en pause'
                           : session.previousDay
-                              ? 'Session d’hier encore ouverte'
+                              ? 'Session d’hier ouverte'
                               : 'Caisse ouverte',
                       subtitle: session.previousDay
-                          ? 'Clôturez-la pour démarrer nettement aujourd’hui'
+                          ? 'Clôturez-la avant d’ouvrir aujourd’hui'
                           : sessionOpenedCaption(
                               openedAt: session.openedAt,
                               previousDay: false,
@@ -355,25 +355,25 @@ class _SectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: HomeScreen._black,
-                  ),
-                ),
-              ),
-              Text(
-                subtitle,
-                style: const TextStyle(fontSize: 12, color: HomeScreen._muted),
-              ),
-            ],
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: HomeScreen._black,
+            ),
           ),
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, color: HomeScreen._muted),
+            ),
+          ],
           const SizedBox(height: 16),
           child,
         ],

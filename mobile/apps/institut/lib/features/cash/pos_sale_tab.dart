@@ -514,7 +514,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Session d’hier encore ouverte',
+                                    'Session d’hier ouverte',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,

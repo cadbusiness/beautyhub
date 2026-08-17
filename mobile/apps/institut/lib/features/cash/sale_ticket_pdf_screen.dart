@@ -18,14 +18,31 @@ Future<void> openSaleTicketPdf(
   );
 }
 
+Future<void> openSaleDocumentPdf(
+  BuildContext context, {
+  required String documentId,
+  String? title,
+}) {
+  return Navigator.of(context, rootNavigator: true).push(
+    MaterialPageRoute<void>(
+      builder: (_) => SaleTicketPdfScreen(
+        documentId: documentId,
+        title: title,
+      ),
+    ),
+  );
+}
+
 class SaleTicketPdfScreen extends ConsumerStatefulWidget {
   const SaleTicketPdfScreen({
     super.key,
-    required this.saleId,
+    this.saleId,
+    this.documentId,
     this.title,
-  });
+  }) : assert(saleId != null || documentId != null);
 
-  final String saleId;
+  final String? saleId;
+  final String? documentId;
   final String? title;
 
   @override
@@ -55,11 +72,17 @@ class _SaleTicketPdfScreenState extends ConsumerState<SaleTicketPdfScreen> {
       if (token == null || tenantId == null) {
         throw StateError('Session ou institut manquant');
       }
-      final bytes = await ref.read(mobileApiProvider).fetchSaleTicketPdf(
-            accessToken: token,
-            tenantId: tenantId,
-            saleId: widget.saleId,
-          );
+      final bytes = widget.documentId != null
+          ? await ref.read(mobileApiProvider).fetchSaleDocumentPdf(
+                accessToken: token,
+                tenantId: tenantId,
+                documentId: widget.documentId!,
+              )
+          : await ref.read(mobileApiProvider).fetchSaleTicketPdf(
+                accessToken: token,
+                tenantId: tenantId,
+                saleId: widget.saleId!,
+              );
       if (!mounted) return;
       setState(() {
         _bytes = bytes;
@@ -78,7 +101,7 @@ class _SaleTicketPdfScreenState extends ConsumerState<SaleTicketPdfScreen> {
   Widget build(BuildContext context) {
     final title = widget.title?.isNotEmpty == true
         ? widget.title!
-        : 'Ticket';
+        : (widget.documentId != null ? 'Document' : 'Ticket');
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -120,11 +143,11 @@ class _SaleTicketPdfScreenState extends ConsumerState<SaleTicketPdfScreen> {
     }
     final bytes = _bytes;
     if (bytes == null || bytes.isEmpty) {
-      return const Center(child: Text('Ticket indisponible.'));
+      return const Center(child: Text('PDF indisponible.'));
     }
     return PdfPreview(
       build: (_) async => bytes,
-      pdfFileName: '${widget.title ?? 'ticket'}.pdf',
+      pdfFileName: '${widget.title ?? 'document'}.pdf',
       canChangeOrientation: false,
       canChangePageFormat: false,
       canDebug: false,

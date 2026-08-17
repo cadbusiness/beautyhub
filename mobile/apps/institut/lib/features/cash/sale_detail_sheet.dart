@@ -280,13 +280,11 @@ class _SaleDetailSheet extends StatelessWidget {
                   ),
                   for (final doc in sale.documents.where((d) => d.docType != 'ticket'))
                     OutlinedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${doc.shortLabel} ${doc.docNumber}'),
-                          ),
-                        );
-                      },
+                      onPressed: () => openSaleDocumentPdf(
+                        context,
+                        documentId: doc.id,
+                        title: doc.docNumber,
+                      ),
                       style: OutlinedButton.styleFrom(
                         visualDensity: VisualDensity.compact,
                       ),

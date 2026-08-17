@@ -939,11 +939,21 @@ class _DocRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => _showDocumentSheet(context, doc),
+      onTap: () => openSaleDocumentPdf(
+        context,
+        documentId: doc.id,
+        title: doc.docNumber,
+      ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
         child: Row(
           children: [
+            const Icon(
+              Icons.picture_as_pdf_outlined,
+              size: 18,
+              color: _muted,
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -975,79 +985,11 @@ class _DocRow extends StatelessWidget {
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right, size: 18, color: _muted),
           ],
         ),
       ),
     );
   }
-}
-
-Future<void> _showDocumentSheet(BuildContext context, InstSaleDocument doc) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (ctx) {
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                doc.docNumber,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${doc.typeLabel} · ${DateFormat("d MMM y HH:mm", "fr_FR").format(doc.issuedAt)}',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF737373)),
-              ),
-              if (doc.clientLabel != null) ...[
-                const SizedBox(height: 8),
-                Text(doc.clientLabel!, style: const TextStyle(fontSize: 14)),
-              ],
-              const SizedBox(height: 8),
-              Text(
-                formatEuros(doc.amountCents),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (doc.docType == 'ticket' && doc.saleId != null)
-                    FilledButton.icon(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        openSaleTicketPdf(
-                          context,
-                          saleId: doc.saleId!,
-                          title: doc.docNumber,
-                        );
-                      },
-                      icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
-                      label: const Text('Ticket PDF'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF0A0A0A),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
 }

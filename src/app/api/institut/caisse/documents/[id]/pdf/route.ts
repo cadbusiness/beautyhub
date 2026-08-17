@@ -28,13 +28,6 @@ export async function GET(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  if (payload.docType !== "ticket") {
-    return NextResponse.json(
-      { error: "unsupported_document", message: "PDF disponible pour les tickets" },
-      { status: 400 },
-    );
-  }
-
   const bytes = await renderTicketPdfBuffer(payload);
   return new NextResponse(new Uint8Array(bytes), {
     headers: ticketPdfHeaders(ticketPdfFileName(payload)),

@@ -115,6 +115,19 @@ const styles = StyleSheet.create({
   },
 });
 
+function documentKindLabel(docType: SaleDocumentPayload["docType"]): string {
+  switch (docType) {
+    case "invoice":
+      return "FACTURE";
+    case "delivery_note":
+      return "BON DE LIVRAISON";
+    case "credit_note":
+      return "AVOIR";
+    default:
+      return "TICKET";
+  }
+}
+
 function methodLabel(method: string): string {
   return METHOD_LABELS[method] ?? method;
 }
@@ -128,7 +141,7 @@ function TicketPdfDocument({ payload }: { payload: SaleDocumentPayload }) {
   const groupSuffix = payload.saleGroupNumber ? ` / ${payload.saleGroupNumber}` : "";
 
   return (
-    <Document title={`Ticket ${payload.docNumber}`} author={payload.legalName}>
+    <Document title={`${documentKindLabel(payload.docType)} ${payload.docNumber}`} author={payload.legalName}>
       <Page size={{ width: PAGE_WIDTH, height: 640 }} style={styles.page} wrap>
         <Text style={styles.total}>
           {formatPrice(payload.totalCents, payload.currency, locale)}
@@ -149,7 +162,7 @@ function TicketPdfDocument({ payload }: { payload: SaleDocumentPayload }) {
         ) : null}
 
         <View style={styles.dashed} />
-        <Text style={styles.meta}>VENTE</Text>
+        <Text style={styles.meta}>{documentKindLabel(payload.docType)}</Text>
         <Text style={styles.meta}>Date : {issued}</Text>
         {payload.cashSessionLabel ? (
           <Text style={styles.meta}>Caisse : {payload.cashSessionLabel}</Text>

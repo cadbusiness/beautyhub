@@ -481,6 +481,38 @@ class MobileApiClient {
     return response.bodyBytes;
   }
 
+  Future<Uint8List> fetchSaleDocumentPdf({
+    required String accessToken,
+    required String tenantId,
+    required String documentId,
+  }) async {
+    final headers = _headers(accessToken: accessToken, tenantId: tenantId);
+    headers['Accept'] = 'application/pdf';
+    final response = await _http.get(
+      _uri('/api/mobile/institut/documents/$documentId/pdf'),
+      headers: headers,
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      Map<String, dynamic> body = const {};
+      if (response.body.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map<String, dynamic>) body = decoded;
+        } catch (_) {
+          // Réponse d'erreur non JSON.
+        }
+      }
+      throw MobileApiException(
+        body['message'] as String? ??
+            body['error'] as String? ??
+            'PDF indisponible (${response.statusCode})',
+        statusCode: response.statusCode,
+        code: body['error'] as String?,
+      );
+    }
+    return response.bodyBytes;
+  }
+
   /// Membres de l'équipe (staff institut).
   Future<List<InstStaffMember>> fetchInstitutTeam({
     required String accessToken,

@@ -116,6 +116,7 @@ export {
   applyWooStockUpdate,
   backfillOrphanWooSaleItems,
   decrementLocalProductStock,
+  decrementWooMirrorStock,
   generateWebhookCredentials,
   getWooCredentialsForTenant,
   mapWooProductToRow,

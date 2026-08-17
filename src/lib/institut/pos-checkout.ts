@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
-import { getWooClientForTenant } from "@/lib/woocommerce";
-import { decrementLocalProductStock } from "@/lib/woocommerce/sync";
+import { decrementLocalProductStock, decrementWooMirrorStock } from "@/lib/woocommerce/sync";
 import { applyPriceOverrides, parsePosCart, resolveCartLines } from "./pos";
 import {
   formatTicketNumber,
@@ -352,40 +351,6 @@ export async function executePosCheckout(
     }
   }
 
-  const wooLineItems = lines
-    .filter((l) => l.type === "product" && l.woo_id)
-    .map((l) => ({ product_id: Number(l.woo_id), quantity: l.quantity }));
-  let wooOrderId: number | null = null;
-  if (status === "paid" && wooLineItems.length > 0) {
-    try {
-      const wooClient = await getWooClientForTenant(tenantId, supabase);
-      if (wooClient) {
-        const voucherMeta = payments
-          .filter((p) => p.method === "voucher" || p.method === "gift_card" || p.method === "credit_note")
-          .map((p) => ({
-            method: p.method,
-            code: p.reference ?? p.voucher_code ?? null,
-            amount_cents: p.amount_cents,
-          }));
-        const order = await wooClient.createOrder(wooLineItems, {
-          setPaid: true,
-          metaData:
-            voucherMeta.length > 0
-              ? [
-                  {
-                    key: "beautyhub_vouchers",
-                    value: JSON.stringify(voucherMeta),
-                  },
-                ]
-              : undefined,
-        });
-        wooOrderId = order.id;
-      }
-    } catch {
-      wooOrderId = null;
-    }
-  }
-
   const ticketNumber = await nextTicketNumber(supabase, tenantId, settings);
   const stripePi =
     input.stripePaymentIntentId ??
@@ -402,7 +367,7 @@ export async function executePosCheckout(
       cash_session_id: sessionId,
       parent_sale_id: input.parentSaleId ?? null,
       sale_kind: input.saleKind ?? "sale",
-      woo_order_id: wooOrderId,
+      woo_order_id: null,
       source_channel: "pos",
       subtotal_cents: totals.subtotal_cents,
       discount_cents: totals.cart_discount_cents,
@@ -507,6 +472,12 @@ export async function executePosCheckout(
     for (const line of totals.lines) {
       if (line.type === "product" && line.product_id) {
         await decrementLocalProductStock(
+          supabase,
+          tenantId,
+          line.product_id,
+          line.quantity,
+        );
+        await decrementWooMirrorStock(
           supabase,
           tenantId,
           line.product_id,

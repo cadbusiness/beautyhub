@@ -222,6 +222,24 @@ export class WooClient {
     });
   }
 
+  async updateVariationStock(
+    productId: number,
+    variationId: number,
+    stockQuantity: number,
+    manageStock = true,
+  ): Promise<WooProductVariation> {
+    return this.request<WooProductVariation>(
+      `/products/${productId}/variations/${variationId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          manage_stock: manageStock,
+          stock_quantity: stockQuantity,
+        }),
+      },
+    );
+  }
+
   async updateOrderMeta(
     orderId: number,
     metaData: Array<{ key: string; value: unknown }>,

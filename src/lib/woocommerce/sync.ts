@@ -1,10 +1,10 @@
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
-import { createServiceClient } from "@/lib/supabase/service";
+import { createServiceClient, tryCreateServiceClient } from "@/lib/supabase/service";
 import { decryptCredentials } from "@/lib/connections/crypto";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
-import type { WooProduct, WooProductVariation } from "@/lib/woocommerce/client";
+import { WooClient, type WooProduct, type WooProductVariation } from "@/lib/woocommerce/client";
 
 type Db = SupabaseClient<Database>;
 
@@ -532,6 +532,71 @@ export async function decrementLocalProductStock(
 }
 
 /**
+ * Baisse le stock Woo d'un produit miroir après une vente caisse.
+ * Ne crée pas de commande Woo : la vente reste dans BeautyHub.
+ */
+export async function decrementWooMirrorStock(
+  supabase: Db,
+  tenantId: string,
+  productId: string,
+  quantity: number,
+): Promise<void> {
+  const { data: product } = await supabase
+    .from("inst_products")
+    .select("woo_id, parent_woo_id, source")
+    .eq("tenant_id", tenantId)
+    .eq("id", productId)
+    .maybeSingle();
+
+  const wooId = product?.woo_id;
+  if (!wooId || product.source === "internal") return;
+
+  const creds = await getWooCredentialsForTenant(tenantId, supabase);
+  if (!creds) return;
+
+  const woo = new WooClient(creds);
+  const parentId = product.parent_woo_id;
+  try {
+    if (parentId) {
+      const variation = await woo.getProductVariation(parentId, wooId);
+      const current =
+        typeof variation.stock_quantity === "number" ? variation.stock_quantity : null;
+      if (current === null) return;
+      const next = Math.max(0, current - quantity);
+      const updated = await woo.updateVariationStock(parentId, wooId, next);
+      await supabase
+        .from("inst_products")
+        .update({
+          stock_quantity:
+            typeof updated.stock_quantity === "number" ? updated.stock_quantity : next,
+          synced_at: new Date().toISOString(),
+        })
+        .eq("tenant_id", tenantId)
+        .eq("id", productId);
+      return;
+    }
+
+    const remote = await woo.getProduct(wooId);
+    const current =
+      typeof remote.stock_quantity === "number" ? remote.stock_quantity : null;
+    if (current === null) return;
+    const next = Math.max(0, current - quantity);
+    const updated = await woo.updateProductStock(wooId, next);
+    await supabase
+      .from("inst_products")
+      .update({
+        stock_quantity:
+          typeof updated.stock_quantity === "number" ? updated.stock_quantity : next,
+        synced_at: new Date().toISOString(),
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", productId);
+  } catch {
+    // La vente caisse ne doit pas échouer si Woo est injoignable.
+  }
+}
+
+/**
  * Credentials déchiffrés pour opérations serveur (webhook, cron).
  *
  * Par défaut passe par le service client (bypass RLS, requis pour webhooks
@@ -544,7 +609,8 @@ export async function getWooCredentialsForTenant(
   tenantId: string,
   supabaseOverride?: SupabaseClient<Database>,
 ): Promise<{ url: string; consumerKey: string; consumerSecret: string } | null> {
-  const supabase = supabaseOverride ?? createServiceClient();
+  const supabase = supabaseOverride ?? tryCreateServiceClient();
+  if (!supabase) return null;
   const { data } = await supabase
     .from("connections")
     .select("credentials, status")

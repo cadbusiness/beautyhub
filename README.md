@@ -77,7 +77,7 @@ tableau de bord apres connexion. En local : `demo.localhost:3000` ou cookie tena
 
 ## Comptes de test
 
-Apres migrations, creer les utilisateurs :
+Sandbox separe des instituts clients (`slug=demo`). Apres migrations :
 
 ```bash
 npm run seed:test-users
@@ -92,6 +92,8 @@ npm run seed:test-users
 | `coach@demo.test` | Coach | Institut Demo |
 
 Mot de passe commun (dev/staging) : `BeautyHub2026!`
+
+Les comptes `@demo.test` ne doivent jamais etre rattaches a un institut client.
 
 ## Roadmap
 

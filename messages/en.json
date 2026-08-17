@@ -3329,6 +3329,7 @@
         "cashPending": "Collection…"
       },
       "emptyCategory": "No articles in this category. ",
+      "noResults": "No articles matching “{query}”.",
       "filters": {
         "wooCategory": "Category Woo",
         "wooCategoryAll": "All categories"

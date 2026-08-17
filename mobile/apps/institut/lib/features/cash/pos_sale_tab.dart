@@ -27,9 +27,19 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
 
-  List<PosCatalogItem> _filtered(PosContext ctx, String filter) {
-    if (filter == 'all') return ctx.catalog;
-    return ctx.catalog.where((item) => item.category == filter).toList();
+  List<PosCatalogItem> _filtered(PosContext ctx, String filter, String query) {
+    final q = query.trim().toLowerCase();
+    return ctx.catalog.where((item) {
+      if (filter != 'all' && item.category != filter) return false;
+      if (q.isEmpty) return true;
+      if (item.name.toLowerCase().contains(q)) return true;
+      if (item.sku?.toLowerCase().contains(q) ?? false) return true;
+      if (item.wooCategories.any((name) => name.toLowerCase().contains(q))) {
+        return true;
+      }
+      if (item.description?.toLowerCase().contains(q) ?? false) return true;
+      return false;
+    }).toList();
   }
 
   int _cartTotalCents(PosContext ctx, Map<String, int> cart) {
@@ -152,6 +162,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   Widget build(BuildContext context) {
     final posAsync = ref.watch(posContextProvider);
     final filter = ref.watch(posCategoryFilterProvider);
+    final query = ref.watch(posCatalogQueryProvider);
     final cart = ref.watch(posCartProvider);
     final cartCount = cart.values.fold(0, (a, b) => a + b);
 
@@ -165,7 +176,8 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         children: [Text('$e')],
       ),
       data: (ctx) {
-        final items = _filtered(ctx, filter);
+        final items = _filtered(ctx, filter, query);
+        final queryTrimmed = query.trim();
         return Stack(
           children: [
             CustomScrollView(
@@ -338,12 +350,18 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                   ),
                 ),
                 if (items.isEmpty)
-                  const SliverFillRemaining(
+                  SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
-                      child: Text(
-                        'Aucun article dans cette catégorie.',
-                        style: TextStyle(color: _muted),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          queryTrimmed.isNotEmpty
+                              ? 'Aucun article pour « $queryTrimmed ».'
+                              : 'Aucun article dans cette catégorie.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: _muted),
+                        ),
                       ),
                     ),
                   )

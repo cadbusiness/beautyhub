@@ -2774,6 +2774,7 @@
       "searchArticles": "Zoek een artikel…",
       "searchAria": "Zoeken",
       "emptyCategory": "Geen artikelen in deze categorie. Voeg behandelingen toe, synchroniseer WooCommerce of maak interne producten aan.",
+      "noResults": "Geen artikelen voor « {query} ».",
       "sessionRequired": "Open de kassa om deze verkoop te registreren.",
       "sessionClosedTitle": "De kassa is niet open",
       "sessionClosedBody": "Open de dag zodat u het niet vergeet. Het kassafonds is optioneel.",

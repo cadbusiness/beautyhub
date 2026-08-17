@@ -2892,6 +2892,7 @@
       "searchArticles": "Rechercher un article…",
       "searchAria": "Rechercher",
       "emptyCategory": "Aucun article dans cette catégorie. Ajoute des prestations, synchronise WooCommerce ou crée des produits internes.",
+      "noResults": "Aucun article pour « {query} ».",
       "filters": {
         "wooCategory": "Catégorie Woo",
         "wooCategoryAll": "Toutes les catégories"

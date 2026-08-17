@@ -1,5 +1,6 @@
 "use client";
 
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -185,7 +186,9 @@ export function PosTerminal({
       if (!q) return true;
       return (
         item.name.toLowerCase().includes(q) ||
-        (item.sku?.toLowerCase().includes(q) ?? false)
+        (item.sku?.toLowerCase().includes(q) ?? false) ||
+        (item.woo_categories?.some((name) => name.toLowerCase().includes(q)) ??
+          false)
       );
     });
   }, [catalog, tab, query, wooCategory]);
@@ -447,15 +450,24 @@ export function PosTerminal({
           ))}
         </div>
 
-        <Input
-          placeholder={t("searchArticles")}
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setPage(1);
-          }}
-          aria-label={t("searchAria")}
-        />
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            aria-hidden
+          />
+          <Input
+            type="search"
+            autoComplete="off"
+            className="pl-9"
+            placeholder={t("searchArticles")}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
+            aria-label={t("searchAria")}
+          />
+        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
           <div className="flex items-center gap-2">
@@ -503,7 +515,9 @@ export function PosTerminal({
 
         {filtered.length === 0 ? (
           <Card>
-            <p className="text-sm text-slate-500">{t("emptyCategory")}</p>
+            <p className="text-sm text-slate-500">
+              {query.trim() ? t("noResults", { query: query.trim() }) : t("emptyCategory")}
+            </p>
           </Card>
         ) : (
           <>

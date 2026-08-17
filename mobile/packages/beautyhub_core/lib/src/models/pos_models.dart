@@ -11,6 +11,9 @@ class PosCatalogItem {
     this.durationMin,
     this.sku,
     this.wooCategories = const [],
+    this.serviceCategoryId,
+    this.serviceCategoryName,
+    this.soldQty = 0,
     this.description,
     this.stockQuantity,
     this.wooId,
@@ -29,6 +32,9 @@ class PosCatalogItem {
   final int? durationMin;
   final String? sku;
   final List<String> wooCategories;
+  final String? serviceCategoryId;
+  final String? serviceCategoryName;
+  final int soldQty;
   final String? description;
   final int? stockQuantity;
   final int? wooId;
@@ -50,6 +56,9 @@ class PosCatalogItem {
       wooCategories: (json['wooCategories'] as List? ?? const [])
           .map((e) => e.toString())
           .toList(),
+      serviceCategoryId: json['serviceCategoryId'] as String?,
+      serviceCategoryName: json['serviceCategoryName'] as String?,
+      soldQty: (json['soldQty'] as num?)?.toInt() ?? 0,
       description: json['description'] as String?,
       stockQuantity: json['stockQuantity'] as int?,
       wooId: json['wooId'] as int?,
@@ -147,6 +156,7 @@ class PosContext {
     required this.sessionOpen,
     required this.requireOpenSession,
     required this.wooConnected,
+    this.serviceCategories = const [],
     this.sessionOpenedAt,
     this.sessionIsPreviousDay = false,
   });
@@ -158,6 +168,7 @@ class PosContext {
   final bool sessionOpen;
   final bool requireOpenSession;
   final bool wooConnected;
+  final List<PosOption> serviceCategories;
   final DateTime? sessionOpenedAt;
   final bool sessionIsPreviousDay;
 
@@ -174,6 +185,17 @@ class PosContext {
         .whereType<Map>()
         .map((e) => PosOption.fromJson(Map<String, dynamic>.from(e)))
         .toList();
+    final serviceCategories = (json['serviceCategories'] as List? ?? const [])
+        .whereType<Map>()
+        .map((e) {
+          final map = Map<String, dynamic>.from(e);
+          return PosOption(
+            id: map['id'] as String? ?? '',
+            label: map['name'] as String? ?? map['label'] as String? ?? '',
+          );
+        })
+        .where((c) => c.id.isNotEmpty && c.label.isNotEmpty)
+        .toList();
 
     return PosContext(
       catalog: catalog,
@@ -185,6 +207,7 @@ class PosContext {
       sessionOpen: json['sessionOpen'] as bool? ?? false,
       requireOpenSession: json['requireOpenSession'] as bool? ?? false,
       wooConnected: json['wooConnected'] as bool? ?? false,
+      serviceCategories: serviceCategories,
       sessionOpenedAt: json['sessionOpenedAt'] is String
           ? DateTime.tryParse(json['sessionOpenedAt'] as String)?.toLocal()
           : null,

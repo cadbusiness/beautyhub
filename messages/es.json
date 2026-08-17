@@ -2904,6 +2904,12 @@
       },
       "emptyCategory": "No hay artículos en esta categoría. Añade servicios, sincroniza WooCommerce o crea productos internos.",
       "noResults": "Ningún artículo para « {query} ».",
+      "noBestsellers": "Aún no hay suficientes ventas para clasificar los artículos.",
+      "filters": {
+        "allCategories": "Todas",
+        "bestsellers": "Más vendidos",
+        "uncategorized": "Sin categoría"
+      },
       "noSessionHint": "Sesión cerrada: abierta para seguimiento de efectivo",
       "openSession": "Abrir caja →",
       "searchAria": "investigar",

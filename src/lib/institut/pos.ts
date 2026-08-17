@@ -18,8 +18,16 @@ export interface PosCatalogItem {
   duration_min?: number;
   sku?: string | null;
   woo_categories?: string[];
+  service_category_id?: string | null;
+  service_category_name?: string | null;
+  sold_qty?: number;
   visibility?: string;
   is_appointment_extra?: boolean;
+}
+
+export interface PosServiceCategory {
+  id: string;
+  name: string;
 }
 
 export interface ResolvedCartLine {
@@ -173,6 +181,54 @@ export async function resolveCartLines(
   return lines;
 }
 
+const SOLD_QTY_PAGE = 1000;
+const SOLD_QTY_SALE_CHUNK = 200;
+
+/** Quantités vendues (12 derniers mois, ventes payées hors avoirs). */
+export async function fetchPosSoldQuantities(
+  supabase: Db,
+  tenantId: string,
+): Promise<Map<string, number>> {
+  const since = new Date();
+  since.setFullYear(since.getFullYear() - 1);
+
+  const saleIds: string[] = [];
+  for (let from = 0; ; from += SOLD_QTY_PAGE) {
+    const { data } = await supabase
+      .from("inst_sales")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .in("status", ["paid", "completed"])
+      .neq("sale_kind", "refund")
+      .gte("created_at", since.toISOString())
+      .range(from, from + SOLD_QTY_PAGE - 1);
+    const rows = data ?? [];
+    for (const row of rows) saleIds.push(row.id);
+    if (rows.length < SOLD_QTY_PAGE) break;
+  }
+  if (saleIds.length === 0) return new Map();
+
+  const qty = new Map<string, number>();
+  for (let i = 0; i < saleIds.length; i += SOLD_QTY_SALE_CHUNK) {
+    const chunk = saleIds.slice(i, i + SOLD_QTY_SALE_CHUNK);
+    const { data: items } = await supabase
+      .from("inst_sale_items")
+      .select("product_id, service_id, quantity")
+      .eq("tenant_id", tenantId)
+      .in("sale_id", chunk);
+    for (const item of items ?? []) {
+      const key = item.service_id
+        ? `service:${item.service_id}`
+        : item.product_id
+          ? `product:${item.product_id}`
+          : null;
+      if (!key) continue;
+      qty.set(key, (qty.get(key) ?? 0) + (item.quantity ?? 0));
+    }
+  }
+  return qty;
+}
+
 export function buildCatalog(
   services: Array<{
     id: string;
@@ -182,6 +238,7 @@ export function buildCatalog(
     duration_min: number;
     image_url?: string | null;
     visibility?: string;
+    category_id?: string | null;
   }>,
   products: Array<{
     id: string;
@@ -194,24 +251,43 @@ export function buildCatalog(
     woo_id?: number | null;
     woo_categories?: string[] | null;
   }>,
+  extras?: {
+    serviceCategories?: PosServiceCategory[];
+    soldQtyByKey?: Map<string, number>;
+  },
 ): PosCatalogItem[] {
-  const items: PosCatalogItem[] = services.map((s) => ({
-    key: `service:${s.id}`,
-    type: "service",
-    id: s.id,
-    name: s.name,
-    price_cents: s.price_cents,
-    image_url: s.image_url ?? null,
-    color: s.color,
-    category: "service",
-    duration_min: s.duration_min,
-    visibility: s.visibility,
-  }));
+  const categoryNameById = new Map(
+    (extras?.serviceCategories ?? []).map((c) => [c.id, c.name]),
+  );
+  const soldQtyByKey = extras?.soldQtyByKey ?? new Map<string, number>();
+
+  const items: PosCatalogItem[] = services.map((s) => {
+    const key = `service:${s.id}`;
+    const categoryId = s.category_id ?? null;
+    return {
+      key,
+      type: "service",
+      id: s.id,
+      name: s.name,
+      price_cents: s.price_cents,
+      image_url: s.image_url ?? null,
+      color: s.color,
+      category: "service",
+      duration_min: s.duration_min,
+      visibility: s.visibility,
+      service_category_id: categoryId,
+      service_category_name: categoryId
+        ? (categoryNameById.get(categoryId) ?? null)
+        : null,
+      sold_qty: soldQtyByKey.get(key) ?? 0,
+    };
+  });
 
   for (const p of products) {
     const isWoo = p.source === "woocommerce" || (p.woo_id != null && p.source !== "internal");
+    const key = `product:${p.id}`;
     items.push({
-      key: `product:${p.id}`,
+      key,
       type: "product",
       id: p.id,
       name: p.name,
@@ -221,6 +297,7 @@ export function buildCatalog(
       category: isWoo ? "woocommerce" : "internal",
       sku: p.sku,
       woo_categories: p.woo_categories ?? [],
+      sold_qty: soldQtyByKey.get(key) ?? 0,
     });
   }
   return items;

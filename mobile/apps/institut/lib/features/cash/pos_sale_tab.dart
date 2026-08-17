@@ -27,19 +27,86 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
 
-  List<PosCatalogItem> _filtered(PosContext ctx, String filter, String query) {
-    final q = query.trim().toLowerCase();
-    return ctx.catalog.where((item) {
-      if (filter != 'all' && item.category != filter) return false;
-      if (q.isEmpty) return true;
-      if (item.name.toLowerCase().contains(q)) return true;
-      if (item.sku?.toLowerCase().contains(q) ?? false) return true;
-      if (item.wooCategories.any((name) => name.toLowerCase().contains(q))) {
-        return true;
-      }
-      if (item.description?.toLowerCase().contains(q) ?? false) return true;
-      return false;
+  List<PosCatalogItem> _filtered(
+    PosContext ctx,
+    String type,
+    String facet,
+    String query,
+  ) {
+    final items = ctx.catalog.where((item) {
+      if (type != 'all' && item.category != type) return false;
+      if (!_matchesFacet(item, facet)) return false;
+      return _matchesQuery(item, query);
     }).toList();
+    if (facet != 'bestsellers') return items;
+    items.sort((a, b) {
+      final sold = b.soldQty.compareTo(a.soldQty);
+      if (sold != 0) return sold;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    return items;
+  }
+
+  bool _matchesFacet(PosCatalogItem item, String facet) {
+    if (facet == 'all') return true;
+    if (facet == 'bestsellers') return item.soldQty > 0;
+    if (facet == 'service:none') {
+      return item.category == 'service' &&
+          (item.serviceCategoryId == null || item.serviceCategoryId!.isEmpty);
+    }
+    if (facet.startsWith('service:')) {
+      return item.serviceCategoryId == facet.substring('service:'.length);
+    }
+    if (facet.startsWith('woo:')) {
+      return item.wooCategories.contains(facet.substring('woo:'.length));
+    }
+    return true;
+  }
+
+  bool _matchesQuery(PosCatalogItem item, String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    if (item.name.toLowerCase().contains(q)) return true;
+    if (item.sku?.toLowerCase().contains(q) ?? false) return true;
+    if (item.serviceCategoryName?.toLowerCase().contains(q) ?? false) {
+      return true;
+    }
+    if (item.description?.toLowerCase().contains(q) ?? false) return true;
+    return item.wooCategories.any((name) => name.toLowerCase().contains(q));
+  }
+
+  List<PosOption> _serviceFacets(PosContext ctx, String type) {
+    if (type != 'all' && type != 'service') return const [];
+    final used = ctx.catalog
+        .where((item) => item.category == 'service')
+        .map((item) => item.serviceCategoryId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toSet();
+    return ctx.serviceCategories.where((c) => used.contains(c.id)).toList();
+  }
+
+  List<String> _wooFacets(PosContext ctx, String type) {
+    if (type != 'all' && type != 'woocommerce') return const [];
+    final names = <String>{};
+    for (final item in ctx.catalog) {
+      if (item.category != 'woocommerce') continue;
+      for (final name in item.wooCategories) {
+        final trimmed = name.trim();
+        if (trimmed.isNotEmpty) names.add(trimmed);
+      }
+    }
+    final list = names.toList()..sort();
+    return list;
+  }
+
+  bool _hasUncategorizedServices(PosContext ctx, String type) {
+    if (type != 'all' && type != 'service') return false;
+    return ctx.catalog.any(
+      (item) =>
+          item.category == 'service' &&
+          (item.serviceCategoryId == null || item.serviceCategoryId!.isEmpty),
+    );
   }
 
   int _cartTotalCents(PosContext ctx, Map<String, int> cart) {
@@ -162,6 +229,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   Widget build(BuildContext context) {
     final posAsync = ref.watch(posContextProvider);
     final filter = ref.watch(posCategoryFilterProvider);
+    final facet = ref.watch(posCatalogFacetProvider);
     final query = ref.watch(posCatalogQueryProvider);
     final cart = ref.watch(posCartProvider);
     final cartCount = cart.values.fold(0, (a, b) => a + b);
@@ -176,8 +244,11 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         children: [Text('$e')],
       ),
       data: (ctx) {
-        final items = _filtered(ctx, filter, query);
+        final items = _filtered(ctx, filter, facet, query);
         final queryTrimmed = query.trim();
+        final serviceFacets = _serviceFacets(ctx, filter);
+        final wooFacets = _wooFacets(ctx, filter);
+        final showUncategorized = _hasUncategorizedServices(ctx, filter);
         return Stack(
           children: [
             CustomScrollView(
@@ -349,6 +420,40 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                     ),
                   ),
                 ),
+                SliverToBoxAdapter(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Row(
+                      children: [
+                        _FacetChip(label: 'Toutes', value: 'all', selected: facet),
+                        _FacetChip(
+                          label: 'Plus vendus',
+                          value: 'bestsellers',
+                          selected: facet,
+                        ),
+                        for (final category in serviceFacets)
+                          _FacetChip(
+                            label: category.label,
+                            value: 'service:${category.id}',
+                            selected: facet,
+                          ),
+                        if (showUncategorized)
+                          _FacetChip(
+                            label: 'Sans catégorie',
+                            value: 'service:none',
+                            selected: facet,
+                          ),
+                        for (final name in wooFacets)
+                          _FacetChip(
+                            label: name,
+                            value: 'woo:$name',
+                            selected: facet,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
                 if (items.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
@@ -358,7 +463,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                         child: Text(
                           queryTrimmed.isNotEmpty
                               ? 'Aucun article pour « $queryTrimmed ».'
-                              : 'Aucun article dans cette catégorie.',
+                              : facet == 'bestsellers'
+                                  ? 'Pas encore assez de ventes pour classer les articles.'
+                                  : 'Aucun article dans cette catégorie.',
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: _muted),
                         ),
@@ -470,7 +577,55 @@ class _FilterChip extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: InkWell(
-        onTap: () => ref.read(posCategoryFilterProvider.notifier).state = value,
+        onTap: () {
+          ref.read(posCategoryFilterProvider.notifier).state = value;
+          ref.read(posCatalogFacetProvider.notifier).state = 'all';
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected ? _black : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected ? _black : const Color(0xFFE5E5E5),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? Colors.white : _muted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FacetChip extends ConsumerWidget {
+  const _FacetChip({
+    required this.label,
+    required this.value,
+    required this.selected,
+  });
+
+  final String label;
+  final String value;
+  final String selected;
+
+  static const _black = Color(0xFF0A0A0A);
+  static const _muted = Color(0xFF737373);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isSelected = selected == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: InkWell(
+        onTap: () => ref.read(posCatalogFacetProvider.notifier).state = value,
         borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),

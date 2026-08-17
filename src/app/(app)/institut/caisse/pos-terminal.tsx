@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { checkoutPos, type ActionResult } from "../caisse-actions";
 import { Card } from "@/components/ui/card";
@@ -11,7 +11,19 @@ import {
   applyPriceOverrides,
   type PosCatalogItem,
   type PosCategory,
+  type PosServiceCategory,
 } from "@/lib/institut/pos";
+import {
+  POS_FACET_ALL,
+  POS_FACET_BESTSELLERS,
+  POS_FACET_UNCATEGORIZED,
+  filterPosCatalog,
+  hasUncategorizedServices,
+  listServiceCategoryFacets,
+  listWooCategoryFacets,
+  serviceFacetId,
+  wooFacetId,
+} from "@/lib/institut/pos-catalog-filter";
 import { computeCartTotals } from "@/lib/institut/pos-totals";
 import {
   formatPosMoney,
@@ -36,6 +48,7 @@ const initial: ActionResult = {};
 
 export function PosTerminal({
   catalog,
+  serviceCategories = [],
   clients,
   staff,
   appointments,
@@ -50,6 +63,7 @@ export function PosTerminal({
   stripeAccountId,
 }: {
   catalog: PosCatalogItem[];
+  serviceCategories?: PosServiceCategory[];
   clients: Option[];
   staff: Option[];
   appointments: PosAppointmentOption[];
@@ -76,7 +90,7 @@ export function PosTerminal({
   const [priceEdits, setPriceEdits] = useState<Record<string, string>>({});
   const [tab, setTab] = useState<PosCategory>("all");
   const [query, setQuery] = useState("");
-  const [wooCategory, setWooCategory] = useState("all");
+  const [facet, setFacet] = useState(POS_FACET_ALL);
   const [clientId, setClientId] = useState(() => initialPrefill?.clientId ?? "");
   const [staffId, setStaffId] = useState(() => initialPrefill?.staffId ?? "");
   const [appointmentId, setAppointmentId] = useState(() => initialPrefill?.appointmentId ?? "");
@@ -174,36 +188,23 @@ export function PosTerminal({
     [activeOverrides],
   );
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return catalog.filter((item) => {
-      if (tab !== "all" && item.category !== tab) return false;
-      if (wooCategory !== "all" && (tab === "all" || tab === "woocommerce")) {
-        if (item.category !== "woocommerce") return false;
-        const names = item.woo_categories ?? [];
-        if (!names.some((name) => name === wooCategory)) return false;
-      }
-      if (!q) return true;
-      return (
-        item.name.toLowerCase().includes(q) ||
-        (item.sku?.toLowerCase().includes(q) ?? false) ||
-        (item.woo_categories?.some((name) => name.toLowerCase().includes(q)) ??
-          false)
-      );
-    });
-  }, [catalog, tab, query, wooCategory]);
+  const filtered = useMemo(
+    () => filterPosCatalog(catalog, tab, facet, query),
+    [catalog, tab, facet, query],
+  );
 
-  const wooCategoryOptions = useMemo(() => {
-    const categories = new Set<string>();
-    for (const item of catalog) {
-      if (item.category !== "woocommerce") continue;
-      for (const name of item.woo_categories ?? []) {
-        const trimmed = name.trim();
-        if (trimmed) categories.add(trimmed);
-      }
-    }
-    return Array.from(categories).sort((a, b) => a.localeCompare(b, "fr"));
-  }, [catalog]);
+  const serviceCategoryFacets = useMemo(
+    () => listServiceCategoryFacets(catalog, tab, serviceCategories),
+    [catalog, tab, serviceCategories],
+  );
+  const wooCategoryFacets = useMemo(
+    () => listWooCategoryFacets(catalog, tab),
+    [catalog, tab],
+  );
+  const showUncategorized = useMemo(
+    () => hasUncategorizedServices(catalog, tab),
+    [catalog, tab],
+  );
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -437,6 +438,7 @@ export function PosTerminal({
               type="button"
               onClick={() => {
                 setTab(item.id);
+                setFacet(POS_FACET_ALL);
                 setPage(1);
               }}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -469,29 +471,70 @@ export function PosTerminal({
           />
         </div>
 
+        <div className="flex flex-wrap items-center gap-1.5">
+          <CatalogFacetChip
+            active={facet === POS_FACET_ALL}
+            onClick={() => {
+              setFacet(POS_FACET_ALL);
+              setPage(1);
+            }}
+          >
+            {t("filters.allCategories")}
+          </CatalogFacetChip>
+          <CatalogFacetChip
+            active={facet === POS_FACET_BESTSELLERS}
+            onClick={() => {
+              setFacet(POS_FACET_BESTSELLERS);
+              setPage(1);
+            }}
+          >
+            {t("filters.bestsellers")}
+          </CatalogFacetChip>
+          {serviceCategoryFacets.map((category) => {
+            const id = serviceFacetId(category.id);
+            return (
+              <CatalogFacetChip
+                key={id}
+                active={facet === id}
+                onClick={() => {
+                  setFacet(id);
+                  setPage(1);
+                }}
+              >
+                {category.name}
+              </CatalogFacetChip>
+            );
+          })}
+          {showUncategorized ? (
+            <CatalogFacetChip
+              active={facet === POS_FACET_UNCATEGORIZED}
+              onClick={() => {
+                setFacet(POS_FACET_UNCATEGORIZED);
+                setPage(1);
+              }}
+            >
+              {t("filters.uncategorized")}
+            </CatalogFacetChip>
+          ) : null}
+          {wooCategoryFacets.map((name) => {
+            const id = wooFacetId(name);
+            return (
+              <CatalogFacetChip
+                key={id}
+                active={facet === id}
+                onClick={() => {
+                  setFacet(id);
+                  setPage(1);
+                }}
+              >
+                {name}
+              </CatalogFacetChip>
+            );
+          })}
+        </div>
+
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            {wooCategoryOptions.length > 0 ? (
-              <>
-                <label htmlFor="woo-category-filter">{t("filters.wooCategory")}</label>
-                <Select
-                  id="woo-category-filter"
-                  value={wooCategory}
-                  onChange={(e) => {
-                    setWooCategory(e.target.value);
-                    setPage(1);
-                  }}
-                  className="h-8 min-w-40"
-                >
-                  <option value="all">{t("filters.wooCategoryAll")}</option>
-                  {wooCategoryOptions.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </Select>
-              </>
-            ) : null}
             <span>{t("pagination.showing", { from: pageFrom, to: pageTo, total: filtered.length })}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -516,7 +559,11 @@ export function PosTerminal({
         {filtered.length === 0 ? (
           <Card>
             <p className="text-sm text-slate-500">
-              {query.trim() ? t("noResults", { query: query.trim() }) : t("emptyCategory")}
+              {query.trim()
+                ? t("noResults", { query: query.trim() })
+                : facet === POS_FACET_BESTSELLERS
+                  ? t("noBestsellers")
+                  : t("emptyCategory")}
             </p>
           </Card>
         ) : (
@@ -920,5 +967,29 @@ export function PosTerminal({
         </Link>
       </Card>
     </div>
+  );
+}
+
+function CatalogFacetChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        active
+          ? "inline-flex h-7 items-center rounded-full bg-slate-900 px-2.5 text-xs font-medium text-white"
+          : "inline-flex h-7 items-center rounded-full bg-slate-100 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-200"
+      }
+    >
+      {children}
+    </button>
   );
 }

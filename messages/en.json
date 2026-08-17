@@ -3330,7 +3330,11 @@
       },
       "emptyCategory": "No articles in this category. ",
       "noResults": "No articles matching “{query}”.",
+      "noBestsellers": "Not enough sales yet to rank articles.",
       "filters": {
+        "allCategories": "All",
+        "bestsellers": "Best sellers",
+        "uncategorized": "Uncategorized",
         "wooCategory": "Category Woo",
         "wooCategoryAll": "All categories"
       },

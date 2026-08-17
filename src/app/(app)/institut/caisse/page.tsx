@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getTenantConnectionStatus } from "@/lib/connections";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { getStripeAccountForTenant } from "@/lib/stripe/index";
-import { buildCatalog } from "@/lib/institut/pos";
+import { buildCatalog, fetchPosSoldQuantities } from "@/lib/institut/pos";
 import { buildPosAppointmentOption } from "@/lib/institut/pos-appointment";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import { getOpenCashSession } from "@/lib/institut/pos-session";
@@ -34,13 +34,13 @@ export default async function CaissePage({
     todayDateString(),
   );
 
-  const [woo, stripeAccount, servicesRes, productsRes, clientsRes, posSettings, staffRes, apptsRes, cashSession, linkedApptRes] =
+  const [woo, stripeAccount, servicesRes, productsRes, clientsRes, posSettings, staffRes, apptsRes, cashSession, linkedApptRes, categoriesRes, soldQtyByKey] =
     await Promise.all([
     getTenantConnectionStatus(tenantId, WOO_PROVIDER),
     getStripeAccountForTenant(tenantId),
     supabase
       .from("inst_services")
-      .select("id, name, price_cents, color, duration_min, image_url, visibility")
+      .select("id, name, price_cents, color, duration_min, image_url, visibility, category_id")
       .eq("tenant_id", tenantId)
       .eq("is_active", true)
       .order("name"),
@@ -80,10 +80,24 @@ export default async function CaissePage({
           .in("status", ["booked", "confirmed", "completed"])
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase
+      .from("inst_service_categories")
+      .select("id, name")
+      .eq("tenant_id", tenantId)
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true }),
+    fetchPosSoldQuantities(supabase, tenantId),
   ]);
 
   const connected = woo?.status === "connected";
-  const catalog = buildCatalog(servicesRes.data ?? [], productsRes.data ?? []);
+  const serviceCategories = (categoriesRes.data ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+  }));
+  const catalog = buildCatalog(servicesRes.data ?? [], productsRes.data ?? [], {
+    serviceCategories,
+    soldQtyByKey,
+  });
   const clients = (clientsRes.data ?? []).map((c) => ({
     id: c.id,
     label: c.full_name ? `${c.full_name} (${c.email})` : c.email,
@@ -157,6 +171,7 @@ export default async function CaissePage({
           ) : null}
           <PosTerminal
             catalog={catalog}
+            serviceCategories={serviceCategories}
             clients={clients}
             staff={staff}
             appointments={appointments}

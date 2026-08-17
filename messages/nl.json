@@ -2775,6 +2775,12 @@
       "searchAria": "Zoeken",
       "emptyCategory": "Geen artikelen in deze categorie. Voeg behandelingen toe, synchroniseer WooCommerce of maak interne producten aan.",
       "noResults": "Geen artikelen voor « {query} ».",
+      "noBestsellers": "Nog niet genoeg verkopen om artikelen te rangschikken.",
+      "filters": {
+        "allCategories": "Alle",
+        "bestsellers": "Meest verkocht",
+        "uncategorized": "Zonder categorie"
+      },
       "sessionRequired": "Open de kassa om deze verkoop te registreren.",
       "sessionClosedTitle": "De kassa is niet open",
       "sessionClosedBody": "Open de dag zodat u het niet vergeet. Het kassafonds is optioneel.",

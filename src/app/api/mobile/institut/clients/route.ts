@@ -2,23 +2,17 @@ import {
   mobileErrorResponse,
   requireMobileTenantSession,
 } from "@/lib/mobile/session";
-import { provisionClientAccess } from "@/lib/institut/client-access";
-import type { Database } from "@/lib/db/database.types";
-
-type ClientInsert = Database["public"]["Tables"]["clients"]["Insert"];
+import {
+  clientPickerLabel,
+  createMobileClient,
+  parseMobileClientBody,
+  serializeMobileClient,
+  type MobileClientRow,
+  MOBILE_CLIENT_SELECT,
+} from "@/lib/institut/mobile-clients";
 
 const DEFAULT_LIMIT = 60;
 const MAX_LIMIT = 200;
-
-function isPlaceholderEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  return (
-    email.endsWith("@beautyhub.local") ||
-    email.endsWith("@no-email.local") ||
-    email.endsWith("@overcache.local") ||
-    email.includes("@import.")
-  );
-}
 
 /**
  * GET /api/mobile/institut/clients
@@ -43,9 +37,7 @@ export async function GET(request: Request) {
 
     let query = session.supabase
       .from("clients")
-      .select(
-        "id, full_name, email, phone, marketing_opt_in, tags, login_id, created_at",
-      )
+      .select(MOBILE_CLIENT_SELECT)
       .eq("tenant_id", session.tenant.id)
       .order("created_at", { ascending: false })
       .limit(limit + 1);
@@ -68,21 +60,9 @@ export async function GET(request: Request) {
       );
     }
 
-    const rows = data ?? [];
+    const rows = (data ?? []) as MobileClientRow[];
     const hasMore = rows.length > limit;
-    const items = (hasMore ? rows.slice(0, limit) : rows).map((c) => {
-      const displayEmail = isPlaceholderEmail(c.email) ? null : c.email;
-      return {
-        id: c.id,
-        fullName: c.full_name,
-        email: displayEmail,
-        phone: c.phone,
-        marketingOptIn: c.marketing_opt_in ?? false,
-        tags: c.tags ?? [],
-        hasAccount: !!c.login_id,
-        createdAt: c.created_at,
-      };
-    });
+    const items = (hasMore ? rows.slice(0, limit) : rows).map(serializeMobileClient);
     const nextCursor = hasMore ? rows[limit - 1].created_at : null;
 
     return Response.json({ items, nextCursor });
@@ -91,142 +71,42 @@ export async function GET(request: Request) {
   }
 }
 
-interface CreateClientPayload {
-  email?: unknown;
-  fullName?: unknown;
-  phone?: unknown;
-  marketingOptIn?: unknown;
-  createAccount?: unknown;
-  notes?: unknown;
-}
-
-function normalizeEmail(value: unknown): string {
-  return typeof value === "string" ? value.trim().toLowerCase() : "";
-}
-
-function normalizeText(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length === 0 ? null : trimmed;
-}
-
 /**
  * POST /api/mobile/institut/clients
- * Créé une fiche client minimale depuis l'app mobile (POS ou agenda).
- * Retourne la ligne complète pour être injectée dans un picker.
- * Peut aussi provisionner un compte cliente (login_id + PIN).
+ * Crée une fiche cliente depuis l'app (liste, POS ou agenda).
  */
 export async function POST(request: Request) {
   try {
     const session = await requireMobileTenantSession(request, {
       moduleId: "institut",
     });
-    const raw = (await request.json().catch(() => ({}))) as CreateClientPayload;
+    const raw = await request.json().catch(() => ({}));
+    const result = await createMobileClient(
+      session.supabase,
+      session.tenant.id,
+      session.user.id,
+      parseMobileClientBody(raw),
+    );
 
-    const email = normalizeEmail(raw.email);
-    const fullName = normalizeText(raw.fullName);
-    const phone = normalizeText(raw.phone);
-    const notes = normalizeText(raw.notes);
-    const marketingOptIn = raw.marketingOptIn === true;
-    const createAccount = raw.createAccount === true;
-
-    if (!email && !fullName && !phone) {
+    if ("error" in result) {
       return Response.json(
-        { error: "missing_fields", message: "Nom, email ou téléphone requis." },
-        { status: 400 },
+        { error: result.code, message: result.error },
+        { status: result.status },
       );
     }
-    if (email && !email.includes("@")) {
-      return Response.json(
-        { error: "invalid_email", message: "Email invalide." },
-        { status: 400 },
-      );
-    }
-    if (createAccount && !email) {
-      return Response.json(
-        {
-          error: "email_required_for_account",
-          message: "Email requis pour créer un compte cliente.",
-        },
-        { status: 400 },
-      );
-    }
-
-    // Placeholder email quand pas fourni (walk-in / téléphone only).
-    const effectiveEmail =
-      email || `noemail+${crypto.randomUUID()}@beautyhub.local`;
-
-    const insertPayload: ClientInsert = {
-      tenant_id: session.tenant.id,
-      email: effectiveEmail,
-      full_name: fullName,
-      phone,
-      marketing_opt_in: marketingOptIn,
-      source: "manual",
-    };
-    if (notes) {
-      insertPayload.metadata = { notes } as ClientInsert["metadata"];
-    }
-
-    const { data, error } = await session.supabase
-      .from("clients")
-      .insert(insertPayload)
-      .select("id, full_name, email, phone")
-      .single();
-
-    if (error || !data) {
-      if (error?.code === "23505") {
-        return Response.json(
-          {
-            error: "email_exists",
-            message: "Une cliente avec cet email existe déjà.",
-          },
-          { status: 409 },
-        );
-      }
-      return Response.json(
-        {
-          error: "insert_failed",
-          message: error?.message ?? "Création impossible.",
-        },
-        { status: 500 },
-      );
-    }
-
-    let account: { loginId: string; pinCode: string } | null = null;
-    if (createAccount) {
-      try {
-        account = await provisionClientAccess(
-          session.supabase,
-          session.tenant.id,
-          data.id,
-        );
-      } catch (e) {
-        // Ne bloque pas la création client, on retourne juste sans account.
-        console.error("[mobile/clients] provisionClientAccess failed", e);
-      }
-    }
-
-    const displayEmail = data.email?.endsWith("@beautyhub.local")
-      ? null
-      : data.email;
-    const label = data.full_name
-      ? displayEmail
-        ? `${data.full_name} (${displayEmail})`
-        : data.full_name
-      : (displayEmail ?? data.phone ?? "Cliente");
 
     return Response.json(
       {
+        item: result.item,
         client: {
-          id: data.id,
-          label,
-          fullName: data.full_name,
-          email: displayEmail,
-          phone: data.phone,
-          marketingOptIn,
+          id: result.item.id,
+          label: clientPickerLabel(result.item),
+          fullName: result.item.fullName,
+          email: result.item.email,
+          phone: result.item.phone,
+          marketingOptIn: result.item.marketingOptIn,
         },
-        account,
+        account: result.account,
       },
       { status: 201 },
     );

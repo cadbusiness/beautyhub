@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-Future<void> showClientDetailSheet({
+import 'client_editor_sheet.dart';
+
+Future<InstClient?> showClientDetailSheet({
   required BuildContext context,
   required InstClient client,
+  ValueChanged<InstClient>? onChanged,
 }) {
-  return showModalBottomSheet<void>(
+  return showModalBottomSheet<InstClient>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -15,14 +18,22 @@ Future<void> showClientDetailSheet({
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => _ClientDetailSheet(client: client),
+    builder: (_) => _ClientDetailSheet(client: client, onChanged: onChanged),
   );
 }
 
-class _ClientDetailSheet extends StatelessWidget {
-  const _ClientDetailSheet({required this.client});
+class _ClientDetailSheet extends StatefulWidget {
+  const _ClientDetailSheet({required this.client, this.onChanged});
 
   final InstClient client;
+  final ValueChanged<InstClient>? onChanged;
+
+  @override
+  State<_ClientDetailSheet> createState() => _ClientDetailSheetState();
+}
+
+class _ClientDetailSheetState extends State<_ClientDetailSheet> {
+  late InstClient client = widget.client;
 
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
@@ -38,6 +49,12 @@ class _ClientDetailSheet extends StatelessWidget {
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  String _formatDob(String raw) {
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) return raw;
+    return DateFormat('d MMMM y', 'fr_FR').format(parsed);
   }
 
   @override
@@ -76,7 +93,7 @@ class _ClientDetailSheet extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => Navigator.of(context).pop(client),
                   icon: const Icon(Icons.close_rounded, size: 22),
                   color: _muted,
                   splashRadius: 20,
@@ -120,6 +137,50 @@ class _ClientDetailSheet extends StatelessWidget {
                       ),
                   ],
                 ),
+                if (client.dateOfBirth != null) ...[
+                  const SizedBox(height: 20),
+                  _Section(
+                    title: 'Naissance',
+                    children: [
+                      _InfoRow(
+                        icon: Icons.cake_outlined,
+                        label: _formatDob(client.dateOfBirth!),
+                      ),
+                    ],
+                  ),
+                ],
+                if (client.hasAddress) ...[
+                  const SizedBox(height: 20),
+                  _Section(
+                    title: 'Adresse',
+                    children: [
+                      _InfoRow(
+                        icon: Icons.location_on_outlined,
+                        label: client.addressOneLine,
+                        maxLines: 3,
+                        onCopy: () =>
+                            _copy(context, client.addressOneLine, 'Adresse'),
+                      ),
+                    ],
+                  ),
+                ],
+                if (client.notes != null && client.notes!.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  _Section(
+                    title: 'Notes',
+                    padded: true,
+                    children: [
+                      Text(
+                        client.notes!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: _black,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 20),
                 _Section(
                   title: 'Préférences',
@@ -177,13 +238,42 @@ class _ClientDetailSheet extends StatelessWidget {
                     ],
                   ),
                 ],
-                const SizedBox(height: 24),
-                const Text(
-                  'Historique et notes détaillées disponibles sur le web.',
-                  style: TextStyle(fontSize: 12, color: _muted),
-                  textAlign: TextAlign.center,
-                ),
+                const SizedBox(height: 8),
               ],
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: () async {
+                    final result = await showClientEditorSheet(
+                      context: context,
+                      client: client,
+                    );
+                    if (result != null && mounted) {
+                      setState(() => client = result.client);
+                      widget.onChanged?.call(result.client);
+                      if (result.account != null) {
+                        showClientAccountCreatedSnackBar(
+                          context,
+                          result.account!,
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: const Text('Modifier'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _black,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -216,16 +306,16 @@ class _Section extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
-              color: _ClientDetailSheet._muted,
+              color: _ClientDetailSheetState._muted,
             ),
           ),
         ),
         Container(
           padding: padded ? const EdgeInsets.all(12) : EdgeInsets.zero,
           decoration: BoxDecoration(
-            color: _ClientDetailSheet._rowBg,
+            color: _ClientDetailSheetState._rowBg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _ClientDetailSheet._border),
+            border: Border.all(color: _ClientDetailSheetState._border),
           ),
           child: Column(
             children: children,
@@ -242,12 +332,14 @@ class _InfoRow extends StatelessWidget {
     required this.label,
     this.onCopy,
     this.trailing,
+    this.maxLines = 1,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onCopy;
   final Widget? trailing;
+  final int maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -257,17 +349,17 @@ class _InfoRow extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: _ClientDetailSheet._muted),
+            Icon(icon, size: 18, color: _ClientDetailSheetState._muted),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 label,
                 style: const TextStyle(
                   fontSize: 14,
-                  color: _ClientDetailSheet._black,
+                  color: _ClientDetailSheetState._black,
                   fontWeight: FontWeight.w500,
                 ),
-                maxLines: 1,
+                maxLines: maxLines,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -277,7 +369,7 @@ class _InfoRow extends StatelessWidget {
               const Icon(
                 Icons.copy_rounded,
                 size: 16,
-                color: _ClientDetailSheet._muted,
+                color: _ClientDetailSheetState._muted,
               ),
           ],
         ),
@@ -297,14 +389,14 @@ class _EmptyRow extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: _ClientDetailSheet._muted),
+          Icon(icon, size: 18, color: _ClientDetailSheetState._muted),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
               style: const TextStyle(
                 fontSize: 13,
-                color: _ClientDetailSheet._muted,
+                color: _ClientDetailSheetState._muted,
                 fontStyle: FontStyle.italic,
               ),
             ),

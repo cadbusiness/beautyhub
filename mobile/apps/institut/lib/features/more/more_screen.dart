@@ -198,7 +198,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 _MenuRow(
                   leading: _IconTile(icon: Icons.people_outline_rounded),
                   title: 'Clientes',
-                  subtitle: 'Rechercher & consulter toutes les fiches',
+                  subtitle: 'Créer, rechercher et modifier les fiches',
                   onTap: () => context.go('/app/more/clients'),
                 ),
                 _MenuRow(

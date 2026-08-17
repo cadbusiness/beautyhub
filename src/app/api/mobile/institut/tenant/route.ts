@@ -1,12 +1,85 @@
+import { z } from "zod";
 import {
   mobileErrorResponse,
   requireMobileTenantSession,
 } from "@/lib/mobile/session";
 import {
-  fetchPublicOpeningHours,
-  groupOpeningHoursByWeekday,
-  formatTimeLabel,
-} from "@/lib/institut/opening-hours";
+  loadTenantProfile,
+  saveDefaultOpeningHours,
+  saveTenantPublicProfile,
+} from "@/lib/institut/tenant-profile";
+
+const optionalText = z
+  .string()
+  .trim()
+  .max(200)
+  .nullable()
+  .optional()
+  .transform((value) => (value === undefined ? undefined : value || null));
+
+const contactSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .max(180)
+    .nullable()
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value || null))
+    .refine(
+      (value) => value === undefined || value === null || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+      "invalid_email",
+    ),
+  phone: optionalText,
+  website: z
+    .string()
+    .trim()
+    .max(200)
+    .nullable()
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value || null)),
+});
+
+const addressSchema = z.object({
+  line1: optionalText,
+  line2: optionalText,
+  city: optionalText,
+  postalCode: z
+    .string()
+    .trim()
+    .max(20)
+    .nullable()
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value || null)),
+  country: optionalText,
+});
+
+const slotSchema = z.object({
+  start: z.string().regex(/^\d{2}:\d{2}$/),
+  end: z.string().regex(/^\d{2}:\d{2}$/),
+});
+
+const patchSchema = z.object({
+  displayName: z.string().trim().max(120).optional(),
+  description: z
+    .string()
+    .trim()
+    .max(500)
+    .nullable()
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value || null)),
+  contact: contactSchema.optional(),
+  address: addressSchema.optional(),
+  openingHours: z
+    .array(
+      z.object({
+        weekday: z.number().int().min(0).max(6),
+        slots: z.array(slotSchema).max(4),
+      }),
+    )
+    .min(1)
+    .max(7)
+    .optional(),
+});
 
 /**
  * GET /api/mobile/institut/tenant
@@ -17,96 +90,95 @@ export async function GET(request: Request) {
     const session = await requireMobileTenantSession(request, {
       moduleId: "institut",
     });
-
-    const [tenantRes, hoursRows, staffCountRes, servicesCountRes, clientsCountRes] =
-      await Promise.all([
-        session.supabase
-          .from("tenants")
-          .select("id, name, slug, branding, custom_domain, created_at")
-          .eq("id", session.tenant.id)
-          .maybeSingle(),
-        fetchPublicOpeningHours(session.supabase, session.tenant.id),
-        session.supabase
-          .from("inst_staff")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", session.tenant.id)
-          .eq("is_active", true),
-        session.supabase
-          .from("inst_services")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", session.tenant.id)
-          .eq("is_active", true),
-        session.supabase
-          .from("clients")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", session.tenant.id),
-      ]);
-
-    if (tenantRes.error || !tenantRes.data) {
+    const profile = await loadTenantProfile(session.supabase, session.tenant.id);
+    if (!profile) {
       return Response.json(
-        {
-          error: "tenant_not_found",
-          message: tenantRes.error?.message ?? "Institut introuvable.",
-        },
+        { error: "tenant_not_found", message: "Institut introuvable." },
         { status: 404 },
       );
     }
+    return Response.json(profile);
+  } catch (error) {
+    return mobileErrorResponse(error);
+  }
+}
 
-    const branding = (tenantRes.data.branding as Record<string, unknown>) ?? {};
-    const contact = (branding.contact as Record<string, unknown>) ?? {};
-    const address = (branding.address as Record<string, unknown>) ?? {};
-
-    const grouped = groupOpeningHoursByWeekday(hoursRows);
-    const weekdayLabels = [
-      "Dimanche",
-      "Lundi",
-      "Mardi",
-      "Mercredi",
-      "Jeudi",
-      "Vendredi",
-      "Samedi",
-    ];
-    const openingHours = Array.from({ length: 7 }, (_, i) => {
-      const slots = (grouped.get(i) ?? []).map((r) => ({
-        start: formatTimeLabel(r.start_time),
-        end: formatTimeLabel(r.end_time),
-      }));
-      return {
-        weekday: i,
-        label: weekdayLabels[i],
-        slots,
-      };
+/**
+ * PATCH /api/mobile/institut/tenant
+ * Met à jour le nom public, le contact, l'adresse et/ou les horaires.
+ */
+export async function PATCH(request: Request) {
+  try {
+    const session = await requireMobileTenantSession(request, {
+      moduleId: "institut",
     });
+    const parsed = patchSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return Response.json(
+        { error: "invalid_body", message: parsed.error.issues[0]?.message ?? "Données invalides." },
+        { status: 400 },
+      );
+    }
 
-    return Response.json({
-      id: tenantRes.data.id,
-      name: tenantRes.data.name,
-      slug: tenantRes.data.slug,
-      customDomain: tenantRes.data.custom_domain,
-      displayName: (branding.displayName as string | undefined) ?? tenantRes.data.name,
-      primaryColor: (branding.primaryColor as string | undefined) ?? null,
-      logoUrl: (branding.logoUrl as string | undefined) ?? null,
-      description: (branding.description as string | undefined) ?? null,
-      contact: {
-        email: (contact.email as string | undefined) ?? null,
-        phone: (contact.phone as string | undefined) ?? null,
-        website: (contact.website as string | undefined) ?? null,
-      },
-      address: {
-        line1: (address.line1 as string | undefined) ?? null,
-        line2: (address.line2 as string | undefined) ?? null,
-        city: (address.city as string | undefined) ?? null,
-        postalCode: (address.postalCode as string | undefined) ?? null,
-        country: (address.country as string | undefined) ?? null,
-      },
-      openingHours,
-      counts: {
-        activeStaff: staffCountRes.count ?? 0,
-        activeServices: servicesCountRes.count ?? 0,
-        clients: clientsCountRes.count ?? 0,
-      },
-      createdAt: tenantRes.data.created_at,
-    });
+    const { displayName, description, contact, address, openingHours } = parsed.data;
+    if (
+      displayName === undefined &&
+      description === undefined &&
+      contact === undefined &&
+      address === undefined &&
+      openingHours === undefined
+    ) {
+      return Response.json(
+        { error: "empty_patch", message: "Aucune modification." },
+        { status: 400 },
+      );
+    }
+
+    if (
+      displayName !== undefined ||
+      description !== undefined ||
+      contact !== undefined ||
+      address !== undefined
+    ) {
+      const saved = await saveTenantPublicProfile(session.supabase, session.tenant.id, {
+        displayName,
+        description,
+        contact,
+        address,
+      });
+      if (saved.error) {
+        return Response.json(
+          { error: "save_failed", message: saved.error },
+          { status: 500 },
+        );
+      }
+    }
+
+    if (openingHours) {
+      const hours = await saveDefaultOpeningHours(
+        session.supabase,
+        session.tenant.id,
+        openingHours,
+      );
+      if (hours.error) {
+        const message =
+          hours.error === "end_before_start"
+            ? "L’heure de fin doit être après l’heure de début."
+            : hours.error === "invalid_time" || hours.error === "invalid_hours"
+              ? "Horaires invalides."
+              : hours.error;
+        return Response.json({ error: hours.error, message }, { status: 400 });
+      }
+    }
+
+    const profile = await loadTenantProfile(session.supabase, session.tenant.id);
+    if (!profile) {
+      return Response.json(
+        { error: "tenant_not_found", message: "Institut introuvable." },
+        { status: 404 },
+      );
+    }
+    return Response.json(profile);
   } catch (error) {
     return mobileErrorResponse(error);
   }

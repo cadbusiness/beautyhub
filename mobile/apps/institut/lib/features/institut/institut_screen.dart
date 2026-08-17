@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../state/session_providers.dart';
 import '../../widgets/screen_scaffold.dart';
+import 'institut_edit_sheets.dart';
 
 class InstitutScreen extends ConsumerStatefulWidget {
   const InstitutScreen({super.key});
@@ -78,7 +79,7 @@ class _InstitutScreenState extends ConsumerState<InstitutScreen> {
       backgroundColor: _bg,
       appBar: const InstitutTopBar(
         title: 'Institut',
-        subtitle: 'Informations & configuration',
+        subtitle: 'Fiche publique',
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -109,12 +110,35 @@ class _InstitutScreenState extends ConsumerState<InstitutScreen> {
                 info: info,
                 uploading: _uploading,
                 onUpload: _uploading ? null : _uploadLogo,
+                onEdit: () => showInstitutIdentityEditor(
+                  context: context,
+                  info: info,
+                ),
               ),
+              if (info.description != null && info.description!.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    info.description!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: _muted,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               _CountsStrip(counts: info.counts),
               const SizedBox(height: 24),
               _Section(
                 title: 'Contact',
+                onEdit: () => showInstitutContactEditor(
+                  context: context,
+                  info: info,
+                ),
                 children: [
                   if (info.contact.email != null)
                     _InfoRow(
@@ -135,14 +159,22 @@ class _InstitutScreenState extends ConsumerState<InstitutScreen> {
                       onCopy: () => _copy(info.contact.website!, 'Site'),
                     ),
                   if (info.contact.isEmpty)
-                    const _EmptyRow(
-                      label: 'Aucun contact renseigné pour l’instant.',
+                    _EmptyRow(
+                      label: 'Aucun contact renseigné. Touchez Modifier.',
+                      onTap: () => showInstitutContactEditor(
+                        context: context,
+                        info: info,
+                      ),
                     ),
                 ],
               ),
               const SizedBox(height: 24),
               _Section(
                 title: 'Adresse',
+                onEdit: () => showInstitutAddressEditor(
+                  context: context,
+                  info: info,
+                ),
                 children: [
                   if (!info.address.isEmpty)
                     _InfoRow(
@@ -152,40 +184,45 @@ class _InstitutScreenState extends ConsumerState<InstitutScreen> {
                           _copy(info.address.oneLine, 'Adresse'),
                     )
                   else
-                    const _EmptyRow(
-                      label: 'Aucune adresse renseignée.',
+                    _EmptyRow(
+                      label: 'Aucune adresse renseignée. Touchez Modifier.',
+                      onTap: () => showInstitutAddressEditor(
+                        context: context,
+                        info: info,
+                      ),
                     ),
                 ],
               ),
               const SizedBox(height: 24),
               _Section(
                 title: 'Horaires publics',
+                onEdit: () => showInstitutHoursEditor(
+                  context: context,
+                  info: info,
+                ),
                 children: [
                   for (var day
                       in _reorderMondayFirst(info.openingHours))
-                    _HoursRow(day: day),
+                    _HoursRow(
+                      day: day,
+                      onTap: () => showInstitutHoursEditor(
+                        context: context,
+                        info: info,
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: 24),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  'Ces informations sont visibles publiquement sur ${info.slug}.beautyhub.com',
+                  'Ces informations sont visibles publiquement sur ${info.customDomain ?? '${info.slug}.beautyhub.com'}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 12,
                     color: _muted,
                     fontStyle: FontStyle.italic,
                   ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'Édition détaillée depuis le web.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, color: _muted),
                 ),
               ),
             ],
@@ -206,11 +243,13 @@ class _Hero extends StatelessWidget {
     required this.info,
     required this.uploading,
     required this.onUpload,
+    required this.onEdit,
   });
 
   final InstTenantInfo info;
   final bool uploading;
   final VoidCallback? onUpload;
+  final VoidCallback onEdit;
 
   static const _black = Color(0xFF0A0A0A);
 
@@ -307,6 +346,12 @@ class _Hero extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            color: Colors.white.withValues(alpha: 0.85),
+            tooltip: 'Modifier l’identité',
+          ),
         ],
       ),
     );
@@ -396,9 +441,14 @@ class _CountCard extends StatelessWidget {
 }
 
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.children});
+  const _Section({
+    required this.title,
+    required this.children,
+    this.onEdit,
+  });
   final String title;
   final List<Widget> children;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -406,15 +456,30 @@ class _Section extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Text(
-            title.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.6,
-              color: _InstitutScreenState._muted,
-            ),
+          padding: const EdgeInsets.fromLTRB(20, 0, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color: _InstitutScreenState._muted,
+                  ),
+                ),
+              ),
+              if (onEdit != null)
+                TextButton(
+                  onPressed: onEdit,
+                  style: TextButton.styleFrom(
+                    foregroundColor: _InstitutScreenState._black,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text('Modifier'),
+                ),
+            ],
           ),
         ),
         Container(
@@ -490,12 +555,13 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _EmptyRow extends StatelessWidget {
-  const _EmptyRow({required this.label});
+  const _EmptyRow({required this.label, this.onTap});
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final child = Padding(
       padding: const EdgeInsets.all(14),
       child: Text(
         label,
@@ -506,17 +572,20 @@ class _EmptyRow extends StatelessWidget {
         ),
       ),
     );
+    if (onTap == null) return child;
+    return InkWell(onTap: onTap, child: child);
   }
 }
 
 class _HoursRow extends StatelessWidget {
-  const _HoursRow({required this.day});
+  const _HoursRow({required this.day, this.onTap});
   final InstOpeningDay day;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final isClosed = day.slots.isEmpty;
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,5 +636,7 @@ class _HoursRow extends StatelessWidget {
         ],
       ),
     );
+    if (onTap == null) return row;
+    return InkWell(onTap: onTap, child: row);
   }
 }

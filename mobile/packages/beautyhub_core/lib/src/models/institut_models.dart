@@ -257,6 +257,12 @@ class InstTenantContact {
       );
 
   bool get isEmpty => email == null && phone == null && website == null;
+
+  Map<String, dynamic> toJson() => {
+        'email': email,
+        'phone': phone,
+        'website': website,
+      };
 }
 
 class InstTenantAddress {
@@ -302,6 +308,14 @@ class InstTenantAddress {
     if (country != null && country!.isNotEmpty) parts.add(country!);
     return parts.join(', ');
   }
+
+  Map<String, dynamic> toJson() => {
+        'line1': line1,
+        'line2': line2,
+        'city': city,
+        'postalCode': postalCode,
+        'country': country,
+      };
 }
 
 class InstOpeningSlot {
@@ -314,6 +328,8 @@ class InstOpeningSlot {
         start: json['start'] as String? ?? '',
         end: json['end'] as String? ?? '',
       );
+
+  Map<String, dynamic> toJson() => {'start': start, 'end': end};
 }
 
 class InstOpeningDay {
@@ -337,6 +353,11 @@ class InstOpeningDay {
           .toList(growable: false),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'weekday': weekday,
+        'slots': slots.map((s) => s.toJson()).toList(growable: false),
+      };
 }
 
 class InstTenantCounts {

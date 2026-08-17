@@ -39,3 +39,21 @@ copyFileSync(versionedPath, stablePath);
 console.log(
   `Wrote ${versionedPath} + ${stablePath} (${zip.byteLength} bytes, ${Object.keys(files).length} entries, v${version})`,
 );
+
+const booklyPhpPath = join(
+  root,
+  "extensions/wordpress/beautyhub-bookly-export/beautyhub-bookly-export.php",
+);
+const booklyPhp = readFileSync(booklyPhpPath);
+const booklyVersion = booklyPhp.toString("utf8").match(/\*\s*Version:\s*([0-9.]+)/)?.[1] ?? "1.0.0";
+const booklySlug = "beautyhub-bookly-export";
+const booklyZip = zipSync({
+  [`${booklySlug}/beautyhub-bookly-export.php`]: new Uint8Array(booklyPhp),
+});
+const booklyVersioned = join(outDir, `${booklySlug}-${booklyVersion}.zip`);
+const booklyStable = join(outDir, `${booklySlug}.zip`);
+writeFileSync(booklyVersioned, booklyZip);
+copyFileSync(booklyVersioned, booklyStable);
+console.log(
+  `Wrote ${booklyVersioned} + ${booklyStable} (${booklyZip.byteLength} bytes, v${booklyVersion})`,
+);

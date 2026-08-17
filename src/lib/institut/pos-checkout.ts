@@ -352,33 +352,37 @@ export async function executePosCheckout(
     }
   }
 
-  const wooClient = await getWooClientForTenant(tenantId);
+  const wooLineItems = lines
+    .filter((l) => l.type === "product" && l.woo_id)
+    .map((l) => ({ product_id: Number(l.woo_id), quantity: l.quantity }));
   let wooOrderId: number | null = null;
-  if (wooClient && status === "paid") {
-    const lineItems = lines
-      .filter((l) => l.type === "product" && l.woo_id)
-      .map((l) => ({ product_id: Number(l.woo_id), quantity: l.quantity }));
-    if (lineItems.length > 0) {
-      const voucherMeta = payments
-        .filter((p) => p.method === "voucher" || p.method === "gift_card" || p.method === "credit_note")
-        .map((p) => ({
-          method: p.method,
-          code: p.reference ?? p.voucher_code ?? null,
-          amount_cents: p.amount_cents,
-        }));
-      const order = await wooClient.createOrder(lineItems, {
-        setPaid: true,
-        metaData:
-          voucherMeta.length > 0
-            ? [
-                {
-                  key: "beautyhub_vouchers",
-                  value: JSON.stringify(voucherMeta),
-                },
-              ]
-            : undefined,
-      });
-      wooOrderId = order.id;
+  if (status === "paid" && wooLineItems.length > 0) {
+    try {
+      const wooClient = await getWooClientForTenant(tenantId, supabase);
+      if (wooClient) {
+        const voucherMeta = payments
+          .filter((p) => p.method === "voucher" || p.method === "gift_card" || p.method === "credit_note")
+          .map((p) => ({
+            method: p.method,
+            code: p.reference ?? p.voucher_code ?? null,
+            amount_cents: p.amount_cents,
+          }));
+        const order = await wooClient.createOrder(wooLineItems, {
+          setPaid: true,
+          metaData:
+            voucherMeta.length > 0
+              ? [
+                  {
+                    key: "beautyhub_vouchers",
+                    value: JSON.stringify(voucherMeta),
+                  },
+                ]
+              : undefined,
+        });
+        wooOrderId = order.id;
+      }
+    } catch {
+      wooOrderId = null;
     }
   }
 

@@ -1,6 +1,8 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveConnection } from "@/lib/connections";
 import { decryptCredentials } from "@/lib/connections/crypto";
-import { createServiceClient } from "@/lib/supabase/service";
+import type { Database } from "@/lib/db/database.types";
+import { tryCreateServiceClient } from "@/lib/supabase/service";
 import { WooClient, type WooCredentials } from "./client";
 
 export const WOO_PROVIDER = "woocommerce";
@@ -11,8 +13,13 @@ export const WOO_PROVIDER = "woocommerce";
  */
 export async function getWooClientForTenant(
   tenantId: string,
+  supabaseOverride?: SupabaseClient<Database>,
 ): Promise<WooClient | null> {
-  const direct = await getWooConnectionForTenant(tenantId);
+  const direct = await getWooConnectionForTenant(
+    tenantId,
+    undefined,
+    supabaseOverride,
+  );
   if (direct) return direct.client;
 
   const conn = await resolveConnection(tenantId, WOO_PROVIDER);
@@ -31,8 +38,10 @@ export async function getWooClientForTenant(
 export async function getWooConnectionForTenant(
   tenantId: string,
   shopUrl?: string,
+  supabaseOverride?: SupabaseClient<Database>,
 ): Promise<{ connectionId: string; shopUrl: string; client: WooClient } | null> {
-  const supabase = createServiceClient();
+  const supabase = supabaseOverride ?? tryCreateServiceClient();
+  if (!supabase) return null;
 
   let query = supabase
     .from("connections")
@@ -70,7 +79,8 @@ export async function getWooConnectionForTenant(
 export async function listWooConnectionsForTenant(
   tenantId: string,
 ): Promise<Array<{ connectionId: string; shopUrl: string; client: WooClient }>> {
-  const supabase = createServiceClient();
+  const supabase = tryCreateServiceClient();
+  if (!supabase) return [];
   const { data } = await supabase
     .from("connections")
     .select("id, credentials, external_id")

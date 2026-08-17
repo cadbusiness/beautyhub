@@ -2613,14 +2613,20 @@
       "empty": "No se registraron ventas.",
       "emptyToday": "Ninguna venta hoy.",
       "emptyFiltered": "Ninguna venta para estos filtros.",
+      "emptyInvoice": "Ninguna factura emitida en este periodo. Cada cobro crea un ticket; la factura se genera después desde el ticket si la clienta la necesita.",
       "searchPlaceholder": "Ticket, cliente, artículo…",
       "footer": "{count, plural, one {# ticket} other {# tickets}}",
+      "footerInvoices": "{count, plural, one {# factura} other {# facturas}}",
       "filters": {
         "today": "Hoy",
         "yesterday": "Ayer",
         "week": "7 días",
         "all": "Todo",
-        "statusAll": "Todos los estados"
+        "statusAll": "Todos",
+        "statusLabel": "Estado",
+        "typeLabel": "Documentos",
+        "salesAll": "Ventas",
+        "invoices": "Facturas"
       },
       "mixedPayments": "Pagos __UCI0__",
       "paidShort": "pagado",
@@ -2641,12 +2647,14 @@
         "partial": "Depósito"
       },
       "viewDocuments": "Documentos",
-      "viewTicket": "Boleto"
+      "viewTicket": "Abrir ticket",
+      "noItems": "Ningún artículo en este ticket."
     },
     "sales": {
       "empty": "Ningún documento de venta.",
       "emptyToday": "Ningún documento hoy.",
       "emptyFiltered": "Ningún documento para estos filtros.",
+      "emptyInvoice": "Ninguna factura emitida en este periodo. Los cobros crean un ticket; la factura se genera desde el ticket si hace falta.",
       "searchPlaceholder": "Referencia, cliente…",
       "footer": "{count, plural, one {# documento} other {# documentos}}",
       "open": "Abrir",
@@ -2655,7 +2663,8 @@
         "yesterday": "Ayer",
         "week": "7 días",
         "all": "Todo",
-        "typeAll": "Todos los tipos"
+        "typeAll": "Todos",
+        "typeLabel": "Tipo"
       },
       "columns": {
         "reference": "Referencia",
@@ -2667,10 +2676,10 @@
         "actions": "Acciones"
       },
       "types": {
-        "ticket": "Ticket de caja",
-        "invoice": "Factura cliente",
+        "ticket": "Ticket",
+        "invoice": "Factura",
         "delivery_note": "Albarán",
-        "credit_note": "Nota de crédito"
+        "credit_note": "Abono"
       },
       "status": {
         "issued": "Emitido",

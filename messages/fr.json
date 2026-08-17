@@ -3038,19 +3038,26 @@
       "empty": "Aucune vente enregistrée.",
       "emptyToday": "Aucune vente aujourd'hui.",
       "emptyFiltered": "Aucune vente pour ces filtres.",
+      "emptyInvoice": "Aucune facture émise sur cette période. Chaque encaissement crée un ticket de caisse ; une facture se génère ensuite depuis le ticket, si la cliente en a besoin.",
       "searchPlaceholder": "Ticket, cliente, article…",
       "footer": "{count, plural, one {# ticket} other {# tickets}}",
-      "viewTicket": "Ticket",
+      "footerInvoices": "{count, plural, one {# facture} other {# factures}}",
+      "viewTicket": "Ouvrir le ticket",
       "viewDocuments": "Documents",
-      "paidShort": "payé",
-      "payBalance": "Solde",
+      "paidShort": "déjà payé",
+      "payBalance": "Encaisser le solde",
       "mixedPayments": "{count} paiements",
+      "noItems": "Aucun article sur ce ticket.",
       "filters": {
         "today": "Aujourd'hui",
         "yesterday": "Hier",
         "week": "7 jours",
         "all": "Tout",
-        "statusAll": "Tous statuts"
+        "statusAll": "Tous",
+        "statusLabel": "Statut",
+        "typeLabel": "Documents",
+        "salesAll": "Ventes",
+        "invoices": "Factures"
       },
       "columns": {
         "date": "Date",
@@ -3082,6 +3089,7 @@
       "empty": "Aucun document de vente.",
       "emptyToday": "Aucun document aujourd'hui.",
       "emptyFiltered": "Aucun document pour ces filtres.",
+      "emptyInvoice": "Aucune facture émise sur cette période. Les ventes créent un ticket de caisse ; la facture se génère depuis le ticket si besoin.",
       "searchPlaceholder": "Référence, cliente…",
       "footer": "{count, plural, one {# document} other {# documents}}",
       "open": "Ouvrir",
@@ -3090,7 +3098,8 @@
         "yesterday": "Hier",
         "week": "7 jours",
         "all": "Tout",
-        "typeAll": "Tous types"
+        "typeAll": "Tous",
+        "typeLabel": "Type"
       },
       "columns": {
         "reference": "Référence",
@@ -3102,10 +3111,10 @@
         "actions": "Actions"
       },
       "types": {
-        "ticket": "Ticket de caisse",
-        "invoice": "Facture client",
+        "ticket": "Ticket",
+        "invoice": "Facture",
         "delivery_note": "Bon de livraison",
-        "credit_note": "Note de crédit"
+        "credit_note": "Avoir"
       },
       "status": {
         "issued": "Émis",

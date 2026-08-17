@@ -14,6 +14,7 @@ function buildHref(
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(next)) {
     if (!value) continue;
+    if ((key === "status" || key === "type") && value === "all") continue;
     params.set(key, value);
   }
   const qs = params.toString();
@@ -32,6 +33,7 @@ function FilterChip({
   return (
     <Link
       href={href}
+      scroll={false}
       className={
         active
           ? "inline-flex h-7 items-center rounded-full bg-slate-900 px-2.5 text-xs font-medium text-white"
@@ -40,6 +42,25 @@ function FilterChip({
     >
       {children}
     </Link>
+  );
+}
+
+function ChipRow({
+  label,
+  children,
+}: {
+  label?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+      {label ? (
+        <span className="mr-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+          {label}
+        </span>
+      ) : null}
+      {children}
+    </div>
   );
 }
 
@@ -52,6 +73,8 @@ export function HistoryFilterBar({
   periodOptions,
   statusOptions,
   typeOptions,
+  statusLabel,
+  typeLabel,
   searchPlaceholder,
   searchName = "q",
 }: {
@@ -63,20 +86,22 @@ export function HistoryFilterBar({
   periodOptions: Chip[];
   statusOptions?: Chip[];
   typeOptions?: Chip[];
+  statusLabel?: string;
+  typeLabel?: string;
   searchPlaceholder: string;
   searchName?: string;
 }) {
   const current: Record<string, string> = {
     period,
-    ...(status ? { status } : {}),
-    ...(type ? { type } : {}),
+    ...(status && status !== "all" ? { status } : {}),
+    ...(type && type !== "all" ? { type } : {}),
     ...(q ? { q } : {}),
   };
 
   return (
     <ListToolbar>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
+        <ChipRow>
           {periodOptions.map((opt) => (
             <FilterChip
               key={opt.value}
@@ -86,29 +111,45 @@ export function HistoryFilterBar({
               {opt.label}
             </FilterChip>
           ))}
-          {statusOptions?.map((opt) => (
-            <FilterChip
-              key={`st-${opt.value}`}
-              href={buildHref(pathname, current, { status: opt.value })}
-              active={(status ?? "all") === opt.value}
-            >
-              {opt.label}
-            </FilterChip>
-          ))}
-          {typeOptions?.map((opt) => (
-            <FilterChip
-              key={`ty-${opt.value}`}
-              href={buildHref(pathname, current, { type: opt.value })}
-              active={(type ?? "all") === opt.value}
-            >
-              {opt.label}
-            </FilterChip>
-          ))}
-        </div>
+        </ChipRow>
+        {statusOptions || typeOptions ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5">
+            {statusOptions ? (
+              <ChipRow label={statusLabel}>
+                {statusOptions.map((opt) => (
+                  <FilterChip
+                    key={`st-${opt.value}`}
+                    href={buildHref(pathname, current, { status: opt.value })}
+                    active={(status ?? "all") === opt.value}
+                  >
+                    {opt.label}
+                  </FilterChip>
+                ))}
+              </ChipRow>
+            ) : null}
+            {typeOptions ? (
+              <ChipRow label={typeLabel}>
+                {typeOptions.map((opt) => (
+                  <FilterChip
+                    key={`ty-${opt.value}`}
+                    href={buildHref(pathname, current, { type: opt.value })}
+                    active={(type ?? "all") === opt.value}
+                  >
+                    {opt.label}
+                  </FilterChip>
+                ))}
+              </ChipRow>
+            ) : null}
+          </div>
+        ) : null}
         <form method="get" className="sm:max-w-xs">
           <input type="hidden" name="period" value={period} />
-          {status ? <input type="hidden" name="status" value={status} /> : null}
-          {type ? <input type="hidden" name="type" value={type} /> : null}
+          {status && status !== "all" ? (
+            <input type="hidden" name="status" value={status} />
+          ) : null}
+          {type && type !== "all" ? (
+            <input type="hidden" name="type" value={type} />
+          ) : null}
           <Input
             type="search"
             name={searchName}

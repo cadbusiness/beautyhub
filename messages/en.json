@@ -3028,18 +3028,25 @@
       "empty": "No sales recorded.",
       "emptyToday": "No sales today.",
       "emptyFiltered": "No sales for these filters.",
+      "emptyInvoice": "No invoices issued in this period. Each checkout creates a receipt; an invoice can be generated from the ticket if the client needs one.",
       "searchPlaceholder": "Ticket, customer, item…",
       "footer": "{count, plural, one {# ticket} other {# tickets}}",
+      "footerInvoices": "{count, plural, one {# invoice} other {# invoices}}",
       "filters": {
         "today": "Today",
         "yesterday": "Yesterday",
         "week": "7 days",
         "all": "All",
-        "statusAll": "All statuses"
+        "statusAll": "All",
+        "statusLabel": "Status",
+        "typeLabel": "Documents",
+        "salesAll": "Sales",
+        "invoices": "Invoices"
       },
       "mixedPayments": "{count} payments",
-      "paidShort": "paid",
-      "payBalance": "Pay",
+      "paidShort": "already paid",
+      "payBalance": "Collect remaining",
+      "noItems": "No items on this ticket.",
       "paymentMethods": {
         "card": "TPE card",
         "cash": "Species",
@@ -3056,7 +3063,7 @@
         "partial": "Deposit"
       },
       "viewDocuments": "Documents",
-      "viewTicket": "Ticket"
+      "viewTicket": "Open ticket"
     },
     "loyalty": {
       "balance": "{count} {label}",
@@ -3104,6 +3111,7 @@
       "empty": "No sales documents.",
       "emptyToday": "No documents today.",
       "emptyFiltered": "No documents for these filters.",
+      "emptyInvoice": "No invoices issued in this period. Checkouts create a receipt; an invoice can be generated from the ticket if needed.",
       "searchPlaceholder": "Reference, customer…",
       "footer": "{count, plural, one {# document} other {# documents}}",
       "filters": {
@@ -3111,7 +3119,8 @@
         "yesterday": "Yesterday",
         "week": "7 days",
         "all": "All",
-        "typeAll": "All types"
+        "typeAll": "All",
+        "typeLabel": "Type"
       },
       "open": "Open",
       "status": {
@@ -3123,10 +3132,10 @@
         "settled": "Acquitted"
       },
       "types": {
-        "credit_note": "Credit rating",
+        "credit_note": "Credit note",
         "delivery_note": "Delivery note",
-        "invoice": "Customer invoice",
-        "ticket": "Cash receipt"
+        "invoice": "Invoice",
+        "ticket": "Receipt"
       }
     },
     "session": {

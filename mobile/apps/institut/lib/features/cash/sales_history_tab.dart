@@ -31,10 +31,9 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
   bool _loadedOnce = false;
   String? _today;
 
-  String _kind = 'tickets';
+  String _view = 'sales';
   String _period = 'today';
   String _status = '';
-  String _docType = '';
 
   @override
   void initState() {
@@ -81,23 +80,7 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
       if (token == null || tenantId == null) {
         throw StateError('Session ou institut manquant');
       }
-      if (_kind == 'documents') {
-        final page = await ref.read(mobileApiProvider).fetchInstitutDocuments(
-              accessToken: token,
-              tenantId: tenantId,
-              period: _period,
-              docType: _docType.isEmpty ? null : _docType,
-            );
-        if (!mounted) return;
-        setState(() {
-          _docs = page.items;
-          _sales = const [];
-          _cursor = page.nextCursor;
-          _today = page.today ?? _today;
-          _loading = false;
-          _loadedOnce = true;
-        });
-      } else {
+      if (_view == 'sales') {
         final page = await ref.read(mobileApiProvider).fetchInstitutSales(
               accessToken: token,
               tenantId: tenantId,
@@ -108,6 +91,22 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
         setState(() {
           _sales = page.items;
           _docs = const [];
+          _cursor = page.nextCursor;
+          _today = page.today ?? _today;
+          _loading = false;
+          _loadedOnce = true;
+        });
+      } else {
+        final page = await ref.read(mobileApiProvider).fetchInstitutDocuments(
+              accessToken: token,
+              tenantId: tenantId,
+              period: _period,
+              docType: _view,
+            );
+        if (!mounted) return;
+        setState(() {
+          _docs = page.items;
+          _sales = const [];
           _cursor = page.nextCursor;
           _today = page.today ?? _today;
           _loading = false;
@@ -131,21 +130,7 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
       final token = ref.read(accessTokenProvider);
       final tenantId = ref.read(selectedTenantIdProvider);
       if (token == null || tenantId == null) return;
-      if (_kind == 'documents') {
-        final page = await ref.read(mobileApiProvider).fetchInstitutDocuments(
-              accessToken: token,
-              tenantId: tenantId,
-              cursor: _cursor,
-              period: _period,
-              docType: _docType.isEmpty ? null : _docType,
-            );
-        if (!mounted) return;
-        setState(() {
-          _docs = [..._docs, ...page.items];
-          _cursor = page.nextCursor;
-          _loadingMore = false;
-        });
-      } else {
+      if (_view == 'sales') {
         final page = await ref.read(mobileApiProvider).fetchInstitutSales(
               accessToken: token,
               tenantId: tenantId,
@@ -159,6 +144,20 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
           _cursor = page.nextCursor;
           _loadingMore = false;
         });
+      } else {
+        final page = await ref.read(mobileApiProvider).fetchInstitutDocuments(
+              accessToken: token,
+              tenantId: tenantId,
+              cursor: _cursor,
+              period: _period,
+              docType: _view,
+            );
+        if (!mounted) return;
+        setState(() {
+          _docs = [..._docs, ...page.items];
+          _cursor = page.nextCursor;
+          _loadingMore = false;
+        });
       }
     } catch (_) {
       if (!mounted) return;
@@ -166,12 +165,11 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
     }
   }
 
-  void _setFilter({String? kind, String? period, String? status, String? docType}) {
+  void _setFilter({String? view, String? period, String? status}) {
     setState(() {
-      if (kind != null) _kind = kind;
+      if (view != null) _view = view;
       if (period != null) _period = period;
       if (status != null) _status = status;
-      if (docType != null) _docType = docType;
     });
     _loadInitial();
   }
@@ -182,28 +180,28 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final empty = _kind == 'documents' ? _docs.isEmpty : _sales.isEmpty;
-    final emptyLabel = _kind == 'documents'
-        ? (_period == 'today'
-            ? 'Aucun document aujourd’hui.'
-            : 'Aucun document pour ces filtres.')
-        : (_period == 'today'
-            ? 'Aucune vente aujourd’hui.'
-            : 'Aucune vente pour ces filtres.');
+    final empty = _view == 'sales' ? _sales.isEmpty : _docs.isEmpty;
+    final emptyLabel = _view == 'invoice'
+        ? 'Aucune facture émise. Chaque vente crée un ticket ; la facture se génère depuis le ticket si la cliente en a besoin.'
+        : _view == 'delivery_note'
+            ? 'Aucun bon de livraison pour ces filtres.'
+            : _view == 'credit_note'
+                ? 'Aucun avoir pour ces filtres.'
+                : (_period == 'today'
+                    ? 'Aucune vente aujourd’hui.'
+                    : 'Aucune vente pour ces filtres.');
 
     return Container(
       color: _bg,
       child: Column(
         children: [
           _FiltersBar(
-            kind: _kind,
+            view: _view,
             period: _period,
             status: _status,
-            docType: _docType,
-            onKind: (v) => _setFilter(kind: v),
+            onView: (v) => _setFilter(view: v),
             onPeriod: (v) => _setFilter(period: v),
             onStatus: (v) => _setFilter(status: v),
-            onDocType: (v) => _setFilter(docType: v),
           ),
           Expanded(
             child: _error != null && empty
@@ -246,9 +244,9 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
                       )
                     : RefreshIndicator(
                         onRefresh: _loadInitial,
-                        child: _kind == 'documents'
-                            ? _buildDocsList()
-                            : _buildSalesList(),
+                        child: _view == 'sales'
+                            ? _buildSalesList()
+                            : _buildDocsList(),
                       ),
           ),
         ],
@@ -331,24 +329,20 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
 
 class _FiltersBar extends StatelessWidget {
   const _FiltersBar({
-    required this.kind,
+    required this.view,
     required this.period,
     required this.status,
-    required this.docType,
-    required this.onKind,
+    required this.onView,
     required this.onPeriod,
     required this.onStatus,
-    required this.onDocType,
   });
 
-  final String kind;
+  final String view;
   final String period;
   final String status;
-  final String docType;
-  final ValueChanged<String> onKind;
+  final ValueChanged<String> onView;
   final ValueChanged<String> onPeriod;
   final ValueChanged<String> onStatus;
-  final ValueChanged<String> onDocType;
 
   @override
   Widget build(BuildContext context) {
@@ -363,15 +357,6 @@ class _FiltersBar extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                _Chip(label: 'Tickets', selected: kind == 'tickets', onTap: () => onKind('tickets')),
-                _Chip(label: 'Documents', selected: kind == 'documents', onTap: () => onKind('documents')),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
                 _Chip(label: 'Aujourd’hui', selected: period == 'today', onTap: () => onPeriod('today')),
                 _Chip(label: 'Hier', selected: period == 'yesterday', onTap: () => onPeriod('yesterday')),
                 _Chip(label: '7 j', selected: period == 'week', onTap: () => onPeriod('week')),
@@ -379,7 +364,18 @@ class _FiltersBar extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            if (kind == 'tickets')
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _Chip(label: 'Ventes', selected: view == 'sales', onTap: () => onView('sales')),
+                _Chip(label: 'Factures', selected: view == 'invoice', onTap: () => onView('invoice')),
+                _Chip(label: 'Bons', selected: view == 'delivery_note', onTap: () => onView('delivery_note')),
+                _Chip(label: 'Avoirs', selected: view == 'credit_note', onTap: () => onView('credit_note')),
+              ],
+            ),
+            if (view == 'sales') ...[
+              const SizedBox(height: 8),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -388,19 +384,8 @@ class _FiltersBar extends StatelessWidget {
                   _Chip(label: 'Payé', selected: status == 'paid', onTap: () => onStatus('paid')),
                   _Chip(label: 'Acompte', selected: status == 'partial', onTap: () => onStatus('partial')),
                 ],
-              )
-            else
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  _Chip(label: 'Tous', selected: docType.isEmpty, onTap: () => onDocType('')),
-                  _Chip(label: 'Ticket', selected: docType == 'ticket', onTap: () => onDocType('ticket')),
-                  _Chip(label: 'Facture', selected: docType == 'invoice', onTap: () => onDocType('invoice')),
-                  _Chip(label: 'Bon', selected: docType == 'delivery_note', onTap: () => onDocType('delivery_note')),
-                  _Chip(label: 'Avoir', selected: docType == 'credit_note', onTap: () => onDocType('credit_note')),
-                ],
               ),
+            ],
           ],
         ),
       ),
@@ -626,18 +611,23 @@ class _DocDayGroup extends StatelessWidget {
   }
 }
 
-class _SaleRow extends StatelessWidget {
+class _SaleRow extends StatefulWidget {
   const _SaleRow({required this.sale});
   final InstSale sale;
 
+  @override
+  State<_SaleRow> createState() => _SaleRowState();
+}
+
+class _SaleRowState extends State<_SaleRow> {
   static const _muted = Color(0xFF737373);
   static const _black = Color(0xFF0A0A0A);
 
-  String _paymentLabel() {
-    if (sale.payments.length > 1) return '${sale.payments.length} moyens';
-    final m = sale.payments.isNotEmpty
-        ? sale.payments.first.method
-        : sale.paymentMethod;
+  bool _open = false;
+
+  InstSale get sale => widget.sale;
+
+  String _methodLabel(String m) {
     switch (m) {
       case 'cash':
         return 'Espèces';
@@ -648,6 +638,7 @@ class _SaleRow extends StatelessWidget {
       case 'gift_card':
         return 'Carte cadeau';
       case 'store_credit':
+      case 'credit_note':
         return 'Avoir';
       default:
         return m;
@@ -668,7 +659,7 @@ class _SaleRow extends StatelessWidget {
   String _statusLabel() {
     switch (sale.status) {
       case 'partial':
-        return 'Solde à venir';
+        return 'Acompte';
       case 'refunded':
         return 'Remboursé';
       default:
@@ -679,115 +670,151 @@ class _SaleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final extraDocs = sale.documents.where((d) => d.docType != 'ticket').toList();
-    return InkWell(
-      onTap: () => showSaleDetailSheet(context: context, sale: sale),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: () => setState(() => _open = !_open),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+            child: Row(
+              children: [
+                AnimatedRotation(
+                  turns: _open ? 0 : -0.25,
+                  duration: const Duration(milliseconds: 160),
+                  child: const Icon(Icons.expand_more, size: 18, color: _muted),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        DateFormat.Hm().format(sale.createdAt),
+                        sale.ticketNumber != null
+                            ? sale.ticketNumber!
+                            : 'Ticket',
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: _black,
-                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 6),
-                      if (sale.ticketNumber != null)
-                        Text(
-                          '#${sale.ticketNumber}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: _muted,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: _statusColor().withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          _statusLabel(),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: _statusColor(),
-                            letterSpacing: 0.3,
-                          ),
-                        ),
+                      Text(
+                        DateFormat.Hm().format(sale.createdAt),
+                        style: const TextStyle(fontSize: 12, color: _muted),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    sale.clientLabel ?? 'Sans cliente',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: sale.clientLabel != null ? _black : _muted,
-                      fontStyle:
-                          sale.clientLabel != null ? FontStyle.normal : FontStyle.italic,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    sale.itemsSummary.isEmpty
-                        ? '${sale.itemsCount} article${sale.itemsCount > 1 ? "s" : ""}'
-                        : sale.itemsSummary,
-                    style: const TextStyle(fontSize: 12, color: _muted),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (extraDocs.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
                     Text(
-                      extraDocs.map((d) => d.shortLabel).join(' · '),
-                      style: const TextStyle(fontSize: 11, color: _muted),
+                      formatEuros(sale.totalCents),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: _black,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    Text(
+                      _statusLabel(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _statusColor(),
+                      ),
                     ),
                   ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  formatEuros(sale.totalCents),
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: _black,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _paymentLabel(),
-                  style: const TextStyle(fontSize: 11, color: _muted),
                 ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (_open)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(38, 0, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  sale.clientLabel ?? 'Sans cliente',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: sale.clientLabel != null ? _black : _muted,
+                    fontStyle:
+                        sale.clientLabel != null ? FontStyle.normal : FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (sale.items.isEmpty)
+                  Text(
+                    '${sale.itemsCount} article${sale.itemsCount > 1 ? "s" : ""}',
+                    style: const TextStyle(fontSize: 13, color: _muted),
+                  )
+                else
+                  for (final item in sale.items)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${item.quantity}× ${item.name}',
+                              style: const TextStyle(fontSize: 13, color: _black),
+                            ),
+                          ),
+                          Text(
+                            formatEuros(item.lineTotalCents),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                if (sale.payments.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  for (final payment in sale.payments)
+                    Text(
+                      '${_methodLabel(payment.method)} · ${formatEuros(payment.amountCents)}',
+                      style: const TextStyle(fontSize: 12, color: _muted),
+                    ),
+                ],
+                if (extraDocs.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    extraDocs.map((d) => d.shortLabel).join(' · '),
+                    style: const TextStyle(fontSize: 12, color: _muted),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          showSaleDetailSheet(context: context, sale: sale),
+                      child: const Text('Voir le ticket'),
+                    ),
+                    if (sale.status == 'partial')
+                      TextButton(
+                        onPressed: () =>
+                            showSaleDetailSheet(context: context, sale: sale),
+                        child: const Text('Encaisser le solde'),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

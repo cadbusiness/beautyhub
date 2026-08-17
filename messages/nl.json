@@ -2907,7 +2907,7 @@
     },
     "history": {
       "empty": "Geen geregistreerde verkopen.",
-      "viewTicket": "Ticket",
+      "viewTicket": "Ticket openen",
       "paidShort": "betaald",
       "mixedPayments": "{count} betalingen",
       "columns": {
@@ -2939,20 +2939,28 @@
       "viewDocuments": "Documenten",
       "emptyToday": "Geen verkopen vandaag.",
       "emptyFiltered": "Geen verkopen voor deze filters.",
+      "emptyInvoice": "Geen facturen in deze periode. Elke verkoop maakt een kassaticket; een factuur kan daarna vanuit het ticket worden aangemaakt.",
       "searchPlaceholder": "Ticket, klant, artikel…",
       "footer": "{count, plural, one {# ticket} other {# tickets}}",
+      "footerInvoices": "{count, plural, one {# factuur} other {# facturen}}",
       "filters": {
         "today": "Vandaag",
         "yesterday": "Gisteren",
         "week": "7 dagen",
         "all": "Alles",
-        "statusAll": "Alle statussen"
-      }
+        "statusAll": "Alle",
+        "statusLabel": "Status",
+        "typeLabel": "Documenten",
+        "salesAll": "Verkopen",
+        "invoices": "Facturen"
+      },
+      "noItems": "Geen artikelen op dit ticket."
     },
     "sales": {
       "empty": "Geen verkoopdocumenten.",
       "emptyToday": "Geen documenten vandaag.",
       "emptyFiltered": "Geen documenten voor deze filters.",
+      "emptyInvoice": "Geen facturen in deze periode. Verkopen maken een kassaticket; de factuur wordt indien nodig vanuit het ticket aangemaakt.",
       "searchPlaceholder": "Referentie, klant…",
       "footer": "{count, plural, one {# document} other {# documenten}}",
       "open": "Openen",
@@ -2961,7 +2969,8 @@
         "yesterday": "Gisteren",
         "week": "7 dagen",
         "all": "Alles",
-        "typeAll": "Alle types"
+        "typeAll": "Alle",
+        "typeLabel": "Type"
       },
       "columns": {
         "reference": "Referentie",
@@ -2973,8 +2982,8 @@
         "actions": "Acties"
       },
       "types": {
-        "ticket": "Kassaticket",
-        "invoice": "Klantfactuur",
+        "ticket": "Ticket",
+        "invoice": "Factuur",
         "delivery_note": "Leveringsbon",
         "credit_note": "Creditnota"
       },

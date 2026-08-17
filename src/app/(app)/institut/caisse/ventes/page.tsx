@@ -95,7 +95,9 @@ export default async function CaisseVentesPage({
 
   const emptyMessage =
     filtered.length === 0
-      ? q || type !== "all" || status !== "all"
+      ? type === "invoice"
+        ? t("emptyInvoice")
+        : q || type !== "all" || status !== "all"
         ? t("emptyFiltered")
         : period === "today"
           ? t("emptyToday")
@@ -108,9 +110,9 @@ export default async function CaisseVentesPage({
         pathname="/institut/caisse/ventes"
         period={period}
         type={type}
-        status={status}
         q={params.q ?? ""}
         searchPlaceholder={t("searchPlaceholder")}
+        typeLabel={t("filters.typeLabel")}
         periodOptions={[
           { value: "today", label: t("filters.today") },
           { value: "yesterday", label: t("filters.yesterday") },

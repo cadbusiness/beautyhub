@@ -543,9 +543,45 @@
       "confirmStatus": "Okay",
       "dialogTitle": "New appointment",
       "empty": "No appointment.",
+      "importCsv": "Import Bookly",
       "new": "New appointment",
       "noResults": "No results for this search.",
       "searchPlaceholder": "Looking for service, client, practitioner…"
+    },
+    "import": {
+      "title": "Import Bookly appointments",
+      "doneTitle": "Import complete",
+      "intro": "Import the CSV (or JSON) exported from WordPress → Tools → Export Bookly. Services must already be imported. Clients are created or matched by phone / email. Re-importing updates via the Bookly ID.",
+      "hint": "bookly-appointments.csv (semicolon) or full JSON export.",
+      "chooseFile": "Choose file",
+      "fileHint": "BeautyHub Bookly CSV or JSON",
+      "fileLabel": "File",
+      "analyzing": "Analyzing file…",
+      "previewIntro": "Review the summary before importing. Team names should match Bookly.",
+      "upcomingOnly": "Import only appointments from today onward (recommended for go-live).",
+      "stats": {
+        "total": "Appointments",
+        "create": "To create",
+        "update": "To update",
+        "missingService": "Service not found",
+        "unmatchedStaff": "Staff unmatched",
+        "skip": "Skipped"
+      },
+      "missingServiceHint": "Import the Bookly catalog (Services) first. Missing services",
+      "unmatchedStaffHint": "No BeautyHub staff with the same name — the appointment will be imported unassigned. Align names in Team",
+      "samples": "Examples",
+      "back": "Choose another file",
+      "confirmImport": "Start import",
+      "importing": "Importing…",
+      "progress": "{processed} / {total} processed",
+      "doneMessage": "{created} created · {updated} updated · {clientsCreated} clients created · {unmatchedStaff} without staff · {missingService} without service.",
+      "errorsCount": "Warnings ({count})",
+      "errors": {
+        "missingColumns": "Expected columns not found (bookly_ca_id, starts_at, service_bookly_id).",
+        "invalidFile": "Invalid file. Use the BeautyHub export (appointments CSV or JSON).",
+        "emptyFile": "This file has no appointments.",
+        "importFailed": "The appointment import failed."
+      }
     },
     "status": {
       "booked": "Reserve",

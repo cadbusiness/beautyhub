@@ -27,6 +27,7 @@ export function CalendarToolbar({
   staff,
   refreshing,
   onNewAppointment,
+  onImportBookly,
 }: {
   viewMode: CalendarViewMode;
   onViewModeChange: (mode: CalendarViewMode) => void;
@@ -44,8 +45,10 @@ export function CalendarToolbar({
   staff: CalendarOption[];
   refreshing?: boolean;
   onNewAppointment?: () => void;
+  onImportBookly?: () => void;
 }) {
   const t = useTranslations("appointments.calendar");
+  const tList = useTranslations("appointments.list");
   const tCommon = useTranslations("common");
   const format = useFormatter();
   const [mounted, setMounted] = useState(false);
@@ -104,6 +107,11 @@ export function CalendarToolbar({
           ))}
         </Select>
         <div className="flex gap-2">
+          {onImportBookly ? (
+            <Button type="button" variant="outline" className="h-9" onClick={onImportBookly}>
+              {tList("importCsv")}
+            </Button>
+          ) : null}
           {onNewAppointment ? (
             <Button type="button" className="h-9" onClick={onNewAppointment}>
               + {t("newAppointment")}

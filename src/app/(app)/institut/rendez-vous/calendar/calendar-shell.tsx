@@ -12,6 +12,7 @@ import { AppointmentPopover } from "./appointment-popover";
 import { AppointmentEditDialog } from "./appointment-edit-dialog";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { AppointmentForm } from "../appointment-form";
+import { AppointmentsImportDialog } from "../appointments-import-dialog";
 import type {
   AppointmentCreateDraft,
   CalendarAppointment,
@@ -64,6 +65,7 @@ export function CalendarShell({
   } | null>(null);
   const [editAppt, setEditAppt] = useState<CalendarAppointment | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [createDraft, setCreateDraft] = useState<AppointmentCreateDraft | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshPending, startRefresh] = useTransition();
@@ -201,6 +203,7 @@ export function CalendarShell({
         staff={staff}
         refreshing={refreshPending}
         onNewAppointment={() => openCreateDialog()}
+        onImportBookly={() => setImportOpen(true)}
       />
 
       {showStaffChips ? (
@@ -295,6 +298,8 @@ export function CalendarShell({
           />
         ) : null}
       </FormDialog>
+
+      <AppointmentsImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 }

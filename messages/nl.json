@@ -373,6 +373,7 @@
     },
     "list": {
       "new": "Nieuwe afspraak",
+      "importCsv": "Bookly importeren",
       "searchPlaceholder": "Zoek behandeling, klant, behandelaar…",
       "empty": "Geen afspraken.",
       "noResults": "Geen resultaten voor deze zoekopdracht.",
@@ -386,6 +387,41 @@
         "actions": "Acties"
       },
       "confirmStatus": "OK"
+    },
+    "import": {
+      "title": "Bookly-afspraken importeren",
+      "doneTitle": "Import voltooid",
+      "intro": "Importeer de CSV (of JSON) uit WordPress → Extra → Export Bookly. Behandelingen moeten al geïmporteerd zijn. Klanten worden aangemaakt of gekoppeld via telefoon / e-mail. Opnieuw importeren werkt bij via het Bookly-ID.",
+      "hint": "Bestand bookly-appointments.csv (scheidingsteken ;) of volledige JSON-export.",
+      "chooseFile": "Bestand kiezen",
+      "fileHint": "BeautyHub Bookly CSV of JSON",
+      "fileLabel": "Bestand",
+      "analyzing": "Bestand analyseren…",
+      "previewIntro": "Controleer het overzicht voor het importeren. Teamnamen moeten overeenkomen met Bookly.",
+      "upcomingOnly": "Alleen afspraken vanaf vandaag importeren (aanbevolen voor de overstap).",
+      "stats": {
+        "total": "Afspraken",
+        "create": "Aan te maken",
+        "update": "Bij te werken",
+        "missingService": "Behandeling ontbreekt",
+        "unmatchedStaff": "Behandelaar niet gekoppeld",
+        "skip": "Overgeslagen"
+      },
+      "missingServiceHint": "Importeer eerst de Bookly-catalogus (Behandelingen). Ontbrekende behandelingen",
+      "unmatchedStaffHint": "Geen BeautyHub-medewerker met dezelfde naam — de afspraak wordt zonder kolom geïmporteerd. Stem namen af in Team",
+      "samples": "Voorbeelden",
+      "back": "Ander bestand kiezen",
+      "confirmImport": "Import starten",
+      "importing": "Bezig met importeren…",
+      "progress": "{processed} / {total} verwerkt",
+      "doneMessage": "{created} aangemaakt · {updated} bijgewerkt · {clientsCreated} klanten aangemaakt · {unmatchedStaff} zonder behandelaar · {missingService} zonder behandeling.",
+      "errorsCount": "Waarschuwingen ({count})",
+      "errors": {
+        "missingColumns": "Verwachte kolommen ontbreken (bookly_ca_id, starts_at, service_bookly_id).",
+        "invalidFile": "Ongeldig bestand. Gebruik de BeautyHub-export (CSV afspraken of JSON).",
+        "emptyFile": "Dit bestand bevat geen afspraken.",
+        "importFailed": "Het importeren van afspraken is mislukt."
+      }
     },
     "calendar": {
       "editTitle": "Afspraak bewerken",

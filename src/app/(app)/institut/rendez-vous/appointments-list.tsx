@@ -10,6 +10,7 @@ import { DataTable, dataTableCell, dataTableHead, dataTableRow } from "@/compone
 import { FormDialog } from "@/components/ui/form-dialog";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { AppointmentForm } from "./appointment-form";
+import { AppointmentsImportDialog } from "./appointments-import-dialog";
 
 const STATUS_KEYS = [
   "booked",
@@ -49,6 +50,7 @@ export function AppointmentsList({
   const format = useFormatter();
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -68,9 +70,19 @@ export function AppointmentsList({
     <>
       <ListToolbar
         action={
-          <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
-            + {t("new")}
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setImportOpen(true)}
+              className="h-9 w-full sm:w-auto"
+            >
+              {t("importCsv")}
+            </Button>
+            <Button onClick={() => setDialogOpen(true)} className="h-9 w-full sm:w-auto">
+              + {t("new")}
+            </Button>
+          </div>
         }
       >
         <Input
@@ -162,6 +174,8 @@ export function AppointmentsList({
           />
         ) : null}
       </FormDialog>
+
+      <AppointmentsImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
     </>
   );
 }

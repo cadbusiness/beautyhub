@@ -1,3 +1,10 @@
+<?php
+/** Collez ceci dans Code Snippets (Run everywhere), ou installez le plugin beautyhub-bookly-export.php. */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if ( ! class_exists( 'BeautyHub_Bookly_Export' ) ) :
 
 final class BeautyHub_Bookly_Export {
@@ -39,9 +46,12 @@ final class BeautyHub_Bookly_Export {
 			self::send_csv( 'bookly-services.csv', self::services_csv_rows( $data['services'] ) );
 		} elseif ( 'extras_csv' === $type ) {
 			self::send_csv( 'bookly-extras.csv', self::extras_csv_rows( $data['extras'] ) );
+		} elseif ( 'appointments_csv' === $type ) {
+			self::send_csv( 'bookly-appointments.csv', self::appointments_csv_rows( self::collect_appointments() ) );
 		} elseif ( 'json' === $type ) {
+			$appointments = self::collect_appointments();
 			self::send_json(
-				'bookly-services-extras.json',
+				'bookly-beautyhub-export.json',
 				array(
 					'exported_at'    => gmdate( 'c' ),
 					'site_url'       => home_url( '/' ),
@@ -50,9 +60,11 @@ final class BeautyHub_Bookly_Export {
 					'categories'     => $data['categories'],
 					'services'       => $data['services'],
 					'extras'         => $data['extras'],
+					'appointments'   => $appointments,
 					'counts'         => array(
-						'services' => count( $data['services'] ),
-						'extras'   => count( $data['extras'] ),
+						'services'     => count( $data['services'] ),
+						'extras'       => count( $data['extras'] ),
+						'appointments' => count( $appointments ),
 					),
 				)
 			);
@@ -74,8 +86,10 @@ final class BeautyHub_Bookly_Export {
 		$cat_n = count( $data['categories'] );
 
 		echo '<div class="wrap">';
+		$appt_n = self::count_appointments();
+
 		echo '<h1>Export Bookly - BeautyHub</h1>';
-		echo '<p>Exporte le catalogue Bookly (prestations + extras) pour migration vers BeautyHub.</p>';
+		echo '<p>Exporte le catalogue Bookly (prestations + extras) et les rendez-vous pour migration vers BeautyHub.</p>';
 
 		echo '<table class="widefat striped" style="max-width:640px;margin:16px 0;"><tbody>';
 		echo '<tr><th>Table services</th><td>' . esc_html( $data['services_table'] ? $data['services_table'] : 'introuvable' ) . '</td></tr>';
@@ -83,6 +97,7 @@ final class BeautyHub_Bookly_Export {
 		echo '<tr><th>Categories</th><td>' . esc_html( (string) $cat_n ) . '</td></tr>';
 		echo '<tr><th>Services</th><td><strong>' . esc_html( (string) $svc_n ) . '</strong></td></tr>';
 		echo '<tr><th>Extras</th><td><strong>' . esc_html( (string) $ext_n ) . '</strong></td></tr>';
+		echo '<tr><th>Rendez-vous</th><td><strong>' . esc_html( (string) $appt_n ) . '</strong></td></tr>';
 		echo '</tbody></table>';
 
 		if ( ! empty( $data['diagnostic'] ) ) {
@@ -109,6 +124,7 @@ final class BeautyHub_Bookly_Export {
 
 		self::echo_download_button( $base, $nonce, 'services_csv', 'Telecharger services (CSV)' );
 		self::echo_download_button( $base, $nonce, 'extras_csv', 'Telecharger extras (CSV)' );
+		self::echo_download_button( $base, $nonce, 'appointments_csv', 'Telecharger rendez-vous (CSV)' );
 		self::echo_download_button( $base, $nonce, 'json', 'Telecharger tout (JSON)' );
 
 		if ( $svc_n > 0 ) {
@@ -301,6 +317,344 @@ final class BeautyHub_Bookly_Export {
 			'extras'         => $extras,
 			'diagnostic'     => $diagnostic,
 		);
+	}
+
+	private static function count_appointments() {
+		$ca_table = self::find_table( array( 'bookly_customer_appointments' ) );
+		if ( ! $ca_table ) {
+			return 0;
+		}
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$ca_table}`" );
+	}
+
+	/**
+	 * Une ligne BeautyHub = un customer_appointment Bookly (1 client par creneau).
+	 */
+	private static function collect_appointments() {
+		global $wpdb;
+
+		$appt_table = self::find_table( array( 'bookly_appointments' ) );
+		$ca_table   = self::find_table( array( 'bookly_customer_appointments' ) );
+		$cust_table = self::find_table( array( 'bookly_customers' ) );
+		$staff_table = self::find_table( array( 'bookly_staff' ) );
+		$svc_table  = self::find_table( array( 'bookly_services' ) );
+		$extras_table = self::find_table(
+			array(
+				'bookly_service_extras',
+				'bookly_service_extra',
+				'bookly_extras',
+			)
+		);
+		$pay_table  = self::find_table( array( 'bookly_payments' ) );
+
+		if ( ! $appt_table || ! $ca_table ) {
+			return array();
+		}
+
+		$ca_cols    = self::table_columns( $ca_table );
+		$appt_cols  = self::table_columns( $appt_table );
+		$cust_cols  = $cust_table ? self::table_columns( $cust_table ) : array();
+		$staff_cols = $staff_table ? self::table_columns( $staff_table ) : array();
+		$svc_cols   = $svc_table ? self::table_columns( $svc_table ) : array();
+		$pay_cols   = $pay_table ? self::table_columns( $pay_table ) : array();
+
+		$has = function ( $cols, $name ) {
+			return in_array( $name, $cols, true );
+		};
+
+		$select = array( 'ca.id AS ca_id', 'ca.appointment_id', 'ca.customer_id' );
+		$select[] = $has( $ca_cols, 'status' ) ? 'ca.status AS ca_status' : "'' AS ca_status";
+		$select[] = $has( $ca_cols, 'notes' ) ? 'ca.notes AS ca_notes' : "'' AS ca_notes";
+		$select[] = $has( $ca_cols, 'extras' ) ? 'ca.extras AS ca_extras' : "'' AS ca_extras";
+		$select[] = $has( $ca_cols, 'number_of_persons' ) ? 'ca.number_of_persons' : '1 AS number_of_persons';
+		$select[] = $has( $ca_cols, 'payment_id' ) ? 'ca.payment_id' : 'NULL AS payment_id';
+
+		$select[] = $has( $appt_cols, 'staff_id' ) ? 'a.staff_id' : 'NULL AS staff_id';
+		$select[] = $has( $appt_cols, 'service_id' ) ? 'a.service_id' : 'NULL AS service_id';
+		$select[] = $has( $appt_cols, 'start_date' ) ? 'a.start_date' : 'NULL AS start_date';
+		$select[] = $has( $appt_cols, 'end_date' ) ? 'a.end_date' : 'NULL AS end_date';
+		$select[] = $has( $appt_cols, 'extras_duration' ) ? 'a.extras_duration' : '0 AS extras_duration';
+		$select[] = $has( $appt_cols, 'internal_note' ) ? 'a.internal_note' : "'' AS internal_note";
+
+		$join = "FROM `{$ca_table}` ca INNER JOIN `{$appt_table}` a ON a.id = ca.appointment_id";
+
+		if ( $cust_table ) {
+			$join .= " LEFT JOIN `{$cust_table}` c ON c.id = ca.customer_id";
+			$select[] = $has( $cust_cols, 'full_name' ) ? 'c.full_name AS customer_full_name' : "'' AS customer_full_name";
+			$select[] = $has( $cust_cols, 'first_name' ) ? 'c.first_name AS customer_first_name' : "'' AS customer_first_name";
+			$select[] = $has( $cust_cols, 'last_name' ) ? 'c.last_name AS customer_last_name' : "'' AS customer_last_name";
+			$select[] = $has( $cust_cols, 'email' ) ? 'c.email AS customer_email' : "'' AS customer_email";
+			$select[] = $has( $cust_cols, 'phone' ) ? 'c.phone AS customer_phone' : "'' AS customer_phone";
+		} else {
+			$select[] = "'' AS customer_full_name";
+			$select[] = "'' AS customer_first_name";
+			$select[] = "'' AS customer_last_name";
+			$select[] = "'' AS customer_email";
+			$select[] = "'' AS customer_phone";
+		}
+
+		if ( $staff_table ) {
+			$join .= " LEFT JOIN `{$staff_table}` st ON st.id = a.staff_id";
+			$select[] = $has( $staff_cols, 'full_name' ) ? 'st.full_name AS staff_name' : "'' AS staff_name";
+		} else {
+			$select[] = "'' AS staff_name";
+		}
+
+		if ( $svc_table ) {
+			$join .= " LEFT JOIN `{$svc_table}` s ON s.id = a.service_id";
+			$select[] = $has( $svc_cols, 'title' ) ? 's.title AS service_title' : "'' AS service_title";
+			$select[] = $has( $svc_cols, 'price' ) ? 's.price AS service_price' : '0 AS service_price';
+		} else {
+			$select[] = "'' AS service_title";
+			$select[] = '0 AS service_price';
+		}
+
+		if ( $pay_table && $has( $ca_cols, 'payment_id' ) ) {
+			$join .= " LEFT JOIN `{$pay_table}` p ON p.id = ca.payment_id";
+			$pay_amount = $has( $pay_cols, 'paid' ) ? 'p.paid' : ( $has( $pay_cols, 'total' ) ? 'p.total' : 'NULL' );
+			$select[]   = "{$pay_amount} AS payment_total";
+		} else {
+			$select[] = 'NULL AS payment_total';
+		}
+
+		$sql = 'SELECT ' . implode( ', ', $select ) . " {$join} ORDER BY a.start_date ASC, ca.id ASC";
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results( $sql, ARRAY_A );
+
+		$extras_by_id = array();
+		if ( $extras_table ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$extra_rows = $wpdb->get_results( "SELECT * FROM `{$extras_table}`", ARRAY_A );
+			foreach ( (array) $extra_rows as $er ) {
+				$eid = (int) ( isset( $er['id'] ) ? $er['id'] : 0 );
+				if ( ! $eid ) {
+					continue;
+				}
+				$dur = isset( $er['duration'] ) ? (int) $er['duration'] : 0;
+				$extras_by_id[ $eid ] = array(
+					'id'           => $eid,
+					'title'        => (string) ( isset( $er['title'] ) ? $er['title'] : '' ),
+					'duration_min' => (int) round( $dur / 60 ),
+					'price_cents'  => self::price_to_cents( isset( $er['price'] ) ? $er['price'] : 0 ),
+				);
+			}
+		}
+
+		$out = array();
+		foreach ( (array) $rows as $row ) {
+			$ca_id = (int) ( isset( $row['ca_id'] ) ? $row['ca_id'] : 0 );
+			if ( ! $ca_id ) {
+				continue;
+			}
+
+			$start_iso = self::datetime_to_iso( isset( $row['start_date'] ) ? $row['start_date'] : '' );
+			$end_iso   = self::datetime_to_iso( isset( $row['end_date'] ) ? $row['end_date'] : '' );
+			$extras_duration = isset( $row['extras_duration'] ) ? (int) $row['extras_duration'] : 0;
+			if ( $extras_duration > 0 && $end_iso ) {
+				try {
+					$end_dt = new DateTime( $end_iso );
+					$end_dt->modify( '+' . $extras_duration . ' seconds' );
+					$end_iso = $end_dt->format( 'Y-m-d\\TH:i:s\\Z' );
+				} catch ( Exception $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+				}
+			}
+
+			$extras = self::normalize_appointment_extras(
+				isset( $row['ca_extras'] ) ? $row['ca_extras'] : '',
+				$extras_by_id
+			);
+
+			$price_cents = null;
+			if ( isset( $row['payment_total'] ) && $row['payment_total'] !== null && $row['payment_total'] !== '' ) {
+				$price_cents = self::price_to_cents( $row['payment_total'] );
+			} elseif ( isset( $row['service_price'] ) ) {
+				$price_cents = self::price_to_cents( $row['service_price'] );
+				foreach ( $extras as $ex ) {
+					$price_cents += (int) $ex['price_cents'] * max( 1, (int) $ex['quantity'] );
+				}
+			}
+
+			$notes = array();
+			if ( ! empty( $row['ca_notes'] ) ) {
+				$notes[] = (string) $row['ca_notes'];
+			}
+			if ( ! empty( $row['internal_note'] ) ) {
+				$notes[] = (string) $row['internal_note'];
+			}
+
+			$out[] = array(
+				'bookly_ca_id'          => $ca_id,
+				'bookly_appointment_id' => (int) ( isset( $row['appointment_id'] ) ? $row['appointment_id'] : 0 ),
+				'starts_at'             => $start_iso,
+				'ends_at'               => $end_iso,
+				'status'                => self::map_bookly_status( isset( $row['ca_status'] ) ? $row['ca_status'] : '' ),
+				'bookly_status'         => (string) ( isset( $row['ca_status'] ) ? $row['ca_status'] : '' ),
+				'service_bookly_id'     => (int) ( isset( $row['service_id'] ) ? $row['service_id'] : 0 ),
+				'service_title'         => (string) ( isset( $row['service_title'] ) ? $row['service_title'] : '' ),
+				'staff_bookly_id'       => isset( $row['staff_id'] ) && $row['staff_id'] ? (int) $row['staff_id'] : null,
+				'staff_name'            => (string) ( isset( $row['staff_name'] ) ? $row['staff_name'] : '' ),
+				'customer_bookly_id'    => isset( $row['customer_id'] ) && $row['customer_id'] ? (int) $row['customer_id'] : null,
+				'customer_first_name'   => (string) ( isset( $row['customer_first_name'] ) ? $row['customer_first_name'] : '' ),
+				'customer_last_name'    => (string) ( isset( $row['customer_last_name'] ) ? $row['customer_last_name'] : '' ),
+				'customer_full_name'    => (string) ( isset( $row['customer_full_name'] ) ? $row['customer_full_name'] : '' ),
+				'customer_email'        => (string) ( isset( $row['customer_email'] ) ? $row['customer_email'] : '' ),
+				'customer_phone'        => (string) ( isset( $row['customer_phone'] ) ? $row['customer_phone'] : '' ),
+				'notes'                 => implode( "\n", $notes ),
+				'price_cents'           => $price_cents,
+				'extras'                => $extras,
+			);
+		}
+
+		return $out;
+	}
+
+	private static function datetime_to_iso( $value ) {
+		$value = trim( (string) $value );
+		if ( '' === $value || '0000-00-00 00:00:00' === $value ) {
+			return '';
+		}
+		try {
+			$tz = function_exists( 'wp_timezone' ) ? wp_timezone() : new DateTimeZone( 'Europe/Paris' );
+			$dt = date_create( $value, $tz );
+			if ( ! $dt ) {
+				return $value;
+			}
+			$dt->setTimezone( new DateTimeZone( 'UTC' ) );
+			return $dt->format( 'Y-m-d\\TH:i:s\\Z' );
+		} catch ( Exception $e ) {
+			return $value;
+		}
+	}
+
+	private static function map_bookly_status( $raw ) {
+		$v = strtolower( trim( (string) $raw ) );
+		$map = array(
+			'pending'    => 'booked',
+			'approved'   => 'confirmed',
+			'confirmed'  => 'confirmed',
+			'booked'     => 'booked',
+			'cancelled'  => 'cancelled',
+			'canceled'   => 'cancelled',
+			'rejected'   => 'cancelled',
+			'done'       => 'completed',
+			'completed'  => 'completed',
+			'waitlisted' => 'skip',
+			'waiting'    => 'skip',
+			'no-show'    => 'no_show',
+			'noshow'     => 'no_show',
+			'no_show'    => 'no_show',
+		);
+		return isset( $map[ $v ] ) ? $map[ $v ] : 'booked';
+	}
+
+	private static function normalize_appointment_extras( $raw, $extras_by_id ) {
+		$map = array();
+		if ( is_array( $raw ) ) {
+			$map = $raw;
+		} elseif ( is_string( $raw ) && '' !== trim( $raw ) ) {
+			$decoded = json_decode( $raw, true );
+			if ( is_array( $decoded ) ) {
+				$map = $decoded;
+			} elseif ( function_exists( 'maybe_unserialize' ) ) {
+				$unser = maybe_unserialize( $raw );
+				if ( is_array( $unser ) ) {
+					$map = $unser;
+				}
+			}
+		}
+
+		$out = array();
+		foreach ( $map as $key => $qty ) {
+			$eid = 0;
+			$quantity = 1;
+			$title = '';
+			$duration_min = 0;
+			$price_cents = 0;
+			if ( is_array( $qty ) ) {
+				$eid          = (int) ( isset( $qty['id'] ) ? $qty['id'] : ( isset( $qty['extra_id'] ) ? $qty['extra_id'] : $key ) );
+				$quantity     = max( 1, (int) ( isset( $qty['quantity'] ) ? $qty['quantity'] : 1 ) );
+				$title        = (string) ( isset( $qty['title'] ) ? $qty['title'] : '' );
+				$duration_min = (int) ( isset( $qty['duration_min'] ) ? $qty['duration_min'] : 0 );
+				$price_cents  = isset( $qty['price_cents'] ) ? (int) $qty['price_cents'] : self::price_to_cents( isset( $qty['price'] ) ? $qty['price'] : 0 );
+			} else {
+				$eid      = (int) $key;
+				$quantity = max( 1, (int) $qty );
+			}
+			if ( ! $eid && '' === $title ) {
+				continue;
+			}
+			$catalog = ( $eid && isset( $extras_by_id[ $eid ] ) ) ? $extras_by_id[ $eid ] : null;
+			if ( $catalog ) {
+				if ( '' === $title ) {
+					$title = $catalog['title'];
+				}
+				if ( ! $duration_min ) {
+					$duration_min = $catalog['duration_min'];
+				}
+				if ( ! $price_cents ) {
+					$price_cents = $catalog['price_cents'];
+				}
+			}
+			$out[] = array(
+				'bookly_extra_id' => $eid,
+				'title'           => $title,
+				'quantity'        => $quantity,
+				'duration_min'    => $duration_min,
+				'price_cents'     => $price_cents,
+			);
+		}
+		return $out;
+	}
+
+	private static function appointments_csv_rows( $appointments ) {
+		$rows   = array();
+		$rows[] = array(
+			'bookly_ca_id',
+			'bookly_appointment_id',
+			'starts_at',
+			'ends_at',
+			'status',
+			'bookly_status',
+			'service_bookly_id',
+			'service_title',
+			'staff_bookly_id',
+			'staff_name',
+			'customer_bookly_id',
+			'customer_first_name',
+			'customer_last_name',
+			'customer_full_name',
+			'customer_email',
+			'customer_phone',
+			'notes',
+			'price_cents',
+			'extras_json',
+		);
+		foreach ( $appointments as $a ) {
+			$rows[] = array(
+				$a['bookly_ca_id'],
+				$a['bookly_appointment_id'],
+				$a['starts_at'],
+				$a['ends_at'],
+				$a['status'],
+				$a['bookly_status'],
+				$a['service_bookly_id'],
+				$a['service_title'],
+				$a['staff_bookly_id'],
+				$a['staff_name'],
+				$a['customer_bookly_id'],
+				$a['customer_first_name'],
+				$a['customer_last_name'],
+				$a['customer_full_name'],
+				$a['customer_email'],
+				$a['customer_phone'],
+				$a['notes'],
+				$a['price_cents'],
+				wp_json_encode( $a['extras'] ),
+			);
+		}
+		return $rows;
 	}
 
 	/**

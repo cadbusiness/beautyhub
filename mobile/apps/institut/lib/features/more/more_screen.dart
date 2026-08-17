@@ -264,7 +264,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                     subtitle: tenants.length > 1
                         ? '${tenants.length} instituts disponibles'
                         : 'Sélectionner un autre espace',
-                    onTap: () => context.go('/tenants'),
+                    onTap: () => context.push('/tenants'),
                   ),
                   if (roleText != null)
                     _MenuRow(

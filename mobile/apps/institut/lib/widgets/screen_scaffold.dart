@@ -10,6 +10,7 @@ class InstitutTopBar extends StatelessWidget implements PreferredSizeWidget {
     this.subtitle,
     this.trailing,
     this.onBack,
+    this.showBack = true,
     this.bottom,
   });
 
@@ -17,6 +18,7 @@ class InstitutTopBar extends StatelessWidget implements PreferredSizeWidget {
   final String? subtitle;
   final Widget? trailing;
   final VoidCallback? onBack;
+  final bool showBack;
   final PreferredSizeWidget? bottom;
 
   static const _black = Color(0xFF0A0A0A);
@@ -52,13 +54,16 @@ class InstitutTopBar extends StatelessWidget implements PreferredSizeWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded, size: 22),
-                    color: _black,
-                    onPressed: effectiveBack,
-                    splashRadius: 20,
-                    tooltip: 'Retour',
-                  ),
+                  if (showBack)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded, size: 22),
+                      color: _black,
+                      onPressed: effectiveBack,
+                      splashRadius: 20,
+                      tooltip: 'Retour',
+                    )
+                  else
+                    const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { after } from "next/server";
 import type { Database } from "@/lib/db/database.types";
 import { decrementLocalProductStock, decrementWooMirrorStock } from "@/lib/woocommerce/sync";
 import { applyPriceOverrides, parsePosCart, resolveCartLines } from "./pos";
@@ -27,6 +28,14 @@ import { normalizePromoCode, redeemPromo, validatePromo } from "./promos-core";
 import { generateSaleDocuments, updateSaleDocumentStatuses } from "./sale-documents/generate";
 
 type Db = SupabaseClient<Database>;
+
+function enqueueAfterResponse(task: () => Promise<void>) {
+  try {
+    after(task);
+  } catch {
+    void task();
+  }
+}
 
 export type SalePaymentMethod =
   | "cash"
@@ -469,21 +478,29 @@ export async function executePosCheckout(
   }
 
   if (status === "paid") {
-    for (const line of totals.lines) {
-      if (line.type === "product" && line.product_id) {
-        await decrementLocalProductStock(
-          supabase,
-          tenantId,
-          line.product_id,
-          line.quantity,
-        );
-        await decrementWooMirrorStock(
-          supabase,
-          tenantId,
-          line.product_id,
-          line.quantity,
-        );
-      }
+    const productLines = totals.lines.filter(
+      (line): line is typeof line & { product_id: string } =>
+        line.type === "product" && Boolean(line.product_id),
+    );
+    for (const line of productLines) {
+      await decrementLocalProductStock(
+        supabase,
+        tenantId,
+        line.product_id,
+        line.quantity,
+      );
+    }
+    if (productLines.length > 0) {
+      enqueueAfterResponse(async () => {
+        for (const line of productLines) {
+          await decrementWooMirrorStock(
+            supabase,
+            tenantId,
+            line.product_id,
+            line.quantity,
+          );
+        }
+      });
     }
   }
 
@@ -497,14 +514,18 @@ export async function executePosCheckout(
   }
 
   const hasProducts = totals.lines.some((line) => line.type === "product");
-  await generateSaleDocuments(supabase, tenantId, sale.id, {
-    ticketNumber,
-    saleStatus: status,
-    amountPaidCents: amountPaid,
-    totalCents: totals.total_cents,
-    hasProducts,
-    settings,
-  });
+  try {
+    await generateSaleDocuments(supabase, tenantId, sale.id, {
+      ticketNumber,
+      saleStatus: status,
+      amountPaidCents: amountPaid,
+      totalCents: totals.total_cents,
+      hasProducts,
+      settings,
+    });
+  } catch {
+    // La vente est déjà enregistrée : ne pas bloquer l'encaissement mobile.
+  }
 
   return {
     saleId: sale.id,

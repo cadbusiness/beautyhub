@@ -97,6 +97,8 @@ class _CashScreenState extends ConsumerState<CashScreen> {
                 RefreshIndicator(
                   onRefresh: _refresh,
                   child: cashAsync.when(
+                    skipLoadingOnReload: true,
+                    skipLoadingOnRefresh: true,
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (e, _) => ListView(
                       physics: const AlwaysScrollableScrollPhysics(),

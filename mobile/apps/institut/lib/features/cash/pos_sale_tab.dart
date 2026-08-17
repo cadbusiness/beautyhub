@@ -21,7 +21,6 @@ class PosSaleTab extends ConsumerStatefulWidget {
 class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   String? _clientId;
   String _paymentMethod = 'cash';
-  bool _checkingOut = false;
 
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
@@ -40,9 +39,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     return total;
   }
 
-  Future<void> _checkout(PosContext ctx) async {
+  Future<bool> _checkout(PosContext ctx) async {
     final cart = ref.read(posCartProvider);
-    if (cart.isEmpty) return;
+    if (cart.isEmpty) return false;
 
     if (ctx.requireOpenSession && !ctx.sessionOpen) {
       if (mounted) {
@@ -50,15 +49,15 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
           const SnackBar(content: Text('Ouvrez la session caisse d’abord.')),
         );
       }
-      return;
+      return false;
     }
 
     final totalCents = _cartTotalCents(ctx, cart);
     final token = ref.read(accessTokenProvider);
     final tenantId = ref.read(selectedTenantIdProvider);
-    if (token == null || tenantId == null) return;
+    if (token == null || tenantId == null) return false;
 
-    setState(() => _checkingOut = true);
+    ref.read(posCheckoutBusyProvider.notifier).state = true;
     try {
       final result = await ref.read(mobileApiProvider).checkout(
             accessToken: token,
@@ -69,9 +68,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
               {'method': _paymentMethod, 'amountCents': totalCents},
             ],
           );
-      ref.read(posCartProvider.notifier).clear();
       ref.invalidate(cashSessionProvider);
       ref.invalidate(posContextProvider);
+      ref.invalidate(institutSalesFirstPageProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -81,14 +80,21 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
           ),
         );
       }
+      Future<void>.microtask(() {
+        ref.read(posCartProvider.notifier).clear();
+      });
+      return true;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$e')),
         );
       }
+      return false;
     } finally {
-      if (mounted) setState(() => _checkingOut = false);
+      if (mounted) {
+        ref.read(posCheckoutBusyProvider.notifier).state = false;
+      }
     }
   }
 
@@ -104,13 +110,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         ctx: ctx,
         clientId: _clientId,
         paymentMethod: _paymentMethod,
-        checkingOut: _checkingOut,
         onClientChanged: (id) => setState(() => _clientId = id),
         onPaymentChanged: (m) => setState(() => _paymentMethod = m),
-        onCheckout: () {
-          Navigator.pop(context);
-          _checkout(ctx);
-        },
+        onCheckout: () => _checkout(ctx),
       ),
     );
   }
@@ -123,6 +125,8 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     final cartCount = cart.values.fold(0, (a, b) => a + b);
 
     return posAsync.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -333,7 +337,6 @@ class _CartSheet extends ConsumerWidget {
     required this.ctx,
     required this.clientId,
     required this.paymentMethod,
-    required this.checkingOut,
     required this.onClientChanged,
     required this.onPaymentChanged,
     required this.onCheckout,
@@ -342,14 +345,14 @@ class _CartSheet extends ConsumerWidget {
   final PosContext ctx;
   final String? clientId;
   final String paymentMethod;
-  final bool checkingOut;
   final ValueChanged<String?> onClientChanged;
   final ValueChanged<String> onPaymentChanged;
-  final VoidCallback onCheckout;
+  final Future<bool> Function() onCheckout;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(posCartProvider);
+    final checkingOut = ref.watch(posCheckoutBusyProvider);
     var total = 0;
     final lines = <Widget>[];
     for (final entry in cart.entries) {
@@ -481,7 +484,15 @@ class _CartSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           FilledButton(
-            onPressed: checkingOut ? null : onCheckout,
+            onPressed: checkingOut
+                ? null
+                : () async {
+                    final ok = await onCheckout();
+                    if (ok && context.mounted) {
+                      Navigator.pop(context);
+                      ref.read(posCartProvider.notifier).clear();
+                    }
+                  },
             child: checkingOut
                 ? const SizedBox(
                     width: 20,

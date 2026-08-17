@@ -28,3 +28,5 @@ final posCartProvider =
 });
 
 final posCategoryFilterProvider = StateProvider<String>((ref) => 'all');
+
+final posCheckoutBusyProvider = StateProvider<bool>((ref) => false);

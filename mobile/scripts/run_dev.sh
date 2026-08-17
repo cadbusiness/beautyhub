@@ -6,10 +6,14 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="${1:?institut ou client}"
 
 case "$APP" in
-  institut) FLAVOR_FILE="$ROOT/flavors/beautyhub_pro.json" ;;
-  client)   FLAVOR_FILE="$ROOT/flavors/beautyhub_client.json" ;;
+  institut) FLAVOR_FILE="$ROOT/flavors/beautyhub_pro.dev.json" ;;
+  client)   FLAVOR_FILE="$ROOT/flavors/beautyhub_client.dev.json" ;;
   *) echo "App inconnue: $APP" >&2; exit 1 ;;
 esac
+if [[ ! -f "$FLAVOR_FILE" ]]; then
+  # Fallback : si pas de variante .dev, on prend le fichier de base.
+  FLAVOR_FILE="${FLAVOR_FILE%.dev.json}.json"
+fi
 
 cd "$ROOT/apps/$APP"
 flutter pub get

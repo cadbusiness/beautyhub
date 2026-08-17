@@ -72,6 +72,7 @@ export type BooklyAppointmentImportResult = {
   created: number;
   updated: number;
   skipped: number;
+  cancelled: number;
   clientsCreated: number;
   unmatchedStaff: number;
   missingService: number;
@@ -596,12 +597,17 @@ export async function runBooklyAppointmentsImport(
   supabase: Db,
   tenantId: string,
   rows: BooklyAppointmentCsvRow[],
-  options: { upcomingOnly: boolean },
+  options: {
+    upcomingOnly: boolean;
+    reconcileUpcoming?: boolean;
+    keepBooklyIds?: number[];
+  },
 ): Promise<BooklyAppointmentImportResult> {
   const result: BooklyAppointmentImportResult = {
     created: 0,
     updated: 0,
     skipped: 0,
+    cancelled: 0,
     clientsCreated: 0,
     unmatchedStaff: 0,
     missingService: 0,
@@ -747,6 +753,38 @@ export async function runBooklyAppointmentsImport(
 
   for (const [staffId, booklyId] of staffBooklyToPersist) {
     await supabase.from("inst_staff").update({ bookly_id: booklyId }).eq("id", staffId);
+  }
+
+  if (options.reconcileUpcoming) {
+    const keep = new Set(
+      (options.keepBooklyIds?.length ? options.keepBooklyIds : [...seen]).filter((id) => id > 0),
+    );
+    const cutoff = startOfToday().toISOString();
+    const { data: existingUpcoming, error: existingErr } = await supabase
+      .from("inst_appointments")
+      .select("id, bookly_id, status")
+      .eq("tenant_id", tenantId)
+      .not("bookly_id", "is", null)
+      .gte("starts_at", cutoff)
+      .neq("status", "cancelled");
+    if (existingErr) {
+      result.errors.push(`reconcile: ${existingErr.message}`);
+    } else {
+      const toCancel = (existingUpcoming ?? []).filter(
+        (a) => typeof a.bookly_id === "number" && !keep.has(a.bookly_id),
+      );
+      for (const appt of toCancel) {
+        const { error } = await supabase
+          .from("inst_appointments")
+          .update({ status: "cancelled" })
+          .eq("id", appt.id);
+        if (error) {
+          result.errors.push(`cancel #${appt.bookly_id}: ${error.message}`);
+          continue;
+        }
+        result.cancelled += 1;
+      }
+    }
   }
 
   return result;

@@ -549,8 +549,9 @@
       "searchPlaceholder": "Looking for service, client, practitioner…"
     },
     "import": {
-      "title": "Import Bookly appointments",
+      "title": "Import / sync Bookly appointments",
       "doneTitle": "Import complete",
+      "csvTitle": "Manual import (CSV / JSON)",
       "intro": "Import the CSV (or JSON) exported from WordPress → Tools → Export Bookly. Services must already be imported. Clients are created or matched by phone / email. Re-importing updates via the Bookly ID.",
       "hint": "bookly-appointments.csv (semicolon) or full JSON export.",
       "chooseFile": "Choose file",
@@ -581,6 +582,21 @@
         "invalidFile": "Invalid file. Use the BeautyHub export (appointments CSV or JSON).",
         "emptyFile": "This file has no appointments.",
         "importFailed": "The appointment import failed."
+      },
+      "sync": {
+        "intro": "During the transition, Bookly stays the source of truth: every appointment created, changed or cancelled in WordPress is sent to BeautyHub (immediately, then caught up every 5 minutes).",
+        "enable": "Enable continuous sync",
+        "enabling": "Enabling…",
+        "enabled": "Sync active",
+        "disable": "Stop sync",
+        "urlLabel": "URL to paste in WordPress",
+        "copy": "Copy",
+        "copied": "Copied",
+        "pasteHint": "In WordPress → Tools → Export Bookly, paste this URL and save. Sync then runs on its own.",
+        "lastSync": "Last sync",
+        "waitingFirst": "Waiting for the first push from WordPress.",
+        "loading": "Loading sync…",
+        "failed": "Unable to configure sync."
       }
     },
     "status": {
@@ -1063,7 +1079,10 @@
       "sales": "Sales",
       "previousDayTitle": "Previous day's session still open",
       "previousDayDescription": "Close it to start today cleanly. Sales stay on this session until it is closed.",
-      "closeSession": "Close session"
+      "closeSession": "Close session",
+      "pausedTitle": "Checkout paused",
+      "pausedDescription": "Sales are blocked. Resume the session to take payments.",
+      "resumeSession": "Resume"
     },
     "quickActions": {
       "appointments": {
@@ -1195,6 +1214,9 @@
       "sessionAlreadyOpen": "A session is already open.",
       "sessionClosed": "Z fence completed",
       "sessionOpened": "Open checkout session.",
+      "sessionPaused": "Checkout is paused — resume the session to take payments.",
+      "sessionPausedOk": "Session paused.",
+      "sessionResumed": "Session resumed.",
       "slugTaken": "The identifier \"{slug}\" is already taken.",
       "staffNoAccount": "This member does not yet have an application account.",
       "staffNotFound": "Member not found.",
@@ -3317,6 +3339,10 @@
       "openingFloat": "Cash bottom",
       "reports": "Reports generated",
       "sessionOpen": "Open checkout",
+      "sessionPaused": "Checkout paused",
+      "pause": "Pause",
+      "resume": "Resume",
+      "pauseHint": "Sales and cash movements are blocked while the session is paused.",
       "previousDayBadge": "Yesterday's session",
       "previousDayTitle": "This session was opened on a previous day",
       "previousDayBody": "Close it (Z report) to start today cleanly. Totals stay those of the open session.",
@@ -3892,7 +3918,8 @@
       "closed": "Checkout closed",
       "closedCta": "Open",
       "previousDay": "Yesterday's session",
-      "previousDayCta": "Close"
+      "previousDayCta": "Close",
+      "paused": "Checkout paused"
     },
     "sidebar": {
       "ariaLabel": "Main navigation",

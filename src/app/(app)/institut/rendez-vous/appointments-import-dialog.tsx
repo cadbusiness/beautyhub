@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { Field, Input } from "@/components/ui/input";
 import {
   filterUpcomingRows,
   isBooklyAppointmentsCsv,
@@ -25,6 +26,70 @@ function StatLine({ label, value }: { label: string; value: string | number }) {
     <div className="flex items-baseline justify-between gap-4 text-sm">
       <span className="text-slate-600">{label}</span>
       <span className="tabular-nums font-medium text-slate-900">{value}</span>
+    </div>
+  );
+}
+
+type SyncStatus = {
+  enabled: boolean;
+  url: string | null;
+  lastSyncAt: string | null;
+  lastError: string | null;
+};
+
+function SyncPanel({
+  status,
+  loading,
+  busy,
+  copied,
+  onEnable,
+  onDisable,
+  onCopy,
+}: {
+  status: SyncStatus | null;
+  loading: boolean;
+  busy: boolean;
+  copied: boolean;
+  onEnable: () => void;
+  onDisable: () => void;
+  onCopy: () => void;
+}) {
+  const t = useTranslations("appointments.import.sync");
+  if (loading && !status) {
+    return <p className="text-sm text-slate-500">{t("loading")}</p>;
+  }
+  return (
+    <div className="space-y-3 border-b border-slate-200 pb-4">
+      <p className="text-sm text-slate-600">{t("intro")}</p>
+      {status?.enabled && status.url ? (
+        <>
+          <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">{t("enabled")}</p>
+          <Field label={t("urlLabel")} htmlFor="bookly-sync-url">
+            <div className="flex gap-2">
+              <Input id="bookly-sync-url" readOnly value={status.url} className="font-mono text-xs" />
+              <Button type="button" variant="outline" className="h-10 shrink-0" onClick={onCopy}>
+                {copied ? t("copied") : t("copy")}
+              </Button>
+            </div>
+          </Field>
+          <p className="text-xs text-slate-500">{t("pasteHint")}</p>
+          {status.lastSyncAt ? (
+            <p className="text-xs text-slate-600">
+              {t("lastSync")}: {new Date(status.lastSyncAt).toLocaleString()}
+            </p>
+          ) : (
+            <p className="text-xs text-slate-500">{t("waitingFirst")}</p>
+          )}
+          {status.lastError ? <p className="text-xs text-amber-800">{status.lastError}</p> : null}
+          <Button type="button" variant="outline" className="h-9" onClick={onDisable} disabled={busy}>
+            {t("disable")}
+          </Button>
+        </>
+      ) : (
+        <Button type="button" onClick={onEnable} disabled={busy} className="h-9">
+          {busy ? t("enabling") : t("enable")}
+        </Button>
+      )}
     </div>
   );
 }
@@ -58,6 +123,22 @@ export function AppointmentsImportDialog({
   const [progress, setProgress] = useState<{ processed: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BooklyAppointmentImportResult | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncBusy, setSyncBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setSyncLoading(true);
+    void fetch("/api/institut/appointments/bookly-sync", { credentials: "include" })
+      .then(async (res) => {
+        if (!res.ok) return;
+        setSyncStatus((await res.json()) as SyncStatus);
+      })
+      .catch(() => null)
+      .finally(() => setSyncLoading(false));
+  }, [open]);
 
   const reset = useCallback(() => {
     setRows([]);
@@ -129,6 +210,40 @@ export function AppointmentsImportDialog({
     if (rows.length) applyPreview(rows, catalog, checked);
   }
 
+  async function syncAction(action: "enable" | "disable") {
+    setSyncBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/institut/appointments/bookly-sync", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(payload.error ?? t("sync.failed"));
+        return;
+      }
+      setSyncStatus((await res.json()) as SyncStatus);
+    } catch {
+      setError(t("sync.failed"));
+    } finally {
+      setSyncBusy(false);
+    }
+  }
+
+  async function copySyncUrl() {
+    if (!syncStatus?.url) return;
+    try {
+      await navigator.clipboard.writeText(syncStatus.url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   async function handleImport() {
     if (rows.length === 0) return;
     setImporting(true);
@@ -137,6 +252,7 @@ export function AppointmentsImportDialog({
       created: 0,
       updated: 0,
       skipped: 0,
+      cancelled: 0,
       clientsCreated: 0,
       unmatchedStaff: 0,
       missingService: 0,
@@ -163,6 +279,7 @@ export function AppointmentsImportDialog({
         acc.created += data.created;
         acc.updated += data.updated;
         acc.skipped += data.skipped;
+        acc.cancelled += data.cancelled ?? 0;
         acc.clientsCreated += data.clientsCreated;
         acc.unmatchedStaff += data.unmatchedStaff;
         acc.missingService += data.missingService;
@@ -185,6 +302,16 @@ export function AppointmentsImportDialog({
     <FormDialog open={open} onClose={handleClose} title={dialogTitle} size="lg">
       {!preview && !result ? (
         <div className="space-y-4">
+          <SyncPanel
+            status={syncStatus}
+            loading={syncLoading}
+            busy={syncBusy}
+            copied={copied}
+            onEnable={() => void syncAction("enable")}
+            onDisable={() => void syncAction("disable")}
+            onCopy={() => void copySyncUrl()}
+          />
+          <p className="text-sm font-medium text-slate-800">{t("csvTitle")}</p>
           <p className="text-sm text-slate-600">{t("intro")}</p>
           <p className="text-xs text-slate-500">{t("hint")}</p>
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center hover:border-slate-400">

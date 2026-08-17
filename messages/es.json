@@ -505,8 +505,9 @@
       "searchPlaceholder": "Buscando servicio, cliente, practicante…"
     },
     "import": {
-      "title": "Importar citas de Bookly",
+      "title": "Importar / sincronizar Bookly",
       "doneTitle": "Importación terminada",
+      "csvTitle": "Importación manual (CSV / JSON)",
       "intro": "Importe el CSV (o JSON) exportado desde WordPress → Herramientas → Export Bookly. Los servicios deben estar ya importados. Los clientes se crean o vinculan por teléfono / email. Volver a importar actualiza por el ID de Bookly.",
       "hint": "Archivo bookly-appointments.csv (separador ;) o JSON completo.",
       "chooseFile": "Elegir archivo",
@@ -537,6 +538,21 @@
         "invalidFile": "Archivo no válido. Use la exportación BeautyHub (CSV de citas o JSON).",
         "emptyFile": "Este archivo no tiene citas.",
         "importFailed": "La importación de citas ha fallado."
+      },
+      "sync": {
+        "intro": "Durante la transición, Bookly sigue siendo la fuente de verdad: cada cita creada, modificada o cancelada en WordPress se envía a BeautyHub (al momento, y un repaso cada 5 minutos).",
+        "enable": "Activar la sincronización continua",
+        "enabling": "Activación…",
+        "enabled": "Sincronización activa",
+        "disable": "Detener la sincronización",
+        "urlLabel": "URL para pegar en WordPress",
+        "copy": "Copiar",
+        "copied": "Copiado",
+        "pasteHint": "En WordPress → Herramientas → Export Bookly, pegue esta URL y guarde. La sincronización arranca sola.",
+        "lastSync": "Última sincronización",
+        "waitingFirst": "Esperando el primer envío desde WordPress.",
+        "loading": "Cargando la sincronización…",
+        "failed": "No se pudo configurar la sincronización."
       }
     },
     "status": {
@@ -946,7 +962,10 @@
       "sales": "Ventas",
       "previousDayTitle": "La sesión del día anterior sigue abierta",
       "previousDayDescription": "Ciérrala para empezar hoy con claridad. Las ventas siguen en esta sesión hasta que se cierre.",
-      "closeSession": "Cerrar la sesión"
+      "closeSession": "Cerrar la sesión",
+      "pausedTitle": "Caja en pausa",
+      "pausedDescription": "Las ventas están bloqueadas. Reanuda la sesión para cobrar.",
+      "resumeSession": "Reanudar"
     },
     "quickActions": {
       "appointments": {
@@ -1078,6 +1097,9 @@
       "sessionAlreadyOpen": "Ya hay una sesión abierta.",
       "sessionClosed": "Valla Z terminada",
       "sessionOpened": "Abrir sesión de pago.",
+      "sessionPaused": "La caja está en pausa — reanuda la sesión para cobrar.",
+      "sessionPausedOk": "Sesión en pausa.",
+      "sessionResumed": "Sesión reanudada.",
       "slugTaken": "El identificador \"{slug}\" ya está en uso.",
       "stripeNotConfigured": "Stripe Connect no está configurado para este instituto.",
       "stripeNotConfiguredShort": "Stripe Connect no configurado.",
@@ -2901,6 +2923,10 @@
       "openingFloat": "fondo de efectivo",
       "reports": "Informes generados",
       "sessionOpen": "Abrir caja",
+      "sessionPaused": "Caja en pausa",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "pauseHint": "Las ventas y movimientos de efectivo están bloqueados mientras la sesión está en pausa.",
       "previousDayBadge": "Sesión de ayer",
       "previousDayTitle": "Esta sesión se abrió un día anterior",
       "previousDayBody": "Ciérrala (informe Z) para empezar hoy con claridad. Los totales siguen siendo los de la sesión abierta.",
@@ -3452,7 +3478,8 @@
       "closed": "Caja cerrada",
       "closedCta": "Abrir",
       "previousDay": "Sesión de ayer",
-      "previousDayCta": "Cerrar"
+      "previousDayCta": "Cerrar",
+      "paused": "Caja en pausa"
     },
     "sidebar": {
       "ariaLabel": "Navegación principal",

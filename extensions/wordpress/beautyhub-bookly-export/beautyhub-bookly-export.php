@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: BeautyHub - Export Bookly (services, extras & RDV)
- * Description: Exporte les services, extras et rendez-vous Bookly en CSV / JSON pour migration BeautyHub.
- * Version: 1.2.0
+ * Description: Exporte et synchronise les rendez-vous Bookly vers BeautyHub (migration).
+ * Version: 1.3.0
  * Author: BeautyHub
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -18,9 +18,21 @@ final class BeautyHub_Bookly_Export {
 	const PAGE_SLUG = 'beautyhub-bookly-export';
 	const NONCE     = 'beautyhub_bookly_export';
 
+	const OPTION_SYNC_URL   = 'beautyhub_bookly_sync_url';
+	const OPTION_SYNC_LAST  = 'beautyhub_bookly_sync_last';
+	const OPTION_SYNC_ERROR = 'beautyhub_bookly_sync_error';
+	const CRON_HOOK         = 'bh_bookly_cron_sync';
+	const PUSH_HOOK         = 'bh_bookly_push_sync';
+
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'register_menu' ) );
 		add_action( 'admin_init', array( __CLASS__, 'maybe_download' ) );
+		add_action( 'admin_init', array( __CLASS__, 'maybe_handle_sync' ) );
+		add_filter( 'cron_schedules', array( __CLASS__, 'cron_schedules' ) );
+		add_action( 'init', array( __CLASS__, 'ensure_cron' ) );
+		add_action( self::CRON_HOOK, array( __CLASS__, 'push_sync' ) );
+		add_action( self::PUSH_HOOK, array( __CLASS__, 'push_sync' ) );
+		add_action( 'shutdown', array( __CLASS__, 'maybe_schedule_push' ) );
 	}
 
 	public static function register_menu() {
@@ -96,7 +108,9 @@ final class BeautyHub_Bookly_Export {
 		$appt_n = self::count_appointments();
 
 		echo '<h1>Export Bookly - BeautyHub</h1>';
-		echo '<p>Exporte le catalogue Bookly (prestations + extras) et les rendez-vous pour migration vers BeautyHub.</p>';
+		echo '<p>Exporte le catalogue Bookly et synchronise les rendez-vous vers BeautyHub pendant la transition.</p>';
+
+		self::render_sync_box();
 
 		echo '<table class="widefat striped" style="max-width:640px;margin:16px 0;"><tbody>';
 		echo '<tr><th>Table services</th><td>' . esc_html( $data['services_table'] ? $data['services_table'] : 'introuvable' ) . '</td></tr>';
@@ -339,7 +353,7 @@ final class BeautyHub_Bookly_Export {
 	/**
 	 * Une ligne BeautyHub = un customer_appointment Bookly (1 client par creneau).
 	 */
-	private static function collect_appointments() {
+	private static function collect_appointments( $upcoming_only = false ) {
 		global $wpdb;
 
 		$appt_table = self::find_table( array( 'bookly_appointments' ) );
@@ -426,7 +440,12 @@ final class BeautyHub_Bookly_Export {
 			$select[] = 'NULL AS payment_total';
 		}
 
-		$sql = 'SELECT ' . implode( ', ', $select ) . " {$join} ORDER BY a.start_date ASC, ca.id ASC";
+		$sql = 'SELECT ' . implode( ', ', $select ) . " {$join}";
+		if ( $upcoming_only && $has( $appt_cols, 'start_date' ) ) {
+			$cutoff = date( 'Y-m-d 00:00:00', strtotime( current_time( 'mysql' ) ) - DAY_IN_SECONDS );
+			$sql   .= $wpdb->prepare( ' WHERE a.start_date >= %s', $cutoff );
+		}
+		$sql .= ' ORDER BY a.start_date ASC, ca.id ASC';
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		$rows = $wpdb->get_results( $sql, ARRAY_A );
 
@@ -817,6 +836,183 @@ final class BeautyHub_Bookly_Export {
 			);
 		}
 		return $rows;
+	}
+
+	public static function cron_schedules( $schedules ) {
+		$schedules['bh_five_minutes'] = array(
+			'interval' => 300,
+			'display'  => 'Toutes les 5 minutes (BeautyHub Bookly)',
+		);
+		return $schedules;
+	}
+
+	private static function sync_url() {
+		return trim( (string) get_option( self::OPTION_SYNC_URL, '' ) );
+	}
+
+	public static function ensure_cron() {
+		$url = self::sync_url();
+		if ( $url && ! wp_next_scheduled( self::CRON_HOOK ) ) {
+			wp_schedule_event( time() + 60, 'bh_five_minutes', self::CRON_HOOK );
+		}
+		if ( ! $url ) {
+			$timestamp = wp_next_scheduled( self::CRON_HOOK );
+			if ( $timestamp ) {
+				wp_unschedule_event( $timestamp, self::CRON_HOOK );
+			}
+		}
+	}
+
+	public static function maybe_schedule_push() {
+		if ( ! self::sync_url() ) {
+			return;
+		}
+		$action = '';
+		if ( isset( $_REQUEST['action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$action = strtolower( (string) wp_unslash( $_REQUEST['action'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		}
+		if ( '' === $action || false === strpos( $action, 'bookly' ) ) {
+			return;
+		}
+		if ( wp_next_scheduled( self::PUSH_HOOK ) ) {
+			return;
+		}
+		wp_schedule_single_event( time() + 8, self::PUSH_HOOK );
+	}
+
+	public static function maybe_handle_sync() {
+		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		if ( empty( $_POST['bh_sync_action'] ) ) {
+			return;
+		}
+		check_admin_referer( self::NONCE );
+		$do = sanitize_key( wp_unslash( $_POST['bh_sync_action'] ) );
+		if ( 'save' === $do ) {
+			$url = isset( $_POST['bh_sync_url'] ) ? esc_url_raw( wp_unslash( $_POST['bh_sync_url'] ) ) : '';
+			update_option( self::OPTION_SYNC_URL, $url );
+			self::ensure_cron();
+			add_action(
+				'admin_notices',
+				static function () {
+					echo '<div class="notice notice-success is-dismissible"><p>URL de synchro BeautyHub enregistree.</p></div>';
+				}
+			);
+		} elseif ( 'push' === $do ) {
+			self::push_sync();
+			add_action(
+				'admin_notices',
+				static function () {
+					$err = get_option( self::OPTION_SYNC_ERROR, '' );
+					if ( $err ) {
+						echo '<div class="notice notice-error is-dismissible"><p>Synchro : ' . esc_html( (string) $err ) . '</p></div>';
+					} else {
+						echo '<div class="notice notice-success is-dismissible"><p>Synchro BeautyHub envoyee.</p></div>';
+					}
+				}
+			);
+		}
+	}
+
+	private static function render_sync_box() {
+		$url  = self::sync_url();
+		$last = get_option( self::OPTION_SYNC_LAST, '' );
+		$err  = get_option( self::OPTION_SYNC_ERROR, '' );
+		$next = wp_next_scheduled( self::CRON_HOOK );
+
+		echo '<div class="notice notice-info" style="padding:12px 16px;max-width:720px;">';
+		echo '<h2 style="margin:0 0 8px;">Synchro continue vers BeautyHub</h2>';
+		echo '<p>Pendant la transition, Bookly reste la source de verite. Chaque rendez-vous cree, modifie ou annule est envoye vers BeautyHub (tout de suite, puis rattrape toutes les 5 minutes).</p>';
+		echo '<form method="post">';
+		wp_nonce_field( self::NONCE );
+		echo '<p><label for="bh_sync_url"><strong>URL de synchro</strong> (copiée depuis BeautyHub → Rendez-vous → Importer Bookly)</label><br />';
+		echo '<input type="url" class="regular-text" style="width:100%;max-width:640px;" id="bh_sync_url" name="bh_sync_url" value="' . esc_attr( $url ) . '" placeholder="https://…/api/webhooks/bookly/…" /></p>';
+		echo '<p>';
+		echo '<button type="submit" class="button button-primary" name="bh_sync_action" value="save">Enregistrer l\'URL</button> ';
+		echo '<button type="submit" class="button" name="bh_sync_action" value="push"' . ( $url ? '' : ' disabled' ) . '>Synchroniser maintenant</button>';
+		echo '</p>';
+		echo '</form>';
+		if ( $url ) {
+			echo '<p style="margin-bottom:0;"><strong>Statut :</strong> active';
+			if ( $next ) {
+				echo ' · prochain rattrapage ' . esc_html( wp_date( 'd/m/Y H:i', $next ) );
+			}
+			if ( $last ) {
+				echo ' · derniere synchro ' . esc_html( (string) $last );
+			}
+			echo '</p>';
+		} else {
+			echo '<p style="margin-bottom:0;">Collez l\'URL generee dans BeautyHub pour activer la synchro.</p>';
+		}
+		if ( $err ) {
+			echo '<p style="color:#b32d2e;margin:8px 0 0;"><strong>Derniere erreur :</strong> ' . esc_html( (string) $err ) . '</p>';
+		}
+		echo '</div>';
+	}
+
+	public static function push_sync() {
+		$url = self::sync_url();
+		if ( ! $url ) {
+			return;
+		}
+		if ( get_transient( 'bh_bookly_sync_lock' ) ) {
+			return;
+		}
+		set_transient( 'bh_bookly_sync_lock', 1, 50 );
+
+		$appointments = self::collect_appointments( true );
+		$keep_ids     = array();
+		foreach ( $appointments as $a ) {
+			$keep_ids[] = (int) $a['bookly_ca_id'];
+		}
+
+		$chunks    = array_chunk( $appointments, 120 );
+		$last_err  = '';
+		$sent_last = false;
+		if ( empty( $chunks ) ) {
+			$chunks = array( array() );
+		}
+		$total = count( $chunks );
+		foreach ( $chunks as $i => $chunk ) {
+			$is_last = ( $i === $total - 1 );
+			$payload = array(
+				'mode'     => $is_last ? 'full' : 'upsert',
+				'rows'     => $chunk,
+				'keep_ids' => $is_last ? $keep_ids : array(),
+			);
+			$res = wp_remote_post(
+				$url,
+				array(
+					'timeout' => 45,
+					'headers' => array(
+						'Content-Type' => 'application/json; charset=utf-8',
+					),
+					'body'    => wp_json_encode( $payload ),
+				)
+			);
+			if ( is_wp_error( $res ) ) {
+				$last_err = $res->get_error_message();
+				break;
+			}
+			$code = (int) wp_remote_retrieve_response_code( $res );
+			if ( $code < 200 || $code >= 300 ) {
+				$body     = (string) wp_remote_retrieve_body( $res );
+				$last_err = 'HTTP ' . $code . ' ' . substr( $body, 0, 180 );
+				break;
+			}
+			$sent_last = $is_last;
+		}
+
+		if ( $last_err ) {
+			update_option( self::OPTION_SYNC_ERROR, $last_err );
+		} else {
+			update_option( self::OPTION_SYNC_ERROR, '' );
+			if ( $sent_last ) {
+				update_option( self::OPTION_SYNC_LAST, wp_date( 'd/m/Y H:i:s' ) );
+			}
+		}
+		delete_transient( 'bh_bookly_sync_lock' );
 	}
 
 	private static function send_csv( $filename, $rows ) {

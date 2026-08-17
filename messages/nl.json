@@ -123,6 +123,7 @@
       "closedCta": "Openen",
       "previousDay": "Sessie van gisteren",
       "previousDayCta": "Afsluiten",
+      "paused": "Kassa gepauzeerd",
       "durationJustOpened": "zojuist",
       "durationMins": "sinds {mins} min",
       "durationHours": "sinds {hours} u {mins} min",
@@ -334,7 +335,10 @@
       "expectedCash": "Verwacht contant",
       "previousDayTitle": "Sessie van de vorige dag nog open",
       "previousDayDescription": "Sluit ze af om vandaag duidelijk te starten. Verkopen blijven in deze sessie tot ze gesloten is.",
-      "closeSession": "Sessie afsluiten"
+      "closeSession": "Sessie afsluiten",
+      "pausedTitle": "Kassa gepauzeerd",
+      "pausedDescription": "Verkoop is geblokkeerd. Hervat de sessie om af te rekenen.",
+      "resumeSession": "Hervatten"
     }
   },
   "appointments": {
@@ -389,8 +393,9 @@
       "confirmStatus": "OK"
     },
     "import": {
-      "title": "Bookly-afspraken importeren",
+      "title": "Bookly-afspraken importeren / synchroniseren",
       "doneTitle": "Import voltooid",
+      "csvTitle": "Handmatige import (CSV / JSON)",
       "intro": "Importeer de CSV (of JSON) uit WordPress → Extra → Export Bookly. Behandelingen moeten al geïmporteerd zijn. Klanten worden aangemaakt of gekoppeld via telefoon / e-mail. Opnieuw importeren werkt bij via het Bookly-ID.",
       "hint": "Bestand bookly-appointments.csv (scheidingsteken ;) of volledige JSON-export.",
       "chooseFile": "Bestand kiezen",
@@ -421,6 +426,21 @@
         "invalidFile": "Ongeldig bestand. Gebruik de BeautyHub-export (CSV afspraken of JSON).",
         "emptyFile": "Dit bestand bevat geen afspraken.",
         "importFailed": "Het importeren van afspraken is mislukt."
+      },
+      "sync": {
+        "intro": "Tijdens de overstap blijft Bookly de bron: elke afspraak die in WordPress wordt aangemaakt, gewijzigd of geannuleerd gaat naar BeautyHub (direct, daarna elke 5 minuten bijgewerkt).",
+        "enable": "Continue synchronisatie inschakelen",
+        "enabling": "Bezig…",
+        "enabled": "Synchronisatie actief",
+        "disable": "Synchronisatie stoppen",
+        "urlLabel": "URL om in WordPress te plakken",
+        "copy": "Kopiëren",
+        "copied": "Gekopieerd",
+        "pasteHint": "In WordPress → Extra → Export Bookly plakt u deze URL en slaat u op. De synchronisatie start vanzelf.",
+        "lastSync": "Laatste synchronisatie",
+        "waitingFirst": "Wachten op de eerste verzending vanuit WordPress.",
+        "loading": "Synchronisatie laden…",
+        "failed": "Synchronisatie kon niet worden ingesteld."
       }
     },
     "calendar": {
@@ -601,6 +621,9 @@
       "paymentMethodDisabled": "Betaalmethode uitgeschakeld: {method}",
       "sessionAlreadyOpen": "Er is al een sessie geopend.",
       "sessionOpened": "Kassasessie geopend.",
+      "sessionPaused": "De kassa staat in pauze — hervat de sessie om af te rekenen.",
+      "sessionPausedOk": "Sessie gepauzeerd.",
+      "sessionResumed": "Sessie hervat.",
       "noOpenSession": "Geen open sessie — open eerst de kassa.",
       "reasonRequired": "Reden verplicht.",
       "invalidMovementType": "Ongeldig bewegingstype.",
@@ -3135,6 +3158,10 @@
       "openTitle": "Dag starten",
       "openDescription": "Open de sessie. Het kassafonds is optioneel.",
       "sessionOpen": "Kassa open",
+      "sessionPaused": "Kassa gepauzeerd",
+      "pause": "Pauzeren",
+      "resume": "Hervatten",
+      "pauseHint": "Verkoop en kasbewegingen zijn geblokkeerd zolang de sessie gepauzeerd is.",
       "previousDayBadge": "Sessie van gisteren",
       "previousDayTitle": "Deze sessie is een vorige dag geopend",
       "previousDayBody": "Sluit ze af (Z-rapport) om vandaag duidelijk te starten. Totalen blijven die van de open sessie.",

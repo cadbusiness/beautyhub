@@ -124,6 +124,7 @@
       "closedCta": "Ouvrir",
       "previousDay": "Session d'hier",
       "previousDayCta": "Clôturer",
+      "paused": "Caisse en pause",
       "durationJustOpened": "à l'instant",
       "durationMins": "depuis {mins} min",
       "durationHours": "depuis {hours} h {mins} min",
@@ -384,7 +385,10 @@
       "expectedCash": "Espèces attendues",
       "previousDayTitle": "Session du jour précédent encore ouverte",
       "previousDayDescription": "Clôturez-la pour démarrer nettement aujourd'hui. Les ventes restent dans cette session tant qu'elle n'est pas fermée.",
-      "closeSession": "Clôturer la session"
+      "closeSession": "Clôturer la session",
+      "pausedTitle": "Caisse en pause",
+      "pausedDescription": "Les ventes sont bloquées. Reprenez la session pour encaisser.",
+      "resumeSession": "Reprendre"
     }
   },
   "appointments": {
@@ -439,8 +443,9 @@
       "confirmStatus": "OK"
     },
     "import": {
-      "title": "Importer les rendez-vous Bookly",
+      "title": "Importer / synchroniser Bookly",
       "doneTitle": "Import terminé",
+      "csvTitle": "Import manuel (CSV / JSON)",
       "intro": "Importez le CSV (ou JSON) exporté depuis WordPress → Outils → Export Bookly. Les prestations doivent déjà avoir été importées. Les clients sont créés ou rattachés par téléphone / e-mail. Réimporter met à jour via l’ID Bookly.",
       "hint": "Fichier bookly-appointments.csv (séparateur ;) ou export JSON complet.",
       "chooseFile": "Choisir le fichier",
@@ -471,6 +476,21 @@
         "invalidFile": "Fichier invalide. Utilisez l’export BeautyHub (CSV rendez-vous ou JSON).",
         "emptyFile": "Aucun rendez-vous dans ce fichier.",
         "importFailed": "L’import des rendez-vous a échoué."
+      },
+      "sync": {
+        "intro": "Pendant la transition, Bookly reste la source de vérité : chaque rendez-vous créé, modifié ou annulé sur WordPress est envoyé vers BeautyHub (immédiatement, puis rattrapé toutes les 5 minutes).",
+        "enable": "Activer la synchro continue",
+        "enabling": "Activation…",
+        "enabled": "Synchro active",
+        "disable": "Arrêter la synchro",
+        "urlLabel": "URL à coller dans WordPress",
+        "copy": "Copier",
+        "copied": "Copié",
+        "pasteHint": "Dans WordPress → Outils → Export Bookly, collez cette URL puis enregistrez. La synchro démarre toute seule.",
+        "lastSync": "Dernière synchro",
+        "waitingFirst": "En attente du premier envoi depuis WordPress.",
+        "loading": "Chargement de la synchro…",
+        "failed": "Impossible de configurer la synchro."
       }
     },
     "calendar": {
@@ -653,6 +673,9 @@
       "paymentMethodDisabled": "Moyen de paiement désactivé : {method}",
       "sessionAlreadyOpen": "Une session est déjà ouverte.",
       "sessionOpened": "Session de caisse ouverte.",
+      "sessionPaused": "La caisse est en pause — reprenez la session pour encaisser.",
+      "sessionPausedOk": "Session mise en pause.",
+      "sessionResumed": "Session reprise.",
       "noOpenSession": "Aucune session ouverte — ouvrez la caisse d'abord.",
       "reasonRequired": "Motif requis.",
       "invalidMovementType": "Type de mouvement invalide.",
@@ -3317,6 +3340,10 @@
       "openTitle": "Démarrer la journée",
       "openDescription": "Ouvrez la session. Le fond de caisse est facultatif.",
       "sessionOpen": "Caisse ouverte",
+      "sessionPaused": "Caisse en pause",
+      "pause": "Mettre en pause",
+      "resume": "Reprendre",
+      "pauseHint": "Les ventes et mouvements espèces sont bloqués tant que la session est en pause.",
       "previousDayBadge": "Session d'hier",
       "previousDayTitle": "Cette session a été ouverte un jour précédent",
       "previousDayBody": "Clôturez-la (rapport Z) pour démarrer nettement aujourd'hui. Les totaux restent ceux de la session ouverte.",

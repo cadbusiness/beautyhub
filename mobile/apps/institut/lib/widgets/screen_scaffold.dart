@@ -42,6 +42,7 @@ class InstitutTopBar extends StatelessWidget implements PreferredSizeWidget {
       child: SafeArea(
         bottom: false,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               height: _height,
@@ -94,7 +95,11 @@ class InstitutTopBar extends StatelessWidget implements PreferredSizeWidget {
                 ],
               ),
             ),
-            if (bottom != null) bottom!,
+            if (bottom != null)
+              SizedBox(
+                height: bottom!.preferredSize.height,
+                child: bottom,
+              ),
           ],
         ),
       ),
@@ -120,58 +125,78 @@ class InstitutSearchBar extends StatelessWidget implements PreferredSizeWidget {
   static const _black = Color(0xFF0A0A0A);
   static const _border = Color(0xFFE8E8E8);
 
+  static const double _height = 56;
+
   @override
-  Size get preferredSize => const Size.fromHeight(54);
+  Size get preferredSize => const Size.fromHeight(_height);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: _border)),
-      ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: _muted, fontSize: 14),
-          prefixIcon: const Icon(
-            Icons.search_rounded,
-            size: 20,
-            color: _muted,
-          ),
-          suffixIcon: controller.text.isNotEmpty
-              ? IconButton(
-                  onPressed: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                  icon: const Icon(Icons.close_rounded, size: 18),
+    return SizedBox(
+      height: _height,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(bottom: BorderSide(color: _border)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: SizedBox(
+            height: 40,
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              textInputAction: TextInputAction.search,
+              style: const TextStyle(fontSize: 14, height: 1.2, color: _black),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(color: _muted, fontSize: 14),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  size: 20,
                   color: _muted,
-                  splashRadius: 18,
-                )
-              : null,
-          filled: true,
-          fillColor: _fill,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: _black, width: 1.2),
+                ),
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 36,
+                  minHeight: 36,
+                ),
+                suffixIcon: controller.text.isNotEmpty
+                    ? IconButton(
+                        onPressed: () {
+                          controller.clear();
+                          onChanged('');
+                        },
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                        color: _muted,
+                        splashRadius: 16,
+                        visualDensity: VisualDensity.compact,
+                      )
+                    : null,
+                suffixIconConstraints: const BoxConstraints(
+                  minWidth: 36,
+                  minHeight: 36,
+                ),
+                filled: true,
+                fillColor: _fill,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: _black, width: 1.2),
+                ),
+              ),
+            ),
           ),
         ),
       ),

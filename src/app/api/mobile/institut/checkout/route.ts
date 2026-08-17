@@ -22,7 +22,8 @@ const bodySchema = z.object({
   cartDiscountCents: z.number().int().min(0).optional(),
   discountReason: z.string().max(80).optional(),
   loyaltyRewardId: z.string().uuid().nullable().optional(),
-  payments: z.array(paymentSchema).min(1),
+  loyaltyCreditCents: z.number().int().min(0).optional(),
+  payments: z.array(paymentSchema).min(0),
 });
 
 export async function POST(request: Request) {
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
       cartDiscountCents,
       discountReason,
       loyaltyRewardId,
+      loyaltyCreditCents,
       payments,
     } = parsed.data;
     const cartEntries = Object.entries(cart).filter(([, qty]) => qty > 0);
@@ -73,6 +75,7 @@ export async function POST(request: Request) {
         cartDiscountCents: cartDiscountCents ?? 0,
         discountReason: discountReason ?? null,
         loyaltyRewardId: loyaltyRewardId ?? null,
+        loyaltyCreditCents: loyaltyCreditCents ?? 0,
         payments: salePayments,
       },
     );

@@ -8,6 +8,8 @@ export interface PublicLoyaltyView {
   programName: string;
   pointsLabel: string;
   isActive: boolean;
+  creditEnabled: boolean;
+  creditRateBps: number;
   rewards: Array<{
     id: string;
     name: string;
@@ -30,7 +32,7 @@ export async function loadPublicLoyaltyView(
 ): Promise<PublicLoyaltyView | null> {
   const { data: program } = await supabase
     .from("inst_loyalty_programs")
-    .select("id, name, points_label, is_active, portal_visible")
+    .select("id, name, points_label, is_active, portal_visible, credit_enabled, credit_rate_bps")
     .eq("tenant_id", tenantId)
     .eq("is_active", true)
     .order("updated_at", { ascending: false })
@@ -52,6 +54,8 @@ export async function loadPublicLoyaltyView(
     programName: program.name,
     pointsLabel: program.points_label,
     isActive: program.is_active,
+    creditEnabled: program.credit_enabled ?? false,
+    creditRateBps: program.credit_rate_bps ?? 0,
     rewards: (rewards ?? []).map((r) => ({
       id: r.id,
       name: r.name,

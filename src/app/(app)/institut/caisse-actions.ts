@@ -373,6 +373,10 @@ export async function checkoutPos(
         String(formData.get("cart_discount") ?? "0"),
       ),
       loyaltyRewardId: String(formData.get("loyalty_reward_id") ?? "") || null,
+      loyaltyCreditCents: Math.max(
+        0,
+        Math.round(Number(formData.get("loyalty_credit_cents") ?? 0)),
+      ),
       promoCode: String(formData.get("promo_code") ?? "") || null,
       priceOverrides,
       payments,
@@ -407,6 +411,7 @@ export async function processPosCheckout(
     cartDiscountCents?: number;
     totalCents?: number;
     loyaltyRewardId?: string | null;
+    loyaltyCreditCents?: number | null;
     promoCode?: string | null;
     priceOverrides?: Record<string, number> | null;
   },
@@ -441,6 +446,7 @@ export async function processPosCheckout(
       cartDiscountCents: options?.cartDiscountCents ?? 0,
       stripePaymentIntentId: options?.stripePaymentIntentId,
       loyaltyRewardId: options?.loyaltyRewardId ?? null,
+      loyaltyCreditCents: options?.loyaltyCreditCents ?? null,
       promoCode: options?.promoCode ?? null,
       priceOverrides: options?.priceOverrides ?? null,
       payments: [

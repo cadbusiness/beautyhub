@@ -27,7 +27,11 @@ export default async function FidelitePublicPage() {
       <header className="text-center">
         <p className="text-sm text-slate-500">{tenant.name}</p>
         <h1 className="mt-1 text-2xl font-semibold text-slate-900">{view.programName}</h1>
-        <p className="mt-2 text-sm text-slate-600">{t("intro")}</p>
+        <p className="mt-2 text-sm text-slate-600">
+          {view.creditEnabled
+            ? t("creditIntro", { rate: (view.creditRateBps / 100).toString() })
+            : t("intro")}
+        </p>
       </header>
 
       {view.rewards.length > 0 ? (

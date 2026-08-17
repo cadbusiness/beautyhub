@@ -19,6 +19,8 @@ const patchSchema = z.object({
   portalVisible: z.boolean().optional(),
   referralPoints: z.number().int().min(0).optional(),
   sameDayRebookPoints: z.number().int().min(0).optional(),
+  creditEnabled: z.boolean().optional(),
+  creditRateBps: z.number().int().min(0).max(10000).optional(),
 });
 
 const duplicateSchema = z.object({
@@ -54,6 +56,8 @@ export async function PATCH(
         portalVisible: data.portalVisible ?? true,
         referralPoints: data.referralPoints ?? 0,
         sameDayRebookPoints: data.sameDayRebookPoints ?? 0,
+        creditEnabled: data.creditEnabled ?? false,
+        creditRateBps: data.creditRateBps ?? 0,
       });
     } else if (data.isActive != null) {
       await setLoyaltyProgramActiveRecord(

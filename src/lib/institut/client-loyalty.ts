@@ -25,6 +25,8 @@ export type ClientLoyaltyCard = {
   lifetimeRedeemed: number;
   nextReward: ClientLoyaltyNextReward | null;
   valueCents: number;
+  creditEnabled: boolean;
+  creditRateBps: number;
   programs: LoyaltyProgramListItem[];
 };
 
@@ -83,6 +85,8 @@ export async function loadClientLoyaltyCard(
       lifetimeRedeemed: 0,
       nextReward: null,
       valueCents: 0,
+      creditEnabled: false,
+      creditRateBps: 0,
       programs,
     };
   }
@@ -123,7 +127,11 @@ export async function loadClientLoyaltyCard(
           missing: Math.max(0, next.points_cost - balance),
         }
       : null,
-    valueCents: estimateLoyaltyValueCents(balance, rewards),
+    creditEnabled: program.credit_enabled,
+    creditRateBps: program.credit_rate_bps,
+    valueCents: program.credit_enabled
+      ? balance
+      : estimateLoyaltyValueCents(balance, rewards),
     programs,
   };
 }

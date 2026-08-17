@@ -832,6 +832,10 @@
           "birthdayBonus": "Bonus anniversaire (points)",
           "birthdayBonusHint": "Points offerts le jour d'anniversaire si l'envoi automatique est activé.",
           "birthdayAuto": "Envoi automatique du bonus anniversaire",
+          "creditEnabled": "Bon en euros",
+          "creditEnabledHint": "La cliente cumule un avoir (ex. 17,50 € pour 500 €) et l’utilise en caisse, en tout ou partie.",
+          "creditRate": "Taux du bon (%)",
+          "creditRateHint": "3,5 % = 17,50 € de fidélité pour 500 € d’achat.",
           "portalVisible": "Visible sur le portail cliente (/client/compte)",
           "active": "Programme actif",
           "activate": "Activer",
@@ -1497,7 +1501,10 @@
           "save": "Enregistrer",
           "saved": "Groupe de fidélité mis à jour.",
           "programNotFound": "Programme introuvable.",
-          "noProgramsHint": "Aucun programme. Créez-en un dans Réglages → Fidélité."
+          "noProgramsHint": "Aucun programme. Créez-en un dans Réglages → Fidélité.",
+          "creditBalance": "Bon fidélité",
+          "usable": "Utilisation",
+          "creditProgress": "Utilisable en caisse, en tout ou partie."
         }
       }
     },
@@ -2592,6 +2599,7 @@
       "unavailableTitle": "Programme fidélité indisponible",
       "unavailableBody": "Ce programme n'est pas actif pour le moment.",
       "intro": "Gagnez des points à chaque visite et échangez-les contre des avantages.",
+      "creditIntro": "{rate} % de vos achats sont remis en bon, utilisable en tout ou partie à l’accueil.",
       "rewardsTitle": "Récompenses",
       "pointsCost": "{cost} {label}",
       "loginCta": "Voir mon solde",
@@ -2771,6 +2779,8 @@
         },
         "loyalty": {
           "subtitle": "Votre carte fidélité",
+          "creditSubtitle": "Votre bon fidélité",
+          "creditHint": "Utilisable en caisse, en tout ou partie.",
           "newServiceOnly": "nouvelle prestation",
           "noRewards": "Aucune récompense disponible pour le moment.",
           "redeemSoon": "L'échange en ligne arrive bientôt — demandez à l'accueil en attendant."
@@ -3110,7 +3120,10 @@
       "noRewards": "Aucune récompense disponible pour ce client.",
       "none": "Ne pas utiliser de points",
       "cost": "{count} {label}",
-      "value": "jusqu'à −{amount}"
+      "value": "jusqu'à −{amount}",
+      "creditBalance": "Bon : {amount}",
+      "creditHint": "Elle peut cumuler ou débiter tout ou partie à l’encaissement.",
+      "useAll": "Tout utiliser"
     },
     "stripe": {
       "paymentFailed": "Paiement échoué.",

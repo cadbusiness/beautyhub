@@ -49,6 +49,8 @@ export function serializeLoyaltyCard(card: ClientLoyaltyCard) {
     lifetimeRedeemed: card.lifetimeRedeemed,
     nextReward: card.nextReward,
     valueCents: card.valueCents,
+    creditEnabled: card.creditEnabled,
+    creditRateBps: card.creditRateBps,
     programs: card.programs.map(serializeProgramListItem),
   };
 }
@@ -73,6 +75,8 @@ export function serializeLoyaltyProgram(program: LoyaltyProgram) {
     referralPoints: program.referral_points,
     sameDayRebookPoints: program.same_day_rebook_points,
     birthdayAutoEnabled: program.birthday_auto_enabled,
+    creditEnabled: program.credit_enabled,
+    creditRateBps: program.credit_rate_bps,
   };
 }
 

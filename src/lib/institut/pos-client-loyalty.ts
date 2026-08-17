@@ -24,6 +24,8 @@ export type PosClientLoyaltySnapshot = {
   points_label: string;
   balance: number;
   value_cents: number;
+  credit_enabled: boolean;
+  credit_rate_bps: number;
   rewards: PosLoyaltyRewardOption[];
 };
 
@@ -88,7 +90,11 @@ export async function loadPosClientLoyalty(
     program_name: program.name,
     points_label: program.points_label || "points",
     balance,
-    value_cents: estimateLoyaltyValueCents(balance, rewardOptions),
+    value_cents: program.credit_enabled
+      ? balance
+      : estimateLoyaltyValueCents(balance, rewardOptions),
+    credit_enabled: program.credit_enabled,
+    credit_rate_bps: program.credit_rate_bps,
     rewards: rewardOptions,
   };
 }

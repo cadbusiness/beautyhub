@@ -26,6 +26,7 @@ interface CheckoutPanelProps {
   discountReason?: string;
   cartDiscountEuros: string;
   loyaltyRewardId?: string;
+  loyaltyCreditCents?: number;
   promoCode?: string;
   priceOverridesJson?: string;
   totals: {
@@ -69,6 +70,7 @@ export function CheckoutPanel({
   discountReason = "",
   cartDiscountEuros,
   loyaltyRewardId = "",
+  loyaltyCreditCents = 0,
   promoCode = "",
   priceOverridesJson = "",
   totals,
@@ -119,11 +121,12 @@ export function CheckoutPanel({
   const remainingCents = totals.total_cents - paymentsTotalCents;
   const isPartial = paymentsTotalCents > 0 && paymentsTotalCents < totals.total_cents;
   const isOverpaid = paymentsTotalCents > totals.total_cents;
+  const coveredByLoyalty = totals.total_cents === 0 && loyaltyCreditCents > 0;
   const canSubmit =
     !disabled &&
-    paymentsTotalCents > 0 &&
     !isOverpaid &&
-    payments.every((p) => p.method && p.amountEuros);
+    (coveredByLoyalty ||
+      (paymentsTotalCents > 0 && payments.every((p) => p.method && p.amountEuros)));
 
   const paymentsJson = JSON.stringify(
     payments
@@ -303,6 +306,7 @@ export function CheckoutPanel({
         <input type="hidden" name="discount_reason" value={discountReason} />
         <input type="hidden" name="cart_discount" value={cartDiscountEuros} />
         <input type="hidden" name="loyalty_reward_id" value={loyaltyRewardId} />
+        <input type="hidden" name="loyalty_credit_cents" value={String(loyaltyCreditCents)} />
         <input type="hidden" name="promo_code" value={promoCode} />
         <input type="hidden" name="price_overrides" value={priceOverridesJson} />
         <input type="hidden" name="payments" value={paymentsJson} />
@@ -333,6 +337,7 @@ export function CheckoutPanel({
           totalCents={totals.total_cents}
           cartDiscountEuros={cartDiscountEuros}
           loyaltyRewardId={loyaltyRewardId}
+          loyaltyCreditCents={loyaltyCreditCents}
           promoCode={promoCode}
           priceOverridesJson={priceOverridesJson}
           publishableKey={stripePublishableKey}

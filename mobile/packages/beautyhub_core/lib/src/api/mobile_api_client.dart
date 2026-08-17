@@ -698,6 +698,7 @@ class MobileApiClient {
     int? cartDiscountCents,
     String? discountReason,
     String? loyaltyRewardId,
+    int? loyaltyCreditCents,
   }) async {
     final response = await _http.post(
       _uri('/api/mobile/institut/checkout'),
@@ -714,6 +715,8 @@ class MobileApiClient {
           'discountReason': discountReason,
         if (loyaltyRewardId != null && loyaltyRewardId.isNotEmpty)
           'loyaltyRewardId': loyaltyRewardId,
+        if (loyaltyCreditCents != null && loyaltyCreditCents > 0)
+          'loyaltyCreditCents': loyaltyCreditCents,
       }),
     );
     final body = await _decode(response);
@@ -909,6 +912,8 @@ class MobileApiClient {
     required bool portalVisible,
     required int referralPoints,
     required int sameDayRebookPoints,
+    bool creditEnabled = false,
+    int creditRateBps = 0,
   }) async {
     final response = await _http.patch(
       _uri('/api/mobile/institut/loyalty/programs/$programId'),
@@ -922,6 +927,8 @@ class MobileApiClient {
         'portalVisible': portalVisible,
         'referralPoints': referralPoints,
         'sameDayRebookPoints': sameDayRebookPoints,
+        'creditEnabled': creditEnabled,
+        'creditRateBps': creditRateBps,
       }),
     );
     await _decode(response);

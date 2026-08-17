@@ -26,6 +26,8 @@ export interface LoyaltyProgram {
   referral_points: number;
   same_day_rebook_points: number;
   birthday_auto_enabled: boolean;
+  credit_enabled: boolean;
+  credit_rate_bps: number;
 }
 
 export interface LoyaltyProgramListItem {
@@ -94,7 +96,15 @@ function normalizeLoyaltyProgram(row: LoyaltyProgramRow): LoyaltyProgram {
     referral_points: row.referral_points ?? 0,
     same_day_rebook_points: row.same_day_rebook_points ?? 0,
     birthday_auto_enabled: row.birthday_auto_enabled ?? false,
+    credit_enabled: row.credit_enabled ?? false,
+    credit_rate_bps: row.credit_rate_bps ?? 0,
   };
+}
+
+/** 350 bps = 3,5 % → 17,50 € pour 500 €. 1 point = 1 centime. */
+export function creditCentsForSpend(amountCents: number, rateBps: number): number {
+  if (amountCents <= 0 || rateBps <= 0) return 0;
+  return Math.floor((amountCents * rateBps) / 10_000);
 }
 
 export function calcPointsForRule(
@@ -310,6 +320,33 @@ async function applyEarnRules(
   }
 }
 
+async function applyCreditEarn(
+  supabase: Db,
+  tenantId: string,
+  program: LoyaltyProgram,
+  input: {
+    clientId: string;
+    sourceType: LoyaltySourceType;
+    sourceId: string;
+    amountCents: number;
+    idempotencyPrefix: string;
+  },
+): Promise<void> {
+  if (!program.credit_enabled) return;
+  const cents = creditCentsForSpend(input.amountCents, program.credit_rate_bps);
+  if (cents <= 0) return;
+  await supabase.rpc("inst_loyalty_credit_bonus", {
+    p_tenant_id: tenantId,
+    p_client_id: input.clientId,
+    p_program_id: program.id,
+    p_points: cents,
+    p_source_type: input.sourceType,
+    p_source_id: input.sourceId,
+    p_idempotency_key: `${input.idempotencyPrefix}:credit`,
+    p_notes: "Bon fidélité",
+  });
+}
+
 export async function processLoyaltyForCompletedAppointment(
   supabase: Db,
   tenantId: string,
@@ -342,11 +379,18 @@ export async function processLoyaltyForCompletedAppointment(
     .eq("is_active", true)
     .eq("source_type", "appointment_completed");
 
-  await applyEarnRules(supabase, tenantId, normalizedProgram, (rules ?? []) as LoyaltyEarnRule[], {
+  const apptEarn = {
     clientId: appt.client_id,
-    sourceType: "appointment_completed",
+    sourceType: "appointment_completed" as const,
     sourceId: appt.id,
     amountCents: appt.price_cents ?? 0,
+  };
+  await applyCreditEarn(supabase, tenantId, normalizedProgram, {
+    ...apptEarn,
+    idempotencyPrefix: `earn:appointment:${appt.id}`,
+  });
+  await applyEarnRules(supabase, tenantId, normalizedProgram, (rules ?? []) as LoyaltyEarnRule[], {
+    ...apptEarn,
     idempotencyPrefix: `earn:appointment:${appt.id}`,
     notes: "RDV terminé",
   });
@@ -385,11 +429,18 @@ export async function processLoyaltyForPaidSale(
     .eq("is_active", true)
     .eq("source_type", sourceType);
 
-  await applyEarnRules(supabase, tenantId, normalizedProgram, (rules ?? []) as LoyaltyEarnRule[], {
+  const saleEarn = {
     clientId: sale.client_id,
     sourceType,
     sourceId: sale.id,
     amountCents: sale.total_cents ?? 0,
+  };
+  await applyCreditEarn(supabase, tenantId, normalizedProgram, {
+    ...saleEarn,
+    idempotencyPrefix: `earn:sale:${sale.id}`,
+  });
+  await applyEarnRules(supabase, tenantId, normalizedProgram, (rules ?? []) as LoyaltyEarnRule[], {
+    ...saleEarn,
     idempotencyPrefix: `earn:sale:${sale.id}`,
     notes: sourceType === "woocommerce_order" ? "Commande WooCommerce" : "Vente caisse",
   });

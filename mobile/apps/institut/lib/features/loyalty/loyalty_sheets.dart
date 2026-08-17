@@ -289,6 +289,10 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
   late bool _active = widget.program.isActive;
   late bool _birthdayAuto = widget.program.birthdayAutoEnabled;
   late bool _portal = widget.program.portalVisible;
+  late bool _credit = widget.program.creditEnabled;
+  late final _creditRate = TextEditingController(
+    text: (widget.program.creditRateBps / 100).toString(),
+  );
   bool _saving = false;
   String? _error;
 
@@ -299,6 +303,7 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
     _birthday.dispose();
     _referral.dispose();
     _rebook.dispose();
+    _creditRate.dispose();
     super.dispose();
   }
 
@@ -329,6 +334,14 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
             portalVisible: _portal,
             referralPoints: int.tryParse(_referral.text.trim()) ?? 0,
             sameDayRebookPoints: int.tryParse(_rebook.text.trim()) ?? 0,
+            creditEnabled: _credit,
+            creditRateBps: (() {
+              final n = double.tryParse(
+                    _creditRate.text.trim().replaceAll(',', '.'),
+                  ) ??
+                  0;
+              return (n * 100).round();
+            })(),
           );
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -406,6 +419,25 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
               value: _active,
               onChanged: (v) => setState(() => _active = v),
             ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Bon en euros'),
+              subtitle: const Text(
+                '17,50 € pour 500 € = 3,5 %. Utilisable en tout ou partie.',
+              ),
+              value: _credit,
+              onChanged: (v) => setState(() => _credit = v),
+            ),
+            if (_credit) ...[
+              const _FieldLabel('Taux du bon (%)'),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _creditRate,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: _fieldDecoration(hint: '3,5'),
+              ),
+            ],
             const _FieldLabel('Points parrainage'),
             const SizedBox(height: 6),
             TextField(

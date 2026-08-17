@@ -1233,6 +1233,8 @@ export type Database = {
           birthday_auto_enabled: boolean
           birthday_bonus_points: number
           created_at: string
+          credit_enabled: boolean
+          credit_rate_bps: number
           id: string
           is_active: boolean
           name: string
@@ -1247,6 +1249,8 @@ export type Database = {
           birthday_auto_enabled?: boolean
           birthday_bonus_points?: number
           created_at?: string
+          credit_enabled?: boolean
+          credit_rate_bps?: number
           id?: string
           is_active?: boolean
           name?: string
@@ -1261,6 +1265,8 @@ export type Database = {
           birthday_auto_enabled?: boolean
           birthday_bonus_points?: number
           created_at?: string
+          credit_enabled?: boolean
+          credit_rate_bps?: number
           id?: string
           is_active?: boolean
           name?: string
@@ -1290,7 +1296,7 @@ export type Database = {
           id: string
           points_spent: number
           program_id: string
-          reward_id: string
+          reward_id: string | null
           sale_id: string | null
           status: string
           tenant_id: string
@@ -1303,7 +1309,7 @@ export type Database = {
           id?: string
           points_spent: number
           program_id: string
-          reward_id: string
+          reward_id?: string | null
           sale_id?: string | null
           status?: string
           tenant_id: string
@@ -1316,7 +1322,7 @@ export type Database = {
           id?: string
           points_spent?: number
           program_id?: string
-          reward_id?: string
+          reward_id?: string | null
           sale_id?: string | null
           status?: string
           tenant_id?: string
@@ -3966,7 +3972,7 @@ export type Database = {
           p_notes?: string
           p_points: number
           p_program_id: string
-          p_reward_id: string
+          p_reward_id: string | null
           p_sale_id: string
           p_tenant_id: string
         }

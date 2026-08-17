@@ -26,6 +26,8 @@ export type LoyaltyProgramSettingsInput = {
   portalVisible: boolean;
   referralPoints: number;
   sameDayRebookPoints: number;
+  creditEnabled: boolean;
+  creditRateBps: number;
 };
 
 export type LoyaltyEarnRuleInput = {
@@ -96,6 +98,11 @@ export async function saveLoyaltyProgramSettingsRecord(
       portal_visible: input.portalVisible,
       referral_points: Math.max(0, Math.round(input.referralPoints)),
       same_day_rebook_points: Math.max(0, Math.round(input.sameDayRebookPoints)),
+      credit_enabled: input.creditEnabled,
+      credit_rate_bps: Math.max(
+        0,
+        Math.min(10_000, Math.round(Number.isFinite(input.creditRateBps) ? input.creditRateBps : 0)),
+      ),
     })
     .eq("id", program.id)
     .eq("tenant_id", tenantId);
@@ -354,7 +361,7 @@ export async function duplicateLoyaltyProgramRecord(
   const { data: sourceProgram } = await supabase
     .from("inst_loyalty_programs")
     .select(
-      "id, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled",
+      "id, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled, credit_enabled, credit_rate_bps",
     )
     .eq("tenant_id", tenantId)
     .eq("id", sourceProgramId)
@@ -373,6 +380,8 @@ export async function duplicateLoyaltyProgramRecord(
       referral_points: sourceProgram.referral_points,
       same_day_rebook_points: sourceProgram.same_day_rebook_points,
       birthday_auto_enabled: sourceProgram.birthday_auto_enabled,
+      credit_enabled: sourceProgram.credit_enabled,
+      credit_rate_bps: sourceProgram.credit_rate_bps,
     })
     .select("id")
     .single();

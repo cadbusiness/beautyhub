@@ -54,29 +54,39 @@ export function ClientLoyaltyPanel({
           </dd>
         </div>
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-2.5">
-          <dt className="shrink-0 text-sm text-slate-500">{t("balance")}</dt>
+          <dt className="shrink-0 text-sm text-slate-500">
+            {card.creditEnabled ? t("creditBalance") : t("balance")}
+          </dt>
           <dd className="text-right text-sm font-medium tabular-nums text-slate-900">
-            {t("points", { count: card.balance, label: card.pointsLabel })}
+            {card.creditEnabled
+              ? formatPrice(card.balance)
+              : t("points", { count: card.balance, label: card.pointsLabel })}
           </dd>
         </div>
-        <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-2.5">
-          <dt className="shrink-0 text-sm text-slate-500">{t("value")}</dt>
-          <dd className="text-right text-sm tabular-nums text-slate-900">
-            {card.valueCents > 0 ? formatPrice(card.valueCents) : tCommon("dash")}
-          </dd>
-        </div>
+        {!card.creditEnabled ? (
+          <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-2.5">
+            <dt className="shrink-0 text-sm text-slate-500">{t("value")}</dt>
+            <dd className="text-right text-sm tabular-nums text-slate-900">
+              {card.valueCents > 0 ? formatPrice(card.valueCents) : tCommon("dash")}
+            </dd>
+          </div>
+        ) : null}
         <div className="flex items-start justify-between gap-4 py-2.5">
-          <dt className="shrink-0 text-sm text-slate-500">{t("progress")}</dt>
+          <dt className="shrink-0 text-sm text-slate-500">
+            {card.creditEnabled ? t("usable") : t("progress")}
+          </dt>
           <dd className="text-right text-sm text-slate-900">
-            {card.nextReward
-              ? t("nextReward", {
-                  name: card.nextReward.name,
-                  missing: card.nextReward.missing,
-                  label: card.pointsLabel,
-                })
-              : card.balance > 0
-                ? t("rewardReady")
-                : t("noProgress")}
+            {card.creditEnabled
+              ? t("creditProgress")
+              : card.nextReward
+                ? t("nextReward", {
+                    name: card.nextReward.name,
+                    missing: card.nextReward.missing,
+                    label: card.pointsLabel,
+                  })
+                : card.balance > 0
+                  ? t("rewardReady")
+                  : t("noProgress")}
           </dd>
         </div>
       </dl>

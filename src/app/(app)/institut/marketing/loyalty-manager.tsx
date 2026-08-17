@@ -615,6 +615,30 @@ export function LoyaltyManager({
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input
                 type="checkbox"
+                name="credit_enabled"
+                value="1"
+                defaultChecked={program.credit_enabled ?? false}
+                className="rounded border-slate-300"
+              />
+              {t("program.creditEnabled")}
+            </label>
+            <p className="text-xs text-slate-500">{t("program.creditEnabledHint")}</p>
+            <Field label={t("program.creditRate")} htmlFor="loyalty_credit_rate">
+              <Input
+                id="loyalty_credit_rate"
+                name="credit_rate_percent"
+                type="number"
+                min={0}
+                max={100}
+                step="0.1"
+                defaultValue={((program.credit_rate_bps ?? 0) / 100).toString()}
+              />
+            </Field>
+            <p className="text-xs text-slate-500">{t("program.creditRateHint")}</p>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
                 name="portal_visible"
                 value="1"
                 defaultChecked={program.portal_visible ?? true}

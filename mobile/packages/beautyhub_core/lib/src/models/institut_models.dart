@@ -666,6 +666,8 @@ class InstClientLoyaltyCard {
     this.programId,
     this.programName,
     this.nextReward,
+    this.creditEnabled = false,
+    this.creditRateBps = 0,
   });
 
   final String? assignedProgramId;
@@ -677,6 +679,8 @@ class InstClientLoyaltyCard {
   final int lifetimeRedeemed;
   final InstLoyaltyNextReward? nextReward;
   final int valueCents;
+  final bool creditEnabled;
+  final int creditRateBps;
   final List<InstLoyaltyProgramRef> programs;
 
   factory InstClientLoyaltyCard.fromJson(Map<String, dynamic> json) {
@@ -690,6 +694,8 @@ class InstClientLoyaltyCard {
       lifetimeEarned: _asInt(json['lifetimeEarned']),
       lifetimeRedeemed: _asInt(json['lifetimeRedeemed']),
       valueCents: _asInt(json['valueCents']),
+      creditEnabled: json['creditEnabled'] as bool? ?? false,
+      creditRateBps: _asInt(json['creditRateBps']),
       nextReward: next is Map
           ? InstLoyaltyNextReward.fromJson(Map<String, dynamic>.from(next))
           : null,
@@ -1028,6 +1034,8 @@ class InstLoyaltyProgramAdmin {
     required this.referralPoints,
     required this.sameDayRebookPoints,
     required this.birthdayAutoEnabled,
+    this.creditEnabled = false,
+    this.creditRateBps = 0,
   });
 
   final String id;
@@ -1039,6 +1047,8 @@ class InstLoyaltyProgramAdmin {
   final int referralPoints;
   final int sameDayRebookPoints;
   final bool birthdayAutoEnabled;
+  final bool creditEnabled;
+  final int creditRateBps;
 
   factory InstLoyaltyProgramAdmin.fromJson(Map<String, dynamic> json) =>
       InstLoyaltyProgramAdmin(
@@ -1051,6 +1061,8 @@ class InstLoyaltyProgramAdmin {
         referralPoints: _asInt(json['referralPoints']),
         sameDayRebookPoints: _asInt(json['sameDayRebookPoints']),
         birthdayAutoEnabled: json['birthdayAutoEnabled'] as bool? ?? false,
+        creditEnabled: json['creditEnabled'] as bool? ?? false,
+        creditRateBps: _asInt(json['creditRateBps']),
       );
 }
 

@@ -24,6 +24,8 @@ type LoyaltySnapshot = {
   points_label?: string;
   balance: number;
   value_cents?: number;
+  credit_enabled?: boolean;
+  credit_rate_bps?: number;
   rewards: LoyaltyRewardOption[];
 };
 
@@ -31,13 +33,17 @@ export function PosLoyaltyPicker({
   clientId,
   subtotalCents,
   selectedRewardId,
+  selectedCreditCents,
   onRewardChange,
+  onCreditChange,
   currency = "eur",
 }: {
   clientId: string;
   subtotalCents: number;
   selectedRewardId: string;
+  selectedCreditCents: number;
   onRewardChange: (rewardId: string, discountCents: number) => void;
+  onCreditChange: (creditCents: number) => void;
   currency?: string;
 }) {
   const t = useTranslations("pos.loyalty");
@@ -49,6 +55,7 @@ export function PosLoyaltyPicker({
     if (!clientId) {
       setSnapshot(null);
       onRewardChange("", 0);
+      onCreditChange(0);
       return;
     }
 
@@ -65,6 +72,9 @@ export function PosLoyaltyPicker({
         if (selectedRewardId) {
           const reward = data.rewards?.find((r) => r.id === selectedRewardId && r.eligible);
           if (!reward) onRewardChange("", 0);
+        }
+        if (selectedCreditCents > 0 && !data.credit_enabled) {
+          onCreditChange(0);
         }
       })
       .catch(() => {
@@ -109,6 +119,10 @@ export function PosLoyaltyPicker({
   const pointsLabel = snapshot.points_label ?? t("pointsDefault");
   const eligibleRewards = snapshot.rewards.filter((r) => r.eligible);
   const valueCents = snapshot.value_cents ?? 0;
+  const creditEnabled = Boolean(snapshot.credit_enabled);
+  const maxCredit = Math.max(0, Math.min(snapshot.balance, subtotalCents));
+  const creditEuros =
+    selectedCreditCents > 0 ? (selectedCreditCents / 100).toFixed(2) : "";
 
   return (
     <div className="rounded-lg border border-violet-200 bg-violet-50/50 p-3">
@@ -122,10 +136,18 @@ export function PosLoyaltyPicker({
           ) : null}
         </div>
         <div className="text-right">
-          <p className="text-xs tabular-nums text-violet-700">
-            {t("balance", { count: snapshot.balance, label: pointsLabel })}
-          </p>
-          {valueCents > 0 ? (
+          {creditEnabled ? (
+            <p className="text-sm font-semibold tabular-nums text-violet-950">
+              {t("creditBalance", {
+                amount: formatPrice(snapshot.balance, currency, locale),
+              })}
+            </p>
+          ) : (
+            <p className="text-xs tabular-nums text-violet-700">
+              {t("balance", { count: snapshot.balance, label: pointsLabel })}
+            </p>
+          )}
+          {!creditEnabled && valueCents > 0 ? (
             <p className="mt-0.5 text-xs font-medium tabular-nums text-violet-900">
               {t("value", { amount: formatPrice(valueCents, currency, locale) })}
             </p>
@@ -133,9 +155,52 @@ export function PosLoyaltyPicker({
         </div>
       </div>
 
-      {eligibleRewards.length === 0 ? (
+      {creditEnabled ? (
+        <div className="mt-2 space-y-2">
+          <p className="text-xs text-violet-700/80">{t("creditHint")}</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              max={(maxCredit / 100).toFixed(2)}
+              value={creditEuros}
+              onChange={(e) => {
+                const n = Number.parseFloat(e.target.value.replace(",", "."));
+                const cents = Number.isFinite(n) ? Math.round(n * 100) : 0;
+                onRewardChange("", 0);
+                onCreditChange(Math.max(0, Math.min(maxCredit, cents)));
+              }}
+              placeholder="0,00"
+              className="h-8 w-28 rounded-md border border-violet-200 bg-white px-2 text-sm tabular-nums"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                onRewardChange("", 0);
+                onCreditChange(maxCredit);
+              }}
+              disabled={maxCredit <= 0}
+              className="text-xs font-medium text-violet-800 hover:underline disabled:opacity-40"
+            >
+              {t("useAll")}
+            </button>
+            {selectedCreditCents > 0 ? (
+              <button
+                type="button"
+                onClick={() => onCreditChange(0)}
+                className="text-xs text-violet-700 hover:underline"
+              >
+                {t("none")}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {!creditEnabled && eligibleRewards.length === 0 ? (
         <p className="mt-2 text-xs text-violet-700/80">{t("noRewards")}</p>
-      ) : (
+      ) : !creditEnabled ? (
         <ul className="mt-2 space-y-1.5">
           <li>
             <button
@@ -176,7 +241,7 @@ export function PosLoyaltyPicker({
             );
           })}
         </ul>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -137,3 +137,95 @@ export async function redeemLoyaltyAtSale(
 
   return redemptionId as string;
 }
+
+export function capLoyaltyCreditCents(
+  requestedCents: number,
+  balanceCents: number,
+  subtotalCents: number,
+): number {
+  return Math.max(
+    0,
+    Math.min(
+      Math.floor(requestedCents),
+      Math.floor(balanceCents),
+      Math.floor(subtotalCents),
+    ),
+  );
+}
+
+export async function previewLoyaltyCreditCents(
+  supabase: Db,
+  tenantId: string,
+  clientId: string,
+  requestedCents: number,
+  subtotalCents: number,
+): Promise<number> {
+  const program = await resolveLoyaltyProgramForClient(supabase, tenantId, clientId);
+  if (!program?.credit_enabled) throw new LoyaltyRedeemError("credit_disabled");
+
+  const { data: balanceRow } = await supabase
+    .from("inst_loyalty_balances")
+    .select("points_balance")
+    .eq("tenant_id", tenantId)
+    .eq("client_id", clientId)
+    .eq("program_id", program.id)
+    .maybeSingle();
+
+  const applied = capLoyaltyCreditCents(
+    requestedCents,
+    balanceRow?.points_balance ?? 0,
+    subtotalCents,
+  );
+  if (requestedCents > 0 && applied <= 0) {
+    throw new LoyaltyRedeemError("insufficient_points");
+  }
+  return applied;
+}
+
+export async function redeemLoyaltyCreditAtSale(
+  supabase: Db,
+  tenantId: string,
+  clientId: string,
+  requestedCents: number,
+  saleId: string,
+  subtotalCents: number,
+): Promise<string> {
+  const program = await resolveLoyaltyProgramForClient(supabase, tenantId, clientId);
+  if (!program?.credit_enabled) throw new LoyaltyRedeemError("credit_disabled");
+
+  const { data: balanceRow } = await supabase
+    .from("inst_loyalty_balances")
+    .select("points_balance")
+    .eq("tenant_id", tenantId)
+    .eq("client_id", clientId)
+    .eq("program_id", program.id)
+    .maybeSingle();
+
+  const applied = capLoyaltyCreditCents(
+    requestedCents,
+    balanceRow?.points_balance ?? 0,
+    subtotalCents,
+  );
+  if (applied <= 0) throw new LoyaltyRedeemError("insufficient_points");
+
+  const { data: redemptionId, error } = await supabase.rpc("inst_loyalty_redeem", {
+    p_tenant_id: tenantId,
+    p_client_id: clientId,
+    p_program_id: program.id,
+    p_reward_id: null,
+    p_points: applied,
+    p_sale_id: saleId,
+    p_discount_cents: applied,
+    p_idempotency_key: `redeem:sale:${saleId}:credit`,
+    p_notes: "Bon fidélité",
+  });
+
+  if (error) {
+    if (error.message.includes("insufficient_points")) {
+      throw new LoyaltyRedeemError("insufficient_points");
+    }
+    throw new Error(error.message);
+  }
+
+  return redemptionId as string;
+}

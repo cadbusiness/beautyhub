@@ -280,8 +280,9 @@ class _LoyaltyScreenState extends ConsumerState<LoyaltyScreen> {
                         children: [
                           _InfoLine(
                             title: '${snap.clientsWithPoints} clientes',
-                            subtitle:
-                                '${snap.totalPointsOutstanding} ${snap.program.pointsLabel} en circulation',
+                            subtitle: snap.program.creditEnabled
+                                ? '${formatEuros(snap.totalPointsOutstanding)} en circulation'
+                                : '${snap.totalPointsOutstanding} ${snap.program.pointsLabel} en circulation',
                           ),
                         ],
                       ),

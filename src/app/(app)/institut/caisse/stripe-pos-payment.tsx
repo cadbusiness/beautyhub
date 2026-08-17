@@ -21,6 +21,7 @@ function PaymentForm({
   clientId,
   cartDiscountEuros,
   loyaltyRewardId,
+  loyaltyCreditCents,
   promoCode,
   priceOverridesJson,
   totalCents,
@@ -32,6 +33,7 @@ function PaymentForm({
   clientId: string;
   cartDiscountEuros: string;
   loyaltyRewardId: string;
+  loyaltyCreditCents: number;
   promoCode: string;
   priceOverridesJson: string;
   totalCents: number;
@@ -76,6 +78,7 @@ function PaymentForm({
       loyaltyRewardId || null,
       promoCode || null,
       priceOverridesJson || null,
+      loyaltyCreditCents,
     );
     if (result.error) {
       setError(result.error);
@@ -108,6 +111,7 @@ export function StripePosPayment({
   totalCents,
   cartDiscountEuros = "0",
   loyaltyRewardId = "",
+  loyaltyCreditCents = 0,
   promoCode = "",
   priceOverridesJson = "",
   publishableKey,
@@ -121,6 +125,7 @@ export function StripePosPayment({
   totalCents: number;
   cartDiscountEuros?: string;
   loyaltyRewardId?: string;
+  loyaltyCreditCents?: number;
   promoCode?: string;
   priceOverridesJson?: string;
   publishableKey: string;
@@ -151,6 +156,7 @@ export function StripePosPayment({
       loyaltyRewardId || null,
       promoCode || null,
       priceOverridesJson || null,
+      loyaltyCreditCents,
     );
     if (result.error || !result.clientSecret) {
       setError(result.error ?? t("startFailed"));
@@ -169,6 +175,7 @@ export function StripePosPayment({
           clientId={initialClientId}
           cartDiscountEuros={cartDiscountEuros}
           loyaltyRewardId={loyaltyRewardId}
+          loyaltyCreditCents={loyaltyCreditCents}
           promoCode={promoCode}
           priceOverridesJson={priceOverridesJson}
           totalCents={totalCents}

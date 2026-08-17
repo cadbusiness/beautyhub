@@ -632,14 +632,16 @@ class _ClientDetailSheetState extends ConsumerState<_ClientDetailSheet> {
           children: [
             Expanded(
               child: _StatTile(
-                label: card.pointsLabel,
-                value: '${card.balance}',
+                label: card.creditEnabled ? 'Bon fidélité' : card.pointsLabel,
+                value: card.creditEnabled
+                    ? formatEuros(card.balance)
+                    : '${card.balance}',
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _StatTile(
-                label: 'Valeur estimée',
+                label: card.creditEnabled ? 'Utilisable' : 'Valeur estimée',
                 value: formatEuros(card.valueCents),
               ),
             ),
@@ -759,7 +761,7 @@ class _ClientDetailSheetState extends ConsumerState<_ClientDetailSheet> {
                       ? Icons.add_circle_outline
                       : Icons.remove_circle_outline,
                   label:
-                      '${entry.pointsDelta >= 0 ? '+' : ''}${entry.pointsDelta} · ${_ledgerLabel(entry)}',
+                      '${entry.pointsDelta >= 0 ? '+' : ''}${card.creditEnabled ? formatEuros(entry.pointsDelta.abs()) : entry.pointsDelta} · ${_ledgerLabel(entry)}',
                   trailing: Text(
                     DateFormat('d MMM', 'fr_FR').format(entry.createdAt),
                     style: const TextStyle(fontSize: 12, color: _muted),

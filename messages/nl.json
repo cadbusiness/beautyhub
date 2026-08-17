@@ -763,6 +763,10 @@
           "birthdayBonus": "Verjaardagsbonus (punten)",
           "birthdayBonusHint": "Punten op de verjaardag als automatische verzending is ingeschakeld.",
           "birthdayAuto": "Automatische verjaardagsbonus",
+          "creditEnabled": "Bon in euro’s",
+          "creditEnabledHint": "De klant spaart tegoed (bijv. €17,50 per €500) en kan dat geheel of gedeeltelijk aan de kassa gebruiken.",
+          "creditRate": "Tarief van de bon (%)",
+          "creditRateHint": "3,5 % = €17,50 terug per €500 besteed.",
           "portalVisible": "Zichtbaar op het klantenportaal (/client/compte)",
           "active": "Programma actief",
           "activate": "Activeren",
@@ -1428,7 +1432,10 @@
           "save": "Opslaan",
           "saved": "Loyaliteitsgroep bijgewerkt.",
           "programNotFound": "Programma niet gevonden.",
-          "noProgramsHint": "Nog geen programma. Maak er een in Instellingen → Loyaliteit."
+          "noProgramsHint": "Nog geen programma. Maak er een in Instellingen → Loyaliteit.",
+          "creditBalance": "Loyaliteitsbon",
+          "usable": "Gebruik",
+          "creditProgress": "Geheel of gedeeltelijk te gebruiken aan de kassa."
         }
       }
     },
@@ -2474,6 +2481,7 @@
       "unavailableTitle": "Loyaliteitsprogramma niet beschikbaar",
       "unavailableBody": "Dit programma is momenteel niet actief.",
       "intro": "Verdien punten bij elk bezoek en wissel ze in voor voordelen.",
+      "creditIntro": "{rate} % van uw aankopen komt terug als tegoed, geheel of gedeeltelijk te gebruiken aan de balie.",
       "rewardsTitle": "Beloningen",
       "pointsCost": "{cost} {label}",
       "loginCta": "Mijn saldo bekijken",
@@ -2653,6 +2661,8 @@
         },
         "loyalty": {
           "subtitle": "Uw loyaliteitskaart",
+          "creditSubtitle": "Uw loyaliteitsbon",
+          "creditHint": "Geheel of gedeeltelijk te gebruiken aan de kassa.",
           "newServiceOnly": "nieuwe behandeling",
           "noRewards": "Nog geen beloningen beschikbaar.",
           "redeemSoon": "Online inwisselen komt binnenkort — vraag intussen aan de balie."
@@ -2983,7 +2993,10 @@
       "noRewards": "Geen beloningen beschikbaar voor deze klant.",
       "none": "Geen punten gebruiken",
       "cost": "{count} {label}",
-      "value": "tot −{amount}"
+      "value": "tot −{amount}",
+      "creditBalance": "Bon: {amount}",
+      "creditHint": "Ze kan sparen of het geheel of gedeeltelijk afrekenen.",
+      "useAll": "Alles gebruiken"
     },
     "stripe": {
       "paymentFailed": "Betaling mislukt.",

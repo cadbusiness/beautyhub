@@ -145,6 +145,7 @@ export async function createStripePaymentIntent(
   loyaltyRewardId: string | null = null,
   promoCode: string | null = null,
   priceOverridesJson: string | null = null,
+  loyaltyCreditCents = 0,
 ): Promise<PaymentIntentResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
@@ -170,6 +171,7 @@ export async function createStripePaymentIntent(
       cartDiscountCents: parseCartDiscountCents(cartDiscountEuros),
       clientId,
       loyaltyRewardId,
+      loyaltyCreditCents,
       promoCode,
       priceOverrides,
     });
@@ -210,6 +212,7 @@ export async function finalizeStripeCheckout(
   loyaltyRewardId: string | null = null,
   promoCode: string | null = null,
   priceOverridesJson: string | null = null,
+  loyaltyCreditCents = 0,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
@@ -235,6 +238,7 @@ export async function finalizeStripeCheckout(
       cartDiscountCents: parseCartDiscountCents(cartDiscountEuros),
       clientId,
       loyaltyRewardId,
+      loyaltyCreditCents,
       promoCode,
       priceOverrides,
     });
@@ -252,6 +256,7 @@ export async function finalizeStripeCheckout(
     cartDiscountCents: parseCartDiscountCents(cartDiscountEuros),
     totalCents: totals.total_cents,
     loyaltyRewardId,
+    loyaltyCreditCents,
     promoCode,
     priceOverrides,
   });

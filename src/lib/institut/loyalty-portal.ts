@@ -10,6 +10,7 @@ export interface ClientLoyaltyPortalView {
   pointsLabel: string;
   balance: number;
   lifetimeEarned: number;
+  creditEnabled: boolean;
   rewards: {
     id: string;
     name: string;
@@ -37,7 +38,7 @@ export async function loadClientLoyaltyPortalView(
 ): Promise<ClientLoyaltyPortalView | null> {
   const { data: program } = await supabase
     .from("inst_loyalty_programs")
-    .select("id, name, is_active, points_label, portal_visible")
+    .select("id, name, is_active, points_label, portal_visible, credit_enabled")
     .eq("tenant_id", tenantId)
     .eq("is_active", true)
     .order("updated_at", { ascending: false })
@@ -83,6 +84,7 @@ export async function loadClientLoyaltyPortalView(
     pointsLabel: program.points_label,
     balance: balanceRes.data?.points_balance ?? 0,
     lifetimeEarned: balanceRes.data?.lifetime_earned ?? 0,
+    creditEnabled: program.credit_enabled ?? false,
     rewards: rewards.map((r) => ({
       id: r.id,
       name: r.name,

@@ -1314,7 +1314,10 @@
           "save": "Save",
           "saved": "Loyalty group updated.",
           "programNotFound": "Program not found.",
-          "noProgramsHint": "No program yet. Create one in Settings → Loyalty."
+          "noProgramsHint": "No program yet. Create one in Settings → Loyalty.",
+          "creditBalance": "Loyalty credit",
+          "usable": "Use",
+          "creditProgress": "Spend all or part of it at checkout."
         },
         "marketingOptIn": "Marketing",
         "memberSince": "Customer since",
@@ -1574,6 +1577,10 @@
           "newProgramTitle": "Create a loyalty program",
           "pointsLabel": "Point wording",
           "pointsLabelHint": "Example: points, stars, credits (same wording everywhere).",
+          "creditEnabled": "Euro credit",
+          "creditEnabledHint": "The client accumulates store credit (e.g. €17.50 per €500) and can spend all or part of it at checkout.",
+          "creditRate": "Credit rate (%)",
+          "creditRateHint": "3.5% = €17.50 back for every €500 spent.",
           "portalVisible": "Visible on the customer portal (/customer/account)",
           "saved": "Recorded program.",
           "scopeBadge": "Overall",
@@ -3180,7 +3187,10 @@
       "none": "Do not use points",
       "pointsDefault": "points",
       "title": "Loyalty",
-      "value": "up to −{amount}"
+      "value": "up to −{amount}",
+      "creditBalance": "Credit: {amount}",
+      "creditHint": "They can save it up or spend all or part of it at checkout.",
+      "useAll": "Use all"
     },
     "products": {
       "columns": {
@@ -3849,7 +3859,9 @@
           "newServiceOnly": "new service",
           "noRewards": "No rewards available at this time.",
           "redeemSoon": "Online exchange is coming soon — ask at reception in the meantime.",
-          "subtitle": "Your loyalty card"
+          "subtitle": "Your loyalty card",
+          "creditSubtitle": "Your loyalty credit",
+          "creditHint": "Spend all or part of it at checkout."
         },
         "status": {
           "booked": "Reserve",
@@ -3878,6 +3890,7 @@
     "loyalty": {
       "accountLink": "I already have an account",
       "intro": "Earn points with every visit and redeem them for benefits.",
+      "creditIntro": "{rate}% of purchases come back as store credit, spendable in full or in part at reception.",
       "loginCta": "View my balance",
       "pointsCost": "{cost} {label}",
       "rewardsTitle": "Awards",

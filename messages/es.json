@@ -1191,7 +1191,10 @@
           "save": "Guardar",
           "saved": "Grupo de fidelidad actualizado.",
           "programNotFound": "Programa no encontrado.",
-          "noProgramsHint": "Ningún programa. Cree uno en Ajustes → Fidelidad."
+          "noProgramsHint": "Ningún programa. Cree uno en Ajustes → Fidelidad.",
+          "creditBalance": "Bono de fidelidad",
+          "usable": "Uso",
+          "creditProgress": "Utilizable en caja, total o parcialmente."
         },
         "marketingOptIn": "Marketing",
         "memberSince": "Cliente desde",
@@ -1411,6 +1414,10 @@
           "name": "Nombre del programa",
           "pointsLabel": "Redacción de puntos",
           "pointsLabelHint": "Ejemplo: puntos, estrellas, créditos (misma etiqueta en todas partes).",
+          "creditEnabled": "Bono en euros",
+          "creditEnabledHint": "La clienta acumula un haber (p. ej. 17,50 € por 500 €) y lo usa en caja, total o parcialmente.",
+          "creditRate": "Tasa del bono (%)",
+          "creditRateHint": "3,5 % = 17,50 € de fidelidad por 500 € de compra.",
           "saved": "Programa grabado.",
           "scopeBadge": "Global",
           "title": "Ajustes",
@@ -2805,7 +2812,10 @@
       "noRewards": "Ninguna recompensa disponible para este cliente.",
       "none": "No usar puntos",
       "cost": "{count} {label}",
-      "value": "hasta −{amount}"
+      "value": "hasta −{amount}",
+      "creditBalance": "Bono: {amount}",
+      "creditHint": "Puede acumularlo o usarlo total o parcialmente al cobrar.",
+      "useAll": "Usar todo"
     },
     "products": {
       "columns": {
@@ -3420,6 +3430,14 @@
         },
         "empty": "No hay citas próximas.",
         "logout": "Desconectar",
+        "loyalty": {
+          "subtitle": "Tu tarjeta de fidelidad",
+          "creditSubtitle": "Tu bono de fidelidad",
+          "creditHint": "Utilizable en caja, total o parcialmente.",
+          "newServiceOnly": "nuevo servicio",
+          "noRewards": "Ninguna recompensa disponible por el momento.",
+          "redeemSoon": "El canje en línea llegará pronto — pide en recepción mientras tanto."
+        },
         "status": {
           "booked": "Reservar",
           "cancelled": "Cancelado",

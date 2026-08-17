@@ -111,6 +111,7 @@ export function PosTerminal({
   const [staffId, setStaffId] = useState(() => initialPrefill?.staffId ?? "");
   const [appointmentId, setAppointmentId] = useState(() => initialPrefill?.appointmentId ?? "");
   const [loyaltyRewardId, setLoyaltyRewardId] = useState("");
+  const [loyaltyCreditCents, setLoyaltyCreditCents] = useState(0);
   const [loyaltyPreviewCents, setLoyaltyPreviewCents] = useState(0);
   const [promoInput, setPromoInput] = useState("");
   const [promoCode, setPromoCode] = useState("");
@@ -147,6 +148,7 @@ export function PosTerminal({
       setCartDiscountValue("");
       setCartDiscountReason("");
       setLoyaltyRewardId("");
+      setLoyaltyCreditCents(0);
       setLoyaltyPreviewCents(0);
       setPromoInput("");
       setPromoCode("");
@@ -169,12 +171,20 @@ export function PosTerminal({
       setLastSale(null);
     }
     setLoyaltyRewardId("");
+    setLoyaltyCreditCents(0);
     setLoyaltyPreviewCents(0);
   }
 
   function handleLoyaltyChange(rewardId: string, discountCents: number) {
     setLoyaltyRewardId(rewardId);
+    if (rewardId) setLoyaltyCreditCents(0);
     setLoyaltyPreviewCents(discountCents);
+  }
+
+  function handleLoyaltyCreditChange(creditCents: number) {
+    setLoyaltyCreditCents(creditCents);
+    if (creditCents > 0) setLoyaltyRewardId("");
+    setLoyaltyPreviewCents(creditCents);
   }
 
   const tabs: { id: PosCategory; label: string }[] = [
@@ -464,6 +474,7 @@ export function PosTerminal({
     setCartDiscountValue("");
     setCartDiscountReason("");
     setLoyaltyRewardId("");
+    setLoyaltyCreditCents(0);
     setLoyaltyPreviewCents(0);
     setNotes("");
     void message;
@@ -1143,6 +1154,7 @@ export function PosTerminal({
           onChange={(e) => {
             setClientId(e.target.value);
             setLoyaltyRewardId("");
+            setLoyaltyCreditCents(0);
             setLoyaltyPreviewCents(0);
           }}
           aria-label={t("cart.clientAria")}
@@ -1167,7 +1179,9 @@ export function PosTerminal({
             clientId={clientId}
             subtotalCents={subtotalForLoyalty}
             selectedRewardId={loyaltyRewardId}
+            selectedCreditCents={loyaltyCreditCents}
             onRewardChange={handleLoyaltyChange}
+            onCreditChange={handleLoyaltyCreditChange}
             currency={settings.currency}
           />
         ) : null}
@@ -1189,6 +1203,7 @@ export function PosTerminal({
             discountReason={!promoCode ? cartDiscountReason.trim() : ""}
             cartDiscountEuros={(discountCents / 100).toFixed(2)}
             loyaltyRewardId={loyaltyRewardId}
+            loyaltyCreditCents={loyaltyCreditCents}
             promoCode={promoCode}
             priceOverridesJson={priceOverridesJson}
             totals={totals}

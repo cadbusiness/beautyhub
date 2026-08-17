@@ -202,6 +202,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     String? notes,
     String? discountReason,
     String? loyaltyRewardId,
+    int loyaltyCreditCents = 0,
   }) async {
     final cart = ref.read(posCartProvider);
     if (cart.isEmpty) return false;
@@ -246,9 +247,13 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             cartDiscountCents: discountCents > 0 ? discountCents : null,
             discountReason: discountReason,
             loyaltyRewardId: loyaltyRewardId,
-            payments: [
-              {'method': _paymentMethod, 'amountCents': totalCents},
-            ],
+            loyaltyCreditCents:
+                loyaltyCreditCents > 0 ? loyaltyCreditCents : null,
+            payments: totalCents > 0
+                ? [
+                    {'method': _paymentMethod, 'amountCents': totalCents},
+                  ]
+                : const [],
           );
       ref.invalidate(cashSessionProvider);
       ref.invalidate(posContextProvider);
@@ -314,6 +319,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
           notes,
           discountReason,
           loyaltyRewardId,
+          loyaltyCreditCents = 0,
         }) =>
             _checkout(
               ctx,
@@ -322,6 +328,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
               notes: notes,
               discountReason: discountReason,
               loyaltyRewardId: loyaltyRewardId,
+              loyaltyCreditCents: loyaltyCreditCents,
             ),
         sessionBlocked: ctx.sessionPaused ||
             (ctx.requireOpenSession && !ctx.sessionOpen),
@@ -1016,6 +1023,7 @@ class _CartSheet extends ConsumerStatefulWidget {
     String? notes,
     String? discountReason,
     String? loyaltyRewardId,
+    int loyaltyCreditCents,
   }) onCheckout;
   final bool sessionBlocked;
 
@@ -1033,6 +1041,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
   final _discountReason = TextEditingController();
   PosClientLoyalty? _loyalty;
   String? _loyaltyRewardId;
+  int _loyaltyCreditCents = 0;
   bool _loyaltyLoading = false;
 
   @override
@@ -1057,6 +1066,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
       setState(() {
         _loyalty = null;
         _loyaltyRewardId = null;
+        _loyaltyCreditCents = 0;
         _loyaltyLoading = false;
       });
       return;
@@ -1078,6 +1088,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
       setState(() {
         _loyalty = snap.active ? snap : null;
         _loyaltyRewardId = null;
+        _loyaltyCreditCents = 0;
         _loyaltyLoading = false;
       });
     } catch (_) {
@@ -1085,6 +1096,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
       setState(() {
         _loyalty = null;
         _loyaltyRewardId = null;
+        _loyaltyCreditCents = 0;
         _loyaltyLoading = false;
       });
     }
@@ -1171,8 +1183,14 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
         }
       }
     }
-    final loyaltyDiscountCents =
-        selectedReward?.discountForSubtotal(afterManual) ?? 0;
+    final creditCap = _loyalty != null && _loyalty!.creditEnabled
+        ? (_loyalty!.balance < afterManual ? _loyalty!.balance : afterManual)
+        : 0;
+    final creditCents =
+        _loyaltyCreditCents > creditCap ? creditCap : _loyaltyCreditCents;
+    final loyaltyDiscountCents = creditCents > 0
+        ? creditCents
+        : (selectedReward?.discountForSubtotal(afterManual) ?? 0);
     var payable = afterManual - loyaltyDiscountCents;
     if (payable < 0) payable = 0;
     final eligibleRewards =
@@ -1357,8 +1375,16 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                   loyalty: _loyalty!,
                   eligibleRewards: eligibleRewards,
                   selectedRewardId: _loyaltyRewardId,
+                  creditCents: creditCents,
                   subtotalCents: afterManual,
-                  onSelect: (id) => setState(() => _loyaltyRewardId = id),
+                  onSelect: (id) => setState(() {
+                    _loyaltyRewardId = id;
+                    _loyaltyCreditCents = 0;
+                  }),
+                  onCreditChanged: (cents) => setState(() {
+                    _loyaltyCreditCents = cents;
+                    _loyaltyRewardId = null;
+                  }),
                 ),
             ],
             if (loyaltyDiscountCents > 0) ...[
@@ -1423,7 +1449,9 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
             SizedBox(
               height: 48,
               child: FilledButton(
-                onPressed: checkingOut || sessionBlocked || payable <= 0
+                onPressed: checkingOut ||
+                        sessionBlocked ||
+                        (payable <= 0 && loyaltyDiscountCents <= 0)
                     ? null
                     : () async {
                         final reason = _customReason
@@ -1433,6 +1461,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                           discountCents: discountCents,
                           loyaltyDiscountCents: loyaltyDiscountCents,
                           loyaltyRewardId: _loyaltyRewardId,
+                          loyaltyCreditCents: creditCents,
                           notes: reason.isEmpty ? null : 'Remise : $reason',
                           discountReason: reason.isEmpty ? null : reason,
                         );
@@ -1512,18 +1541,25 @@ class _LoyaltyPaymentCard extends StatelessWidget {
     required this.loyalty,
     required this.eligibleRewards,
     required this.selectedRewardId,
+    required this.creditCents,
     required this.subtotalCents,
     required this.onSelect,
+    required this.onCreditChanged,
   });
 
   final PosClientLoyalty loyalty;
   final List<PosLoyaltyReward> eligibleRewards;
   final String? selectedRewardId;
+  final int creditCents;
   final int subtotalCents;
   final ValueChanged<String?> onSelect;
+  final ValueChanged<int> onCreditChanged;
 
   @override
   Widget build(BuildContext context) {
+    final maxCredit = loyalty.balance < subtotalCents
+        ? loyalty.balance
+        : subtotalCents;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1566,13 +1602,16 @@ class _LoyaltyPaymentCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${loyalty.balance} ${loyalty.pointsLabel}',
+                    loyalty.creditEnabled
+                        ? 'Bon ${formatEuros(loyalty.balance)}'
+                        : '${loyalty.balance} ${loyalty.pointsLabel}',
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF6D28D9),
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4C1D95),
                     ),
                   ),
-                  if (loyalty.valueCents > 0)
+                  if (!loyalty.creditEnabled && loyalty.valueCents > 0)
                     Text(
                       'jusqu’à −${formatEuros(loyalty.valueCents)}',
                       style: const TextStyle(
@@ -1585,7 +1624,19 @@ class _LoyaltyPaymentCard extends StatelessWidget {
               ),
             ],
           ),
-          if (eligibleRewards.isEmpty)
+          if (loyalty.creditEnabled) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Cumulable, ou à débiter en tout ou partie.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF6D28D9)),
+            ),
+            const SizedBox(height: 8),
+            _CreditAmountField(
+              creditCents: creditCents,
+              maxCredit: maxCredit,
+              onChanged: onCreditChanged,
+            ),
+          ] else if (eligibleRewards.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text(
@@ -1616,6 +1667,86 @@ class _LoyaltyPaymentCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _CreditAmountField extends StatefulWidget {
+  const _CreditAmountField({
+    required this.creditCents,
+    required this.maxCredit,
+    required this.onChanged,
+  });
+
+  final int creditCents;
+  final int maxCredit;
+  final ValueChanged<int> onChanged;
+
+  @override
+  State<_CreditAmountField> createState() => _CreditAmountFieldState();
+}
+
+class _CreditAmountFieldState extends State<_CreditAmountField> {
+  late final _controller = TextEditingController(
+    text: widget.creditCents > 0
+        ? (widget.creditCents / 100).toStringAsFixed(2)
+        : '',
+  );
+
+  @override
+  void didUpdateWidget(covariant _CreditAmountField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.creditCents != widget.creditCents) {
+      final next = widget.creditCents > 0
+          ? (widget.creditCents / 100).toStringAsFixed(2)
+          : '';
+      if (_controller.text != next) _controller.text = next;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _apply(String raw) {
+    final n = double.tryParse(raw.replaceAll(',', '.')) ?? 0;
+    var cents = (n * 100).round();
+    if (cents < 0) cents = 0;
+    if (cents > widget.maxCredit) cents = widget.maxCredit;
+    widget.onChanged(cents);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              isDense: true,
+              hintText: '0,00',
+              suffixText: '€',
+            ),
+            onChanged: _apply,
+          ),
+        ),
+        const SizedBox(width: 8),
+        TextButton(
+          onPressed: widget.maxCredit <= 0
+              ? null
+              : () => widget.onChanged(widget.maxCredit),
+          child: const Text('Tout'),
+        ),
+        if (widget.creditCents > 0)
+          TextButton(
+            onPressed: () => widget.onChanged(0),
+            child: const Text('Aucun'),
+          ),
+      ],
     );
   }
 }

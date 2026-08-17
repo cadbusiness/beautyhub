@@ -22,8 +22,10 @@ import { getVoucherByCode, redeemVoucher } from "./vouchers-core";
 import { processLoyaltyForPaidSale } from "./loyalty";
 import {
   LoyaltyRedeemError,
+  previewLoyaltyCreditCents,
   previewLoyaltyDiscountCents,
   redeemLoyaltyAtSale,
+  redeemLoyaltyCreditAtSale,
 } from "./loyalty-redeem";
 import { normalizePromoCode, redeemPromo, validatePromo } from "./promos-core";
 import { generateSaleDocuments, updateSaleDocumentStatuses } from "./sale-documents/generate";
@@ -68,6 +70,8 @@ export interface PosCheckoutInput {
   saleKind?: "sale" | "balance";
   /** Récompense fidélité à échanger sur cette vente (réduction appliquée avant paiement). */
   loyaltyRewardId?: string | null;
+  /** Bon euros : montant à débiter (1 point = 1 centime), tout ou partie. */
+  loyaltyCreditCents?: number | null;
   /** Code promo marketing (désactive la remise manuelle côté UI). */
   promoCode?: string | null;
   /**
@@ -192,6 +196,7 @@ export async function resolvePosCartTotals(
     cartDiscountCents?: number;
     clientId?: string | null;
     loyaltyRewardId?: string | null;
+    loyaltyCreditCents?: number | null;
     promoCode?: string | null;
     priceOverrides?: Record<string, number> | null;
   },
@@ -243,7 +248,21 @@ export async function resolvePosCartTotals(
   });
 
   let loyaltyDiscountCents = 0;
-  if (input.loyaltyRewardId && input.clientId) {
+  const requestedCredit = Math.max(0, Math.floor(input.loyaltyCreditCents ?? 0));
+  if (requestedCredit > 0 && input.clientId) {
+    try {
+      loyaltyDiscountCents = await previewLoyaltyCreditCents(
+        supabase,
+        tenantId,
+        input.clientId,
+        requestedCredit,
+        preLoyaltyTotals.subtotal_cents,
+      );
+    } catch (e) {
+      if (e instanceof LoyaltyRedeemError) throw new Error(e.message);
+      throw e;
+    }
+  } else if (input.loyaltyRewardId && input.clientId) {
     try {
       loyaltyDiscountCents = await previewLoyaltyDiscountCents(
         supabase,
@@ -306,11 +325,16 @@ export async function executePosCheckout(
     cartDiscountCents: baseCartDiscountCents,
     clientId: input.clientId,
     loyaltyRewardId: input.loyaltyRewardId,
+    loyaltyCreditCents: input.loyaltyCreditCents,
     promoCode: input.promoCode,
     priceOverrides: input.priceOverrides,
   });
 
-  if (totals.total_cents <= 0) throw new Error("invalid_amount");
+  const coveredByLoyalty =
+    (input.loyaltyCreditCents ?? 0) > 0 && totals.total_cents === 0;
+  if (totals.total_cents < 0 || (totals.total_cents === 0 && !coveredByLoyalty)) {
+    throw new Error("invalid_amount");
+  }
 
   let sessionId = input.cashSessionId ?? null;
   const open = await getOpenCashSession(supabase, tenantId);
@@ -321,7 +345,7 @@ export async function executePosCheckout(
   }
 
   const rawPayments = input.payments.filter((p) => p.amount_cents > 0);
-  if (rawPayments.length === 0) throw new Error("no_payments");
+  if (rawPayments.length === 0 && !coveredByLoyalty) throw new Error("no_payments");
 
   const payments = await resolvePaymentReferences(supabase, tenantId, rawPayments);
 
@@ -340,7 +364,8 @@ export async function executePosCheckout(
   }
 
   const amountPaid = payments.reduce((s, p) => s + p.amount_cents, 0);
-  if (amountPaid <= 0) throw new Error("invalid_amount");
+  if (amountPaid < 0) throw new Error("invalid_amount");
+  if (!coveredByLoyalty && amountPaid <= 0) throw new Error("invalid_amount");
   if (amountPaid > totals.total_cents) throw new Error("overpaid");
 
   const status: "paid" | "partial" =
@@ -466,15 +491,27 @@ export async function executePosCheckout(
     });
   }
 
-  if (status === "paid" && input.loyaltyRewardId && input.clientId) {
-    await redeemLoyaltyAtSale(
-      supabase,
-      tenantId,
-      input.clientId,
-      input.loyaltyRewardId,
-      sale.id,
-      preSubtotalCents,
-    );
+  if (status === "paid" && input.clientId) {
+    const creditCents = Math.max(0, Math.floor(input.loyaltyCreditCents ?? 0));
+    if (creditCents > 0) {
+      await redeemLoyaltyCreditAtSale(
+        supabase,
+        tenantId,
+        input.clientId,
+        creditCents,
+        sale.id,
+        preSubtotalCents,
+      );
+    } else if (input.loyaltyRewardId) {
+      await redeemLoyaltyAtSale(
+        supabase,
+        tenantId,
+        input.clientId,
+        input.loyaltyRewardId,
+        sale.id,
+        preSubtotalCents,
+      );
+    }
   }
 
   if (status === "paid") {

@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import type { ClientLoyaltyPortalView } from "@/lib/institut/loyalty-portal";
+import { formatPrice } from "@/lib/utils";
 
 export async function ClientLoyaltyPanel({ loyalty }: { loyalty: ClientLoyaltyPortalView }) {
   const t = await getTranslations("public.client.account.loyalty");
@@ -9,15 +10,25 @@ export async function ClientLoyaltyPanel({ loyalty }: { loyalty: ClientLoyaltyPo
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <h2 className="text-sm font-medium text-slate-900">{loyalty.programName}</h2>
-          <p className="mt-0.5 text-xs text-slate-500">{t("subtitle")}</p>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {loyalty.creditEnabled ? t("creditSubtitle") : t("subtitle")}
+          </p>
         </div>
         <p className="text-2xl font-semibold tabular-nums text-slate-900">
-          {loyalty.balance}{" "}
-          <span className="text-sm font-normal text-slate-500">{loyalty.pointsLabel}</span>
+          {loyalty.creditEnabled ? (
+            formatPrice(loyalty.balance)
+          ) : (
+            <>
+              {loyalty.balance}{" "}
+              <span className="text-sm font-normal text-slate-500">{loyalty.pointsLabel}</span>
+            </>
+          )}
         </p>
       </div>
 
-      {loyalty.rewards.length > 0 ? (
+      {loyalty.creditEnabled ? (
+        <p className="mt-2 text-xs text-slate-500">{t("creditHint")}</p>
+      ) : loyalty.rewards.length > 0 ? (
         <ul className="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-200 text-sm">
           {loyalty.rewards.map((reward) => (
             <li key={reward.id} className="flex items-center justify-between gap-3 px-3 py-2">
@@ -38,7 +49,9 @@ export async function ClientLoyaltyPanel({ loyalty }: { loyalty: ClientLoyaltyPo
         <p className="mt-2 text-xs text-slate-500">{t("noRewards")}</p>
       )}
 
-      <p className="mt-2 text-xs text-slate-400">{t("redeemSoon")}</p>
+      {loyalty.creditEnabled ? null : (
+        <p className="mt-2 text-xs text-slate-400">{t("redeemSoon")}</p>
+      )}
     </section>
   );
 }

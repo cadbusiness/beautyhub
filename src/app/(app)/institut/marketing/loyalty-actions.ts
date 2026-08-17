@@ -132,6 +132,8 @@ export async function saveLoyaltyProgramSettings(
       portalVisible: formData.get("portal_visible") === "1",
       referralPoints: Number(formData.get("referral_points") ?? 0),
       sameDayRebookPoints: Number(formData.get("same_day_rebook_points") ?? 0),
+      creditEnabled: formData.get("credit_enabled") === "1",
+      creditRateBps: Math.round(Number(formData.get("credit_rate_percent") ?? 0) * 100),
     });
   } catch (e) {
     if (e instanceof LoyaltyAdminError) return { error: mapAdminError(e.code, t) };

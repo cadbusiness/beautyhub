@@ -312,6 +312,7 @@ class PosClientLoyalty {
     this.programName,
     this.pointsLabel = 'points',
     this.valueCents = 0,
+    this.creditEnabled = false,
     this.rewards = const [],
   });
 
@@ -320,6 +321,7 @@ class PosClientLoyalty {
   final String? programName;
   final String pointsLabel;
   final int valueCents;
+  final bool creditEnabled;
   final List<PosLoyaltyReward> rewards;
 
   factory PosClientLoyalty.fromJson(Map<String, dynamic> json) {
@@ -329,6 +331,7 @@ class PosClientLoyalty {
       programName: json['program_name'] as String?,
       pointsLabel: json['points_label'] as String? ?? 'points',
       valueCents: (json['value_cents'] as num?)?.toInt() ?? 0,
+      creditEnabled: json['credit_enabled'] as bool? ?? false,
       rewards: (json['rewards'] as List? ?? const [])
           .whereType<Map>()
           .map((e) => PosLoyaltyReward.fromJson(Map<String, dynamic>.from(e)))

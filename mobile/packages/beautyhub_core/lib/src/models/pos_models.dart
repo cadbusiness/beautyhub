@@ -15,6 +15,8 @@ class PosCatalogItem {
     this.wooSoins = const [],
     this.serviceCategoryId,
     this.serviceCategoryName,
+    this.productCategoryId,
+    this.productCategoryName,
     this.soldQty = 0,
     this.description,
     this.stockQuantity,
@@ -38,6 +40,8 @@ class PosCatalogItem {
   final List<String> wooSoins;
   final String? serviceCategoryId;
   final String? serviceCategoryName;
+  final String? productCategoryId;
+  final String? productCategoryName;
   final int soldQty;
   final String? description;
   final int? stockQuantity;
@@ -68,6 +72,8 @@ class PosCatalogItem {
           .toList(),
       serviceCategoryId: json['serviceCategoryId'] as String?,
       serviceCategoryName: json['serviceCategoryName'] as String?,
+      productCategoryId: json['productCategoryId'] as String?,
+      productCategoryName: json['productCategoryName'] as String?,
       soldQty: (json['soldQty'] as num?)?.toInt() ?? 0,
       description: json['description'] as String?,
       stockQuantity: json['stockQuantity'] as int?,
@@ -103,6 +109,14 @@ class PosOption {
       label: json['label'] as String? ?? '',
     );
   }
+}
+
+PosOption _categoryOptionFromJson(Map<dynamic, dynamic> raw) {
+  final map = Map<String, dynamic>.from(raw);
+  return PosOption(
+    id: map['id'] as String? ?? '',
+    label: map['name'] as String? ?? map['label'] as String? ?? '',
+  );
 }
 
 class PosPaymentMethods {
@@ -167,6 +181,7 @@ class PosContext {
     required this.requireOpenSession,
     required this.wooConnected,
     this.serviceCategories = const [],
+    this.productCategories = const [],
     this.sessionOpenedAt,
     this.sessionIsPreviousDay = false,
   });
@@ -179,6 +194,7 @@ class PosContext {
   final bool requireOpenSession;
   final bool wooConnected;
   final List<PosOption> serviceCategories;
+  final List<PosOption> productCategories;
   final DateTime? sessionOpenedAt;
   final bool sessionIsPreviousDay;
 
@@ -197,13 +213,12 @@ class PosContext {
         .toList();
     final serviceCategories = (json['serviceCategories'] as List? ?? const [])
         .whereType<Map>()
-        .map((e) {
-          final map = Map<String, dynamic>.from(e);
-          return PosOption(
-            id: map['id'] as String? ?? '',
-            label: map['name'] as String? ?? map['label'] as String? ?? '',
-          );
-        })
+        .map(_categoryOptionFromJson)
+        .where((c) => c.id.isNotEmpty && c.label.isNotEmpty)
+        .toList();
+    final productCategories = (json['productCategories'] as List? ?? const [])
+        .whereType<Map>()
+        .map(_categoryOptionFromJson)
         .where((c) => c.id.isNotEmpty && c.label.isNotEmpty)
         .toList();
 
@@ -218,6 +233,7 @@ class PosContext {
       requireOpenSession: json['requireOpenSession'] as bool? ?? false,
       wooConnected: json['wooConnected'] as bool? ?? false,
       serviceCategories: serviceCategories,
+      productCategories: productCategories,
       sessionOpenedAt: json['sessionOpenedAt'] is String
           ? DateTime.tryParse(json['sessionOpenedAt'] as String)?.toLocal()
           : null,

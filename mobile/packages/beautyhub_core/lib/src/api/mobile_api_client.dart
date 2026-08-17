@@ -582,5 +582,45 @@ class MobileApiClient {
     return PosCheckoutResult.fromJson(body);
   }
 
+  Future<void> createInternalProduct({
+    required String accessToken,
+    required String tenantId,
+    required String name,
+    required int priceCents,
+    String? sku,
+    int? stockQuantity,
+    String? categoryId,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/products'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'name': name,
+        'priceCents': priceCents,
+        if (sku != null && sku.isNotEmpty) 'sku': sku,
+        if (stockQuantity != null) 'stockQuantity': stockQuantity,
+        if (categoryId != null && categoryId.isNotEmpty) 'categoryId': categoryId,
+      }),
+    );
+    await _decode(response);
+  }
+
+  Future<void> createInternalProductCategory({
+    required String accessToken,
+    required String tenantId,
+    required String name,
+    int sortOrder = 0,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/product-categories'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'name': name,
+        'sortOrder': sortOrder,
+      }),
+    );
+    await _decode(response);
+  }
+
   void close() => _http.close();
 }

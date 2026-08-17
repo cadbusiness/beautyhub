@@ -3100,6 +3100,7 @@
     "products": {
       "columns": {
         "actions": "Actions",
+        "category": "Category",
         "name": "Name",
         "price": "Price",
         "sku": "SKUs",
@@ -3107,16 +3108,36 @@
       },
       "delete": "DELETE",
       "dialogTitle": "New product",
+      "dialogEditTitle": "Edit product",
       "empty": "No internal products.",
+      "filterCategoryAll": "All categories",
+      "filterCategoryNone": "Uncategorized",
       "footer": "{count, plural, one {# produit} other {# produits}}",
       "form": {
+        "category": "Internal category",
+        "categoryNone": "Uncategorized",
         "namePlaceholder": "Facial oil 30 ml",
         "priceEur": "Price (EUR)",
+        "save": "Save",
+        "saving": "Saving…",
         "skuOptional": "Optional",
         "stockOptional": "Optional",
         "submit": "Add product",
         "submitting": "Addition…"
       },
+      "categories": {
+        "title": "Internal product categories",
+        "intro": "Organize the till catalog (consumables, retail, etc.). Order defines display.",
+        "name": "Name",
+        "namePlaceholder": "Retail",
+        "sortOrder": "Order",
+        "sortLabel": "Order {order}",
+        "add": "Add",
+        "saving": "Saving…",
+        "empty": "No categories yet.",
+        "deleteConfirm": "Delete category “{name}”? Linked products will stay uncategorized."
+      },
+      "manageCategories": "Categories",
       "new": "New product",
       "noResults": "No results for this search.",
       "searchPlaceholder": "Search name, SKU…"
@@ -3361,6 +3382,11 @@
         "cashPending": "Collection…"
       },
       "emptyCategory": "No articles in this category. ",
+      "emptyInternal": "No internal products. Create a category, then a product, to sell them at the till.",
+      "emptyServices": "No visible services. Add them in Services.",
+      "addInternalProduct": "New internal product",
+      "manageProductCategories": "Internal categories",
+      "manageServices": "Manage services",
       "noResults": "No articles matching “{query}”.",
       "noBestsellers": "Not enough sales yet to rank articles.",
       "filters": {
@@ -3393,7 +3419,7 @@
       "sessionPreviousDayCta": "Go close →",
       "tabs": {
         "all": "All",
-        "internal": "Internal",
+        "internal": "Internal products",
         "services": "Services",
         "woo": "Shop Woo"
       }

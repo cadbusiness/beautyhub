@@ -1630,6 +1630,41 @@ export type Database = {
           },
         ]
       }
+      inst_product_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_product_categories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_products: {
         Row: {
           connection_id: string | null
@@ -1653,6 +1688,7 @@ export type Database = {
           variation_attributes: Json
           woo_categories: string[]
           woo_id: number | null
+          category_id: string | null
         }
         Insert: {
           connection_id?: string | null
@@ -1676,6 +1712,7 @@ export type Database = {
           variation_attributes?: Json
           woo_categories?: string[]
           woo_id?: number | null
+          category_id?: string | null
         }
         Update: {
           connection_id?: string | null
@@ -1699,8 +1736,16 @@ export type Database = {
           variation_attributes?: Json
           woo_categories?: string[]
           woo_id?: number | null
+          category_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "inst_products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "inst_product_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inst_products_connection_id_fkey"
             columns: ["connection_id"]

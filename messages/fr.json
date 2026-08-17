@@ -2903,7 +2903,7 @@
         "all": "Tout",
         "services": "Prestations",
         "woo": "Boutique Woo",
-        "internal": "Interne"
+        "internal": "Produits internes"
       },
       "categories": {
         "service": "Prestation",
@@ -2914,6 +2914,11 @@
       "searchArticles": "Rechercher un article…",
       "searchAria": "Rechercher",
       "emptyCategory": "Aucun article dans cette catégorie. Ajoute des prestations, synchronise WooCommerce ou crée des produits internes.",
+      "emptyInternal": "Aucun produit interne. Crée une catégorie, puis un produit, pour les vendre à la caisse.",
+      "emptyServices": "Aucune prestation visible. Ajoute-les dans Prestations.",
+      "addInternalProduct": "Nouveau produit interne",
+      "manageProductCategories": "Catégories internes",
+      "manageServices": "Gérer les prestations",
       "noResults": "Aucun article pour « {query} ».",
       "noBestsellers": "Pas encore assez de ventes pour classer les articles.",
       "filters": {
@@ -3052,11 +3057,15 @@
     },
     "products": {
       "new": "Nouveau produit",
+      "manageCategories": "Catégories",
       "searchPlaceholder": "Recherche nom, SKU…",
       "empty": "Aucun produit interne.",
       "noResults": "Aucun résultat pour cette recherche.",
+      "filterCategoryAll": "Toutes catégories",
+      "filterCategoryNone": "Sans catégorie",
       "columns": {
         "name": "Nom",
+        "category": "Catégorie",
         "sku": "SKU",
         "stock": "Stock",
         "price": "Prix",
@@ -3065,13 +3074,30 @@
       "delete": "Supprimer",
       "footer": "{count, plural, one {# produit} other {# produits}}",
       "dialogTitle": "Nouveau produit",
+      "dialogEditTitle": "Modifier le produit",
       "form": {
         "namePlaceholder": "Huile visage 30 ml",
         "priceEur": "Prix (EUR)",
         "stockOptional": "Optionnel",
         "skuOptional": "Optionnel",
+        "category": "Catégorie interne",
+        "categoryNone": "Sans catégorie",
         "submit": "Ajouter le produit",
-        "submitting": "Ajout…"
+        "submitting": "Ajout…",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…"
+      },
+      "categories": {
+        "title": "Catégories de produits internes",
+        "intro": "Organisez le catalogue caisse (consommables, retail, etc.). L’ordre définit l’affichage.",
+        "name": "Nom",
+        "namePlaceholder": "Retail",
+        "sortOrder": "Ordre",
+        "sortLabel": "Ordre {order}",
+        "add": "Ajouter",
+        "saving": "Enregistrement…",
+        "empty": "Aucune catégorie pour le moment.",
+        "deleteConfirm": "Supprimer la catégorie « {name} » ? Les produits associés resteront sans catégorie."
       }
     },
     "history": {

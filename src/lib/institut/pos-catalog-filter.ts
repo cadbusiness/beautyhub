@@ -1,9 +1,15 @@
-import type { PosCatalogItem, PosCategory, PosServiceCategory } from "@/lib/institut/pos";
+import type {
+  PosCatalogItem,
+  PosCategory,
+  PosProductCategory,
+  PosServiceCategory,
+} from "@/lib/institut/pos";
 import type { WooSoinsChild } from "@/lib/woocommerce/product-labels";
 
 export const POS_FACET_ALL = "all";
 export const POS_FACET_BESTSELLERS = "bestsellers";
 export const POS_FACET_UNCATEGORIZED = "service:none";
+export const POS_FACET_INTERNAL_UNCATEGORIZED = "product:none";
 export const POS_FACET_SOINS = "woo-group:soins";
 export const POS_FACET_MARQUES = "woo-group:marques";
 
@@ -17,6 +23,10 @@ const SOINS_LABELS: Record<WooSoinsChild, string> = {
 
 export function serviceFacetId(categoryId: string) {
   return `service:${categoryId}`;
+}
+
+export function productFacetId(categoryId: string) {
+  return `product:${categoryId}`;
 }
 
 export function wooFacetId(name: string) {
@@ -42,8 +52,14 @@ export function itemMatchesFacet(item: PosCatalogItem, facet: string): boolean {
   if (facet === POS_FACET_UNCATEGORIZED) {
     return item.category === "service" && !item.service_category_id;
   }
+  if (facet === POS_FACET_INTERNAL_UNCATEGORIZED) {
+    return item.category === "internal" && !item.product_category_id;
+  }
   if (facet.startsWith("service:")) {
     return item.service_category_id === facet.slice("service:".length);
+  }
+  if (facet.startsWith("product:")) {
+    return item.product_category_id === facet.slice("product:".length);
   }
   if (facet === POS_FACET_SOINS) {
     return (item.woo_soins ?? []).length > 0;
@@ -73,6 +89,7 @@ export function itemMatchesQuery(item: PosCatalogItem, query: string): boolean {
   if (item.name.toLowerCase().includes(q)) return true;
   if (item.sku?.toLowerCase().includes(q)) return true;
   if (item.service_category_name?.toLowerCase().includes(q)) return true;
+  if (item.product_category_name?.toLowerCase().includes(q)) return true;
   if (item.woo_categories?.some((name) => name.toLowerCase().includes(q))) return true;
   if (item.woo_brands?.some((name) => name.toLowerCase().includes(q))) return true;
   return false;
@@ -110,6 +127,14 @@ export function listServiceCategoryFacets(
       .filter((id): id is string => Boolean(id)),
   );
   return serviceCategories.filter((category) => used.has(category.id));
+}
+
+export function listProductCategoryFacets(
+  tab: PosCategory,
+  productCategories: PosProductCategory[],
+): PosProductCategory[] {
+  if (tab !== "all" && tab !== "internal") return [];
+  return productCategories;
 }
 
 export function listWooCategoryFacets(
@@ -178,4 +203,12 @@ export function hasUncategorizedServices(
 ): boolean {
   if (tab !== "all" && tab !== "service") return false;
   return catalog.some((item) => item.category === "service" && !item.service_category_id);
+}
+
+export function hasUncategorizedInternalProducts(
+  catalog: PosCatalogItem[],
+  tab: PosCategory,
+): boolean {
+  if (tab !== "all" && tab !== "internal") return false;
+  return catalog.some((item) => item.category === "internal" && !item.product_category_id);
 }

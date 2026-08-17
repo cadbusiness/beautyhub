@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
+import { listProductCategories } from "@/lib/institut/internal-products";
 import { buildCatalog, fetchPosSoldQuantities, type PosCatalogItem, type PosServiceCategory } from "@/lib/institut/pos";
 import { getPosSettings, type PosSettings } from "@/lib/institut/pos-settings";
 import { getOpenCashSession } from "@/lib/institut/pos-session";
@@ -21,6 +22,7 @@ export interface MobilePosStaffOption {
 export interface MobilePosContext {
   catalog: PosCatalogItem[];
   serviceCategories: PosServiceCategory[];
+  productCategories: PosServiceCategory[];
   settings: PosSettings;
   clients: MobilePosClientOption[];
   staff: MobilePosStaffOption[];
@@ -49,7 +51,7 @@ export async function loadMobilePosContext(
   supabase: Db,
   tenantId: string,
 ): Promise<MobilePosContextLoaded> {
-  const [servicesRes, productsRes, clientsRes, staffRes, posSettings, cashSession, wooRes, categoriesRes, soldQtyByKey] =
+  const [servicesRes, productsRes, clientsRes, staffRes, posSettings, cashSession, wooRes, categoriesRes, productCategories, soldQtyByKey] =
     await Promise.all([
       supabase
         .from("inst_services")
@@ -62,7 +64,7 @@ export async function loadMobilePosContext(
       supabase
         .from("inst_products")
         .select(
-          "id, name, price_cents, image_url, source, sku, status, woo_id, woo_categories, stock_quantity",
+          "id, name, price_cents, image_url, source, sku, status, woo_id, woo_categories, stock_quantity, category_id",
         )
         .eq("tenant_id", tenantId)
         .in("status", ["active", "publish"])
@@ -96,6 +98,7 @@ export async function loadMobilePosContext(
         .eq("tenant_id", tenantId)
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true }),
+      listProductCategories(supabase, tenantId),
       fetchPosSoldQuantities(supabase, tenantId),
     ]);
 
@@ -105,6 +108,7 @@ export async function loadMobilePosContext(
   }));
   const catalog = buildCatalog(servicesRes.data ?? [], productsRes.data ?? [], {
     serviceCategories,
+    productCategories,
     soldQtyByKey,
   });
   const clients = (clientsRes.data ?? []).map((c) => ({
@@ -119,6 +123,7 @@ export async function loadMobilePosContext(
   return {
     catalog,
     serviceCategories,
+    productCategories,
     settings: posSettings,
     clients,
     staff,
@@ -143,6 +148,7 @@ export function serializeMobilePosContext(ctx: MobilePosContextLoaded) {
       serializeCatalogItem(item, serviceById, productById),
     ),
     serviceCategories: ctx.serviceCategories,
+    productCategories: ctx.productCategories,
     settings: {
       currency: ctx.settings.currency,
       priceDisplay: ctx.settings.price_display,
@@ -186,6 +192,8 @@ function serializeCatalogItem(
     wooSoins: item.woo_soins ?? [],
     serviceCategoryId: item.service_category_id ?? null,
     serviceCategoryName: item.service_category_name ?? null,
+    productCategoryId: item.product_category_id ?? null,
+    productCategoryName: item.product_category_name ?? null,
     soldQty: item.sold_qty ?? 0,
     description: null as string | null,
     stockQuantity: null as number | null,

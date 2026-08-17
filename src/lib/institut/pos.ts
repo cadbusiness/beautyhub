@@ -23,6 +23,8 @@ export interface PosCatalogItem {
   woo_soins?: Array<"Visage" | "Corps" | "Cheveux" | "autres">;
   service_category_id?: string | null;
   service_category_name?: string | null;
+  product_category_id?: string | null;
+  product_category_name?: string | null;
   sold_qty?: number;
   visibility?: string;
   is_appointment_extra?: boolean;
@@ -32,6 +34,8 @@ export interface PosServiceCategory {
   id: string;
   name: string;
 }
+
+export type PosProductCategory = PosServiceCategory;
 
 export interface ResolvedCartLine {
   key: string;
@@ -253,14 +257,19 @@ export function buildCatalog(
     color?: string | null;
     woo_id?: number | null;
     woo_categories?: string[] | null;
+    category_id?: string | null;
   }>,
   extras?: {
     serviceCategories?: PosServiceCategory[];
+    productCategories?: PosProductCategory[];
     soldQtyByKey?: Map<string, number>;
   },
 ): PosCatalogItem[] {
   const categoryNameById = new Map(
     (extras?.serviceCategories ?? []).map((c) => [c.id, c.name]),
+  );
+  const productCategoryNameById = new Map(
+    (extras?.productCategories ?? []).map((c) => [c.id, c.name]),
   );
   const soldQtyByKey = extras?.soldQtyByKey ?? new Map<string, number>();
 
@@ -292,6 +301,7 @@ export function buildCatalog(
     const classified = isWoo
       ? classifyWooProduct(p.name, p.woo_categories ?? [])
       : { brands: [] as string[], soins: [] as Array<"Visage" | "Corps" | "Cheveux" | "autres"> };
+    const productCategoryId = !isWoo ? (p.category_id ?? null) : null;
     items.push({
       key,
       type: "product",
@@ -305,6 +315,10 @@ export function buildCatalog(
       woo_categories: p.woo_categories ?? [],
       woo_brands: classified.brands,
       woo_soins: classified.soins,
+      product_category_id: productCategoryId,
+      product_category_name: productCategoryId
+        ? (productCategoryNameById.get(productCategoryId) ?? null)
+        : null,
       sold_qty: soldQtyByKey.get(key) ?? 0,
     });
   }

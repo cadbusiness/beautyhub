@@ -34,7 +34,7 @@ export default async function CaissePage({
     todayDateString(),
   );
 
-  const [woo, stripeAccount, servicesRes, productsRes, clientsRes, posSettings, staffRes, apptsRes, cashSession, linkedApptRes, categoriesRes, soldQtyByKey] =
+  const [woo, stripeAccount, servicesRes, productsRes, clientsRes, posSettings, staffRes, apptsRes, cashSession, linkedApptRes, categoriesRes, productCategoriesRes, soldQtyByKey] =
     await Promise.all([
     getTenantConnectionStatus(tenantId, WOO_PROVIDER),
     getStripeAccountForTenant(tenantId),
@@ -46,7 +46,7 @@ export default async function CaissePage({
       .order("name"),
     supabase
       .from("inst_products")
-      .select("id, name, price_cents, image_url, source, sku, status, woo_id, woo_categories")
+      .select("id, name, price_cents, image_url, source, sku, status, woo_id, woo_categories, category_id")
       .eq("tenant_id", tenantId)
       .in("status", ["active", "publish"])
       .order("name"),
@@ -86,6 +86,12 @@ export default async function CaissePage({
       .eq("tenant_id", tenantId)
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true }),
+    supabase
+      .from("inst_product_categories")
+      .select("id, name, sort_order")
+      .eq("tenant_id", tenantId)
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true }),
     fetchPosSoldQuantities(supabase, tenantId),
   ]);
 
@@ -94,8 +100,14 @@ export default async function CaissePage({
     id: c.id,
     name: c.name,
   }));
+  const productCategories = (productCategoriesRes.data ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    sort_order: c.sort_order,
+  }));
   const catalog = buildCatalog(servicesRes.data ?? [], productsRes.data ?? [], {
     serviceCategories,
+    productCategories,
     soldQtyByKey,
   });
   const clients = (clientsRes.data ?? []).map((c) => ({
@@ -172,6 +184,7 @@ export default async function CaissePage({
           <PosTerminal
             catalog={catalog}
             serviceCategories={serviceCategories}
+            productCategories={productCategories}
             clients={clients}
             staff={staff}
             appointments={appointments}

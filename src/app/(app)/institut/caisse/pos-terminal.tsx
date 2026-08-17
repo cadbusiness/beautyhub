@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { checkoutPos, type ActionResult } from "../caisse-actions";
 import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/input";
@@ -16,14 +17,18 @@ import {
 import {
   POS_FACET_ALL,
   POS_FACET_BESTSELLERS,
+  POS_FACET_INTERNAL_UNCATEGORIZED,
   POS_FACET_MARQUES,
   POS_FACET_SOINS,
   POS_FACET_UNCATEGORIZED,
   expandedWooGroup,
   filterPosCatalog,
+  hasUncategorizedInternalProducts,
   hasUncategorizedServices,
+  listProductCategoryFacets,
   listServiceCategoryFacets,
   listWooNavGroups,
+  productFacetId,
   serviceFacetId,
 } from "@/lib/institut/pos-catalog-filter";
 import { computeCartTotals, resolveCartDiscountCents } from "@/lib/institut/pos-totals";
@@ -39,6 +44,11 @@ import {
 import { CheckoutPanel } from "./checkout-panel";
 import { PosLoyaltyPicker } from "./pos-loyalty-picker";
 import { OpenSessionForm } from "./session/open-session-form";
+import { InternalProductForm } from "./produits/internal-product-form";
+import { ProductCategoriesDialog } from "./produits/product-categories-dialog";
+import { Button } from "@/components/ui/button";
+import { FormDialog } from "@/components/ui/form-dialog";
+import type { ProductCategoryRow } from "@/lib/institut/internal-products";
 
 interface Option {
   id: string;
@@ -51,6 +61,7 @@ const initial: ActionResult = {};
 export function PosTerminal({
   catalog,
   serviceCategories = [],
+  productCategories = [],
   clients,
   staff,
   appointments,
@@ -66,6 +77,7 @@ export function PosTerminal({
 }: {
   catalog: PosCatalogItem[];
   serviceCategories?: PosServiceCategory[];
+  productCategories?: ProductCategoryRow[];
   clients: Option[];
   staff: Option[];
   appointments: PosAppointmentOption[];
@@ -114,7 +126,10 @@ export function PosTerminal({
     initial,
   );
   const [lastSale, setLastSale] = useState<ActionResult | null>(null);
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const lastRecordedSale = useRef<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (
@@ -210,6 +225,18 @@ export function PosTerminal({
     () => hasUncategorizedServices(catalog, tab),
     [catalog, tab],
   );
+  const productCategoryFacets = useMemo(
+    () => listProductCategoryFacets(tab, productCategories),
+    [tab, productCategories],
+  );
+  const showUncategorizedInternal = useMemo(
+    () => hasUncategorizedInternalProducts(catalog, tab),
+    [catalog, tab],
+  );
+  const selectedProductCategoryId =
+    facet.startsWith("product:") && facet !== POS_FACET_INTERNAL_UNCATEGORIZED
+      ? facet.slice("product:".length)
+      : "";
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -440,6 +467,7 @@ export function PosTerminal({
   const tCheckout = useTranslations("pos.checkout");
 
   return (
+    <>
     <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
@@ -527,6 +555,32 @@ export function PosTerminal({
               {t("filters.uncategorized")}
             </CatalogFacetChip>
           ) : null}
+          {productCategoryFacets.map((category) => {
+            const id = productFacetId(category.id);
+            return (
+              <CatalogFacetChip
+                key={id}
+                active={facet === id}
+                onClick={() => {
+                  setFacet(id);
+                  setPage(1);
+                }}
+              >
+                {category.name}
+              </CatalogFacetChip>
+            );
+          })}
+          {showUncategorizedInternal ? (
+            <CatalogFacetChip
+              active={facet === POS_FACET_INTERNAL_UNCATEGORIZED}
+              onClick={() => {
+                setFacet(POS_FACET_INTERNAL_UNCATEGORIZED);
+                setPage(1);
+              }}
+            >
+              {t("filters.uncategorized")}
+            </CatalogFacetChip>
+          ) : null}
           {wooNav.soins.length > 0 ? (
             <CatalogFacetChip
               active={wooGroup === "soins"}
@@ -608,6 +662,37 @@ export function PosTerminal({
           </div>
         </div>
 
+        {tab === "internal" || tab === "service" ? (
+          <div className="flex flex-wrap gap-2">
+            {tab === "service" ? (
+              <Link href="/institut/prestations">
+                <Button type="button" variant="outline" className="h-8">
+                  {t("manageServices")}
+                </Button>
+              </Link>
+            ) : null}
+            {tab === "internal" ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-8"
+                  onClick={() => setCategoriesOpen(true)}
+                >
+                  {t("manageProductCategories")}
+                </Button>
+                <Button
+                  type="button"
+                  className="h-8"
+                  onClick={() => setProductDialogOpen(true)}
+                >
+                  + {t("addInternalProduct")}
+                </Button>
+              </>
+            ) : null}
+          </div>
+        ) : null}
+
         {filtered.length === 0 ? (
           <Card>
             <p className="text-sm text-slate-500">
@@ -615,8 +700,40 @@ export function PosTerminal({
                 ? t("noResults", { query: query.trim() })
                 : facet === POS_FACET_BESTSELLERS
                   ? t("noBestsellers")
-                  : t("emptyCategory")}
+                  : tab === "internal"
+                    ? t("emptyInternal")
+                    : tab === "service"
+                      ? t("emptyServices")
+                      : t("emptyCategory")}
             </p>
+            {tab === "internal" && !query.trim() ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-8"
+                  onClick={() => setCategoriesOpen(true)}
+                >
+                  {t("manageProductCategories")}
+                </Button>
+                <Button
+                  type="button"
+                  className="h-8"
+                  onClick={() => setProductDialogOpen(true)}
+                >
+                  + {t("addInternalProduct")}
+                </Button>
+              </div>
+            ) : null}
+            {tab === "service" && !query.trim() ? (
+              <div className="mt-3">
+                <Link href="/institut/prestations">
+                  <Button type="button" variant="outline" className="h-8">
+                    {t("manageServices")}
+                  </Button>
+                </Link>
+              </div>
+            ) : null}
           </Card>
         ) : (
           <>
@@ -1055,6 +1172,33 @@ export function PosTerminal({
         </Link>
       </Card>
     </div>
+    {productDialogOpen ? (
+      <FormDialog
+        open={productDialogOpen}
+        onClose={() => setProductDialogOpen(false)}
+        title={t("addInternalProduct")}
+      >
+        <InternalProductForm
+          categories={productCategories}
+          defaultCategoryId={selectedProductCategoryId || null}
+          onSuccess={() => {
+            setProductDialogOpen(false);
+            router.refresh();
+          }}
+        />
+      </FormDialog>
+    ) : null}
+    {categoriesOpen ? (
+      <ProductCategoriesDialog
+        open={categoriesOpen}
+        categories={productCategories}
+        onClose={() => {
+          setCategoriesOpen(false);
+          router.refresh();
+        }}
+      />
+    ) : null}
+    </>
   );
 }
 

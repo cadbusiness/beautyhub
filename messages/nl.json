@@ -2785,7 +2785,7 @@
         "all": "Alles",
         "services": "Behandelingen",
         "woo": "Woo-winkel",
-        "internal": "Intern"
+        "internal": "Interne producten"
       },
       "categories": {
         "service": "Behandeling",
@@ -2796,6 +2796,11 @@
       "searchArticles": "Zoek een artikel…",
       "searchAria": "Zoeken",
       "emptyCategory": "Geen artikelen in deze categorie. Voeg behandelingen toe, synchroniseer WooCommerce of maak interne producten aan.",
+      "emptyInternal": "Geen interne producten. Maak een categorie, daarna een product, om ze aan de kassa te verkopen.",
+      "emptyServices": "Geen zichtbare behandelingen. Voeg ze toe bij Behandelingen.",
+      "addInternalProduct": "Nieuw intern product",
+      "manageProductCategories": "Interne categorieën",
+      "manageServices": "Behandelingen beheren",
       "noResults": "Geen artikelen voor « {query} ».",
       "noBestsellers": "Nog niet genoeg verkopen om artikelen te rangschikken.",
       "filters": {
@@ -2925,11 +2930,15 @@
     },
     "products": {
       "new": "Nieuw product",
+      "manageCategories": "Categorieën",
       "searchPlaceholder": "Zoek naam, SKU…",
       "empty": "Geen interne producten.",
       "noResults": "Geen resultaten voor deze zoekopdracht.",
+      "filterCategoryAll": "Alle categorieën",
+      "filterCategoryNone": "Zonder categorie",
       "columns": {
         "name": "Naam",
+        "category": "Categorie",
         "sku": "SKU",
         "stock": "Voorraad",
         "price": "Prijs",
@@ -2938,13 +2947,30 @@
       "delete": "Verwijderen",
       "footer": "{count, plural, one {# product} other {# producten}}",
       "dialogTitle": "Nieuw product",
+      "dialogEditTitle": "Product bewerken",
       "form": {
         "namePlaceholder": "Gezichtsolie 30 ml",
         "priceEur": "Prijs (EUR)",
         "stockOptional": "Optioneel",
         "skuOptional": "Optioneel",
+        "category": "Interne categorie",
+        "categoryNone": "Zonder categorie",
         "submit": "Product toevoegen",
-        "submitting": "Toevoegen…"
+        "submitting": "Toevoegen…",
+        "save": "Opslaan",
+        "saving": "Opslaan…"
+      },
+      "categories": {
+        "title": "Categorieën van interne producten",
+        "intro": "Organiseer de kassacatalogus (verbruiksartikelen, retail, enz.). De volgorde bepaalt de weergave.",
+        "name": "Naam",
+        "namePlaceholder": "Retail",
+        "sortOrder": "Volgorde",
+        "sortLabel": "Volgorde {order}",
+        "add": "Toevoegen",
+        "saving": "Opslaan…",
+        "empty": "Nog geen categorie.",
+        "deleteConfirm": "Categorie « {name} » verwijderen? Gekoppelde producten blijven zonder categorie."
       }
     },
     "history": {

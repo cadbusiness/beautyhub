@@ -26,6 +26,13 @@ import {
   DEFAULT_POS_PAYMENT_METHODS,
 } from "@/lib/institut/pos-settings";
 import {
+  createInternalProductRecord,
+  createProductCategory,
+  deleteProductCategory,
+  updateInternalProductRecord,
+  updateProductCategory,
+} from "@/lib/institut/internal-products";
+import {
   getTaxCountry,
   isVatExemptRegime,
   resolvePosCurrency,
@@ -153,18 +160,50 @@ export async function createInternalProduct(
 
   const stockRaw = String(formData.get("stock_quantity") ?? "").trim();
   const stock = stockRaw === "" ? null : Math.max(0, Number.parseInt(stockRaw, 10) || 0);
+  const categoryId = String(formData.get("category_id") ?? "").trim() || null;
 
   const supabase = await createClient();
-  const { error } = await supabase.from("inst_products").insert({
-    tenant_id: session.tenant.id,
-    name,
-    sku: String(formData.get("sku") ?? "").trim() || null,
-    price_cents: parseEurosCents(formData.get("price")),
-    stock_quantity: stock,
-    source: "internal",
-    status: "active",
-  });
-  if (error) return { error: error.message };
+  try {
+    await createInternalProductRecord(supabase, session.tenant.id, {
+      name,
+      sku: String(formData.get("sku") ?? "").trim() || null,
+      priceCents: parseEurosCents(formData.get("price")),
+      stockQuantity: stock,
+      categoryId,
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : t("nameRequired") };
+  }
+  revalidateCaisse();
+  return { ok: true };
+}
+
+export async function updateInternalProduct(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const id = String(formData.get("id") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!id || !name) return { error: t("nameRequired") };
+
+  const stockRaw = String(formData.get("stock_quantity") ?? "").trim();
+  const stock = stockRaw === "" ? null : Math.max(0, Number.parseInt(stockRaw, 10) || 0);
+  const categoryId = String(formData.get("category_id") ?? "").trim() || null;
+
+  const supabase = await createClient();
+  try {
+    await updateInternalProductRecord(supabase, session.tenant.id, id, {
+      name,
+      sku: String(formData.get("sku") ?? "").trim() || null,
+      priceCents: parseEurosCents(formData.get("price")),
+      stockQuantity: stock,
+      categoryId,
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : t("nameRequired") };
+  }
   revalidateCaisse();
   return { ok: true };
 }
@@ -177,6 +216,56 @@ export async function deleteInternalProduct(formData: FormData): Promise<void> {
     .delete()
     .eq("id", String(formData.get("id")))
     .eq("source", "internal");
+  revalidateCaisse();
+}
+
+export async function createInternalProductCategory(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: t("nameRequired") };
+  const sortOrder = Number.parseInt(String(formData.get("sort_order") ?? "0"), 10) || 0;
+  const supabase = await createClient();
+  try {
+    await createProductCategory(supabase, session.tenant.id, { name, sortOrder });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : t("nameRequired") };
+  }
+  revalidateCaisse();
+  return { ok: true };
+}
+
+export async function updateInternalProductCategory(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  const id = String(formData.get("id") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!id || !name) return { error: t("nameRequired") };
+  const sortOrder = Number.parseInt(String(formData.get("sort_order") ?? "0"), 10) || 0;
+  const supabase = await createClient();
+  try {
+    await updateProductCategory(supabase, session.tenant.id, id, { name, sortOrder });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : t("nameRequired") };
+  }
+  revalidateCaisse();
+  return { ok: true };
+}
+
+export async function deleteInternalProductCategory(formData: FormData): Promise<void> {
+  const session = await requireModule("institut");
+  const supabase = await createClient();
+  await deleteProductCategory(
+    supabase,
+    session.tenant.id,
+    String(formData.get("id")),
+  );
   revalidateCaisse();
 }
 

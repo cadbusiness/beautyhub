@@ -2725,6 +2725,7 @@
     "products": {
       "columns": {
         "actions": "Comportamiento",
+        "category": "Categoría",
         "name": "Nombre",
         "price": "Precio",
         "sku": "SKU",
@@ -2732,16 +2733,36 @@
       },
       "delete": "BORRAR",
       "dialogTitle": "Nuevo producto",
+      "dialogEditTitle": "Modificar el producto",
       "empty": "Sin productos internos.",
+      "filterCategoryAll": "Todas las categorías",
+      "filterCategoryNone": "Sin categoría",
       "footer": "{recuento, plural, uno {# produit} otro {# produits}}",
       "form": {
+        "category": "Categoría interna",
+        "categoryNone": "Sin categoría",
         "namePlaceholder": "Aceite facial 30ml",
         "priceEur": "Precio (EUR)",
+        "save": "Guardar",
+        "saving": "Guardando…",
         "skuOptional": "Opcional",
         "stockOptional": "Opcional",
         "submit": "Añadir producto",
         "submitting": "Suma…"
       },
+      "categories": {
+        "title": "Categorías de productos internos",
+        "intro": "Organice el catálogo de caja (consumibles, retail, etc.). El orden define la visualización.",
+        "name": "Nombre",
+        "namePlaceholder": "Retail",
+        "sortOrder": "Orden",
+        "sortLabel": "Orden {order}",
+        "add": "Añadir",
+        "saving": "Guardando…",
+        "empty": "Ninguna categoría por el momento.",
+        "deleteConfirm": "¿Eliminar la categoría « {name} »? Los productos asociados quedarán sin categoría."
+      },
+      "manageCategories": "Categorías",
       "new": "Nuevo producto",
       "noResults": "No hay resultados para esta búsqueda.",
       "searchPlaceholder": "Buscar nombre, SKU…"
@@ -2944,6 +2965,11 @@
         "cashPending": "Recopilación…"
       },
       "emptyCategory": "No hay artículos en esta categoría. Añade servicios, sincroniza WooCommerce o crea productos internos.",
+      "emptyInternal": "Ningún producto interno. Cree una categoría, luego un producto, para venderlos en caja.",
+      "emptyServices": "Ningún servicio visible. Añádalos en Servicios.",
+      "addInternalProduct": "Nuevo producto interno",
+      "manageProductCategories": "Categorías internas",
+      "manageServices": "Gestionar servicios",
       "noResults": "Ningún artículo para « {query} ».",
       "noBestsellers": "Aún no hay suficientes ventas para clasificar los artículos.",
       "filters": {
@@ -2967,7 +2993,7 @@
       "sessionPreviousDayCta": "Ir a cerrar →",
       "tabs": {
         "all": "Todo",
-        "internal": "Interno",
+        "internal": "Productos internos",
         "services": "Servicios",
         "woo": "Tienda Woo"
       }

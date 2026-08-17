@@ -11,6 +11,7 @@ import '../shared/catalog_item_thumb.dart';
 import '../shared/money.dart';
 import 'catalog_item_detail_sheet.dart';
 import 'catalog_product_row.dart';
+import 'internal_product_sheets.dart';
 import 'sale_ticket_pdf_screen.dart';
 
 class PosSaleTab extends ConsumerStatefulWidget {
@@ -58,6 +59,13 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     if (facet.startsWith('service:')) {
       return item.serviceCategoryId == facet.substring('service:'.length);
     }
+    if (facet == 'product:none') {
+      return item.category == 'internal' &&
+          (item.productCategoryId == null || item.productCategoryId!.isEmpty);
+    }
+    if (facet.startsWith('product:')) {
+      return item.productCategoryId == facet.substring('product:'.length);
+    }
     if (facet == 'woo-group:soins') return item.wooSoins.isNotEmpty;
     if (facet == 'woo-group:marques') return item.wooBrands.isNotEmpty;
     if (facet.startsWith('woo-soins:')) {
@@ -81,6 +89,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     if (item.serviceCategoryName?.toLowerCase().contains(q) ?? false) {
       return true;
     }
+    if (item.productCategoryName?.toLowerCase().contains(q) ?? false) {
+      return true;
+    }
     if (item.description?.toLowerCase().contains(q) ?? false) return true;
     if (item.wooBrands.any((name) => name.toLowerCase().contains(q))) {
       return true;
@@ -97,6 +108,11 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         .where((id) => id.isNotEmpty)
         .toSet();
     return ctx.serviceCategories.where((c) => used.contains(c.id)).toList();
+  }
+
+  List<PosOption> _productFacets(PosContext ctx, String type) {
+    if (type != 'all' && type != 'internal') return const [];
+    return ctx.productCategories;
   }
 
   ({List<({String id, String name})> soins, List<({String id, String name})> marques})
@@ -145,6 +161,15 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       (item) =>
           item.category == 'service' &&
           (item.serviceCategoryId == null || item.serviceCategoryId!.isEmpty),
+    );
+  }
+
+  bool _hasUncategorizedInternal(PosContext ctx, String type) {
+    if (type != 'all' && type != 'internal') return false;
+    return ctx.catalog.any(
+      (item) =>
+          item.category == 'internal' &&
+          (item.productCategoryId == null || item.productCategoryId!.isEmpty),
     );
   }
 
@@ -309,9 +334,15 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         final items = _filtered(ctx, filter, facet, query);
         final queryTrimmed = query.trim();
         final serviceFacets = _serviceFacets(ctx, filter);
+        final productFacets = _productFacets(ctx, filter);
         final wooNav = _wooNav(ctx, filter);
         final wooGroup = _expandedWooGroup(facet);
         final showUncategorized = _hasUncategorizedServices(ctx, filter);
+        final showUncategorizedInternal = _hasUncategorizedInternal(ctx, filter);
+        final selectedProductCategoryId =
+            facet.startsWith('product:') && facet != 'product:none'
+                ? facet.substring('product:'.length)
+                : null;
         return Stack(
           children: [
             CustomScrollView(
@@ -507,6 +538,18 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                             value: 'service:none',
                             selected: facet,
                           ),
+                        for (final category in productFacets)
+                          _FacetChip(
+                            label: category.label,
+                            value: 'product:${category.id}',
+                            selected: facet,
+                          ),
+                        if (showUncategorizedInternal)
+                          _FacetChip(
+                            label: 'Sans catégorie',
+                            value: 'product:none',
+                            selected: facet,
+                          ),
                         if (wooNav.soins.isNotEmpty)
                           _FacetChip(
                             label: 'Soins',
@@ -561,6 +604,35 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                       ),
                     ),
                   ),
+                if (filter == 'internal')
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton(
+                            onPressed: () =>
+                                showCreateInternalProductCategorySheet(
+                              context,
+                              ref,
+                            ),
+                            child: const Text('Catégories internes'),
+                          ),
+                          FilledButton(
+                            onPressed: () => showCreateInternalProductSheet(
+                              context,
+                              ref,
+                              categories: ctx.productCategories,
+                              defaultCategoryId: selectedProductCategoryId,
+                            ),
+                            child: const Text('+ Produit interne'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 if (items.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
@@ -572,7 +644,11 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                               ? 'Aucun article pour « $queryTrimmed ».'
                               : facet == 'bestsellers'
                                   ? 'Pas encore assez de ventes pour classer les articles.'
-                                  : 'Aucun article dans cette catégorie.',
+                                  : filter == 'internal'
+                                      ? 'Aucun produit interne. Créez une catégorie, puis un produit.'
+                                      : filter == 'service'
+                                          ? 'Aucune prestation visible. Ajoutez-les dans Prestations sur le site.'
+                                          : 'Aucun article dans cette catégorie.',
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: _muted),
                         ),

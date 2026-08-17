@@ -29,6 +29,31 @@ class ClosedCashSessionResult {
   final int varianceCents;
 }
 
+class CreditNoteResult {
+  const CreditNoteResult({
+    required this.id,
+    required this.creditNumber,
+    required this.settlement,
+    required this.remainingRefundableCents,
+    this.documentId,
+  });
+
+  final String id;
+  final String creditNumber;
+  final String settlement;
+  final int remainingRefundableCents;
+  final String? documentId;
+
+  factory CreditNoteResult.fromJson(Map<String, dynamic> json) =>
+      CreditNoteResult(
+        id: json['id'] as String? ?? '',
+        creditNumber: json['creditNumber'] as String? ?? '',
+        settlement: json['settlement'] as String? ?? 'credit',
+        remainingRefundableCents: json['remainingRefundableCents'] as int? ?? 0,
+        documentId: json['documentId'] as String?,
+      );
+}
+
 /// Credentials retournés quand on créé un compte cliente à la volée.
 class ClientAccountCredentials {
   const ClientAccountCredentials({required this.loginId, required this.pinCode});
@@ -693,6 +718,29 @@ class MobileApiClient {
     );
     final body = await _decode(response);
     return PosCheckoutResult.fromJson(body);
+  }
+
+  Future<CreditNoteResult> createSaleCreditNote({
+    required String accessToken,
+    required String tenantId,
+    required String saleId,
+    required int amountCents,
+    required String reason,
+    String settlement = 'credit',
+    String? intent,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/sales/$saleId/credit-note'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'amountCents': amountCents,
+        'reason': reason,
+        'settlement': settlement,
+        if (intent != null && intent.isNotEmpty) 'intent': intent,
+      }),
+    );
+    final body = await _decode(response);
+    return CreditNoteResult.fromJson(body);
   }
 
   Future<void> createInternalProduct({

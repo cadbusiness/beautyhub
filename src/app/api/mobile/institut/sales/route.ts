@@ -11,6 +11,7 @@ import {
   todayDateString,
   zonedDayStartUtc,
 } from "@/lib/date";
+import { creditedCentsBySaleIds } from "@/lib/institut/pos-vouchers";
 
 const DEFAULT_LIMIT = 40;
 const MAX_LIMIT = 100;
@@ -225,19 +226,23 @@ export async function GET(request: Request) {
     }
 
     const saleIds = pageRows.map((sale) => sale.id as string);
-    const docsRes =
+    const [docsRes, creditedMap] = await Promise.all([
       saleIds.length > 0
-        ? await session.supabase
+        ? session.supabase
             .from("inst_sale_documents")
             .select("id, sale_id, doc_type, doc_number")
             .eq("tenant_id", session.tenant.id)
             .in("sale_id", saleIds)
-        : { data: [] as Array<{
-            id: string;
-            sale_id: string | null;
-            doc_type: string;
-            doc_number: string;
-          }> };
+        : Promise.resolve({
+            data: [] as Array<{
+              id: string;
+              sale_id: string | null;
+              doc_type: string;
+              doc_number: string;
+            }>,
+          }),
+      creditedCentsBySaleIds(session.supabase, session.tenant.id, saleIds),
+    ]);
 
     const docsBySale = new Map<
       string,
@@ -327,6 +332,7 @@ export async function GET(request: Request) {
           amountCents: p.amount_cents,
         })),
         documents: docsBySale.get(sale.id) ?? [],
+        creditedCents: creditedMap.get(sale.id) ?? 0,
       };
     });
     const nextCursor = hasMore ? rows[limit - 1].created_at : null;

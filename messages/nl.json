@@ -637,6 +637,7 @@
       "creditNoteCreated": "Creditnota aangemaakt",
       "creditAmountInvalid": "Ongeldig creditnota-bedrag.",
       "saleNotFound": "Verkoop niet gevonden.",
+      "saleAlreadyRefunded": "Dit ticket is al volledig gecrediteerd.",
       "saleNotPartial": "Deze verkoop is geen openstaand voorschot.",
       "balancePaid": "Saldo ontvangen",
       "giftCardInvalid": "Ongeldige cadeaubon.",
@@ -3042,6 +3043,28 @@
       "empty": "Geen geregistreerde verkopen.",
       "viewTicket": "Ticket openen",
       "ticketLabel": "Ticket",
+      "ticketActions": {
+        "open": "Acties",
+        "title": "Actie op het ticket",
+        "legalHint": "Het originele ticket wordt nooit gewijzigd of verwijderd. Elke correctie verloopt via een creditnota.",
+        "credit": "Creditnota",
+        "creditHint": "De klant gebruikt het bedrag bij een volgende aankoop.",
+        "refund": "Terugbetaling",
+        "refundHint": "Creditnota plus terugbetaling. De terminalterugbetaling gebeurt apart.",
+        "replace": "Vervanging",
+        "replaceHint": "Creditnota voor het geretourneerde artikel, daarna afrekenen van het nieuwe artikel.",
+        "settlement": "Uitbetaling",
+        "settlementCash": "Contant",
+        "settlementCard": "Kaart (terminal)",
+        "amount": "Bedrag",
+        "remaining": "Nog te crediteren: {amount}",
+        "reason": "Reden (verplicht)",
+        "reasonPlaceholder": "Ontevredenheid, defect product, kassafout…",
+        "submit": "Creditnota uitgeven",
+        "submitRefund": "Creditnota uitgeven en terugbetalen",
+        "submitReplace": "Creditnota uitgeven en vervangen",
+        "noneLeft": "Dit ticket is al volledig gecrediteerd."
+      },
       "paidShort": "betaald",
       "mixedPayments": "{count} betalingen",
       "columns": {
@@ -3056,7 +3079,8 @@
       },
       "status": {
         "paid": "Betaald",
-        "partial": "Voorschot"
+        "partial": "Voorschot",
+        "refunded": "Terugbetaald"
       },
       "paymentMethods": {
         "cash": "Contant",

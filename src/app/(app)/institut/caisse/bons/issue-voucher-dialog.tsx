@@ -238,7 +238,7 @@ function CreditNoteFields({ sales }: { sales: IssueDialogSale[] }) {
         />
       </Field>
       <Field label={t("reason")} htmlFor="credit_reason">
-        <Textarea id="credit_reason" name="reason" rows={2} />
+        <Textarea id="credit_reason" name="reason" rows={2} required minLength={3} />
       </Field>
     </>
   );

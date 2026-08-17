@@ -1202,6 +1202,7 @@
       "saleAlreadyRecorded": "Sale already registered.",
       "saleError": "Sales error.",
       "saleNotFound": "Sale not found.",
+      "saleAlreadyRefunded": "This ticket has already been fully credited.",
       "saleNotPartial": "This sale is not a pending deposit.",
       "saleRecorded": "Registered sale",
       "scheduleBlocksInvalid": "Invalid time slot format.",
@@ -3142,11 +3143,34 @@
       },
       "status": {
         "paid": "Paid",
-        "partial": "Deposit"
+        "partial": "Deposit",
+        "refunded": "Refunded"
       },
       "viewDocuments": "Documents",
       "viewTicket": "Open ticket",
-      "ticketLabel": "Ticket"
+      "ticketLabel": "Ticket",
+      "ticketActions": {
+        "open": "Actions",
+        "title": "Ticket action",
+        "legalHint": "The original ticket is never edited or deleted. Any correction is issued as a credit note.",
+        "credit": "Credit note",
+        "creditHint": "The customer uses the amount on a later purchase.",
+        "refund": "Refund",
+        "refundHint": "Credit note plus cash or card payout. Card refunds are done on the terminal.",
+        "replace": "Replacement",
+        "replaceHint": "Credit the returned item, then check out the replacement.",
+        "settlement": "Payout",
+        "settlementCash": "Cash",
+        "settlementCard": "Card (terminal)",
+        "amount": "Amount",
+        "remaining": "Still refundable: {amount}",
+        "reason": "Reason (required)",
+        "reasonPlaceholder": "Dissatisfaction, defective product, till error…",
+        "submit": "Issue credit note",
+        "submitRefund": "Issue credit note and refund",
+        "submitReplace": "Issue credit note then replace",
+        "noneLeft": "This ticket has already been fully credited."
+      }
     },
     "loyalty": {
       "balance": "{count} {label}",

@@ -689,6 +689,7 @@
       "creditNoteCreated": "Avoir créé",
       "creditAmountInvalid": "Montant d'avoir invalide.",
       "saleNotFound": "Vente introuvable.",
+      "saleAlreadyRefunded": "Ce ticket a déjà été entièrement crédité.",
       "saleNotPartial": "Cette vente n'est pas un acompte en attente.",
       "balancePaid": "Solde encaissé",
       "giftCardInvalid": "Bon-cadeau invalide.",
@@ -3175,6 +3176,28 @@
       "footerInvoices": "{count, plural, one {# facture} other {# factures}}",
       "viewTicket": "Ouvrir le ticket",
       "ticketLabel": "Ticket",
+      "ticketActions": {
+        "open": "Actions",
+        "title": "Action sur le ticket",
+        "legalHint": "Le ticket d'origine n'est jamais modifié ni supprimé. Toute correction passe par un avoir (note de crédit).",
+        "credit": "Avoir",
+        "creditHint": "La cliente utilise le montant sur un prochain achat.",
+        "refund": "Remboursement",
+        "refundHint": "Avoir + restitution de l'argent. Le TPE carte se fait à part.",
+        "replace": "Remplacement",
+        "replaceHint": "Avoir sur l'article rendu, puis encaissement du nouvel article.",
+        "settlement": "Restitution",
+        "settlementCash": "Espèces",
+        "settlementCard": "Carte (TPE)",
+        "amount": "Montant",
+        "remaining": "Restant à créditer : {amount}",
+        "reason": "Motif (obligatoire)",
+        "reasonPlaceholder": "Insatisfaction, produit défectueux, erreur de caisse…",
+        "submit": "Émettre l'avoir",
+        "submitRefund": "Émettre l'avoir et rembourser",
+        "submitReplace": "Émettre l'avoir puis remplacer",
+        "noneLeft": "Ce ticket a déjà été entièrement crédité."
+      },
       "viewDocuments": "Documents",
       "paidShort": "déjà payé",
       "payBalance": "Encaisser le solde",
@@ -3203,7 +3226,8 @@
       },
       "status": {
         "paid": "Payé",
-        "partial": "Acompte"
+        "partial": "Acompte",
+        "refunded": "Remboursé"
       },
       "paymentMethods": {
         "cash": "Espèces",

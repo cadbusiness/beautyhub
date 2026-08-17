@@ -1085,6 +1085,7 @@
       "saleAlreadyRecorded": "Venta ya registrada.",
       "saleError": "Error de ventas.",
       "saleNotFound": "Venta no encontrada.",
+      "saleAlreadyRefunded": "Este ticket ya ha sido acreditado por completo.",
       "saleNotPartial": "Esta venta no es un depósito pendiente.",
       "saleRecorded": "Venta registrada",
       "scheduleBlocksInvalid": "Formato de franja horaria no válido.",
@@ -2726,11 +2727,34 @@
       },
       "status": {
         "paid": "Pagado",
-        "partial": "Depósito"
+        "partial": "Depósito",
+        "refunded": "Reembolsado"
       },
       "viewDocuments": "Documentos",
       "viewTicket": "Abrir ticket",
       "ticketLabel": "Ticket",
+      "ticketActions": {
+        "open": "Acciones",
+        "title": "Acción sobre el ticket",
+        "legalHint": "El ticket original no se modifica ni se elimina. Toda corrección se emite como una nota de crédito.",
+        "credit": "Nota de crédito",
+        "creditHint": "La clienta usa el importe en una compra posterior.",
+        "refund": "Reembolso",
+        "refundHint": "Nota de crédito y devolución del dinero. El TPE se hace aparte.",
+        "replace": "Sustitución",
+        "replaceHint": "Nota de crédito del artículo devuelto, luego cobro del nuevo artículo.",
+        "settlement": "Restitución",
+        "settlementCash": "Efectivo",
+        "settlementCard": "Tarjeta (TPE)",
+        "amount": "Importe",
+        "remaining": "Pendiente de acreditar: {amount}",
+        "reason": "Motivo (obligatorio)",
+        "reasonPlaceholder": "Insatisfacción, producto defectuoso, error de caja…",
+        "submit": "Emitir la nota de crédito",
+        "submitRefund": "Emitir la nota y reembolsar",
+        "submitReplace": "Emitir la nota y sustituir",
+        "noneLeft": "Este ticket ya ha sido acreditado por completo."
+      },
       "noItems": "Ningún artículo en este ticket."
     },
     "sales": {

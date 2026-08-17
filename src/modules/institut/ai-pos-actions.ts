@@ -470,7 +470,7 @@ export const institutPosAiActions = [
       sale_id: z.string().uuid().optional(),
       ticket_number: z.string().optional(),
       amount_euros: z.number().positive(),
-      reason: z.string().optional(),
+      reason: z.string().min(3),
     }),
     requiredRole: "tenant_owner",
     confirm: true,
@@ -493,6 +493,8 @@ export const institutPosAiActions = [
         const msg = (e as Error).message;
         if (msg === "credit_amount_invalid") throw new Error("Montant avoir invalide.");
         if (msg === "sale_not_found") throw new Error("Vente introuvable.");
+        if (msg === "sale_already_refunded") throw new Error("Cette vente a déjà un avoir intégral.");
+        if (msg === "reason_required") throw new Error("Motif obligatoire.");
         throw e;
       }
     },

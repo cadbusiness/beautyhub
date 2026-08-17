@@ -249,6 +249,7 @@ class InstSale {
     this.clientEmail,
     this.calendarDate,
     this.documents = const [],
+    this.creditedCents = 0,
   });
 
   final String id;
@@ -267,6 +268,14 @@ class InstSale {
   final List<InstSalePayment> payments;
   final String? calendarDate;
   final List<InstSaleDocumentRef> documents;
+  final int creditedCents;
+
+  int get refundableCents {
+    final left = amountPaidCents - creditedCents;
+    return left < 0 ? 0 : left;
+  }
+
+  bool get canIssueCredit => status != 'refunded' && refundableCents > 0;
 
   factory InstSale.fromJson(Map<String, dynamic> json) {
     return InstSale(
@@ -295,6 +304,7 @@ class InstSale {
           .whereType<Map>()
           .map((e) => InstSaleDocumentRef.fromJson(Map<String, dynamic>.from(e)))
           .toList(growable: false),
+      creditedCents: json['creditedCents'] as int? ?? 0,
     );
   }
 }

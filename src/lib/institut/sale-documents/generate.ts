@@ -140,7 +140,7 @@ export async function generateCreditNoteDocument(
   creditNoteId: string,
   creditNumber: string,
   saleId: string,
-): Promise<void> {
+): Promise<string | null> {
   const { data: sale } = await supabase
     .from("inst_sales")
     .select("sale_group_number")
@@ -148,15 +148,20 @@ export async function generateCreditNoteDocument(
     .eq("id", saleId)
     .maybeSingle();
 
-  const { error } = await supabase.from("inst_sale_documents").insert({
-    tenant_id: tenantId,
-    sale_id: saleId,
-    credit_note_id: creditNoteId,
-    doc_type: "credit_note",
-    doc_number: creditNumber,
-    sale_group_number: sale?.sale_group_number ?? null,
-    status: "issued",
-  });
+  const { data, error } = await supabase
+    .from("inst_sale_documents")
+    .insert({
+      tenant_id: tenantId,
+      sale_id: saleId,
+      credit_note_id: creditNoteId,
+      doc_type: "credit_note",
+      doc_number: creditNumber,
+      sale_group_number: sale?.sale_group_number ?? null,
+      status: "issued",
+    })
+    .select("id")
+    .single();
 
   if (error) throw new Error(error.message);
+  return data?.id ?? null;
 }

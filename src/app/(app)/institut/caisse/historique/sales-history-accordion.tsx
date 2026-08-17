@@ -8,6 +8,7 @@ import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { dataTableCellCompact } from "@/components/ui/data-table";
 import { SaleDocMark } from "@/components/institut/sale-doc-mark";
+import { SaleTicketActions } from "./sale-ticket-actions";
 
 export type HistorySaleItem = {
   name: string;
@@ -32,6 +33,7 @@ export type HistorySale = {
   createdAtLabel: string;
   totalCents: number;
   amountPaidCents: number;
+  creditedCents: number;
   currency: string;
   status: string;
   paymentMethod: string;
@@ -174,22 +176,23 @@ export function SalesHistoryAccordion({ sales }: { sales: HistorySale[] }) {
                   </p>
                 ) : null}
 
-                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
                   <Link
                     href={
                       ticketDoc
                         ? `/institut/caisse/documents/${ticketDoc.id}`
                         : `/institut/caisse/ticket/${sale.id}`
                     }
-                    className="font-medium text-orange-900 underline"
+                    className="inline-flex items-center gap-1.5 rounded-md bg-orange-50 px-2 py-0.5 text-[11px] font-semibold text-orange-900 ring-1 ring-inset ring-orange-200"
                   >
-                    {t("viewTicket")}
+                    <SaleDocMark type="ticket" />
+                    {t("ticketLabel")}
                   </Link>
                   {extraDocs.map((doc) => (
                     <Link
                       key={doc.id}
                       href={`/institut/caisse/documents/${doc.id}`}
-                      className="inline-flex items-center gap-1.5 text-slate-700 underline"
+                      className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-semibold text-slate-700 ring-1 ring-inset ring-slate-200"
                       title={doc.docNumber}
                     >
                       <SaleDocMark type={doc.docType} />
@@ -198,6 +201,7 @@ export function SalesHistoryAccordion({ sales }: { sales: HistorySale[] }) {
                       })}
                     </Link>
                   ))}
+                  <SaleTicketActions sale={sale} />
                   {sale.status === "partial" ? (
                     <Link
                       href={`/institut/caisse/solde/${sale.id}`}

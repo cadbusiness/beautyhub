@@ -7,6 +7,7 @@ import '../../state/session_providers.dart';
 import '../shared/money.dart';
 import '../shared/sale_doc.dart';
 import 'sale_detail_sheet.dart';
+import 'sale_ticket_actions_sheet.dart';
 import 'sale_ticket_pdf_screen.dart';
 
 class SalesHistoryTab extends ConsumerStatefulWidget {
@@ -121,6 +122,26 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
         _loading = false;
         _loadedOnce = true;
       });
+    }
+  }
+
+  Future<void> _runTicketAction(InstSale sale) async {
+    final outcome = await showSaleTicketActionsSheet(
+      context: context,
+      sale: sale,
+    );
+    if (outcome == null || !mounted) return;
+    await _loadInitial();
+    if (!mounted) return;
+    if (outcome.replace) return;
+    final documentId = outcome.documentId;
+    if (documentId != null && documentId.isNotEmpty) {
+      await openSaleDocumentPdf(
+        context,
+        documentId: documentId,
+        title: outcome.creditNumber,
+        docType: 'credit_note',
+      );
     }
   }
 
@@ -272,7 +293,11 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           );
         }
-        return _DayGroup(day: grouped[index], today: _today);
+        return _DayGroup(
+          day: grouped[index],
+          today: _today,
+          onTicketAction: _runTicketAction,
+        );
       },
     );
   }
@@ -595,9 +620,10 @@ String _formatDayLabel(String key, String? today, DateTime fallback) {
 }
 
 class _DayGroup extends StatelessWidget {
-  const _DayGroup({required this.day, this.today});
+  const _DayGroup({required this.day, required this.onTicketAction, this.today});
   final _DaySales day;
   final String? today;
+  final Future<void> Function(InstSale sale) onTicketAction;
 
   static const _muted = Color(0xFF737373);
   static const _border = Color(0xFFEBEBEB);
@@ -646,7 +672,10 @@ class _DayGroup extends StatelessWidget {
             child: Column(
               children: [
                 for (var i = 0; i < day.sales.length; i++) ...[
-                  _SaleRow(sale: day.sales[i]),
+                  _SaleRow(
+                    sale: day.sales[i],
+                    onTicketAction: () => onTicketAction(day.sales[i]),
+                  ),
                   if (i < day.sales.length - 1)
                     const Divider(
                       height: 1,
@@ -723,8 +752,9 @@ class _DocDayGroup extends StatelessWidget {
 }
 
 class _SaleRow extends StatefulWidget {
-  const _SaleRow({required this.sale});
+  const _SaleRow({required this.sale, required this.onTicketAction});
   final InstSale sale;
+  final VoidCallback onTicketAction;
 
   @override
   State<_SaleRow> createState() => _SaleRowState();
@@ -763,6 +793,8 @@ class _SaleRowState extends State<_SaleRow> {
   @override
   Widget build(BuildContext context) {
     final extraDocs = sale.documents.where((d) => d.docType != 'ticket').toList();
+    final ticketDocs = sale.documents.where((d) => d.docType == 'ticket');
+    final ticketDoc = ticketDocs.isEmpty ? null : ticketDocs.first;
     final client = sale.clientLabel;
     final time = DateFormat.Hm().format(sale.createdAt);
     final subtitle = [
@@ -919,50 +951,56 @@ class _SaleRowState extends State<_SaleRow> {
                         ),
                       ),
                   ],
-                  if (extraDocs.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        for (final doc in extraDocs)
-                          _DocChip(
-                            docType: doc.docType,
-                            label: doc.shortLabel,
-                            onTap: () => openSaleDocumentPdf(
-                              context,
-                              documentId: doc.id,
-                              title: doc.docNumber,
-                              docType: doc.docType,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                  Row(
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
                     children: [
-                      FilledButton.icon(
-                        onPressed: () =>
-                            showSaleDetailSheet(context: context, sale: sale),
-                        icon: const Icon(Icons.receipt_long_outlined, size: 16),
-                        label: const Text('Ouvrir le ticket'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF9A3412),
-                          foregroundColor: Colors.white,
-                          visualDensity: VisualDensity.compact,
-                        ),
+                      _DocChip(
+                        docType: 'ticket',
+                        label: 'Ticket',
+                        onTap: () {
+                          if (ticketDoc != null) {
+                            openSaleDocumentPdf(
+                              context,
+                              documentId: ticketDoc.id,
+                              title: ticketDoc.docNumber,
+                              docType: 'ticket',
+                            );
+                          } else {
+                            openSaleTicketPdf(
+                              context,
+                              saleId: sale.id,
+                              title: sale.ticketNumber != null
+                                  ? 'Ticket n° ${sale.ticketNumber}'
+                                  : 'Ticket',
+                            );
+                          }
+                        },
                       ),
-                      if (sale.status == 'partial') ...[
-                        const SizedBox(width: 8),
-                        TextButton(
-                          onPressed: () =>
-                              showSaleDetailSheet(context: context, sale: sale),
-                          child: const Text('Encaisser le solde'),
+                      for (final doc in extraDocs)
+                        _DocChip(
+                          docType: doc.docType,
+                          label: doc.shortLabel,
+                          onTap: () => openSaleDocumentPdf(
+                            context,
+                            documentId: doc.id,
+                            title: doc.docNumber,
+                            docType: doc.docType,
+                          ),
                         ),
-                      ],
+                      if (sale.canIssueCredit)
+                        _ActionChip(onTap: widget.onTicketAction),
                     ],
                   ),
+                  if (sale.status == 'partial') ...[
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () =>
+                          showSaleDetailSheet(context: context, sale: sale),
+                      child: const Text('Encaisser le solde'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -1009,6 +1047,41 @@ class _DocChip extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: look.foreground,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionChip extends StatelessWidget {
+  const _ActionChip({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFF0A0A0A),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(6, 4, 8, 4),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.more_horiz, size: 13, color: Colors.white),
+              SizedBox(width: 4),
+              Text(
+                'Actions',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
                 ),
               ),
             ],

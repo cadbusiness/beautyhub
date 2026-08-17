@@ -4,11 +4,13 @@ import 'package:intl/intl.dart';
 
 import '../shared/money.dart';
 import '../shared/sale_doc.dart';
+import 'sale_ticket_actions_sheet.dart';
 import 'sale_ticket_pdf_screen.dart';
 
 Future<void> showSaleDetailSheet({
   required BuildContext context,
   required InstSale sale,
+  Future<void> Function()? onChanged,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -18,13 +20,14 @@ Future<void> showSaleDetailSheet({
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => _SaleDetailSheet(sale: sale),
+    builder: (_) => _SaleDetailSheet(sale: sale, onChanged: onChanged),
   );
 }
 
 class _SaleDetailSheet extends StatelessWidget {
-  const _SaleDetailSheet({required this.sale});
+  const _SaleDetailSheet({required this.sale, this.onChanged});
   final InstSale sale;
+  final Future<void> Function()? onChanged;
 
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
@@ -258,9 +261,9 @@ class _SaleDetailSheet extends StatelessWidget {
                           : 'Ticket',
                     ),
                     icon: const Icon(Icons.receipt_long_outlined, size: 16),
-                    label: const Text('Ouvrir le ticket'),
+                    label: const Text('Ticket'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: _black,
+                      backgroundColor: const Color(0xFF9A3412),
                       foregroundColor: Colors.white,
                       visualDensity: VisualDensity.compact,
                     ),
@@ -278,6 +281,36 @@ class _SaleDetailSheet extends StatelessWidget {
                       ),
                       icon: Icon(saleDocLook(doc.docType).icon, size: 16),
                       label: Text(doc.shortLabel),
+                    ),
+                  if (sale.canIssueCredit)
+                    FilledButton.icon(
+                      onPressed: () async {
+                        final outcome = await showSaleTicketActionsSheet(
+                          context: context,
+                          sale: sale,
+                        );
+                        if (outcome == null) return;
+                        await onChanged?.call();
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop();
+                        if (outcome.replace) return;
+                        final documentId = outcome.documentId;
+                        if (documentId != null && documentId.isNotEmpty) {
+                          await openSaleDocumentPdf(
+                            context,
+                            documentId: documentId,
+                            title: outcome.creditNumber,
+                            docType: 'credit_note',
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.more_horiz, size: 16),
+                      label: const Text('Actions'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _black,
+                        foregroundColor: Colors.white,
+                        visualDensity: VisualDensity.compact,
+                      ),
                     ),
                   if (sale.status == 'partial')
                     Text(

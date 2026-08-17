@@ -3,6 +3,7 @@ import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { ListPanelFooter } from "@/components/ui/list-panel";
 import { historyPeriodBoundsUtc, parseHistoryPeriod } from "@/lib/date";
+import { creditedCentsBySaleIds } from "@/lib/institut/pos-vouchers";
 import { HistoryFilterBar } from "../history-filter-bar";
 import {
   SalesHistoryAccordion,
@@ -83,6 +84,12 @@ export default async function CaisseHistoriquePage({
     return hay.includes(q);
   });
 
+  const creditedMap = await creditedCentsBySaleIds(
+    supabase,
+    session.tenant.id,
+    filtered.map((sale) => sale.id),
+  );
+
   const rows: HistorySale[] = filtered.map((sale) => {
     const client = sale.clients as { full_name: string | null; email: string } | null;
     const items = (sale.inst_sale_items ?? []) as Array<{
@@ -104,6 +111,7 @@ export default async function CaisseHistoriquePage({
       }),
       totalCents: sale.total_cents,
       amountPaidCents: sale.amount_paid_cents,
+      creditedCents: creditedMap.get(sale.id) ?? 0,
       currency: sale.currency,
       status: sale.status,
       paymentMethod: sale.payment_method,

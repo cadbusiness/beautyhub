@@ -292,9 +292,18 @@ export async function createCreditNoteAction(
 
   const saleId = String(formData.get("sale_id") ?? "");
   const amount = parseEurosCents(formData.get("amount"));
-  const reason = String(formData.get("reason") ?? "").trim() || undefined;
+  const reason = String(formData.get("reason") ?? "").trim();
+  const settlementRaw = String(formData.get("settlement") ?? "credit");
+  const settlement =
+    settlementRaw === "cash" || settlementRaw === "card" ? settlementRaw : "credit";
+  const intentRaw = String(formData.get("intent") ?? "");
+  const intent =
+    intentRaw === "refund" || intentRaw === "replacement" || intentRaw === "credit"
+      ? intentRaw
+      : undefined;
   if (!saleId) return { error: t("saleNotFound") };
   if (amount <= 0) return { error: t("invalidAmount") };
+  if (reason.length < 3) return { error: t("reasonRequired") };
 
   const { createCreditNoteFromSale } = await import("@/lib/institut/pos-vouchers");
   try {
@@ -302,6 +311,8 @@ export async function createCreditNoteAction(
       saleId,
       amountCents: amount,
       reason,
+      settlement,
+      intent,
     });
     revalidateSession();
     return { ok: true, message: `${t("creditNoteCreated")} · ${note.creditNumber}` };
@@ -309,6 +320,10 @@ export async function createCreditNoteAction(
     const msg = (e as Error).message;
     if (msg === "credit_amount_invalid") return { error: t("creditAmountInvalid") };
     if (msg === "sale_not_found") return { error: t("saleNotFound") };
+    if (msg === "sale_already_refunded") return { error: t("saleAlreadyRefunded") };
+    if (msg === "reason_required") return { error: t("reasonRequired") };
+    if (msg === "no_open_session") return { error: t("noOpenSession") };
+    if (msg === "session_paused") return { error: t("sessionPaused") };
     return { error: msg };
   }
 }

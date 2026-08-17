@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/pos_cart_provider.dart';
 import '../../state/session_providers.dart';
+import '../../widgets/client_picker.dart';
 import '../../widgets/new_client_form.dart';
 import '../../widgets/searchable_picker.dart';
 import '../shared/catalog_item_thumb.dart';
@@ -20,7 +21,7 @@ class PosSaleTab extends ConsumerStatefulWidget {
 }
 
 class _PosSaleTabState extends ConsumerState<PosSaleTab> {
-  String? _clientId;
+  PickerItem? _selectedClient;
   String _paymentMethod = 'cash';
   bool _openingDay = false;
 
@@ -157,7 +158,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             accessToken: token,
             tenantId: tenantId,
             cart: cart,
-            clientId: _clientId,
+            clientId: _selectedClient?.id,
             payments: [
               {'method': _paymentMethod, 'amountCents': totalCents},
             ],
@@ -215,9 +216,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       ),
       builder: (context) => _CartSheet(
         ctx: ctx,
-        clientId: _clientId,
+        selectedClient: _selectedClient,
         paymentMethod: _paymentMethod,
-        onClientChanged: (id) => setState(() => _clientId = id),
+        onClientChanged: (item) => setState(() => _selectedClient = item),
         onPaymentChanged: (m) => setState(() => _paymentMethod = m),
         onCheckout: () => _checkout(ctx),
         sessionBlocked: ctx.requireOpenSession && !ctx.sessionOpen,
@@ -650,10 +651,10 @@ class _FacetChip extends ConsumerWidget {
   }
 }
 
-class _CartSheet extends ConsumerWidget {
+class _CartSheet extends ConsumerStatefulWidget {
   const _CartSheet({
     required this.ctx,
-    required this.clientId,
+    required this.selectedClient,
     required this.paymentMethod,
     required this.onClientChanged,
     required this.onPaymentChanged,
@@ -662,15 +663,27 @@ class _CartSheet extends ConsumerWidget {
   });
 
   final PosContext ctx;
-  final String? clientId;
+  final PickerItem? selectedClient;
   final String paymentMethod;
-  final ValueChanged<String?> onClientChanged;
+  final ValueChanged<PickerItem?> onClientChanged;
   final ValueChanged<String> onPaymentChanged;
   final Future<bool> Function() onCheckout;
   final bool sessionBlocked;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CartSheet> createState() => _CartSheetState();
+}
+
+class _CartSheetState extends ConsumerState<_CartSheet> {
+  late PickerItem? _client = widget.selectedClient;
+
+  @override
+  Widget build(BuildContext context) {
+    final ctx = widget.ctx;
+    final paymentMethod = widget.paymentMethod;
+    final onPaymentChanged = widget.onPaymentChanged;
+    final onCheckout = widget.onCheckout;
+    final sessionBlocked = widget.sessionBlocked;
     final cart = ref.watch(posCartProvider);
     final checkingOut = ref.watch(posCheckoutBusyProvider);
     var total = 0;
@@ -746,51 +759,30 @@ class _CartSheet extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Builder(builder: (fieldCtx) {
-            final selectedClient = clientId == null
-                ? null
-                : ctx.clients.firstWhere(
-                    (c) => c.id == clientId,
-                    orElse: () => PosOption(id: clientId!, label: ''),
-                  );
-            final split = selectedClient == null
-                ? null
-                : splitLabelWithEmail(selectedClient.label);
-            return SearchablePickerField(
-              label: 'Cliente (optionnel)',
-              value: split?.title.isNotEmpty == true ? split!.title : null,
-              selectedSubtitle: split?.subtitle,
-              placeholder: 'Aucune cliente',
-              onOpen: () async {
-                final picked = await showSearchablePicker(
-                  context: fieldCtx,
-                  title: 'Choisir une cliente',
-                  items: ctx.clients.map((c) {
-                    final s = splitLabelWithEmail(c.label);
-                    return PickerItem(
-                      id: c.id,
-                      title: s.title,
-                      subtitle: s.subtitle,
-                      searchKeywords: [c.label],
-                    );
-                  }).toList(),
-                  selectedId: clientId,
-                  searchHint: 'Rechercher (nom, email)…',
-                  nullOption:
-                      const PickerItem(id: '__none__', title: 'Aucune cliente'),
-                  emptyMessage: 'Aucune cliente trouvée.',
-                  createAction: newClientPickerAction(ref),
-                );
-                if (picked == null) {
-                  onClientChanged(null);
-                } else if (picked == '__none__') {
-                  onClientChanged(null);
-                } else {
-                  onClientChanged(picked);
-                }
-              },
-            );
-          }),
+          SearchablePickerField(
+            label: 'Cliente (optionnel)',
+            value: _client?.title,
+            selectedSubtitle: _client?.subtitle,
+            placeholder: 'Aucune cliente',
+            onOpen: () async {
+              final picked = await showSearchablePicker(
+                context: context,
+                title: 'Choisir une cliente',
+                items: const [],
+                search: (q) => searchInstitutClients(ref, q),
+                selectedId: _client?.id,
+                searchHint: 'Rechercher (nom, email, téléphone)…',
+                nullOption:
+                    const PickerItem(id: '__none__', title: 'Aucune cliente'),
+                emptyMessage: 'Aucune cliente trouvée.',
+                createAction: newClientPickerAction(ref),
+              );
+              if (picked == null) return;
+              final next = picked.id == '__none__' ? null : picked;
+              setState(() => _client = next);
+              widget.onClientChanged(next);
+            },
+          ),
           const SizedBox(height: 12),
           SegmentedButton<String>(
             segments: [

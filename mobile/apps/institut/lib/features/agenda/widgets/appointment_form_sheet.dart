@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../state/session_providers.dart';
+import '../../../widgets/client_picker.dart';
 import '../../../widgets/new_client_form.dart';
 import '../../../widgets/searchable_picker.dart';
 
@@ -45,6 +46,8 @@ class _CreateAppointmentSheetState
     extends ConsumerState<_CreateAppointmentSheet> {
   String? _serviceId;
   String? _clientId;
+  String? _clientTitle;
+  String? _clientSubtitle;
   String? _staffId;
   late DateTime _date;
   late TimeOfDay _time;
@@ -147,18 +150,6 @@ class _CreateAppointmentSheetState
         .toList();
   }
 
-  List<PickerItem> _clientsToItems(List<PosOption> clients) {
-    return clients.map((c) {
-      final split = splitLabelWithEmail(c.label);
-      return PickerItem(
-        id: c.id,
-        title: split.title,
-        subtitle: split.subtitle,
-        searchKeywords: [c.label],
-      );
-    }).toList();
-  }
-
   List<PickerItem> _staffToItems(List<PosOption> staff) {
     return staff
         .map((s) => PickerItem(id: s.id, title: s.label))
@@ -174,25 +165,33 @@ class _CreateAppointmentSheetState
       searchHint: 'Rechercher une prestation…',
       emptyMessage: 'Aucune prestation trouvée.',
     );
-    if (picked != null) setState(() => _serviceId = picked);
+    if (picked != null) setState(() => _serviceId = picked.id);
   }
 
-  Future<void> _openClientPicker(List<PosOption> clients) async {
+  Future<void> _openClientPicker() async {
     final picked = await showSearchablePicker(
       context: context,
       title: 'Choisir une cliente',
-      items: _clientsToItems(clients),
+      items: const [],
+      search: (q) => searchInstitutClients(ref, q),
       selectedId: _clientId,
-      searchHint: 'Rechercher (nom, email)…',
+      searchHint: 'Rechercher (nom, email, téléphone)…',
       nullOption: const PickerItem(id: '__none__', title: 'Sans cliente'),
       emptyMessage: 'Aucune cliente trouvée.',
       createAction: newClientPickerAction(ref),
     );
-    if (picked == null) {
-      setState(() => _clientId = null);
-    } else if (picked != '__none__') {
-      setState(() => _clientId = picked);
-    }
+    if (picked == null) return;
+    setState(() {
+      if (picked.id == '__none__') {
+        _clientId = null;
+        _clientTitle = null;
+        _clientSubtitle = null;
+      } else {
+        _clientId = picked.id;
+        _clientTitle = picked.title;
+        _clientSubtitle = picked.subtitle;
+      }
+    });
   }
 
   Future<void> _openStaffPicker(List<PosOption> staff) async {
@@ -205,11 +204,10 @@ class _CreateAppointmentSheetState
       nullOption: const PickerItem(id: '__none__', title: 'Non assignée'),
       emptyMessage: 'Aucune praticienne trouvée.',
     );
-    if (picked == null) {
-      setState(() => _staffId = null);
-    } else if (picked != '__none__') {
-      setState(() => _staffId = picked);
-    }
+    if (picked == null) return;
+    setState(() {
+      _staffId = picked.id == '__none__' ? null : picked.id;
+    });
   }
 
   @override
@@ -305,12 +303,13 @@ class _CreateAppointmentSheetState
                   const SizedBox(height: 14),
                   SearchablePickerField(
                     label: 'Cliente',
-                    value: selectedClientSplit?.title.isNotEmpty == true
-                        ? selectedClientSplit!.title
-                        : null,
-                    selectedSubtitle: selectedClientSplit?.subtitle,
+                    value: _clientTitle ??
+                        (selectedClientSplit?.title.isNotEmpty == true
+                            ? selectedClientSplit!.title
+                            : null),
+                    selectedSubtitle: _clientSubtitle ?? selectedClientSplit?.subtitle,
                     placeholder: 'Sans cliente',
-                    onOpen: () => _openClientPicker(pos.clients),
+                    onOpen: _openClientPicker,
                   ),
                   const SizedBox(height: 14),
                   SearchablePickerField(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// Item générique pour le picker cherchable.
@@ -169,8 +171,12 @@ class PickerCreateAction {
 
 /// Ouvre un bottom sheet plein-écran avec recherche + liste virtualisée.
 ///
-/// Retourne l'id sélectionné (`null` si "Aucun" ou fermé sans choisir).
-Future<String?> showSearchablePicker({
+/// [search] : si fourni, la liste est chargée à distance (debounce) au lieu
+/// d’un filtre local sur [items]. Utile pour les clientes (fichier trop long).
+///
+/// Retourne l’item choisi, `null` si fermé sans choisir, ou l’item [nullOption]
+/// si « Aucun » est tapé.
+Future<PickerItem?> showSearchablePicker({
   required BuildContext context,
   required String title,
   required List<PickerItem> items,
@@ -179,8 +185,9 @@ Future<String?> showSearchablePicker({
   PickerItem? nullOption,
   String emptyMessage = 'Aucun résultat.',
   PickerCreateAction? createAction,
+  Future<List<PickerItem>> Function(String query)? search,
 }) {
-  return showModalBottomSheet<String?>(
+  return showModalBottomSheet<PickerItem?>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -196,6 +203,7 @@ Future<String?> showSearchablePicker({
       nullOption: nullOption,
       emptyMessage: emptyMessage,
       createAction: createAction,
+      search: search,
     ),
   );
 }
@@ -211,6 +219,7 @@ class _PickerSheet extends StatefulWidget {
     required this.nullOption,
     required this.emptyMessage,
     required this.createAction,
+    required this.search,
   });
 
   final String title;
@@ -220,6 +229,7 @@ class _PickerSheet extends StatefulWidget {
   final PickerItem? nullOption;
   final String emptyMessage;
   final PickerCreateAction? createAction;
+  final Future<List<PickerItem>> Function(String query)? search;
 
   @override
   State<_PickerSheet> createState() => _PickerSheetState();
@@ -231,14 +241,54 @@ class _PickerSheetState extends State<_PickerSheet>
   final _focusNode = FocusNode();
   String _query = '';
   _SheetMode _mode = _SheetMode.browse;
+  Timer? _debounce;
+  List<PickerItem>? _remoteItems;
+  bool _searching = false;
+  int _searchGen = 0;
 
   static const _border = Color(0xFFE5E5E5);
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.search != null) {
+      _runSearch('');
+    }
+  }
+
+  @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onQueryChanged(String value) {
+    setState(() => _query = value);
+    if (widget.search == null) return;
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 280), () {
+      _runSearch(value);
+    });
+  }
+
+  Future<void> _runSearch(String value) async {
+    final search = widget.search;
+    if (search == null) return;
+    final gen = ++_searchGen;
+    setState(() => _searching = true);
+    try {
+      final items = await search(value);
+      if (!mounted || gen != _searchGen) return;
+      setState(() {
+        _remoteItems = items;
+        _searching = false;
+      });
+    } catch (_) {
+      if (!mounted || gen != _searchGen) return;
+      setState(() => _searching = false);
+    }
   }
 
   void _goCreate() {
@@ -257,7 +307,7 @@ class _PickerSheetState extends State<_PickerSheet>
   @override
   void confirm(PickerItem item) {
     if (!mounted) return;
-    Navigator.of(context).pop<String?>(item.id);
+    Navigator.of(context).pop<PickerItem?>(item);
   }
 
   @override
@@ -292,7 +342,7 @@ class _PickerSheetState extends State<_PickerSheet>
                       onTap: _goCreate,
                     )
                   : null,
-              onClose: () => Navigator.of(context).pop<String?>(null),
+              onClose: () => Navigator.of(context).pop<PickerItem?>(null),
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -324,8 +374,10 @@ class _PickerSheetState extends State<_PickerSheet>
                           focusNode: _focusNode,
                           searchHint: widget.searchHint,
                           query: _query,
-                          onQueryChanged: (v) => setState(() => _query = v),
+                          onQueryChanged: _onQueryChanged,
                           items: widget.items,
+                          searchResults: widget.search != null ? _remoteItems : null,
+                          searching: _searching,
                           selectedId: widget.selectedId,
                           nullOption: widget.nullOption,
                           emptyMessage: widget.emptyMessage,
@@ -439,6 +491,8 @@ class _BrowseView extends StatelessWidget {
     required this.query,
     required this.onQueryChanged,
     required this.items,
+    required this.searchResults,
+    required this.searching,
     required this.selectedId,
     required this.nullOption,
     required this.emptyMessage,
@@ -452,6 +506,8 @@ class _BrowseView extends StatelessWidget {
   final String query;
   final ValueChanged<String> onQueryChanged;
   final List<PickerItem> items;
+  final List<PickerItem>? searchResults;
+  final bool searching;
   final String? selectedId;
   final PickerItem? nullOption;
   final String emptyMessage;
@@ -464,7 +520,7 @@ class _BrowseView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = items.where((i) => i.matches(query)).toList();
+    final filtered = searchResults ?? items.where((i) => i.matches(query)).toList();
     return Column(
       children: [
         Padding(
@@ -518,8 +574,19 @@ class _BrowseView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
+        if (searching)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: LinearProgressIndicator(
+              minHeight: 2,
+              color: _black,
+              backgroundColor: Color(0xFFE5E5E5),
+            ),
+          ),
         Expanded(
-          child: _buildList(context, filtered),
+          child: searchResults == null && searching
+              ? const Center(child: CircularProgressIndicator())
+              : _buildList(context, filtered),
         ),
       ],
     );
@@ -583,7 +650,7 @@ class _BrowseView extends StatelessWidget {
           return _PickerRow(
             item: nullOption!,
             selected: selectedId == null,
-            onTap: () => Navigator.of(context).pop<String?>(null),
+            onTap: () => Navigator.of(context).pop<PickerItem?>(nullOption),
             asNullOption: true,
           );
         }
@@ -592,7 +659,7 @@ class _BrowseView extends StatelessWidget {
         return _PickerRow(
           item: item,
           selected: item.id == selectedId,
-          onTap: () => Navigator.of(context).pop<String?>(item.id),
+          onTap: () => Navigator.of(context).pop<PickerItem?>(item),
         );
       },
     );

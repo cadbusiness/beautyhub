@@ -42,11 +42,14 @@ export async function GET(request: Request) {
       .order("created_at", { ascending: false })
       .limit(limit + 1);
 
-    if (q.length >= 2) {
-      const like = `%${q}%`;
-      query = query.or(
-        `full_name.ilike.${like},email.ilike.${like},phone.ilike.${like}`,
-      );
+    if (q.length >= 1) {
+      const pattern = q.replace(/[%_,\\]/g, " ").replace(/,/g, " ").trim();
+      if (pattern) {
+        const like = `%${pattern}%`;
+        query = query.or(
+          `full_name.ilike.${like},email.ilike.${like},phone.ilike.${like}`,
+        );
+      }
     }
     if (cursor) {
       query = query.lt("created_at", cursor);

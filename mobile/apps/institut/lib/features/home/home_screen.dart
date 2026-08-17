@@ -284,9 +284,30 @@ class HomeScreen extends ConsumerWidget {
                               child: const Text('Session'),
                             )
                           else
-                            TextButton(
+                            FilledButton.icon(
                               onPressed: () => _openCashSale(ref, context),
-                              child: const Text('Encaisser'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: _black,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+                                minimumSize: const Size(0, 40),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.point_of_sale_outlined,
+                                size: 16,
+                              ),
+                              label: const Text(
+                                'Encaisser',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                         ],
                       ),

@@ -245,7 +245,7 @@ class _CashScreenState extends ConsumerState<CashScreen> {
                   onRefresh: _refresh,
                   child: const PosSaleTab(),
                 ),
-                const SalesHistoryTab(),
+                SalesHistoryTab(active: _tabIndex == 2),
               ],
             ),
           ),

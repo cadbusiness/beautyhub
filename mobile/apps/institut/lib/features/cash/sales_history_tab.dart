@@ -10,7 +10,9 @@ import '../shared/money.dart';
 import 'sale_detail_sheet.dart';
 
 class SalesHistoryTab extends ConsumerStatefulWidget {
-  const SalesHistoryTab({super.key});
+  const SalesHistoryTab({super.key, this.active = false});
+
+  final bool active;
 
   @override
   ConsumerState<SalesHistoryTab> createState() => _SalesHistoryTabState();
@@ -26,12 +28,23 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
   bool _loading = false;
   bool _loadingMore = false;
   String? _error;
+  bool _loadedOnce = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
     _scrollController.addListener(_onScroll);
+    if (widget.active) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant SalesHistoryTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) {
+      _loadInitial();
+    }
   }
 
   @override
@@ -71,12 +84,14 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
         _items = page.items;
         _cursor = page.nextCursor;
         _loading = false;
+        _loadedOnce = true;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
+        _loadedOnce = true;
       });
     }
   }
@@ -107,50 +122,46 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
+    if (_loading && !_loadedOnce) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: _muted, fontSize: 13),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: _loadInitial,
-                child: const Text('Réessayer'),
-              ),
-            ],
-          ),
+    if (_error != null && _items.isEmpty) {
+      return _RefreshableMessage(
+        onRefresh: _loadInitial,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: _muted, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: _loadInitial,
+              child: const Text('Réessayer'),
+            ),
+          ],
         ),
       );
     }
     if (_items.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(
-                Icons.receipt_long_outlined,
-                size: 44,
-                color: _muted,
-              ),
-              SizedBox(height: 12),
-              Text(
-                'Aucune vente enregistrée.',
-                style: TextStyle(color: _muted, fontSize: 14),
-              ),
-            ],
-          ),
+      return _RefreshableMessage(
+        onRefresh: _loadInitial,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 44,
+              color: _muted,
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Aucune vente enregistrée.',
+              style: TextStyle(color: _muted, fontSize: 14),
+            ),
+          ],
         ),
       );
     }
@@ -199,6 +210,32 @@ class _SalesHistoryTabState extends ConsumerState<SalesHistoryTab> {
         totalCents: total,
       );
     }).toList();
+  }
+}
+
+class _RefreshableMessage extends StatelessWidget {
+  const _RefreshableMessage({
+    required this.onRefresh,
+    required this.child,
+  });
+
+  final Future<void> Function() onRefresh;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(
+            height: MediaQuery.sizeOf(context).height * 0.45,
+            child: Center(child: child),
+          ),
+        ],
+      ),
+    );
   }
 }
 

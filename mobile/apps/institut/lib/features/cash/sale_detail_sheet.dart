@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../shared/money.dart';
+import 'sale_ticket_pdf_screen.dart';
 
 Future<void> showSaleDetailSheet({
   required BuildContext context,
@@ -251,6 +252,31 @@ class _SaleDetailSheet extends StatelessWidget {
                   ),
                 ],
               ],
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: () => openSaleTicketPdf(
+                    context,
+                    saleId: sale.id,
+                    title: sale.ticketNumber != null
+                        ? 'Ticket #${sale.ticketNumber}'
+                        : 'Ticket',
+                  ),
+                  icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                  label: const Text('Voir le ticket'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _black,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
             ),
           ),
         ],

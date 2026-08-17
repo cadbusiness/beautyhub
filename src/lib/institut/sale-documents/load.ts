@@ -360,3 +360,21 @@ export async function loadSaleDocumentPayload(
     isCredit: false,
   };
 }
+
+export async function loadTicketPayloadBySaleId(
+  supabase: Db,
+  tenantId: string,
+  saleId: string,
+  tenantName: string,
+): Promise<SaleDocumentPayload | null> {
+  const { data: ticketDoc } = await supabase
+    .from("inst_sale_documents")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("sale_id", saleId)
+    .eq("doc_type", "ticket")
+    .maybeSingle();
+
+  if (!ticketDoc) return null;
+  return loadSaleDocumentPayload(supabase, tenantId, ticketDoc.id, tenantName);
+}

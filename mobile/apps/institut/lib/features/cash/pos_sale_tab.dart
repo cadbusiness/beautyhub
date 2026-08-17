@@ -10,6 +10,7 @@ import '../shared/catalog_item_thumb.dart';
 import '../shared/money.dart';
 import 'catalog_item_detail_sheet.dart';
 import 'catalog_product_row.dart';
+import 'sale_ticket_pdf_screen.dart';
 
 class PosSaleTab extends ConsumerStatefulWidget {
   const PosSaleTab({super.key});
@@ -80,8 +81,21 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
           ),
         );
       }
+      final ticketContext = context;
+      final saleId = result.saleId;
+      final ticketTitle = result.ticketNumber != null
+          ? 'Ticket #${result.ticketNumber}'
+          : 'Ticket';
       Future<void>.microtask(() {
         ref.read(posCartProvider.notifier).clear();
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!ticketContext.mounted) return;
+        openSaleTicketPdf(
+          ticketContext,
+          saleId: saleId,
+          title: ticketTitle,
+        );
       });
       return true;
     } catch (e) {

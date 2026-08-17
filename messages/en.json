@@ -2948,6 +2948,7 @@
       "paymentLine": "Regulation {date} · {method}",
       "paymentTerms": "Payment conditions",
       "print": "Print",
+      "downloadPdf": "Open PDF",
       "reference": "Our reference",
       "register": "Box",
       "seller": "Seller",

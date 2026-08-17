@@ -3042,6 +3042,7 @@
     },
     "documents": {
       "print": "Imprimer",
+      "downloadPdf": "Ouvrir le PDF",
       "reference": "Notre référence",
       "date": "Date",
       "attention": "À l'attention de {name}",

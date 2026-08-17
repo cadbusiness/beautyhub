@@ -428,7 +428,7 @@
         "importFailed": "Het importeren van afspraken is mislukt."
       },
       "sync": {
-        "intro": "Tijdens de overstap blijft Bookly de bron: elke afspraak die in WordPress wordt aangemaakt, gewijzigd of geannuleerd gaat naar BeautyHub (direct, daarna elke 5 minuten bijgewerkt).",
+        "intro": "Tijdens de overstap blijft Bookly de bron: elke afspraak die in WordPress wordt aangemaakt, gewijzigd of geannuleerd gaat naar BeautyHub. Een inhaalronde elke 15 minuten bevraagt WordPress alleen als er iets is veranderd.",
         "enable": "Continue synchronisatie inschakelen",
         "enabling": "Bezig…",
         "enabled": "Synchronisatie actief",

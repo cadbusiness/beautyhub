@@ -478,7 +478,7 @@
         "importFailed": "L’import des rendez-vous a échoué."
       },
       "sync": {
-        "intro": "Pendant la transition, Bookly reste la source de vérité : chaque rendez-vous créé, modifié ou annulé sur WordPress est envoyé vers BeautyHub (immédiatement, puis rattrapé toutes les 5 minutes).",
+        "intro": "Pendant la transition, Bookly reste la source de vérité : chaque rendez-vous créé, modifié ou annulé sur WordPress est envoyé vers BeautyHub. Un rattrapage toutes les 15 minutes ne charge la base WordPress que s’il y a eu un changement.",
         "enable": "Activer la synchro continue",
         "enabling": "Activation…",
         "enabled": "Synchro active",

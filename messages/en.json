@@ -584,7 +584,7 @@
         "importFailed": "The appointment import failed."
       },
       "sync": {
-        "intro": "During the transition, Bookly stays the source of truth: every appointment created, changed or cancelled in WordPress is sent to BeautyHub (immediately, then caught up every 5 minutes).",
+        "intro": "During the transition, Bookly stays the source of truth: every appointment created, changed or cancelled in WordPress is sent to BeautyHub. A catch-up every 15 minutes only queries WordPress if something actually changed.",
         "enable": "Enable continuous sync",
         "enabling": "Enabling…",
         "enabled": "Sync active",

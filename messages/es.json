@@ -540,7 +540,7 @@
         "importFailed": "La importación de citas ha fallado."
       },
       "sync": {
-        "intro": "Durante la transición, Bookly sigue siendo la fuente de verdad: cada cita creada, modificada o cancelada en WordPress se envía a BeautyHub (al momento, y un repaso cada 5 minutos).",
+        "intro": "Durante la transición, Bookly sigue siendo la fuente de verdad: cada cita creada, modificada o cancelada en WordPress se envía a BeautyHub. Un repaso cada 15 minutos solo consulta WordPress si algo ha cambiado.",
         "enable": "Activar la sincronización continua",
         "enabling": "Activación…",
         "enabled": "Sincronización activa",

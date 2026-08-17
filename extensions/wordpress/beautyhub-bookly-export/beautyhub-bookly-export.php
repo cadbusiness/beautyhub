@@ -2,7 +2,7 @@
 /**
  * Plugin Name: BeautyHub - Export Bookly (services, extras & RDV)
  * Description: Exporte et synchronise les rendez-vous Bookly vers BeautyHub (migration).
- * Version: 1.3.0
+ * Version: 1.3.1
  * Author: BeautyHub
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -18,11 +18,16 @@ final class BeautyHub_Bookly_Export {
 	const PAGE_SLUG = 'beautyhub-bookly-export';
 	const NONCE     = 'beautyhub_bookly_export';
 
-	const OPTION_SYNC_URL   = 'beautyhub_bookly_sync_url';
-	const OPTION_SYNC_LAST  = 'beautyhub_bookly_sync_last';
-	const OPTION_SYNC_ERROR = 'beautyhub_bookly_sync_error';
-	const CRON_HOOK         = 'bh_bookly_cron_sync';
-	const PUSH_HOOK         = 'bh_bookly_push_sync';
+	const OPTION_SYNC_URL          = 'beautyhub_bookly_sync_url';
+	const OPTION_SYNC_LAST         = 'beautyhub_bookly_sync_last';
+	const OPTION_SYNC_ERROR        = 'beautyhub_bookly_sync_error';
+	const OPTION_SYNC_FINGERPRINT  = 'beautyhub_bookly_sync_fp';
+	const OPTION_CRON_VERSION      = 'beautyhub_bookly_cron_ver';
+	const CRON_HOOK                = 'bh_bookly_cron_sync';
+	const PUSH_HOOK                = 'bh_bookly_push_sync';
+	const CRON_VERSION             = '1.3.1';
+	const MIN_SYNC_INTERVAL        = 60;
+	const MAX_SYNCS_PER_HOUR       = 20;
 
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'register_menu' ) );
@@ -449,24 +454,7 @@ final class BeautyHub_Bookly_Export {
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		$rows = $wpdb->get_results( $sql, ARRAY_A );
 
-		$extras_by_id = array();
-		if ( $extras_table ) {
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$extra_rows = $wpdb->get_results( "SELECT * FROM `{$extras_table}`", ARRAY_A );
-			foreach ( (array) $extra_rows as $er ) {
-				$eid = (int) ( isset( $er['id'] ) ? $er['id'] : 0 );
-				if ( ! $eid ) {
-					continue;
-				}
-				$dur = isset( $er['duration'] ) ? (int) $er['duration'] : 0;
-				$extras_by_id[ $eid ] = array(
-					'id'           => $eid,
-					'title'        => (string) ( isset( $er['title'] ) ? $er['title'] : '' ),
-					'duration_min' => (int) round( $dur / 60 ),
-					'price_cents'  => self::price_to_cents( isset( $er['price'] ) ? $er['price'] : 0 ),
-				);
-			}
-		}
+		$extras_by_id = self::extras_catalog( $extras_table );
 
 		$out = array();
 		foreach ( (array) $rows as $row ) {
@@ -737,9 +725,14 @@ final class BeautyHub_Bookly_Export {
 
 	private static function table_columns( $table ) {
 		global $wpdb;
+		static $cache = array();
+		if ( isset( $cache[ $table ] ) ) {
+			return $cache[ $table ];
+		}
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$cols = $wpdb->get_col( "SHOW COLUMNS FROM `{$table}`" );
-		return array_map( 'strval', (array) $cols );
+		$cache[ $table ] = array_map( 'strval', (array) $cols );
+		return $cache[ $table ];
 	}
 
 	private static function filter_raw( $row, $cols ) {
@@ -839,9 +832,9 @@ final class BeautyHub_Bookly_Export {
 	}
 
 	public static function cron_schedules( $schedules ) {
-		$schedules['bh_five_minutes'] = array(
-			'interval' => 300,
-			'display'  => 'Toutes les 5 minutes (BeautyHub Bookly)',
+		$schedules['bh_fifteen_minutes'] = array(
+			'interval' => 900,
+			'display'  => 'Toutes les 15 minutes (BeautyHub Bookly)',
 		);
 		return $schedules;
 	}
@@ -852,14 +845,16 @@ final class BeautyHub_Bookly_Export {
 
 	public static function ensure_cron() {
 		$url = self::sync_url();
-		if ( $url && ! wp_next_scheduled( self::CRON_HOOK ) ) {
-			wp_schedule_event( time() + 60, 'bh_five_minutes', self::CRON_HOOK );
+		if ( (string) get_option( self::OPTION_CRON_VERSION, '' ) !== self::CRON_VERSION ) {
+			wp_clear_scheduled_hook( self::CRON_HOOK );
+			update_option( self::OPTION_CRON_VERSION, self::CRON_VERSION );
 		}
 		if ( ! $url ) {
-			$timestamp = wp_next_scheduled( self::CRON_HOOK );
-			if ( $timestamp ) {
-				wp_unschedule_event( $timestamp, self::CRON_HOOK );
-			}
+			wp_clear_scheduled_hook( self::CRON_HOOK );
+			return;
+		}
+		if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
+			wp_schedule_event( time() + 120, 'bh_fifteen_minutes', self::CRON_HOOK );
 		}
 	}
 
@@ -871,13 +866,36 @@ final class BeautyHub_Bookly_Export {
 		if ( isset( $_REQUEST['action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$action = strtolower( (string) wp_unslash( $_REQUEST['action'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
-		if ( '' === $action || false === strpos( $action, 'bookly' ) ) {
+		if ( ! self::is_bookly_write_action( $action ) ) {
 			return;
 		}
 		if ( wp_next_scheduled( self::PUSH_HOOK ) ) {
 			return;
 		}
-		wp_schedule_single_event( time() + 8, self::PUSH_HOOK );
+		wp_schedule_single_event( time() + 20, self::PUSH_HOOK );
+	}
+
+	private static function is_bookly_write_action( $action ) {
+		if ( '' === $action || false === strpos( $action, 'bookly' ) ) {
+			return false;
+		}
+		$needles = array(
+			'save',
+			'create',
+			'update',
+			'edit',
+			'delete',
+			'cancel',
+			'approve',
+			'reject',
+			'status',
+		);
+		foreach ( $needles as $needle ) {
+			if ( false !== strpos( $action, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static function maybe_handle_sync() {
@@ -900,7 +918,7 @@ final class BeautyHub_Bookly_Export {
 				}
 			);
 		} elseif ( 'push' === $do ) {
-			self::push_sync();
+			self::push_sync( true );
 			add_action(
 				'admin_notices',
 				static function () {
@@ -923,7 +941,7 @@ final class BeautyHub_Bookly_Export {
 
 		echo '<div class="notice notice-info" style="padding:12px 16px;max-width:720px;">';
 		echo '<h2 style="margin:0 0 8px;">Synchro continue vers BeautyHub</h2>';
-		echo '<p>Pendant la transition, Bookly reste la source de verite. Chaque rendez-vous cree, modifie ou annule est envoye vers BeautyHub (tout de suite, puis rattrape toutes les 5 minutes).</p>';
+		echo '<p>Pendant la transition, Bookly reste la source de verite. Les creations, modifications et annulations sont envoyees vers BeautyHub apres un court delai. Un rattrapage tourne toutes les 15 minutes : si rien n\'a change, la base WordPress n\'est pas relue en entier.</p>';
 		echo '<form method="post">';
 		wp_nonce_field( self::NONCE );
 		echo '<p><label for="bh_sync_url"><strong>URL de synchro</strong> (copiée depuis BeautyHub → Rendez-vous → Importer Bookly)</label><br />';
@@ -951,15 +969,117 @@ final class BeautyHub_Bookly_Export {
 		echo '</div>';
 	}
 
-	public static function push_sync() {
-		$url = self::sync_url();
+	private static function extras_catalog( $extras_table ) {
+		$cached = get_transient( 'bh_bookly_extras_cat' );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+		$extras_by_id = array();
+		if ( $extras_table ) {
+			global $wpdb;
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$extra_rows = $wpdb->get_results( "SELECT * FROM `{$extras_table}`", ARRAY_A );
+			foreach ( (array) $extra_rows as $er ) {
+				$eid = (int) ( isset( $er['id'] ) ? $er['id'] : 0 );
+				if ( ! $eid ) {
+					continue;
+				}
+				$dur = isset( $er['duration'] ) ? (int) $er['duration'] : 0;
+				$extras_by_id[ $eid ] = array(
+					'id'           => $eid,
+					'title'        => (string) ( isset( $er['title'] ) ? $er['title'] : '' ),
+					'duration_min' => (int) round( $dur / 60 ),
+					'price_cents'  => self::price_to_cents( isset( $er['price'] ) ? $er['price'] : 0 ),
+				);
+			}
+		}
+		set_transient( 'bh_bookly_extras_cat', $extras_by_id, 15 * MINUTE_IN_SECONDS );
+		return $extras_by_id;
+	}
+
+	private static function upcoming_fingerprint() {
+		global $wpdb;
+		$appt_table = self::find_table( array( 'bookly_appointments' ) );
+		$ca_table   = self::find_table( array( 'bookly_customer_appointments' ) );
+		if ( ! $appt_table || ! $ca_table ) {
+			return '';
+		}
+		$ca_cols   = self::table_columns( $ca_table );
+		$appt_cols = self::table_columns( $appt_table );
+		$has       = static function ( $cols, $name ) {
+			return in_array( $name, $cols, true );
+		};
+		if ( ! $has( $appt_cols, 'start_date' ) ) {
+			return '';
+		}
+		$cutoff = date( 'Y-m-d 00:00:00', strtotime( current_time( 'mysql' ) ) - DAY_IN_SECONDS );
+		$status = $has( $ca_cols, 'status' ) ? 'ca.status' : "''";
+		$end    = $has( $appt_cols, 'end_date' ) ? 'a.end_date' : 'a.start_date';
+		$staff  = $has( $appt_cols, 'staff_id' ) ? 'a.staff_id' : '0';
+		$svc    = $has( $appt_cols, 'service_id' ) ? 'a.service_id' : '0';
+		$cust   = $has( $ca_cols, 'customer_id' ) ? 'ca.customer_id' : '0';
+		$sql    = "SELECT COUNT(*) AS n,
+			COALESCE(MAX(ca.id), 0) AS max_id,
+			COALESCE(SUM(ca.id), 0) AS id_sum,
+			COALESCE(SUM(UNIX_TIMESTAMP(a.start_date)), 0) AS start_sum,
+			COALESCE(SUM(UNIX_TIMESTAMP({$end})), 0) AS end_sum,
+			COALESCE(SUM({$staff}), 0) AS staff_sum,
+			COALESCE(SUM({$svc}), 0) AS svc_sum,
+			COALESCE(SUM({$cust}), 0) AS cust_sum,
+			COALESCE(SUM(CRC32({$status})), 0) AS status_sum
+			FROM `{$ca_table}` ca
+			INNER JOIN `{$appt_table}` a ON a.id = ca.appointment_id
+			WHERE a.start_date >= %s";
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$row = $wpdb->get_row( $wpdb->prepare( $sql, $cutoff ), ARRAY_A );
+		if ( ! is_array( $row ) ) {
+			return '';
+		}
+		return md5( wp_json_encode( $row ) );
+	}
+
+	private static function hour_bucket() {
+		$bucket = get_transient( 'bh_bookly_sync_hour' );
+		if ( ! is_array( $bucket ) || empty( $bucket['until'] ) || time() > (int) $bucket['until'] ) {
+			return array(
+				'n'     => 0,
+				'until' => time() + HOUR_IN_SECONDS,
+			);
+		}
+		return $bucket;
+	}
+
+	public static function push_sync( $force = false ) {
+		$force = true === $force;
+		$url   = self::sync_url();
 		if ( ! $url ) {
 			return;
 		}
 		if ( get_transient( 'bh_bookly_sync_lock' ) ) {
 			return;
 		}
-		set_transient( 'bh_bookly_sync_lock', 1, 50 );
+		set_transient( 'bh_bookly_sync_lock', 1, 5 * MINUTE_IN_SECONDS );
+
+		if ( ! $force ) {
+			$last_ts = (int) get_transient( 'bh_bookly_sync_last_ts' );
+			if ( $last_ts && ( time() - $last_ts ) < self::MIN_SYNC_INTERVAL ) {
+				if ( ! wp_next_scheduled( self::PUSH_HOOK ) ) {
+					wp_schedule_single_event( $last_ts + self::MIN_SYNC_INTERVAL + 1, self::PUSH_HOOK );
+				}
+				delete_transient( 'bh_bookly_sync_lock' );
+				return;
+			}
+			$bucket = self::hour_bucket();
+			if ( (int) $bucket['n'] >= self::MAX_SYNCS_PER_HOUR ) {
+				delete_transient( 'bh_bookly_sync_lock' );
+				return;
+			}
+			$fp = self::upcoming_fingerprint();
+			if ( $fp && $fp === (string) get_option( self::OPTION_SYNC_FINGERPRINT, '' ) ) {
+				delete_transient( 'bh_bookly_sync_lock' );
+				return;
+			}
+		}
 
 		$appointments = self::collect_appointments( true );
 		$keep_ids     = array();
@@ -1010,6 +1130,11 @@ final class BeautyHub_Bookly_Export {
 			update_option( self::OPTION_SYNC_ERROR, '' );
 			if ( $sent_last ) {
 				update_option( self::OPTION_SYNC_LAST, wp_date( 'd/m/Y H:i:s' ) );
+				update_option( self::OPTION_SYNC_FINGERPRINT, self::upcoming_fingerprint() );
+				set_transient( 'bh_bookly_sync_last_ts', time(), HOUR_IN_SECONDS );
+				$bucket       = self::hour_bucket();
+				$bucket['n']  = (int) $bucket['n'] + 1;
+				set_transient( 'bh_bookly_sync_hour', $bucket, HOUR_IN_SECONDS + 60 );
 			}
 		}
 		delete_transient( 'bh_bookly_sync_lock' );

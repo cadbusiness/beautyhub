@@ -1042,6 +1042,18 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
     return cents > gross ? gross : cents;
   }
 
+  void _setDiscountOpen(bool open) {
+    setState(() {
+      _showDiscount = open;
+      if (!open) {
+        _discountValue.clear();
+        _discountReason.clear();
+        _pickedReason = null;
+        _customReason = false;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final ctx = widget.ctx;
@@ -1139,29 +1151,36 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
             ),
             const SizedBox(height: 16),
             ...lines,
-            const SizedBox(height: 8),
-            if (!_showDiscount)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () => setState(() => _showDiscount = true),
-                  style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF0A0A0A),
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: const Text('Ajouter une réduction'),
-                ),
-              )
-            else ...[
-              const Text(
-                'Réduction',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF404040),
+            const SizedBox(height: 4),
+            const _CartRule(),
+            InkWell(
+              onTap: () => _setDiscountOpen(!_showDiscount),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Réduction',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0A0A0A),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      _showDiscount ? 'Fermer' : 'Ajouter',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0A0A0A),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
+            ),
+            if (_showDiscount) ...[
               _MiniSegmented(
                 items: const [
                   (id: 'percent', label: '%'),
@@ -1237,7 +1256,9 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                   ),
                 ),
               ],
+              const SizedBox(height: 12),
             ],
+            const _CartRule(),
             const SizedBox(height: 16),
             SearchablePickerField(
               label: 'Cliente (optionnel)',
@@ -1412,6 +1433,18 @@ InputDecoration _cartFieldDecoration({required String hint}) {
       borderSide: const BorderSide(color: black, width: 1.2),
     ),
   );
+}
+
+class _CartRule extends StatelessWidget {
+  const _CartRule();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: Color(0xFFE8E8E8),
+      child: SizedBox(width: double.infinity, height: 1),
+    );
+  }
 }
 
 class _LoyaltyPaymentCard extends StatelessWidget {

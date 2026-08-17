@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 
 import '../../state/session_providers.dart';
+import '../shared/sale_doc.dart';
 
 Future<void> openSaleTicketPdf(
   BuildContext context, {
@@ -22,12 +23,14 @@ Future<void> openSaleDocumentPdf(
   BuildContext context, {
   required String documentId,
   String? title,
+  String? docType,
 }) {
   return Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute<void>(
       builder: (_) => SaleTicketPdfScreen(
         documentId: documentId,
         title: title,
+        docType: docType,
       ),
     ),
   );
@@ -39,11 +42,13 @@ class SaleTicketPdfScreen extends ConsumerStatefulWidget {
     this.saleId,
     this.documentId,
     this.title,
+    this.docType,
   }) : assert(saleId != null || documentId != null);
 
   final String? saleId;
   final String? documentId;
   final String? title;
+  final String? docType;
 
   @override
   ConsumerState<SaleTicketPdfScreen> createState() =>
@@ -105,7 +110,23 @@ class _SaleTicketPdfScreenState extends ConsumerState<SaleTicketPdfScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Text(title),
+        title: Row(
+          children: [
+            SaleDocMark(
+              docType: widget.docType ??
+                  (widget.saleId != null ? 'ticket' : 'invoice'),
+              size: 28,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF0A0A0A),
         elevation: 0,

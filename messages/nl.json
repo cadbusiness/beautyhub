@@ -3041,6 +3041,7 @@
     "history": {
       "empty": "Geen geregistreerde verkopen.",
       "viewTicket": "Ticket openen",
+      "ticketLabel": "Ticket",
       "paidShort": "betaald",
       "mixedPayments": "{count} betalingen",
       "columns": {

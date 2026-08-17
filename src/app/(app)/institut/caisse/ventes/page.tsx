@@ -12,6 +12,7 @@ import { ListPanelFooter } from "@/components/ui/list-panel";
 import { formatPrice } from "@/lib/utils";
 import { historyPeriodBoundsUtc, parseHistoryPeriod } from "@/lib/date";
 import { HistoryFilterBar } from "../history-filter-bar";
+import { SaleDocMark } from "@/components/institut/sale-doc-mark";
 
 const DOC_TYPES = ["ticket", "invoice", "delivery_note", "credit_note"] as const;
 type DocType = (typeof DOC_TYPES)[number];
@@ -173,9 +174,12 @@ export default async function CaisseVentesPage({
                     {groupSuffix}
                   </td>
                   <td className={dataTableCellCompact}>
-                    {DOC_TYPES.includes(doc.doc_type as DocType)
-                      ? t(`types.${doc.doc_type as DocType}`)
-                      : doc.doc_type}
+                    <span className="inline-flex items-center gap-2">
+                      <SaleDocMark type={doc.doc_type} />
+                      {DOC_TYPES.includes(doc.doc_type as DocType)
+                        ? t(`types.${doc.doc_type as DocType}`)
+                        : doc.doc_type}
+                    </span>
                   </td>
                   <td className={dataTableCellCompact}>
                     {t(`status.${doc.status as "issued"}`, { defaultValue: doc.status })}

@@ -3145,7 +3145,8 @@
         "partial": "Deposit"
       },
       "viewDocuments": "Documents",
-      "viewTicket": "Open ticket"
+      "viewTicket": "Open ticket",
+      "ticketLabel": "Ticket"
     },
     "loyalty": {
       "balance": "{count} {label}",

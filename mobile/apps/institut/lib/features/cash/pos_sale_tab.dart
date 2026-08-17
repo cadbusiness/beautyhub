@@ -257,7 +257,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Vente enregistrée${result.ticketNumber != null ? ' · ${result.ticketNumber}' : ''}',
+              'Ticket enregistré${result.ticketNumber != null ? ' · n° ${result.ticketNumber}' : ''}',
             ),
           ),
         );
@@ -265,7 +265,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       final ticketContext = context;
       final saleId = result.saleId;
       final ticketTitle = result.ticketNumber != null
-          ? 'Ticket #${result.ticketNumber}'
+          ? 'Ticket n° ${result.ticketNumber}'
           : 'Ticket';
       Future<void>.microtask(() {
         ref.read(posCartProvider.notifier).clear();

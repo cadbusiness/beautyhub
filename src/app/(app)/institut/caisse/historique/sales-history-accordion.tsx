@@ -7,6 +7,7 @@ import { ChevronDown } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { dataTableCellCompact } from "@/components/ui/data-table";
+import { SaleDocMark } from "@/components/institut/sale-doc-mark";
 
 export type HistorySaleItem = {
   name: string;
@@ -85,13 +86,14 @@ export function SalesHistoryAccordion({ sales }: { sales: HistorySale[] }) {
                 )}
                 aria-hidden
               />
+              <SaleDocMark type="ticket" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium text-slate-900">
-                  {sale.ticketNumber ?? t("viewTicket")}
+                  {t("ticketLabel")}
                 </span>
                 <span className="block truncate text-xs text-slate-500">
+                  {sale.clientLabel ? `${sale.clientLabel} · ` : ""}
                   {sale.createdAtLabel}
-                  {sale.clientLabel ? ` · ${sale.clientLabel}` : ""}
                 </span>
               </span>
               <span className="shrink-0 text-right">
@@ -110,7 +112,10 @@ export function SalesHistoryAccordion({ sales }: { sales: HistorySale[] }) {
             </button>
 
             {open ? (
-              <div className="space-y-3 border-t border-slate-100 bg-slate-50/50 px-4 py-3 lg:px-6">
+              <div className="space-y-3 border-t border-orange-100 bg-orange-50/40 px-4 py-3 lg:px-6">
+                {sale.ticketNumber ? (
+                  <p className="text-xs font-medium text-orange-800">n° {sale.ticketNumber}</p>
+                ) : null}
                 <dl className="grid gap-1 text-sm sm:grid-cols-2">
                   <div className="flex justify-between gap-3 sm:block">
                     <dt className="text-xs text-slate-500">{t("columns.client")}</dt>
@@ -176,7 +181,7 @@ export function SalesHistoryAccordion({ sales }: { sales: HistorySale[] }) {
                         ? `/institut/caisse/documents/${ticketDoc.id}`
                         : `/institut/caisse/ticket/${sale.id}`
                     }
-                    className="font-medium text-slate-800 underline"
+                    className="font-medium text-orange-900 underline"
                   >
                     {t("viewTicket")}
                   </Link>
@@ -184,9 +189,10 @@ export function SalesHistoryAccordion({ sales }: { sales: HistorySale[] }) {
                     <Link
                       key={doc.id}
                       href={`/institut/caisse/documents/${doc.id}`}
-                      className="text-slate-700 underline"
+                      className="inline-flex items-center gap-1.5 text-slate-700 underline"
                       title={doc.docNumber}
                     >
+                      <SaleDocMark type={doc.docType} />
                       {tDocs(`types.${doc.docType as "invoice"}`, {
                         defaultValue: doc.docType,
                       })}

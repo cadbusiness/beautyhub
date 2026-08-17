@@ -26,6 +26,7 @@ import { ClientPrivacyPanel } from "@/components/compliance/client-privacy-panel
 import { ClientForm } from "../client-form";
 import { ClientLoyaltyPanel } from "./client-loyalty-panel";
 import type { ClientLoyaltyCard } from "@/lib/institut/client-loyalty";
+import { SaleDocMark } from "@/components/institut/sale-doc-mark";
 
 type Tab = "overview" | "appointments" | "sales" | "quotes" | "access" | "privacy";
 
@@ -480,9 +481,13 @@ export function ClientDetail({
                             {s.ticket_number ? (
                               <Link
                                 href={`/institut/caisse/ticket/${s.id}`}
-                                className="text-slate-900 underline-offset-2 hover:underline"
+                                className="inline-flex items-center gap-2 text-slate-900 underline-offset-2 hover:underline"
                               >
-                                {s.ticket_number}
+                                <SaleDocMark type="ticket" />
+                                <span>
+                                  {t("columns.ticket")}
+                                  <span className="ml-1 text-slate-500">n° {s.ticket_number}</span>
+                                </span>
                               </Link>
                             ) : (
                               tCommon("dash")

@@ -7,6 +7,7 @@ import { getPosSettings } from "@/lib/institut/pos-settings";
 import { formatPrice } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { BalancePayPanel } from "./balance-pay-panel";
+import { SaleDocMark } from "@/components/institut/sale-doc-mark";
 
 export default async function SoldePage({
   params,
@@ -15,6 +16,7 @@ export default async function SoldePage({
 }) {
   const { id } = await params;
   const t = await getTranslations("pos.balance");
+  const tHistory = await getTranslations("pos.history");
   const session = await requireModule("institut");
   const supabase = await createClient();
 
@@ -38,11 +40,17 @@ export default async function SoldePage({
   return (
     <div className="mx-auto max-w-md space-y-4 px-4 py-4 lg:px-6">
       <Card className="space-y-3">
-        <div>
-          <p className="text-sm text-slate-500">{sale.ticket_number ?? t("sale")}</p>
-          {client ? (
-            <p className="text-slate-900">{client.full_name ?? client.email}</p>
-          ) : null}
+        <div className="flex items-start gap-3">
+          <SaleDocMark type="ticket" size="md" />
+          <div>
+            <p className="text-sm font-medium text-slate-900">{tHistory("ticketLabel")}</p>
+            <p className="text-sm text-slate-500">
+              {sale.ticket_number ? `n° ${sale.ticket_number}` : t("sale")}
+            </p>
+            {client ? (
+              <p className="mt-1 text-slate-900">{client.full_name ?? client.email}</p>
+            ) : null}
+          </div>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-slate-500">{t("total")}</span>

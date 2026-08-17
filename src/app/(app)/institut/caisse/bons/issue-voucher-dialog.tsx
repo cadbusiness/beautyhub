@@ -218,7 +218,7 @@ function CreditNoteFields({ sales }: { sales: IssueDialogSale[] }) {
           </option>
           {sales.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.ticket_number ?? s.id.slice(0, 8)} ·{" "}
+              {s.ticket_number ? `Ticket n° ${s.ticket_number}` : s.id.slice(0, 8)} ·{" "}
               {(s.amount_paid_cents / 100).toFixed(2)} €
             </option>
           ))}

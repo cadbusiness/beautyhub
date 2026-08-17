@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../shared/money.dart';
+import '../shared/sale_doc.dart';
 import 'sale_ticket_pdf_screen.dart';
 
 Future<void> showSaleDetailSheet({
@@ -30,23 +31,6 @@ class _SaleDetailSheet extends StatelessWidget {
   static const _border = Color(0xFFE5E5E5);
   static const _fill = Color(0xFFF9FAFB);
 
-  String _paymentLabel(String m) {
-    switch (m) {
-      case 'cash':
-        return 'Espèces';
-      case 'card':
-        return 'Carte';
-      case 'transfer':
-        return 'Virement';
-      case 'gift_card':
-        return 'Carte cadeau';
-      case 'store_credit':
-        return 'Avoir';
-      default:
-        return m;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final date = DateFormat("EEEE d MMM y — HH'h'mm", 'fr_FR')
@@ -69,16 +53,16 @@ class _SaleDetailSheet extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
+                const SaleDocMark(docType: 'ticket', size: 40),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        sale.ticketNumber != null
-                            ? 'Ticket #${sale.ticketNumber}'
-                            : 'Vente',
-                        style: const TextStyle(
+                      const Text(
+                        'Ticket',
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: _black,
@@ -87,7 +71,10 @@ class _SaleDetailSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        date,
+                        [
+                          if (sale.ticketNumber != null) 'n° ${sale.ticketNumber}',
+                          date,
+                        ].join(' · '),
                         style: const TextStyle(fontSize: 12, color: _muted),
                       ),
                     ],
@@ -195,12 +182,12 @@ class _SaleDetailSheet extends StatelessWidget {
                     children: [
                       for (final p in sale.payments)
                         _KVRow(
-                          label: _paymentLabel(p.method),
+                          label: salePaymentLabel(p.method),
                           value: formatEuros(p.amountCents),
                         ),
                       if (sale.payments.isEmpty)
                         _KVRow(
-                          label: _paymentLabel(sale.paymentMethod),
+                          label: salePaymentLabel(sale.paymentMethod),
                           value: formatEuros(sale.amountPaidCents),
                         ),
                       const Divider(height: 16, thickness: 1, color: _border),
@@ -267,11 +254,11 @@ class _SaleDetailSheet extends StatelessWidget {
                       context,
                       saleId: sale.id,
                       title: sale.ticketNumber != null
-                          ? 'Ticket #${sale.ticketNumber}'
+                          ? 'Ticket n° ${sale.ticketNumber}'
                           : 'Ticket',
                     ),
-                    icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
-                    label: const Text('Ticket'),
+                    icon: const Icon(Icons.receipt_long_outlined, size: 16),
+                    label: const Text('Ouvrir le ticket'),
                     style: FilledButton.styleFrom(
                       backgroundColor: _black,
                       foregroundColor: Colors.white,
@@ -279,16 +266,18 @@ class _SaleDetailSheet extends StatelessWidget {
                     ),
                   ),
                   for (final doc in sale.documents.where((d) => d.docType != 'ticket'))
-                    OutlinedButton(
+                    OutlinedButton.icon(
                       onPressed: () => openSaleDocumentPdf(
                         context,
                         documentId: doc.id,
                         title: doc.docNumber,
+                        docType: doc.docType,
                       ),
                       style: OutlinedButton.styleFrom(
                         visualDensity: VisualDensity.compact,
                       ),
-                      child: Text(doc.shortLabel),
+                      icon: Icon(saleDocLook(doc.docType).icon, size: 16),
+                      label: Text(doc.shortLabel),
                     ),
                   if (sale.status == 'partial')
                     Text(

@@ -3174,6 +3174,7 @@
       "footer": "{count, plural, one {# ticket} other {# tickets}}",
       "footerInvoices": "{count, plural, one {# facture} other {# factures}}",
       "viewTicket": "Ouvrir le ticket",
+      "ticketLabel": "Ticket",
       "viewDocuments": "Documents",
       "paidShort": "déjà payé",
       "payBalance": "Encaisser le solde",

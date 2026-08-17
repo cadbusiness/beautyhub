@@ -2730,6 +2730,7 @@
       },
       "viewDocuments": "Documentos",
       "viewTicket": "Abrir ticket",
+      "ticketLabel": "Ticket",
       "noItems": "Ningún artículo en este ticket."
     },
     "sales": {

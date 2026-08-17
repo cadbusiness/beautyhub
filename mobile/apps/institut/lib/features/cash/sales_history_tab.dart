@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../state/session_providers.dart';
 import '../shared/money.dart';
+import '../shared/sale_doc.dart';
 import 'sale_detail_sheet.dart';
 import 'sale_ticket_pdf_screen.dart';
 
@@ -737,24 +738,6 @@ class _SaleRowState extends State<_SaleRow> {
 
   InstSale get sale => widget.sale;
 
-  String _methodLabel(String m) {
-    switch (m) {
-      case 'cash':
-        return 'Espèces';
-      case 'card':
-        return 'Carte';
-      case 'transfer':
-        return 'Virement';
-      case 'gift_card':
-        return 'Carte cadeau';
-      case 'store_credit':
-      case 'credit_note':
-        return 'Avoir';
-      default:
-        return m;
-    }
-  }
-
   Color _statusColor() {
     switch (sale.status) {
       case 'partial':
@@ -780,40 +763,42 @@ class _SaleRowState extends State<_SaleRow> {
   @override
   Widget build(BuildContext context) {
     final extraDocs = sale.documents.where((d) => d.docType != 'ticket').toList();
+    final client = sale.clientLabel;
+    final time = DateFormat.Hm().format(sale.createdAt);
+    final subtitle = [
+      if (client != null && client.isNotEmpty) client,
+      time,
+    ].join(' · ');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         InkWell(
           onTap: () => setState(() => _open = !_open),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+            padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
             child: Row(
               children: [
-                AnimatedRotation(
-                  turns: _open ? 0 : -0.25,
-                  duration: const Duration(milliseconds: 160),
-                  child: const Icon(Icons.expand_more, size: 18, color: _muted),
-                ),
-                const SizedBox(width: 6),
+                const SaleDocMark(docType: 'ticket', size: 34),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        sale.ticketNumber != null
-                            ? sale.ticketNumber!
-                            : 'Ticket',
-                        style: const TextStyle(
+                      const Text(
+                        'Ticket',
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: _black,
                         ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        subtitle.isEmpty ? time : subtitle,
+                        style: const TextStyle(fontSize: 12, color: _muted),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        DateFormat.Hm().format(sale.createdAt),
-                        style: const TextStyle(fontSize: 12, color: _muted),
                       ),
                     ],
                   ),
@@ -841,90 +826,195 @@ class _SaleRowState extends State<_SaleRow> {
                     ),
                   ],
                 ),
+                const SizedBox(width: 4),
+                AnimatedRotation(
+                  turns: _open ? 0.25 : 0,
+                  duration: const Duration(milliseconds: 160),
+                  child: const Icon(Icons.chevron_right, size: 18, color: _muted),
+                ),
               ],
             ),
           ),
         ),
         if (_open)
           Padding(
-            padding: const EdgeInsets.fromLTRB(38, 0, 14, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  sale.clientLabel ?? 'Sans cliente',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: sale.clientLabel != null ? _black : _muted,
-                    fontStyle:
-                        sale.clientLabel != null ? FontStyle.normal : FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (sale.items.isEmpty)
-                  Text(
-                    '${sale.itemsCount} article${sale.itemsCount > 1 ? "s" : ""}',
-                    style: const TextStyle(fontSize: 13, color: _muted),
-                  )
-                else
-                  for (final item in sale.items)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${item.quantity}× ${item.name}',
-                              style: const TextStyle(fontSize: 13, color: _black),
-                            ),
-                          ),
-                          Text(
-                            formatEuros(item.lineTotalCents),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontFeatures: [FontFeature.tabularFigures()],
-                            ),
-                          ),
-                        ],
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFFED7AA)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (sale.ticketNumber != null)
+                    Text(
+                      'n° ${sale.ticketNumber}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF9A3412),
+                        letterSpacing: 0.2,
                       ),
                     ),
-                if (sale.payments.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  for (final payment in sale.payments)
-                    Text(
-                      '${_methodLabel(payment.method)} · ${formatEuros(payment.amountCents)}',
-                      style: const TextStyle(fontSize: 12, color: _muted),
-                    ),
-                ],
-                if (extraDocs.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    extraDocs.map((d) => d.shortLabel).join(' · '),
-                    style: const TextStyle(fontSize: 12, color: _muted),
-                  ),
-                ],
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton(
-                      onPressed: () =>
-                          showSaleDetailSheet(context: context, sale: sale),
-                      child: const Text('Voir le ticket'),
-                    ),
-                    if (sale.status == 'partial')
-                      TextButton(
-                        onPressed: () =>
-                            showSaleDetailSheet(context: context, sale: sale),
-                        child: const Text('Encaisser le solde'),
+                  if (sale.items.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        '${sale.itemsCount} article${sale.itemsCount > 1 ? "s" : ""}',
+                        style: const TextStyle(fontSize: 13, color: _black),
+                      ),
+                    )
+                  else ...[
+                    const SizedBox(height: 8),
+                    for (final item in sale.items)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${item.quantity}× ${item.name}',
+                                style: const TextStyle(fontSize: 13, color: _black),
+                              ),
+                            ),
+                            Text(
+                              formatEuros(item.lineTotalCents),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                   ],
-                ),
-              ],
+                  if (sale.payments.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    const Divider(height: 1, color: Color(0xFFFED7AA)),
+                    const SizedBox(height: 8),
+                    for (final payment in sale.payments)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            Icon(
+                              salePaymentIcon(payment.method),
+                              size: 15,
+                              color: const Color(0xFF9A3412),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${salePaymentLabel(payment.method)} · ${formatEuros(payment.amountCents)}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF7C2D12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                  if (extraDocs.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final doc in extraDocs)
+                          _DocChip(
+                            docType: doc.docType,
+                            label: doc.shortLabel,
+                            onTap: () => openSaleDocumentPdf(
+                              context,
+                              documentId: doc.id,
+                              title: doc.docNumber,
+                              docType: doc.docType,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () =>
+                            showSaleDetailSheet(context: context, sale: sale),
+                        icon: const Icon(Icons.receipt_long_outlined, size: 16),
+                        label: const Text('Ouvrir le ticket'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF9A3412),
+                          foregroundColor: Colors.white,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                      if (sale.status == 'partial') ...[
+                        const SizedBox(width: 8),
+                        TextButton(
+                          onPressed: () =>
+                              showSaleDetailSheet(context: context, sale: sale),
+                          child: const Text('Encaisser le solde'),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
       ],
+    );
+  }
+}
+
+class _DocChip extends StatelessWidget {
+  const _DocChip({
+    required this.docType,
+    required this.label,
+    required this.onTap,
+  });
+
+  final String docType;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final look = saleDocLook(docType);
+    return Material(
+      color: look.background,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(6, 4, 8, 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: look.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(look.icon, size: 13, color: look.foreground),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: look.foreground,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -943,32 +1033,32 @@ class _DocRow extends StatelessWidget {
         context,
         documentId: doc.id,
         title: doc.docNumber,
+        docType: doc.docType,
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+        padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
         child: Row(
           children: [
-            const Icon(
-              Icons.picture_as_pdf_outlined,
-              size: 18,
-              color: _muted,
-            ),
+            SaleDocMark(docType: doc.docType, size: 34),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    doc.docNumber,
+                    doc.typeLabel,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: _black,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
-                    '${doc.typeLabel} · ${doc.clientLabel ?? "Sans cliente"}',
+                    [
+                      doc.docNumber,
+                      if (doc.clientLabel != null) doc.clientLabel,
+                    ].join(' · '),
                     style: const TextStyle(fontSize: 12, color: _muted),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -985,7 +1075,7 @@ class _DocRow extends StatelessWidget {
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             const Icon(Icons.chevron_right, size: 18, color: _muted),
           ],
         ),

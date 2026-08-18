@@ -212,6 +212,7 @@ export type Database = {
           full_name: string | null
           id: string
           login_id: string | null
+          last_name_sort: string
           loyalty_program_id: string | null
           marketing_opt_in: boolean
           metadata: Json

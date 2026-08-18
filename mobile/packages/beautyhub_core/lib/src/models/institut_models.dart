@@ -104,6 +104,40 @@ class InstClient {
   }
 
   bool get hasAddress => addressOneLine.isNotEmpty;
+
+  /// Dernier mot du nom, accents pliés — même règle que `clients.last_name_sort`.
+  String get lastNameSort {
+    final name = (fullName ?? '').trim();
+    if (name.isEmpty) return '~';
+    final parts = name.split(RegExp(r'\s+'));
+    final last = parts.isEmpty ? '' : parts.last;
+    final folded = _foldLastName(last);
+    return folded.isEmpty ? '~' : folded;
+  }
+
+  /// Lettre d'annuaire (`A`–`Z` ou `#`).
+  String get lastNameLetter {
+    final key = lastNameSort;
+    if (key.isEmpty || key.startsWith('~')) return '#';
+    final c = key[0].toUpperCase();
+    if (c.compareTo('A') >= 0 && c.compareTo('Z') <= 0) return c;
+    return '#';
+  }
+}
+
+const _lastNameFoldFrom =
+    'àáâäãåçéèêëìíîïñòóôöõùúûüýÿÀÁÂÄÃÅÇÉÈÊËÌÍÎÏÑÒÓÔÖÕÙÚÛÜÝŸ';
+const _lastNameFoldTo =
+    'aaaaaaceeeeiiiinooooouuuuyyaaaaaaceeeeiiiinooooouuuuyy';
+
+String _foldLastName(String input) {
+  final buf = StringBuffer();
+  for (final rune in input.runes) {
+    final ch = String.fromCharCode(rune);
+    final i = _lastNameFoldFrom.indexOf(ch);
+    buf.write(i >= 0 ? _lastNameFoldTo[i] : ch);
+  }
+  return buf.toString().toLowerCase();
 }
 
 class InstClientPage {

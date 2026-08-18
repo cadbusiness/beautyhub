@@ -11,13 +11,13 @@ import {
   MOBILE_CLIENT_SELECT,
 } from "@/lib/institut/mobile-clients";
 
-const DEFAULT_LIMIT = 60;
-const MAX_LIMIT = 200;
+const DEFAULT_LIMIT = 80;
+const MAX_LIMIT = 1000;
 
 /**
  * GET /api/mobile/institut/clients
- * Liste paginée + recherche pour l'app mobile.
- * ?q=texte&limit=60&cursor=<created_at ISO>
+ * Liste paginée alphabétique (nom de famille) + recherche.
+ * ?q=texte&limit=60&cursor=<offset>
  */
 export async function GET(request: Request) {
   try {
@@ -35,12 +35,17 @@ export async function GET(request: Request) {
       : DEFAULT_LIMIT;
     const cursor = url.searchParams.get("cursor");
 
+    const offset = /^\d+$/.test(cursor ?? "")
+      ? Number.parseInt(cursor as string, 10)
+      : 0;
+
     let query = session.supabase
       .from("clients")
       .select(MOBILE_CLIENT_SELECT)
       .eq("tenant_id", session.tenant.id)
-      .order("created_at", { ascending: false })
-      .limit(limit + 1);
+      .order("last_name_sort", { ascending: true })
+      .order("id", { ascending: true })
+      .range(offset, offset + limit);
 
     if (q.length >= 1) {
       const pattern = q.replace(/[%_,\\]/g, " ").replace(/,/g, " ").trim();
@@ -50,9 +55,6 @@ export async function GET(request: Request) {
           `full_name.ilike.${like},email.ilike.${like},phone.ilike.${like}`,
         );
       }
-    }
-    if (cursor) {
-      query = query.lt("created_at", cursor);
     }
 
     const { data, error } = await query;
@@ -66,7 +68,7 @@ export async function GET(request: Request) {
     const rows = (data ?? []) as MobileClientRow[];
     const hasMore = rows.length > limit;
     const items = (hasMore ? rows.slice(0, limit) : rows).map(serializeMobileClient);
-    const nextCursor = hasMore ? rows[limit - 1].created_at : null;
+    const nextCursor = hasMore ? String(offset + limit) : null;
 
     return Response.json({ items, nextCursor });
   } catch (error) {

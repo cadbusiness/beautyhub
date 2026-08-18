@@ -320,6 +320,37 @@ async function fetchClientRowsByIds(
   return rows;
 }
 
+const LAST_NAME_FOLD_FROM =
+  "àáâäãåçéèêëìíîïñòóôöõùúûüýÿÀÁÂÄÃÅÇÉÈÊËÌÍÎÏÑÒÓÔÖÕÙÚÛÜÝŸ";
+const LAST_NAME_FOLD_TO =
+  "aaaaaaceeeeiiiinooooouuuuyyaaaaaaceeeeiiiinooooouuuuyy";
+
+/** Dernier mot du nom, accents pliés — même règle que `clients.last_name_sort`. */
+export function clientLastNameSortKey(fullName: string | null | undefined): string {
+  const trimmed = (fullName ?? "").trim();
+  if (!trimmed) return "~";
+  const parts = trimmed.split(/\s+/);
+  const last = parts[parts.length - 1] ?? "";
+  let folded = "";
+  for (const ch of last) {
+    const i = LAST_NAME_FOLD_FROM.indexOf(ch);
+    folded += i >= 0 ? LAST_NAME_FOLD_TO[i] : ch;
+  }
+  folded = folded.toLowerCase();
+  return folded.length === 0 ? "~" : folded;
+}
+
+function compareClientsByLastName(
+  a: { full_name: string | null; id: string },
+  b: { full_name: string | null; id: string },
+): number {
+  const byName = clientLastNameSortKey(a.full_name).localeCompare(
+    clientLastNameSortKey(b.full_name),
+  );
+  if (byName !== 0) return byName;
+  return a.id.localeCompare(b.id);
+}
+
 function applyClientSearch<T extends { or: (filters: string) => T }>(
   query: T,
   search: string,
@@ -370,16 +401,18 @@ export async function fetchClientsListPage(
       );
     }
 
-    scoped.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    scoped.sort(compareClientsByLastName);
     const total = scoped.length;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const pageClients = scoped.slice(from, from + pageSize);
     const pageRows = metaRows.filter((row) =>
       pageClients.some((client) => client.id === String(row.id)),
     );
-    pageRows.sort(
-      (a, b) =>
-        String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")),
+    pageRows.sort((a, b) =>
+      compareClientsByLastName(
+        { full_name: (a.full_name as string | null) ?? null, id: String(a.id) },
+        { full_name: (b.full_name as string | null) ?? null, id: String(b.id) },
+      ),
     );
 
     return {
@@ -411,7 +444,8 @@ export async function fetchClientsListPage(
   }
 
   const { data, error, count } = await clientsQuery
-    .order("created_at", { ascending: false })
+    .order("last_name_sort", { ascending: true })
+    .order("id", { ascending: true })
     .range(from, to);
 
   if (error) {

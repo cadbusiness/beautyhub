@@ -9,12 +9,45 @@ import { apiBaseUrl } from "@/lib/app-url";
 
 export const BOOKLY_PROVIDER = "bookly";
 
+export type BooklySyncStats = {
+  mode: string | null;
+  incoming: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  cancelled: number;
+  missingService: number;
+  missingTitles: string[];
+  resourcesCreated: number;
+};
+
 export type BooklySyncStatus = {
   enabled: boolean;
   url: string | null;
   lastSyncAt: string | null;
   lastError: string | null;
+  lastStats: BooklySyncStats | null;
 };
+
+function toStats(raw: unknown): BooklySyncStats | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const asNum = (v: unknown) => (typeof v === "number" ? v : Number(v)) || 0;
+  const missing = Array.isArray(row.missingTitles)
+    ? row.missingTitles.filter((v): v is string => typeof v === "string")
+    : [];
+  return {
+    mode: typeof row.mode === "string" ? row.mode : null,
+    incoming: asNum(row.incoming),
+    created: asNum(row.created),
+    updated: asNum(row.updated),
+    skipped: asNum(row.skipped),
+    cancelled: asNum(row.cancelled),
+    missingService: asNum(row.missingService),
+    missingTitles: missing,
+    resourcesCreated: asNum(row.resourcesCreated),
+  };
+}
 
 function syncUrl(token: string): string {
   return `${apiBaseUrl()}/api/webhooks/bookly/${token}`;
@@ -24,7 +57,13 @@ function statusFromRow(
   data: { status: string; config: unknown } | null,
 ): BooklySyncStatus {
   if (!data || data.status !== "connected") {
-    return { enabled: false, url: null, lastSyncAt: null, lastError: null };
+    return {
+      enabled: false,
+      url: null,
+      lastSyncAt: null,
+      lastError: null,
+      lastStats: null,
+    };
   }
   const config = (data.config as Record<string, unknown>) ?? {};
   const token = typeof config.webhook_token === "string" ? config.webhook_token : null;
@@ -33,6 +72,7 @@ function statusFromRow(
     url: token ? syncUrl(token) : null,
     lastSyncAt: typeof config.last_sync_at === "string" ? config.last_sync_at : null,
     lastError: typeof config.last_error === "string" ? config.last_error : null,
+    lastStats: toStats(config.last_sync_stats),
   };
 }
 
@@ -71,6 +111,7 @@ export async function enableBooklySync(tenantId: string): Promise<BooklySyncStat
     url: syncUrl(token),
     lastSyncAt: existing.lastSyncAt,
     lastError: null,
+    lastStats: existing.lastStats,
   };
 }
 
@@ -83,12 +124,18 @@ export async function rotateBooklySync(tenantId: string): Promise<BooklySyncStat
     { webhook_token: token, last_sync_at: null, last_error: null },
     "connected",
   );
-  return { enabled: true, url: syncUrl(token), lastSyncAt: null, lastError: null };
+  return {
+    enabled: true,
+    url: syncUrl(token),
+    lastSyncAt: null,
+    lastError: null,
+    lastStats: null,
+  };
 }
 
 export async function disableBooklySync(tenantId: string): Promise<BooklySyncStatus> {
   await disconnectTenantConnection(tenantId, BOOKLY_PROVIDER);
-  return { enabled: false, url: null, lastSyncAt: null, lastError: null };
+  return { enabled: false, url: null, lastSyncAt: null, lastError: null, lastStats: null };
 }
 
 export async function resolveBooklyWebhookTenant(

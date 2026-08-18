@@ -21,6 +21,7 @@ declare
   v_cancelled int := 0;
   v_resources int := 0;
   v_errors text[] := '{}';
+  v_missing_titles text[] := '{}';
   v_row jsonb;
   v_ca int;
   v_service_bookly int;
@@ -41,6 +42,7 @@ declare
   v_cust_bookly text;
   v_keep int[];
   v_price int;
+  v_incoming int := 0;
 begin
   if length(coalesce(p_token, '')) < 16 then
     raise exception 'invalid_token';
@@ -56,6 +58,7 @@ begin
     p_rows := '[]'::jsonb;
   end if;
 
+  v_incoming := jsonb_array_length(p_rows);
   v_keep := coalesce(p_keep_ids, '{}'::integer[]);
 
   for v_row in select value from jsonb_array_elements(p_rows)
@@ -107,6 +110,10 @@ begin
       limit 1;
       if v_service_id is null then
         v_missing := v_missing + 1;
+        if coalesce(array_length(v_missing_titles, 1), 0) < 8 then
+          v_missing_titles := array_append(v_missing_titles,
+            coalesce(nullif(v_row->>'service_title', ''), 'bookly#' || v_service_bookly::text));
+        end if;
         continue;
       end if;
 
@@ -307,7 +314,19 @@ begin
   update public.connections
   set config = coalesce(config, '{}'::jsonb) || jsonb_build_object(
     'last_sync_at', to_char(timezone('utc', now()), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
-    'last_error', case when coalesce(array_length(v_errors, 1), 0) > 0 then array_to_string(v_errors, ' | ') else null end
+    'last_error', case when coalesce(array_length(v_errors, 1), 0) > 0 then array_to_string(v_errors, ' | ') else null end,
+    'last_sync_stats', jsonb_build_object(
+      'mode', p_mode,
+      'incoming', v_incoming,
+      'created', v_created,
+      'updated', v_updated,
+      'skipped', v_skipped,
+      'missingService', v_missing,
+      'missingTitles', to_jsonb(v_missing_titles),
+      'resourcesCreated', v_resources,
+      'cancelled', v_cancelled,
+      'errors', to_jsonb(v_errors)
+    )
   )
   where id = v_conn;
 

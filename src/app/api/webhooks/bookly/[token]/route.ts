@@ -54,7 +54,7 @@ export async function POST(
       keepIds: keepBooklyIds,
       mode,
     });
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "sync_failed";
     console.error("[bookly-webhook]", error);

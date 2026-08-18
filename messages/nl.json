@@ -442,7 +442,17 @@
         "lastSync": "Laatste synchronisatie",
         "waitingFirst": "Wachten op de eerste verzending vanuit WordPress.",
         "loading": "Synchronisatie laden…",
-        "failed": "Synchronisatie kon niet worden ingesteld."
+        "failed": "Synchronisatie kon niet worden ingesteld.",
+        "statsTitle": "Laatste verzending",
+        "statsIncoming": "Ontvangen afspraken",
+        "statsCreated": "Aangemaakt",
+        "statsUpdated": "Bijgewerkt",
+        "statsSkipped": "Overgeslagen",
+        "statsCancelled": "Geannuleerd",
+        "statsMissingService": "Onbekende behandeling",
+        "statsMissingTitles": "Bookly-behandelingen om te koppelen",
+        "statsEmpty": "WordPress heeft geen toekomstige afspraken verstuurd.",
+        "statsHint": "WordPress stuurt alleen toekomstige afspraken (vanaf gisteren). Nul betekent dat Bookly niets nieuws heeft."
       }
     },
     "calendar": {

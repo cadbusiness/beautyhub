@@ -598,7 +598,17 @@
         "lastSync": "Last sync",
         "waitingFirst": "Waiting for the first push from WordPress.",
         "loading": "Loading sync…",
-        "failed": "Unable to configure sync."
+        "failed": "Unable to configure sync.",
+        "statsTitle": "Latest push",
+        "statsIncoming": "Appointments received",
+        "statsCreated": "Created",
+        "statsUpdated": "Updated",
+        "statsSkipped": "Skipped",
+        "statsCancelled": "Cancelled",
+        "statsMissingService": "Unknown service",
+        "statsMissingTitles": "Bookly services to map",
+        "statsEmpty": "WordPress didn't send any upcoming appointment.",
+        "statsHint": "WordPress only pushes upcoming appointments (from yesterday). A zero here means Bookly has nothing new."
       }
     },
     "status": {

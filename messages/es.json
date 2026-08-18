@@ -554,7 +554,17 @@
         "lastSync": "Última sincronización",
         "waitingFirst": "Esperando el primer envío desde WordPress.",
         "loading": "Cargando la sincronización…",
-        "failed": "No se pudo configurar la sincronización."
+        "failed": "No se pudo configurar la sincronización.",
+        "statsTitle": "Último envío",
+        "statsIncoming": "Citas recibidas",
+        "statsCreated": "Creadas",
+        "statsUpdated": "Actualizadas",
+        "statsSkipped": "Omitidas",
+        "statsCancelled": "Canceladas",
+        "statsMissingService": "Servicio desconocido",
+        "statsMissingTitles": "Servicios Bookly a mapear",
+        "statsEmpty": "WordPress no envió ninguna cita próxima.",
+        "statsHint": "WordPress solo envía las citas próximas (desde ayer). Un cero significa que no hay nada nuevo en Bookly."
       }
     },
     "status": {

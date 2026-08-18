@@ -492,7 +492,17 @@
         "lastSync": "Dernière synchro",
         "waitingFirst": "En attente du premier envoi depuis WordPress.",
         "loading": "Chargement de la synchro…",
-        "failed": "Impossible de configurer la synchro."
+        "failed": "Impossible de configurer la synchro.",
+        "statsTitle": "Détail du dernier envoi",
+        "statsIncoming": "Rendez-vous reçus",
+        "statsCreated": "Créés",
+        "statsUpdated": "Mis à jour",
+        "statsSkipped": "Ignorés",
+        "statsCancelled": "Annulés",
+        "statsMissingService": "Prestation inconnue",
+        "statsMissingTitles": "Prestations Bookly à mapper",
+        "statsEmpty": "Aucun rendez-vous à venir n'a été envoyé par WordPress.",
+        "statsHint": "WordPress n'envoie que les rendez-vous à venir (à partir d'hier). Si le compteur est à 0, il n'y a rien de neuf côté Bookly."
       }
     },
     "calendar": {

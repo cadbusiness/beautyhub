@@ -21,6 +21,39 @@ import {
 
 const BATCH_SIZE = 40;
 
+function SyncStatsPanel({ stats }: { stats: SyncStats }) {
+  const t = useTranslations("appointments.import.sync");
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+        {t("statsTitle")}
+      </p>
+      {stats.incoming === 0 ? (
+        <p className="text-slate-600">{t("statsEmpty")}</p>
+      ) : (
+        <ul className="grid grid-cols-2 gap-x-3 gap-y-0.5 tabular-nums">
+          <li>{t("statsIncoming")}: <strong>{stats.incoming}</strong></li>
+          <li>{t("statsCreated")}: <strong>{stats.created}</strong></li>
+          <li>{t("statsUpdated")}: <strong>{stats.updated}</strong></li>
+          <li>{t("statsSkipped")}: <strong>{stats.skipped}</strong></li>
+          {stats.cancelled > 0 ? (
+            <li>{t("statsCancelled")}: <strong>{stats.cancelled}</strong></li>
+          ) : null}
+          {stats.missingService > 0 ? (
+            <li>{t("statsMissingService")}: <strong>{stats.missingService}</strong></li>
+          ) : null}
+        </ul>
+      )}
+      {stats.missingTitles.length > 0 ? (
+        <p className="mt-1 text-amber-800">
+          {t("statsMissingTitles")}: {stats.missingTitles.join(" · ")}
+        </p>
+      ) : null}
+      <p className="mt-1 text-[10px] text-slate-500">{t("statsHint")}</p>
+    </div>
+  );
+}
+
 function StatLine({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="flex items-baseline justify-between gap-4 text-sm">
@@ -30,11 +63,24 @@ function StatLine({ label, value }: { label: string; value: string | number }) {
   );
 }
 
+type SyncStats = {
+  mode: string | null;
+  incoming: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  cancelled: number;
+  missingService: number;
+  missingTitles: string[];
+  resourcesCreated: number;
+};
+
 type SyncStatus = {
   enabled: boolean;
   url: string | null;
   lastSyncAt: string | null;
   lastError: string | null;
+  lastStats: SyncStats | null;
 };
 
 function SyncPanel({
@@ -81,6 +127,7 @@ function SyncPanel({
             <p className="text-xs text-slate-500">{t("waitingFirst")}</p>
           )}
           {status.lastError ? <p className="text-xs text-amber-800">{status.lastError}</p> : null}
+          {status.lastStats ? <SyncStatsPanel stats={status.lastStats} /> : null}
           <Button type="button" variant="outline" className="h-9" onClick={onDisable} disabled={busy}>
             {t("disable")}
           </Button>

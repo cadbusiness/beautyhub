@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'alphabet_index.dart';
+
 /// Item générique pour le picker cherchable.
 class PickerItem {
   const PickerItem({
@@ -174,6 +176,8 @@ class PickerCreateAction {
 /// [search] : si fourni, la liste est chargée à distance (debounce) au lieu
 /// d’un filtre local sur [items]. Utile pour les clientes (fichier trop long).
 ///
+/// [showAlphabet] : index A–Z à droite (saut serveur via [search] `fromLetter`).
+///
 /// Retourne l’item choisi, `null` si fermé sans choisir, ou l’item [nullOption]
 /// si « Aucun » est tapé.
 Future<PickerItem?> showSearchablePicker({
@@ -185,7 +189,8 @@ Future<PickerItem?> showSearchablePicker({
   PickerItem? nullOption,
   String emptyMessage = 'Aucun résultat.',
   PickerCreateAction? createAction,
-  Future<List<PickerItem>> Function(String query)? search,
+  Future<List<PickerItem>> Function(String query, {String? fromLetter})? search,
+  bool showAlphabet = false,
 }) {
   return showModalBottomSheet<PickerItem?>(
     context: context,
@@ -204,6 +209,7 @@ Future<PickerItem?> showSearchablePicker({
       emptyMessage: emptyMessage,
       createAction: createAction,
       search: search,
+      showAlphabet: showAlphabet,
     ),
   );
 }
@@ -220,6 +226,7 @@ class _PickerSheet extends StatefulWidget {
     required this.emptyMessage,
     required this.createAction,
     required this.search,
+    required this.showAlphabet,
   });
 
   final String title;
@@ -229,7 +236,9 @@ class _PickerSheet extends StatefulWidget {
   final PickerItem? nullOption;
   final String emptyMessage;
   final PickerCreateAction? createAction;
-  final Future<List<PickerItem>> Function(String query)? search;
+  final Future<List<PickerItem>> Function(String query, {String? fromLetter})?
+      search;
+  final bool showAlphabet;
 
   @override
   State<_PickerSheet> createState() => _PickerSheetState();
@@ -242,9 +251,12 @@ class _PickerSheetState extends State<_PickerSheet>
   String _query = '';
   _SheetMode _mode = _SheetMode.browse;
   Timer? _debounce;
+  Timer? _letterDebounce;
   List<PickerItem>? _remoteItems;
   bool _searching = false;
   int _searchGen = 0;
+  String? _fromLetter;
+  String? _scrubLetter;
 
   static const _border = Color(0xFFE5E5E5);
 
@@ -259,13 +271,17 @@ class _PickerSheetState extends State<_PickerSheet>
   @override
   void dispose() {
     _debounce?.cancel();
+    _letterDebounce?.cancel();
     _searchController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
   void _onQueryChanged(String value) {
-    setState(() => _query = value);
+    setState(() {
+      _query = value;
+      _fromLetter = null;
+    });
     if (widget.search == null) return;
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 280), () {
@@ -273,13 +289,33 @@ class _PickerSheetState extends State<_PickerSheet>
     });
   }
 
-  Future<void> _runSearch(String value) async {
+  void _onLetter(String letter) {
+    if (_scrubLetter != letter) {
+      alphabetHaptic();
+      setState(() => _scrubLetter = letter);
+    }
+    _letterDebounce?.cancel();
+    _letterDebounce = Timer(const Duration(milliseconds: 70), () {
+      _searchController.clear();
+      setState(() {
+        _query = '';
+        _fromLetter = letter;
+      });
+      _focusNode.unfocus();
+      _runSearch('', fromLetter: letter);
+    });
+  }
+
+  Future<void> _runSearch(String value, {String? fromLetter}) async {
     final search = widget.search;
     if (search == null) return;
     final gen = ++_searchGen;
     setState(() => _searching = true);
     try {
-      final items = await search(value);
+      final items = await search(
+        value,
+        fromLetter: fromLetter ?? _fromLetter,
+      );
       if (!mounted || gen != _searchGen) return;
       setState(() {
         _remoteItems = items;
@@ -376,13 +412,24 @@ class _PickerSheetState extends State<_PickerSheet>
                           query: _query,
                           onQueryChanged: _onQueryChanged,
                           items: widget.items,
-                          searchResults: widget.search != null ? _remoteItems : null,
+                          searchResults:
+                              widget.search != null ? _remoteItems : null,
                           searching: _searching,
                           selectedId: widget.selectedId,
                           nullOption: widget.nullOption,
                           emptyMessage: widget.emptyMessage,
                           createAction: widget.createAction,
                           onCreateTap: _goCreate,
+                          showAlphabet: widget.showAlphabet,
+                          activeLetter: _fromLetter,
+                          scrubLetter: _scrubLetter,
+                          onLetter: _onLetter,
+                          onLetterDragEnd: () {
+                            if (_scrubLetter != null) {
+                              setState(() => _scrubLetter = null);
+                            }
+                          },
+                          autofocusSearch: !widget.showAlphabet,
                         ),
                       ),
               ),
@@ -498,6 +545,12 @@ class _BrowseView extends StatelessWidget {
     required this.emptyMessage,
     required this.createAction,
     required this.onCreateTap,
+    required this.showAlphabet,
+    required this.activeLetter,
+    required this.scrubLetter,
+    required this.onLetter,
+    required this.onLetterDragEnd,
+    required this.autofocusSearch,
   });
 
   final TextEditingController searchController;
@@ -513,6 +566,12 @@ class _BrowseView extends StatelessWidget {
   final String emptyMessage;
   final PickerCreateAction? createAction;
   final VoidCallback onCreateTap;
+  final bool showAlphabet;
+  final String? activeLetter;
+  final String? scrubLetter;
+  final ValueChanged<String> onLetter;
+  final VoidCallback onLetterDragEnd;
+  final bool autofocusSearch;
 
   static const _muted = Color(0xFF737373);
   static const _black = Color(0xFF0A0A0A);
@@ -528,7 +587,7 @@ class _BrowseView extends StatelessWidget {
           child: TextField(
             controller: searchController,
             focusNode: focusNode,
-            autofocus: true,
+            autofocus: autofocusSearch,
             onChanged: onQueryChanged,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
@@ -584,9 +643,25 @@ class _BrowseView extends StatelessWidget {
             ),
           ),
         Expanded(
-          child: searchResults == null && searching
-              ? const Center(child: CircularProgressIndicator())
-              : _buildList(context, filtered),
+          child: Stack(
+            children: [
+              searchResults == null && searching
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildList(context, filtered),
+              if (showAlphabet)
+                Positioned(
+                  right: 0,
+                  top: 4,
+                  bottom: 8,
+                  child: AlphabetIndex(
+                    activeLetter: activeLetter,
+                    onSelect: onLetter,
+                    onDragEnd: onLetterDragEnd,
+                  ),
+                ),
+              if (scrubLetter != null) AlphabetScrubBubble(letter: scrubLetter!),
+            ],
+          ),
         ),
       ],
     );
@@ -636,7 +711,7 @@ class _BrowseView extends StatelessWidget {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.fromLTRB(0, 4, showAlphabet ? 22 : 0, 4),
       itemCount: items.length + (showNull ? 1 : 0),
       separatorBuilder: (_, index) => const Divider(
         height: 1,

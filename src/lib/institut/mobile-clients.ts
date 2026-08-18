@@ -11,6 +11,10 @@ type ClientUpdate = Database["public"]["Tables"]["clients"]["Update"];
 export const MOBILE_CLIENT_SELECT =
   "id, full_name, email, phone, date_of_birth, address_line1, address_line2, city, postal_code, country, notes, tags, marketing_opt_in, login_id, created_at";
 
+/** Liste / recherche : assez léger pour rester fluide à 5000+ fiches. */
+export const MOBILE_CLIENT_LIST_SELECT =
+  "id, full_name, email, phone, tags, marketing_opt_in, login_id, created_at";
+
 export type MobileClientRow = {
   id: string;
   full_name: string | null;
@@ -111,16 +115,16 @@ export function serializeMobileClient(row: MobileClientRow): MobileClientJson {
   const displayEmail = isPlaceholderEmail(row.email) ? null : row.email;
   return {
     id: row.id,
-    fullName: row.full_name,
+    fullName: row.full_name ?? null,
     email: displayEmail,
-    phone: row.phone,
-    dateOfBirth: row.date_of_birth,
-    addressLine1: row.address_line1,
-    addressLine2: row.address_line2,
-    city: row.city,
-    postalCode: row.postal_code,
-    country: row.country,
-    notes: row.notes,
+    phone: row.phone ?? null,
+    dateOfBirth: row.date_of_birth ?? null,
+    addressLine1: row.address_line1 ?? null,
+    addressLine2: row.address_line2 ?? null,
+    city: row.city ?? null,
+    postalCode: row.postal_code ?? null,
+    country: row.country ?? null,
+    notes: row.notes ?? null,
     tags: row.tags ?? [],
     marketingOptIn: row.marketing_opt_in ?? false,
     hasAccount: Boolean(row.login_id),

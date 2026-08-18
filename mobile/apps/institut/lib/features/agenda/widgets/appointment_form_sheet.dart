@@ -173,7 +173,12 @@ class _CreateAppointmentSheetState
       context: context,
       title: 'Choisir une cliente',
       items: const [],
-      search: (q) => searchInstitutClients(ref, q),
+      search: (q, {fromLetter}) => searchInstitutClients(
+        ref,
+        q,
+        fromLetter: fromLetter,
+      ),
+      showAlphabet: true,
       selectedId: _clientId,
       searchHint: 'Rechercher (nom, email, téléphone)…',
       nullOption: const PickerItem(id: '__none__', title: 'Sans cliente'),

@@ -455,11 +455,13 @@ class MobileApiClient {
     String query = '',
     int limit = 60,
     String? cursor,
+    String? fromLetter,
   }) async {
     final params = <String, String>{
       if (query.isNotEmpty) 'q': query,
       'limit': '$limit',
       if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+      if (fromLetter != null && fromLetter.isNotEmpty) 'from': fromLetter,
     };
     final response = await _http.get(
       _uri('/api/mobile/institut/clients', params),

@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/session_providers.dart';
+import '../../widgets/alphabet_index.dart';
 import '../../widgets/screen_scaffold.dart';
 import 'client_detail_sheet.dart';
 import 'client_editor_sheet.dart';
@@ -22,21 +22,23 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   static const _muted = Color(0xFF737373);
   static const _rowBg = Colors.white;
   static const _border = Color(0xFFEDEDED);
-  static const _pageSize = 500;
+  static const _pageSize = 60;
 
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   final _sectionKeys = <String, GlobalKey>{};
 
   Timer? _debounce;
+  Timer? _letterDebounce;
   String _query = '';
+  String? _fromLetter;
   List<InstClient> _items = const [];
   String? _cursor;
   bool _loading = false;
   bool _loadingMore = false;
+  bool _letterLoading = false;
   String? _error;
   String? _scrubLetter;
-  String? _pendingJump;
   int _loadGen = 0;
 
   @override
@@ -49,6 +51,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _letterDebounce?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -67,8 +70,10 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   Future<void> _loadInitial() async {
     final gen = ++_loadGen;
     if (!mounted) return;
+    final blocking = _items.isEmpty;
     setState(() {
-      _loading = true;
+      _loading = blocking;
+      _letterLoading = !blocking;
       _loadingMore = false;
       _error = null;
     });
@@ -82,21 +87,25 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
             accessToken: token,
             tenantId: tenantId,
             query: _query,
+            fromLetter: _fromLetter,
             limit: _pageSize,
           );
       if (!mounted || gen != _loadGen) return;
       setState(() {
-        _items = [...page.items]..sort(_compareClients);
+        _items = [...page.items];
         _cursor = page.nextCursor;
         _loading = false;
-        _pendingJump = null;
+        _letterLoading = false;
       });
-      unawaited(_prefetchRemaining(gen));
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
     } catch (e) {
       if (!mounted || gen != _loadGen) return;
       setState(() {
         _error = e.toString();
         _loading = false;
+        _letterLoading = false;
       });
     }
   }
@@ -118,6 +127,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
             accessToken: token,
             tenantId: tenantId,
             query: _query,
+            fromLetter: _fromLetter,
             cursor: _cursor,
             limit: _pageSize,
           );
@@ -127,9 +137,6 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
         _cursor = page.nextCursor;
         _loadingMore = false;
       });
-      if (_pendingJump != null && _tryScrollToLetter(_pendingJump!)) {
-        _pendingJump = null;
-      }
     } catch (_) {
       if (!mounted || gen != _loadGen) return;
       setState(() => _loadingMore = false);
@@ -137,9 +144,12 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   }
 
   void _onQueryChanged(String v) {
-    setState(() => _query = v);
+    setState(() {
+      _query = v;
+      _fromLetter = null;
+    });
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 320), _loadInitial);
+    _debounce = Timer(const Duration(milliseconds: 280), _loadInitial);
   }
 
   @override
@@ -168,7 +178,7 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) {
+    if (_loading && _items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
@@ -232,7 +242,6 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
     }
 
     final sections = _groupByLetter(_items);
-    final available = sections.map((s) => s.letter).toSet();
     final bottomPad = MediaQuery.viewPaddingOf(context).bottom + 24;
 
     return RefreshIndicator(
@@ -243,6 +252,14 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
+              if (_letterLoading)
+                const SliverToBoxAdapter(
+                  child: LinearProgressIndicator(
+                    minHeight: 2,
+                    color: Color(0xFF0A0A0A),
+                    backgroundColor: Color(0xFFE5E5E5),
+                  ),
+                ),
               for (final section in sections)
                 SliverMainAxisGroup(
                   slivers: [
@@ -287,8 +304,8 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
             right: 0,
             top: 4,
             bottom: bottomPad,
-            child: _AlphabetRail(
-              available: available,
+            child: AlphabetIndex(
+              activeLetter: _fromLetter,
               onSelect: _onRailLetter,
               onDragEnd: () {
                 if (_scrubLetter != null) {
@@ -297,40 +314,10 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
               },
             ),
           ),
-          if (_scrubLetter != null)
-            IgnorePointer(
-              child: Center(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0xE60A0A0A),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: SizedBox(
-                    width: 76,
-                    height: 76,
-                    child: Center(
-                      child: Text(
-                        _scrubLetter!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 34,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          if (_scrubLetter != null) AlphabetScrubBubble(letter: _scrubLetter!),
         ],
       ),
     );
-  }
-
-  Future<void> _prefetchRemaining(int gen) async {
-    while (mounted && gen == _loadGen && _cursor != null && !_loading) {
-      await _loadMore();
-    }
   }
 
   GlobalKey _sectionKey(String letter) =>
@@ -351,47 +338,35 @@ class _ClientsScreenState extends ConsumerState<ClientsScreen> {
 
   void _onRailLetter(String letter) {
     if (_scrubLetter != letter) {
-      HapticFeedback.selectionClick();
+      alphabetHaptic();
       setState(() => _scrubLetter = letter);
     }
-    _jumpToLetter(letter);
+    _letterDebounce?.cancel();
+    _letterDebounce = Timer(const Duration(milliseconds: 70), () {
+      _jumpToLetter(letter);
+    });
   }
 
   void _jumpToLetter(String letter) {
-    if (_tryScrollToLetter(letter)) {
-      _pendingJump = null;
-      return;
-    }
-    _pendingJump = letter;
-    if (!_loadingMore && _cursor != null) unawaited(_loadMore());
+    if (_query.isEmpty && _tryScrollToLetter(letter)) return;
+    _searchController.clear();
+    setState(() {
+      _query = '';
+      _fromLetter = letter;
+    });
+    unawaited(_loadInitial());
   }
 
   bool _tryScrollToLetter(String letter) {
     final direct = _sectionKeys[letter]?.currentContext;
-    if (direct != null) {
-      Scrollable.ensureVisible(
-        direct,
-        alignment: 0.0,
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOut,
-      );
-      return true;
-    }
-    const order = _AlphabetRail.letters;
-    final start = order.indexOf(letter);
-    if (start < 0) return _cursor == null;
-    for (var i = start + 1; i < order.length; i++) {
-      final ctx = _sectionKeys[order[i]]?.currentContext;
-      if (ctx == null) continue;
-      Scrollable.ensureVisible(
-        ctx,
-        alignment: 0.0,
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOut,
-      );
-      return _cursor == null;
-    }
-    return _cursor == null;
+    if (direct == null) return false;
+    Scrollable.ensureVisible(
+      direct,
+      alignment: 0.0,
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOut,
+    );
+    return true;
   }
 
   int _compareClients(InstClient a, InstClient b) {
@@ -613,70 +588,5 @@ class _LetterHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _LetterHeaderDelegate oldDelegate) {
     return oldDelegate.letter != letter || oldDelegate.headerKey != headerKey;
-  }
-}
-
-class _AlphabetRail extends StatelessWidget {
-  const _AlphabetRail({
-    required this.available,
-    required this.onSelect,
-    required this.onDragEnd,
-  });
-
-  final Set<String> available;
-  final ValueChanged<String> onSelect;
-  final VoidCallback onDragEnd;
-
-  static const letters = [
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '#',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTapDown: (details) =>
-              _pick(constraints.maxHeight, details.localPosition.dy),
-          onTapUp: (_) => onDragEnd(),
-          onTapCancel: onDragEnd,
-          onVerticalDragDown: (details) =>
-              _pick(constraints.maxHeight, details.localPosition.dy),
-          onVerticalDragUpdate: (details) =>
-              _pick(constraints.maxHeight, details.localPosition.dy),
-          onVerticalDragEnd: (_) => onDragEnd(),
-          onVerticalDragCancel: onDragEnd,
-          child: SizedBox(
-            width: 22,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                for (final letter in letters)
-                  Text(
-                    letter,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                      color: available.contains(letter)
-                          ? const Color(0xFF0A0A0A)
-                          : const Color(0xFFD4D4D4),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _pick(double height, double dy) {
-    if (height <= 0) return;
-    final index =
-        (dy / height * letters.length).floor().clamp(0, letters.length - 1);
-    onSelect(letters[index]);
   }
 }

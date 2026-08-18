@@ -8,16 +8,24 @@ import {
   parseMobileClientBody,
   serializeMobileClient,
   type MobileClientRow,
-  MOBILE_CLIENT_SELECT,
+  MOBILE_CLIENT_LIST_SELECT,
 } from "@/lib/institut/mobile-clients";
 
-const DEFAULT_LIMIT = 80;
-const MAX_LIMIT = 1000;
+const DEFAULT_LIMIT = 60;
+const MAX_LIMIT = 100;
+
+function parseFromLetter(raw: string | null): string | null {
+  const value = (raw ?? "").trim().toLowerCase();
+  if (!value) return null;
+  if (value === "#" || value === "~") return "#";
+  if (/^[a-z]$/.test(value)) return value;
+  return null;
+}
 
 /**
  * GET /api/mobile/institut/clients
  * Liste paginée alphabétique (nom de famille) + recherche.
- * ?q=texte&limit=60&cursor=<offset>
+ * ?q=texte&from=m&limit=60&cursor=<offset>
  */
 export async function GET(request: Request) {
   try {
@@ -26,6 +34,7 @@ export async function GET(request: Request) {
     });
     const url = new URL(request.url);
     const q = (url.searchParams.get("q") ?? "").trim();
+    const fromLetter = parseFromLetter(url.searchParams.get("from"));
     const limitRaw = Number.parseInt(
       url.searchParams.get("limit") ?? String(DEFAULT_LIMIT),
       10,
@@ -41,7 +50,7 @@ export async function GET(request: Request) {
 
     let query = session.supabase
       .from("clients")
-      .select(MOBILE_CLIENT_SELECT)
+      .select(MOBILE_CLIENT_LIST_SELECT)
       .eq("tenant_id", session.tenant.id)
       .order("last_name_sort", { ascending: true })
       .order("id", { ascending: true })
@@ -55,6 +64,10 @@ export async function GET(request: Request) {
           `full_name.ilike.${like},email.ilike.${like},phone.ilike.${like}`,
         );
       }
+    } else if (fromLetter === "#") {
+      query = query.or("last_name_sort.lt.a,last_name_sort.gte.~");
+    } else if (fromLetter) {
+      query = query.gte("last_name_sort", fromLetter);
     }
 
     const { data, error } = await query;

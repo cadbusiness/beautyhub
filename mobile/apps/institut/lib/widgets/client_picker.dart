@@ -23,8 +23,9 @@ PickerItem pickerItemFromClient(InstClient client) {
 
 Future<List<PickerItem>> searchInstitutClients(
   WidgetRef ref,
-  String query,
-) async {
+  String query, {
+  String? fromLetter,
+}) async {
   final token = ref.read(accessTokenProvider);
   final tenantId = ref.read(selectedTenantIdProvider);
   if (token == null || tenantId == null) return const [];
@@ -32,7 +33,8 @@ Future<List<PickerItem>> searchInstitutClients(
         accessToken: token,
         tenantId: tenantId,
         query: query.trim(),
-        limit: 80,
+        fromLetter: fromLetter,
+        limit: 60,
       );
   return page.items.map(pickerItemFromClient).toList(growable: false);
 }

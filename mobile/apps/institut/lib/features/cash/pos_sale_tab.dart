@@ -1381,7 +1381,12 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                   context: context,
                   title: 'Choisir une cliente',
                   items: const [],
-                  search: (q) => searchInstitutClients(ref, q),
+                  search: (q, {fromLetter}) => searchInstitutClients(
+                    ref,
+                    q,
+                    fromLetter: fromLetter,
+                  ),
+                  showAlphabet: true,
                   selectedId: _client?.id,
                   searchHint: 'Rechercher (nom, email, téléphone)…',
                   nullOption:

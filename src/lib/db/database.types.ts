@@ -3724,6 +3724,15 @@ export type Database = {
       auth_has_brand_access: { Args: { bid: string }; Returns: boolean }
       auth_has_tenant_access: { Args: { tid: string }; Returns: boolean }
       auth_is_platform_admin: { Args: never; Returns: boolean }
+      bookly_import_payload: {
+        Args: {
+          p_keep_ids?: number[]
+          p_mode?: string
+          p_rows?: Json
+          p_token: string
+        }
+        Returns: Json
+      }
       bookly_resolve_webhook: {
         Args: { p_token: string }
         Returns: {

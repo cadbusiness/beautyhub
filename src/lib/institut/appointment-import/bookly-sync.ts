@@ -3,7 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { requireSupabaseEnv } from "@/lib/supabase/env";
 import { tryCreateServiceClient } from "@/lib/supabase/service";
-import type { Database } from "@/lib/db/database.types";
+import type { Database, Json } from "@/lib/db/database.types";
 import { saveTenantConnection, disconnectTenantConnection } from "@/lib/connections";
 import { apiBaseUrl } from "@/lib/app-url";
 
@@ -127,6 +127,54 @@ export function createBooklyWebhookClient(token: string) {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { headers: { "x-bookly-webhook-token": token } },
   });
+}
+
+export type BooklyImportPayloadResult = {
+  ok: boolean;
+  created: number;
+  updated: number;
+  skipped: number;
+  cancelled: number;
+  missingService: number;
+  resourcesCreated: number;
+  errors: string[];
+};
+
+function asImportResult(value: unknown): BooklyImportPayloadResult {
+  const row = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const errors = Array.isArray(row.errors)
+    ? row.errors.filter((e): e is string => typeof e === "string")
+    : [];
+  return {
+    ok: row.ok !== false,
+    created: Number(row.created) || 0,
+    updated: Number(row.updated) || 0,
+    skipped: Number(row.skipped) || 0,
+    cancelled: Number(row.cancelled) || 0,
+    missingService: Number(row.missingService) || 0,
+    resourcesCreated: Number(row.resourcesCreated) || 0,
+    errors,
+  };
+}
+
+export async function importBooklyWebhookPayload(input: {
+  token: string;
+  rows: unknown;
+  keepIds: number[];
+  mode: "upsert" | "full";
+}): Promise<BooklyImportPayloadResult> {
+  const env = requireSupabaseEnv();
+  const anon = createSupabaseClient<Database>(env.url, env.anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data, error } = await anon.rpc("bookly_import_payload", {
+    p_token: input.token,
+    p_rows: (Array.isArray(input.rows) ? input.rows : []) as Json,
+    p_keep_ids: input.keepIds,
+    p_mode: input.mode,
+  });
+  if (error) throw new Error(error.message);
+  return asImportResult(data);
 }
 
 export async function markBooklySyncResult(

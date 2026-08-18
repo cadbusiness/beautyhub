@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
 import {
-  createBooklyWebhookClient,
-  markBooklySyncResult,
+  importBooklyWebhookPayload,
   resolveBooklyWebhookTenant,
 } from "@/lib/institut/appointment-import/bookly-sync";
-import {
-  runBooklyAppointmentsImport,
-  toRowFromObject,
-  type BooklyAppointmentCsvRow,
-} from "@/lib/institut/appointment-import/bookly-csv";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,8 +13,6 @@ type SyncBody = {
   rows?: unknown;
   keep_ids?: unknown;
   keepBooklyIds?: unknown;
-  cancelled_ids?: unknown;
-  cancelledBooklyIds?: unknown;
 };
 
 function asIdList(value: unknown): number[] {
@@ -47,61 +39,26 @@ export async function POST(
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const rows: BooklyAppointmentCsvRow[] = [];
-  if (Array.isArray(body.rows)) {
-    for (let i = 0; i < body.rows.length; i += 1) {
-      const row = toRowFromObject(body.rows[i], i + 1);
-      if (row) rows.push(row);
-    }
-  }
-
-  const cancelledIds = asIdList(body.cancelled_ids ?? body.cancelledBooklyIds);
+  const rows = Array.isArray(body.rows) ? body.rows : [];
   const keepBooklyIds = asIdList(body.keep_ids ?? body.keepBooklyIds);
   const mode = body.mode === "full" ? "full" : "upsert";
 
-  if (rows.length === 0 && cancelledIds.length === 0 && mode !== "full") {
-    await markBooklySyncResult(conn.connectionId, null, token);
-    return NextResponse.json({ ok: true, created: 0, updated: 0, cancelled: 0 });
-  }
   if (rows.length > 400) {
     return NextResponse.json({ error: "batch_too_large" }, { status: 400 });
   }
 
   try {
-    const supabase = createBooklyWebhookClient(token);
-    let resultOffset = 0;
-
-    if (cancelledIds.length) {
-      const { data: existing } = await supabase
-        .from("inst_appointments")
-        .select("id, bookly_id")
-        .eq("tenant_id", conn.tenantId)
-        .in("bookly_id", cancelledIds);
-      for (const appt of existing ?? []) {
-        await supabase.from("inst_appointments").update({ status: "cancelled" }).eq("id", appt.id);
-      }
-      resultOffset = existing?.length ?? 0;
-    }
-
-    const result = await runBooklyAppointmentsImport(supabase, conn.tenantId, rows, {
-      upcomingOnly: false,
-      reconcileUpcoming: mode === "full" && (rows.length > 0 || keepBooklyIds.length > 0),
-      keepBooklyIds:
-        mode === "full"
-          ? keepBooklyIds.length
-            ? keepBooklyIds
-            : rows.map((r) => r.booklyCaId)
-          : undefined,
+    const result = await importBooklyWebhookPayload({
+      token,
+      rows,
+      keepIds: keepBooklyIds,
+      mode,
     });
-    result.cancelled += resultOffset;
-
-    const errorSummary = result.errors.length ? result.errors.slice(0, 5).join(" | ") : null;
-    await markBooklySyncResult(conn.connectionId, errorSummary, token);
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     const message = error instanceof Error ? error.message : "sync_failed";
-    await markBooklySyncResult(conn.connectionId, message, token);
     console.error("[bookly-webhook]", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    const status = message.includes("invalid_token") ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

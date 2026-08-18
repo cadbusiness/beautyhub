@@ -251,7 +251,7 @@ class HomeScreen extends ConsumerWidget {
                               ? 'Session d’hier ouverte'
                               : 'Caisse ouverte',
                       subtitle: session.previousDay
-                          ? 'Clôturez-la avant d’ouvrir aujourd’hui'
+                          ? 'Encaissements bloqués — clôturez-la avec l’heure d’hier'
                           : sessionOpenedCaption(
                               openedAt: session.openedAt,
                               previousDay: false,
@@ -287,10 +287,14 @@ class HomeScreen extends ConsumerWidget {
                           if (session.previousDay || session.paused)
                             TextButton(
                               onPressed: () {
-                                ref.read(cashInitialTabProvider.notifier).state = 0;
+                                if (session.previousDay) {
+                                  requestCashCloseSheet(ref);
+                                } else {
+                                  ref.read(cashInitialTabProvider.notifier).state = 0;
+                                }
                                 context.go('/app/cash');
                               },
-                              child: Text(session.paused ? 'Reprendre' : 'Session'),
+                              child: Text(session.paused ? 'Reprendre' : 'Clôturer'),
                             )
                           else
                             FilledButton.icon(

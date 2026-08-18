@@ -33,6 +33,7 @@ class _CashOpenSessionViewState extends ConsumerState<CashOpenSessionView> {
     _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeOpenCloseSheet());
   }
 
   @override
@@ -56,6 +57,13 @@ class _CashOpenSessionViewState extends ConsumerState<CashOpenSessionView> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  void _maybeOpenCloseSheet() {
+    if (!mounted) return;
+    if (!ref.read(cashRequestCloseSheetProvider)) return;
+    ref.read(cashRequestCloseSheetProvider.notifier).state = false;
+    _openCloseSheet();
   }
 
   Future<void> _openCloseSheet() async {
@@ -87,10 +95,48 @@ class _CashOpenSessionViewState extends ConsumerState<CashOpenSessionView> {
     );
     final mixHint = _articlesHint(session);
 
+    ref.listen<bool>(cashRequestCloseSheetProvider, (prev, next) {
+      if (next) _maybeOpenCloseSheet();
+    });
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
+        if (session.previousDay) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFBEB),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFDE68A)),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Session d’hier encore ouverte',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF78350F),
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Les encaissements d’aujourd’hui sont bloqués. Clôturez cette session en indiquant l’heure à laquelle le tiroir a vraiment été fermé.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF92400E),
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
         _SessionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,11 +273,15 @@ class _CashOpenSessionViewState extends ConsumerState<CashOpenSessionView> {
               child: FilledButton(
                 onPressed: _busy ? null : _openCloseSheet,
                 style: FilledButton.styleFrom(
-                  backgroundColor: _black,
+                  backgroundColor: session.previousDay
+                      ? const Color(0xFF78350F)
+                      : _black,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: const Text('Clôturer'),
+                child: Text(
+                  session.previousDay ? 'Clôturer hier' : 'Clôturer',
+                ),
               ),
             ),
           ],
@@ -258,6 +308,8 @@ class _CloseSessionSheet extends ConsumerStatefulWidget {
 class _CloseSessionSheetState extends ConsumerState<_CloseSessionSheet> {
   late final TextEditingController _counted;
   late final TextEditingController _notes;
+  late DateTime _closedAt;
+  bool _useNow = false;
   bool _confirmed = false;
   bool _submitting = false;
   String? _error;
@@ -269,6 +321,8 @@ class _CloseSessionSheetState extends ConsumerState<_CloseSessionSheet> {
       text: (widget.session.expectedCashCents / 100).toStringAsFixed(2),
     );
     _notes = TextEditingController();
+    _closedAt = _defaultClosedAt(widget.session);
+    _useNow = !widget.session.previousDay;
   }
 
   @override
@@ -285,6 +339,47 @@ class _CloseSessionSheetState extends ConsumerState<_CloseSessionSheet> {
   }
 
   int get _variance => _countedCents - widget.session.expectedCashCents;
+
+  Future<void> _pickClosedAt() async {
+    final session = widget.session;
+    final initial = _useNow ? DateTime.now() : _closedAt;
+    final DateTime? date;
+    if (session.previousDay) {
+      date = DateTime(
+        session.openedAt.year,
+        session.openedAt.month,
+        session.openedAt.day,
+      );
+    } else {
+      date = await showDatePicker(
+        context: context,
+        initialDate: initial,
+        firstDate: session.openedAt,
+        lastDate: DateTime.now(),
+      );
+    }
+    if (!mounted || date == null) return;
+    final pickedDate = date;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child ?? const SizedBox.shrink(),
+      ),
+    );
+    if (!mounted || time == null) return;
+    setState(() {
+      _useNow = false;
+      _closedAt = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        time.hour,
+        time.minute,
+      );
+    });
+  }
 
   Future<void> _submit() async {
     if (_variance != 0 && _notes.text.trim().isEmpty) {
@@ -304,6 +399,7 @@ class _CloseSessionSheetState extends ConsumerState<_CloseSessionSheet> {
         ref,
         countedCashCents: _countedCents,
         notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
+        closedAt: _useNow ? DateTime.now() : _closedAt,
       );
       if (!mounted) return;
       Navigator.of(context).pop(report.isEmpty ? 'Z' : report);
@@ -348,12 +444,57 @@ class _CloseSessionSheetState extends ConsumerState<_CloseSessionSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Comptez les espèces du tiroir, puis confirmez. Ouverte à ${DateFormat.Hm().format(session.openedAt)}.',
+              session.previousDay
+                  ? 'Indiquez l’heure à laquelle le tiroir a vraiment été fermé hier, puis comptez les espèces.'
+                  : 'Comptez les espèces du tiroir, puis confirmez. Ouverte à ${DateFormat.Hm().format(session.openedAt)}.',
               style: const TextStyle(
                 color: Color(0xFF737373),
                 fontSize: 13,
                 height: 1.35,
               ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              session.previousDay
+                  ? 'Heure de clôture (${DateFormat.MMMMd('fr_FR').format(session.openedAt)})'
+                  : 'Heure de clôture',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF404040),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _submitting ? null : _pickClosedAt,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF0A0A0A),
+                      side: const BorderSide(color: Color(0xFFD4D4D4)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      _useNow
+                          ? 'Maintenant'
+                          : DateFormat('d MMM · HH:mm', 'fr_FR').format(_closedAt),
+                    ),
+                  ),
+                ),
+                if (session.previousDay) ...[
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: _submitting
+                        ? null
+                        : () => setState(() {
+                              _useNow = true;
+                              _closedAt = DateTime.now();
+                            }),
+                    child: const Text('Maintenant'),
+                  ),
+                ],
+              ],
             ),
             const SizedBox(height: 16),
             _StatRow(
@@ -558,6 +699,19 @@ class _StatRow extends StatelessWidget {
       ),
     );
   }
+}
+
+DateTime _defaultClosedAt(CashSessionSummary session) {
+  if (session.suggestedClosedAt != null) return session.suggestedClosedAt!;
+  if (!session.previousDay) return DateTime.now();
+  final open = session.openedAt;
+  final lastSale = session.lastSaleAt;
+  var suggested = DateTime(open.year, open.month, open.day, 19);
+  if (suggested.isBefore(open)) suggested = open;
+  if (lastSale != null && lastSale.isAfter(suggested)) suggested = lastSale;
+  final now = DateTime.now();
+  if (suggested.isAfter(now)) return now;
+  return suggested;
 }
 
 String? _articlesHint(CashSessionSummary session) {

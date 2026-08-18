@@ -93,6 +93,7 @@ async function translateCheckoutError(error: unknown): Promise<string> {
   if (code === "sale_error") return t("saleError");
   if (code === "no_open_session") return t("noOpenSession");
   if (code === "session_paused") return t("sessionPaused");
+  if (code === "session_previous_day") return t("sessionPreviousDay");
   if (code === "gift_card_invalid") return t("giftCardInvalid");
   if (code === "gift_card_insufficient") return t("giftCardInsufficient");
   if (code === "gift_card_expired") return t("giftCardExpired");

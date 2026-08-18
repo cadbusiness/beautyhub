@@ -173,11 +173,13 @@ export async function closeCashSession(
 
   const countedCash = parseEurosCents(formData.get("counted_cash"));
   const notes = String(formData.get("notes") ?? "").trim() || null;
+  const closedAt = String(formData.get("closed_at") ?? "").trim() || null;
 
   try {
     const result = await closeOpenCashSession(supabase, session.tenant.id, {
       countedCashCents: countedCash,
       notes,
+      closedAt,
     });
     revalidateSession();
     return {

@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/lib/db/database.types";
-import { calendarDateString, isPreviousCalendarDay } from "@/lib/date";
+import {
+  calendarDateString,
+  isPreviousCalendarDay,
+  parseClosedAtInput,
+  zonedDateTimeUtc,
+} from "@/lib/date";
 import { formatTicketNumber, getPosSettings } from "./pos-settings";
 
 type Db = SupabaseClient<Database>;
@@ -58,6 +63,8 @@ export interface PosSessionSummary {
   paused: boolean;
   opened_calendar_date: string;
   is_previous_day: boolean;
+  last_sale_at: string | null;
+  suggested_closed_at: string;
   currency: string;
 }
 
@@ -78,6 +85,8 @@ export type MobileCashSessionJson = {
   paused: boolean;
   openedCalendarDate: string;
   previousDay: boolean;
+  lastSaleAt: string | null;
+  suggestedClosedAt: string;
 };
 
 export function serializeCashSession(
@@ -100,6 +109,8 @@ export function serializeCashSession(
     paused: summary.paused,
     openedCalendarDate: summary.opened_calendar_date,
     previousDay: summary.is_previous_day,
+    lastSaleAt: summary.last_sale_at,
+    suggestedClosedAt: summary.suggested_closed_at,
   };
 }
 
@@ -111,11 +122,20 @@ export async function getPosSessionSummary(
   const cashSession = await getOpenCashSession(supabase, tenantId);
   if (!cashSession) return null;
 
-  const [snapshot, settings] = await Promise.all([
+  const [snapshot, settings, lastSaleRes] = await Promise.all([
     computeSessionSnapshot(supabase, tenantId, cashSession.id, "x"),
     getPosSettings(supabase, tenantId),
+    supabase
+      .from("inst_sales")
+      .select("created_at")
+      .eq("tenant_id", tenantId)
+      .eq("cash_session_id", cashSession.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
+  const lastSaleAt = lastSaleRes.data?.created_at ?? null;
   const openedCalendarDate = calendarDateString(cashSession.opened_at);
   const cashSalesCents = snapshot.by_payment_method.cash ?? 0;
   const cardSalesCents =
@@ -137,8 +157,55 @@ export async function getPosSessionSummary(
     paused: isCashSessionPaused(cashSession),
     opened_calendar_date: openedCalendarDate,
     is_previous_day: isPreviousCalendarDay(cashSession.opened_at),
+    last_sale_at: lastSaleAt,
+    suggested_closed_at: suggestedSessionClosedAt({
+      openedAt: cashSession.opened_at,
+      lastSaleAt,
+    }),
     currency: settings.currency,
   };
+}
+
+export function suggestedSessionClosedAt(input: {
+  openedAt: string;
+  lastSaleAt: string | null;
+  now?: Date;
+}): string {
+  const now = input.now ?? new Date();
+  const previousDay =
+    calendarDateString(input.openedAt) < calendarDateString(now);
+  return resolveSessionClosedAt({
+    openedAt: input.openedAt,
+    lastSaleAt: input.lastSaleAt,
+    requested: previousDay
+      ? zonedDateTimeUtc(calendarDateString(input.openedAt), 19, 0).toISOString()
+      : now.toISOString(),
+    now,
+  });
+}
+
+export function resolveSessionClosedAt(input: {
+  openedAt: string;
+  lastSaleAt?: string | null;
+  requested?: string | Date | null;
+  now?: Date;
+}): string {
+  const now = input.now ?? new Date();
+  const opened = new Date(input.openedAt);
+  const lastSale = input.lastSaleAt ? new Date(input.lastSaleAt) : null;
+  const requested =
+    input.requested instanceof Date
+      ? input.requested
+      : typeof input.requested === "string"
+        ? (parseClosedAtInput(input.requested) ?? now)
+        : now;
+
+  const floor =
+    lastSale && lastSale.getTime() > opened.getTime() ? lastSale : opened;
+  const clamped = new Date(
+    Math.min(now.getTime(), Math.max(floor.getTime(), requested.getTime())),
+  );
+  return clamped.toISOString();
 }
 
 export async function requireOpenSessionIfNeeded(
@@ -299,10 +366,24 @@ export async function resumePausedCashSession(supabase: Db, tenantId: string) {
 export async function closeOpenCashSession(
   supabase: Db,
   tenantId: string,
-  input: { countedCashCents: number; notes?: string | null },
+  input: { countedCashCents: number; notes?: string | null; closedAt?: string | null },
 ): Promise<{ reportId: string; reportNumber: string; varianceCents: number }> {
   const cashSession = await getOpenCashSession(supabase, tenantId);
   if (!cashSession) throw new Error("no_open_session");
+
+  const { data: lastSale } = await supabase
+    .from("inst_sales")
+    .select("created_at")
+    .eq("tenant_id", tenantId)
+    .eq("cash_session_id", cashSession.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const closedAt = resolveSessionClosedAt({
+    openedAt: cashSession.opened_at,
+    lastSaleAt: lastSale?.created_at ?? null,
+    requested: input.closedAt,
+  });
 
   const countedCash = Math.max(0, Math.round(input.countedCashCents));
   const notes = input.notes?.trim() || null;
@@ -341,7 +422,7 @@ export async function closeOpenCashSession(
     .from("inst_cash_sessions")
     .update({
       status: "closed",
-      closed_at: new Date().toISOString(),
+      closed_at: closedAt,
       closing_counted_cents: countedCash,
       closing_expected_cents: snapshot.expected_cash_cents,
       closing_variance_cents: variance,

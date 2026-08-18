@@ -64,6 +64,51 @@ function timeZoneOffsetMs(date: Date, timeZone: string): number {
   return asUtc - date.getTime();
 }
 
+/** Instant UTC correspondant à une heure murale dans `timeZone` le jour `ymd`. */
+export function zonedDateTimeUtc(
+  ymd: string,
+  hour: number,
+  minute = 0,
+  timeZone = APP_TIME_ZONE,
+): Date {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const utcGuess = Date.UTC(y, m - 1, d, hour, minute, 0, 0);
+  const first = new Date(utcGuess - timeZoneOffsetMs(new Date(utcGuess), timeZone));
+  return new Date(utcGuess - timeZoneOffsetMs(first, timeZone));
+}
+
+/** `YYYY-MM-DDTHH:mm` dans le fuseau métier, pour un input datetime-local. */
+export function toDateTimeLocalValue(
+  iso: string | Date,
+  timeZone = APP_TIME_ZONE,
+): string {
+  const date = typeof iso === "string" ? new Date(iso) : iso;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const n = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "00";
+  return `${n("year")}-${n("month")}-${n("day")}T${n("hour")}:${n("minute")}`;
+}
+
+/** Interprète une saisie de clôture (`YYYY-MM-DDTHH:mm` ou ISO). */
+export function parseClosedAtInput(value: string | null | undefined): Date | null {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return null;
+  const local = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/.exec(trimmed);
+  if (local) {
+    return zonedDateTimeUtc(local[1], Number(local[2]), Number(local[3]));
+  }
+  const parsed = new Date(trimmed);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 /** Instant UTC correspondant à 00:00:00 dans `timeZone` le jour `ymd`. */
 export function zonedDayStartUtc(ymd: string, timeZone = APP_TIME_ZONE): Date {
   const [y, m, d] = ymd.split("-").map(Number);

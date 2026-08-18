@@ -624,6 +624,7 @@
       "sessionAlreadyOpen": "Er is al een sessie geopend.",
       "sessionOpened": "Kassasessie geopend.",
       "sessionPaused": "De kassa staat in pauze — hervat de sessie om af te rekenen.",
+      "sessionPreviousDay": "De sessie van gisteren staat nog open. Sluit die eerst af voordat u vandaag afrekent.",
       "sessionPausedOk": "Sessie gepauzeerd.",
       "sessionResumed": "Sessie hervat.",
       "noOpenSession": "Geen open sessie — open eerst de kassa.",
@@ -3312,6 +3313,9 @@
       "closeForm": {
         "theoreticalTitle": "Theoretisch contant saldo",
         "expected": "Verwacht contant",
+        "closedAt": "Sluitingstijd",
+        "closedAtHelp": "Het tijdstip waarop de lade echt is gesloten.",
+        "closedAtHelpPrevious": "Als u gisteren vergat af te sluiten, kies dan het sluitingsuur van de vorige dag (bv. 19:00).",
         "counted": "Geteld contant (€)",
         "countedHelp": "Tel munten en biljetten in de lade.",
         "balancedTitle": "Kassa in evenwicht",

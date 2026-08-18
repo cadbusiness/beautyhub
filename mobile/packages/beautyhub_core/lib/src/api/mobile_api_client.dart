@@ -367,6 +367,7 @@ class MobileApiClient {
     required String tenantId,
     required int countedCashCents,
     String? notes,
+    DateTime? closedAt,
   }) async {
     final response = await _http.post(
       _uri('/api/mobile/institut/cash-session/close'),
@@ -374,6 +375,7 @@ class MobileApiClient {
       body: jsonEncode({
         'countedCashCents': countedCashCents,
         if (notes != null && notes.isNotEmpty) 'notes': notes,
+        if (closedAt != null) 'closedAt': closedAt.toUtc().toIso8601String(),
       }),
     );
     final body = await _decode(response);

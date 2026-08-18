@@ -98,6 +98,16 @@ export async function POST(request: Request) {
         { status: 409 },
       );
     }
+    if (message === "session_previous_day") {
+      return Response.json(
+        {
+          error: message,
+          message:
+            "La session d’hier est encore ouverte. Clôturez-la (avec l’heure de fermeture) avant d’encaisser aujourd’hui.",
+        },
+        { status: 409 },
+      );
+    }
     if (
       message === "empty_cart" ||
       message === "invalid_cart" ||

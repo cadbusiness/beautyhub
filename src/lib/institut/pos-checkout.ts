@@ -12,6 +12,7 @@ import {
 } from "./pos-settings";
 import { computeCartTotals, parseCartDiscountCents } from "./pos-totals";
 import { requireOpenSessionIfNeeded, getOpenCashSession } from "./pos-session";
+import { isPreviousCalendarDay } from "@/lib/date";
 import {
   findCreditNoteByNumber,
   findGiftCardByCode,
@@ -339,6 +340,9 @@ export async function executePosCheckout(
   let sessionId = input.cashSessionId ?? null;
   const open = await getOpenCashSession(supabase, tenantId);
   if (open?.status === "paused") throw new Error("session_paused");
+  if (open && isPreviousCalendarDay(open.opened_at)) {
+    throw new Error("session_previous_day");
+  }
   if (!sessionId) {
     if (open) sessionId = open.id;
     else await requireOpenSessionIfNeeded(supabase, tenantId);

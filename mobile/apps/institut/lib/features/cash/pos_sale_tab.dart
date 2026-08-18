@@ -221,6 +221,19 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       return false;
     }
 
+    if (ctx.sessionIsPreviousDay) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Clôturez d’abord la session d’hier avant d’encaisser aujourd’hui.',
+            ),
+          ),
+        );
+      }
+      return false;
+    }
+
     if (ctx.requireOpenSession && !ctx.sessionOpen) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -341,6 +354,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
               paymentMethod: paymentMethod,
             ),
         sessionBlocked: ctx.sessionPaused ||
+            ctx.sessionIsPreviousDay ||
             (ctx.requireOpenSession && !ctx.sessionOpen),
       ),
     );
@@ -525,7 +539,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    'Clôturez-la pour séparer les journées. Vous pouvez encore encaisser.',
+                                    'Les encaissements sont bloqués. Clôturez-la en indiquant l’heure de fermeture d’hier.',
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Color(0xFF92400E),
@@ -536,10 +550,8 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                               ),
                             ),
                             TextButton(
-                              onPressed: () {
-                                ref.read(cashInitialTabProvider.notifier).state = 0;
-                              },
-                              child: const Text('Session'),
+                              onPressed: () => requestCashCloseSheet(ref),
+                              child: const Text('Clôturer'),
                             ),
                           ],
                         ),

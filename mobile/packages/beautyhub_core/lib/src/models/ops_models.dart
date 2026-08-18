@@ -351,6 +351,8 @@ class CashSessionSummary {
     this.paused = false,
     this.previousDay = false,
     this.openedCalendarDate,
+    this.lastSaleAt,
+    this.suggestedClosedAt,
   });
 
   final String id;
@@ -369,6 +371,8 @@ class CashSessionSummary {
   final bool paused;
   final bool previousDay;
   final String? openedCalendarDate;
+  final DateTime? lastSaleAt;
+  final DateTime? suggestedClosedAt;
 
   factory CashSessionSummary.fromJson(Map<String, dynamic> json) {
     return CashSessionSummary(
@@ -388,6 +392,12 @@ class CashSessionSummary {
       paused: json['paused'] as bool? ?? false,
       previousDay: json['previousDay'] as bool? ?? false,
       openedCalendarDate: json['openedCalendarDate'] as String?,
+      lastSaleAt: json['lastSaleAt'] == null
+          ? null
+          : DateTime.tryParse(json['lastSaleAt'] as String)?.toLocal(),
+      suggestedClosedAt: json['suggestedClosedAt'] == null
+          ? null
+          : DateTime.tryParse(json['suggestedClosedAt'] as String)?.toLocal(),
     );
   }
 }

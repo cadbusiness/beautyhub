@@ -63,6 +63,13 @@ final tenantsProvider = FutureProvider<List<TenantOption>>((ref) async {
 
 final cashInitialTabProvider = StateProvider<int>((ref) => 1);
 
+final cashRequestCloseSheetProvider = StateProvider<bool>((ref) => false);
+
+void requestCashCloseSheet(WidgetRef ref) {
+  ref.read(cashInitialTabProvider.notifier).state = 0;
+  ref.read(cashRequestCloseSheetProvider.notifier).state = true;
+}
+
 final selectedAgendaDateProvider = StateProvider<DateTime>((ref) {
   final now = DateTime.now();
   return DateTime(now.year, now.month, now.day);
@@ -234,6 +241,7 @@ Future<String> closeInstitutCashDay(
   WidgetRef ref, {
   required int countedCashCents,
   String? notes,
+  DateTime? closedAt,
 }) async {
   final token = ref.read(accessTokenProvider);
   final tenantId = ref.read(selectedTenantIdProvider);
@@ -245,6 +253,7 @@ Future<String> closeInstitutCashDay(
         tenantId: tenantId,
         countedCashCents: countedCashCents,
         notes: notes,
+        closedAt: closedAt,
       );
   ref.invalidate(cashSessionProvider);
   ref.invalidate(posContextProvider);

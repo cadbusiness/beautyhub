@@ -2,11 +2,12 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
-import { isPreviousCalendarDay } from "@/lib/date";
+import { isPreviousCalendarDay, toDateTimeLocalValue } from "@/lib/date";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import {
   computeSessionSnapshot,
   getOpenCashSession,
+  suggestedSessionClosedAt,
 } from "@/lib/institut/pos-session";
 import { formatPrice } from "@/lib/utils";
 import { OpenSessionForm } from "./open-session-form";
@@ -24,7 +25,7 @@ export default async function CaisseSessionPage() {
 
   const cashSession = await getOpenCashSession(supabase, tenantId);
 
-  const [settings, movementsRes, reportsRes] = await Promise.all([
+  const [settings, movementsRes, reportsRes, lastSaleRes] = await Promise.all([
     getPosSettings(supabase, tenantId),
     cashSession
       ? supabase
@@ -40,6 +41,16 @@ export default async function CaisseSessionPage() {
           .eq("session_id", cashSession.id)
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] as Array<{ id: string; report_type: string; report_number: string; created_at: string }> }),
+    cashSession
+      ? supabase
+          .from("inst_sales")
+          .select("created_at")
+          .eq("tenant_id", tenantId)
+          .eq("cash_session_id", cashSession.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null as { created_at: string } | null }),
   ]);
 
   let snapshot = null;
@@ -268,7 +279,17 @@ export default async function CaisseSessionPage() {
               <p className="mt-0.5 text-xs text-slate-500">{t("closeDescription")}</p>
             </div>
             {breakdown ? (
-              <CloseSessionForm breakdown={breakdown} currency={settings.currency} />
+              <CloseSessionForm
+                breakdown={breakdown}
+                currency={settings.currency}
+                suggestedClosedAt={toDateTimeLocalValue(
+                  suggestedSessionClosedAt({
+                    openedAt: cashSession.opened_at,
+                    lastSaleAt: lastSaleRes.data?.created_at ?? null,
+                  }),
+                )}
+                previousDay={previousDay}
+              />
             ) : null}
           </div>
         </section>

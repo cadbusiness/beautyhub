@@ -12,10 +12,12 @@ export async function POST(request: Request) {
 
     let countedCashCents = 0;
     let notes: string | null = null;
+    let closedAt: string | null = null;
     try {
       const body = (await request.json()) as {
         countedCashCents?: unknown;
         notes?: unknown;
+        closedAt?: unknown;
       };
       if (typeof body.countedCashCents === "number") {
         countedCashCents = Math.max(0, Math.round(body.countedCashCents));
@@ -26,6 +28,9 @@ export async function POST(request: Request) {
       if (typeof body.notes === "string") {
         notes = body.notes.trim() || null;
       }
+      if (typeof body.closedAt === "string" && body.closedAt.trim()) {
+        closedAt = body.closedAt.trim();
+      }
     } catch {
       countedCashCents = 0;
     }
@@ -33,6 +38,7 @@ export async function POST(request: Request) {
     const result = await closeOpenCashSession(session.supabase, session.tenant.id, {
       countedCashCents,
       notes,
+      closedAt,
     });
 
     return Response.json({

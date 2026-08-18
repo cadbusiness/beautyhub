@@ -1211,7 +1211,12 @@ export function PosTerminal({
             stripeEnabled={Boolean(stripeEnabled)}
             stripePublishableKey={stripePublishableKey}
             stripeAccountId={stripeAccountId}
-            disabled={cartEmpty || sessionPaused || (requireSession && !sessionOpen)}
+            disabled={
+              cartEmpty ||
+              sessionPaused ||
+              sessionPreviousDay ||
+              (requireSession && !sessionOpen)
+            }
             checkoutAction={checkoutAction}
             checkoutPending={checkoutPending}
             checkoutState={checkoutState}

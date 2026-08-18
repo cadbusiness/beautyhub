@@ -19,6 +19,8 @@ const initial: ActionResult = {};
 export function CloseSessionForm({
   breakdown,
   currency = "eur",
+  suggestedClosedAt,
+  previousDay = false,
 }: {
   breakdown: {
     openingFloatCents: number;
@@ -29,6 +31,8 @@ export function CloseSessionForm({
     expectedCashCents: number;
   };
   currency?: string;
+  suggestedClosedAt: string;
+  previousDay?: boolean;
 }) {
   const t = useTranslations("pos.session.closeForm");
   const tBreakdown = useTranslations("pos.session.breakdown");
@@ -64,6 +68,19 @@ export function CloseSessionForm({
         </p>
         <CashBreakdownTable lines={breakdownLines} currency={currency} locale={locale} compact />
       </div>
+
+      <Field label={t("closedAt")} htmlFor="closed_at">
+        <Input
+          id="closed_at"
+          name="closed_at"
+          type="datetime-local"
+          defaultValue={suggestedClosedAt}
+          required
+        />
+        <p className="mt-1 text-xs text-slate-500">
+          {previousDay ? t("closedAtHelpPrevious") : t("closedAtHelp")}
+        </p>
+      </Field>
 
       <Field label={t("counted")} htmlFor="counted_cash">
         <Input

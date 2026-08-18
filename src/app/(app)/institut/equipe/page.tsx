@@ -23,7 +23,7 @@ export default async function EquipePage() {
       fetchTeamInvitations(supabase, tenantId),
       supabase
         .from("inst_resources")
-        .select("id, name, is_active, schedule_id")
+        .select("id, name, kind, is_active, schedule_id")
         .eq("tenant_id", tenantId)
         .order("name"),
       supabase

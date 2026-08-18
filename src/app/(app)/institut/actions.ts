@@ -1257,11 +1257,13 @@ export async function createResource(
   const session = await requireModule("institut");
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: t("nameRequired") };
+  const kind = String(formData.get("kind") ?? "cabin") === "event" ? "event" : "cabin";
 
   const supabase = await createClient();
   const { error } = await supabase.from("inst_resources").insert({
     tenant_id: session.tenant.id,
     name,
+    kind,
   });
   if (error) return { error: error.message };
   revalidatePath("/institut/equipe");

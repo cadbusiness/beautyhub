@@ -38,6 +38,7 @@ type StaffRow = StaffWithAccess;
 type ResourceRow = {
   id: string;
   name: string;
+  kind?: string | null;
   schedule_id: string | null;
 };
 
@@ -407,6 +408,7 @@ export function EquipeManager({
                   <thead className="border-b border-slate-200">
                     <tr>
                       <th className={dataTableHead}>{t("cabines.columns.name")}</th>
+                      <th className={dataTableHead}>{t("cabines.columns.kind")}</th>
                       <th className={`w-28 text-right ${dataTableHead}`}>
                         {t("cabines.columns.actions")}
                       </th>
@@ -417,6 +419,9 @@ export function EquipeManager({
                       <tr key={r.id} className={dataTableRow}>
                         <td className={`font-medium text-slate-900 ${dataTableCell}`}>
                           {r.name}
+                        </td>
+                        <td className={`text-slate-600 ${dataTableCell}`}>
+                          {r.kind === "event" ? t("cabines.kinds.event") : t("cabines.kinds.cabin")}
                         </td>
                         <td className={`text-right ${dataTableCell}`}>
                           <form action={deleteResource}>

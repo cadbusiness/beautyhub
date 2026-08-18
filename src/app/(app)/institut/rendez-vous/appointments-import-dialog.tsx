@@ -97,6 +97,7 @@ function SyncPanel({
 const emptyCatalog: BooklyAppointmentCatalog = {
   services: [],
   staff: [],
+  resources: [],
   extras: [],
   existingAppointments: [],
 };
@@ -255,6 +256,7 @@ export function AppointmentsImportDialog({
       cancelled: 0,
       clientsCreated: 0,
       unmatchedStaff: 0,
+      resourcesCreated: 0,
       missingService: 0,
       errors: [],
     };
@@ -282,6 +284,7 @@ export function AppointmentsImportDialog({
         acc.cancelled += data.cancelled ?? 0;
         acc.clientsCreated += data.clientsCreated;
         acc.unmatchedStaff += data.unmatchedStaff;
+        acc.resourcesCreated += data.resourcesCreated ?? 0;
         acc.missingService += data.missingService;
         acc.errors.push(...data.errors);
         setProgress({ processed: Math.min(toSend.length, offset + batch.length), total: toSend.length });
@@ -346,7 +349,7 @@ export function AppointmentsImportDialog({
             <StatLine label={t("stats.create")} value={preview.toCreate} />
             <StatLine label={t("stats.update")} value={preview.toUpdate} />
             <StatLine label={t("stats.missingService")} value={preview.missingService} />
-            <StatLine label={t("stats.unmatchedStaff")} value={preview.unmatchedStaff} />
+            <StatLine label={t("stats.resourcesToCreate")} value={preview.resourcesToCreate} />
             <StatLine label={t("stats.skip")} value={preview.skipped} />
           </div>
           <label className="flex items-start gap-2 text-sm text-slate-700">
@@ -364,9 +367,9 @@ export function AppointmentsImportDialog({
               {t("missingServiceHint")}: {preview.missingServiceTitles.join(" · ")}
             </p>
           ) : null}
-          {preview.unmatchedStaffNames.length > 0 ? (
-            <p className="text-xs text-amber-800">
-              {t("unmatchedStaffHint")}: {preview.unmatchedStaffNames.join(" · ")}
+          {preview.resourceNamesToCreate.length > 0 ? (
+            <p className="text-xs text-slate-600">
+              {t("resourcesToCreateHint")}: {preview.resourceNamesToCreate.join(" · ")}
             </p>
           ) : null}
           {preview.samples.length > 0 ? (
@@ -407,7 +410,7 @@ export function AppointmentsImportDialog({
               created: result.created,
               updated: result.updated,
               clientsCreated: result.clientsCreated,
-              unmatchedStaff: result.unmatchedStaff,
+              resourcesCreated: result.resourcesCreated,
               missingService: result.missingService,
             })}
           </p>

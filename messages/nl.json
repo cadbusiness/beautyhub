@@ -396,13 +396,13 @@
       "title": "Bookly-afspraken importeren / synchroniseren",
       "doneTitle": "Import voltooid",
       "csvTitle": "Handmatige import (CSV / JSON)",
-      "intro": "Importeer de CSV (of JSON) uit WordPress → Extra → Export Bookly. Behandelingen moeten al geïmporteerd zijn. Klanten worden aangemaakt of gekoppeld via telefoon / e-mail. Opnieuw importeren werkt bij via het Bookly-ID.",
+      "intro": "Importeer de CSV (of JSON) uit WordPress → Extra → Export Bookly. Behandelingen moeten al geïmporteerd zijn. Klanten worden aangemaakt of gekoppeld via telefoon / e-mail. Bookly-«medewerkers» worden cabines (of een event) als ze niet overeenkomen met een teamlid. Opnieuw importeren werkt bij via het Bookly-ID.",
       "hint": "Bestand bookly-appointments.csv (scheidingsteken ;) of volledige JSON-export.",
       "chooseFile": "Bestand kiezen",
       "fileHint": "BeautyHub Bookly CSV of JSON",
       "fileLabel": "Bestand",
       "analyzing": "Bestand analyseren…",
-      "previewIntro": "Controleer het overzicht voor het importeren. Teamnamen moeten overeenkomen met Bookly.",
+      "previewIntro": "Controleer het overzicht voor het importeren. Een Bookly-naam die al in het team staat blijft behandelaar; anders wordt een cabine / event aangemaakt.",
       "upcomingOnly": "Alleen afspraken vanaf vandaag importeren (aanbevolen voor de overstap).",
       "stats": {
         "total": "Afspraken",
@@ -410,16 +410,18 @@
         "update": "Bij te werken",
         "missingService": "Behandeling ontbreekt",
         "unmatchedStaff": "Behandelaar niet gekoppeld",
+        "resourcesToCreate": "Cabines / events aan te maken",
         "skip": "Overgeslagen"
       },
       "missingServiceHint": "Importeer eerst de Bookly-catalogus (Behandelingen). Ontbrekende behandelingen",
       "unmatchedStaffHint": "Geen BeautyHub-medewerker met dezelfde naam — de afspraak wordt zonder kolom geïmporteerd. Stem namen af in Team",
+      "resourcesToCreateHint": "Deze Bookly-namen worden aangemaakt onder Team → Cabines",
       "samples": "Voorbeelden",
       "back": "Ander bestand kiezen",
       "confirmImport": "Import starten",
       "importing": "Bezig met importeren…",
       "progress": "{processed} / {total} verwerkt",
-      "doneMessage": "{created} aangemaakt · {updated} bijgewerkt · {clientsCreated} klanten aangemaakt · {unmatchedStaff} zonder behandelaar · {missingService} zonder behandeling.",
+      "doneMessage": "{created} aangemaakt · {updated} bijgewerkt · {clientsCreated} klanten aangemaakt · {resourcesCreated} cabines aangemaakt · {missingService} zonder behandeling.",
       "errorsCount": "Waarschuwingen ({count})",
       "errors": {
         "missingColumns": "Verwachte kolommen ontbreken (bookly_ca_id, starts_at, service_bookly_id).",
@@ -1841,18 +1843,24 @@
       },
       "cabines": {
         "add": "Cabine toevoegen",
-        "subtitle": "Cabines en behandelkamers",
+        "subtitle": "Behandelcabines en events",
         "empty": "Geen cabines geconfigureerd.",
         "columns": {
           "name": "Naam",
+          "kind": "Type",
           "actions": "Acties"
+        },
+        "kinds": {
+          "cabin": "Cabine",
+          "event": "Event"
         },
         "delete": "Verwijderen",
         "footer": "{count, plural, one {# cabine} other {# cabines}}",
         "dialogTitle": "Cabine toevoegen",
         "form": {
-          "name": "Naam cabine / resource",
+          "name": "Naam cabine / event",
           "namePlaceholder": "Cabine 1",
+          "kind": "Type",
           "submit": "Toevoegen",
           "submitting": "Toevoegen…"
         }

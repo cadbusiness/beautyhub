@@ -53,7 +53,9 @@ export function CalendarShell({
   const router = useRouter();
   const tCal = useTranslations("appointments.calendar");
   const [viewMode, setViewMode] = useState<CalendarViewMode>("day");
-  const [columnMode, setColumnMode] = useState<ColumnMode>("staff");
+  const [columnMode, setColumnMode] = useState<ColumnMode>(() =>
+    staffColumns.length === 0 && resourceColumns.length > 0 ? "resource" : "staff",
+  );
   const [anchor, setAnchor] = useState(() => parseDateOnly(initialDate));
   const [serviceFilter, setServiceFilter] = useState("");
   const [staffDropdownFilter, setStaffDropdownFilter] = useState("");
@@ -75,6 +77,12 @@ export function CalendarShell({
     setAppointments(initialAppointments);
     setError(null);
   }, [initialAppointments]);
+
+  useEffect(() => {
+    if (staffColumns.length === 0 && resourceColumns.length > 0) {
+      setColumnMode((mode) => (mode === "staff" ? "resource" : mode));
+    }
+  }, [staffColumns.length, resourceColumns.length]);
 
   const filtered = useMemo(
     () =>

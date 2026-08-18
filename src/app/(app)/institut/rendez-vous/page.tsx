@@ -81,7 +81,7 @@ export default async function RendezVousPage({
         .order("created_at", { ascending: false }),
       supabase
         .from("inst_appointments")
-        .select("id, starts_at, ends_at, status, price_cents, staff_id, service_id, client_id")
+        .select("id, starts_at, ends_at, status, price_cents, staff_id, resource_id, service_id, client_id")
         .eq("tenant_id", tenantId)
         .order("starts_at", { ascending: true })
         .limit(50),
@@ -104,6 +104,7 @@ export default async function RendezVousPage({
   }));
 
   const staffMap = new Map((staffRes.data ?? []).map((s) => [s.id, s.full_name]));
+  const resourceMap = new Map((resourcesRes.data ?? []).map((r) => [r.id, r.name]));
   const serviceMap = new Map(catalogServices.map((s) => [s.id, s.name]));
   const clientMap = new Map(
     (clientsRes.data ?? []).map((c) => [c.id, c.full_name ?? c.email]),
@@ -116,7 +117,10 @@ export default async function RendezVousPage({
     price_cents: a.price_cents ?? 0,
     serviceName: (a.service_id && serviceMap.get(a.service_id)) || "-",
     clientName: (a.client_id && clientMap.get(a.client_id)) || "-",
-    staffName: (a.staff_id && staffMap.get(a.staff_id)) || "-",
+    staffName:
+      (a.staff_id && staffMap.get(a.staff_id)) ||
+      (a.resource_id && resourceMap.get(a.resource_id)) ||
+      "-",
   }));
 
   const staffColumns = (staffRes.data ?? []).map((s) => ({

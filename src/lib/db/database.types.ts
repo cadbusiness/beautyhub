@@ -1944,27 +1944,33 @@ export type Database = {
       }
       inst_resources: {
         Row: {
+          bookly_id: number | null
           created_at: string
           id: string
           is_active: boolean
+          kind: string
           name: string
           schedule_id: string | null
           tenant_id: string
           updated_at: string
         }
         Insert: {
+          bookly_id?: number | null
           created_at?: string
           id?: string
           is_active?: boolean
+          kind?: string
           name: string
           schedule_id?: string | null
           tenant_id: string
           updated_at?: string
         }
         Update: {
+          bookly_id?: number | null
           created_at?: string
           id?: string
           is_active?: boolean
+          kind?: string
           name?: string
           schedule_id?: string | null
           tenant_id?: string

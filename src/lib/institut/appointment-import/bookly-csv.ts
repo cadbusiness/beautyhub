@@ -37,9 +37,19 @@ export type BooklyAppointmentCsvRow = {
   lineNumber: number;
 };
 
+export type BooklyResourceKind = "cabin" | "event";
+
+export type BooklyResourceRef = {
+  id: string;
+  name: string;
+  bookly_id: number | null;
+  kind: BooklyResourceKind;
+};
+
 export type BooklyAppointmentCatalog = {
   services: Array<{ id: string; name: string; bookly_id: number | null; visibility: string }>;
   staff: Array<{ id: string; full_name: string; bookly_id: number | null }>;
+  resources: BooklyResourceRef[];
   extras: Array<{
     extra_service_id: string;
     service_id: string;
@@ -55,6 +65,7 @@ export type BooklyAppointmentImportPreview = {
   skipped: number;
   missingService: number;
   unmatchedStaff: number;
+  resourcesToCreate: number;
   upcoming: number;
   past: number;
   samples: Array<{
@@ -64,6 +75,7 @@ export type BooklyAppointmentImportPreview = {
     staffName: string;
   }>;
   unmatchedStaffNames: string[];
+  resourceNamesToCreate: string[];
   missingServiceTitles: string[];
   errors: string[];
 };
@@ -75,6 +87,7 @@ export type BooklyAppointmentImportResult = {
   cancelled: number;
   clientsCreated: number;
   unmatchedStaff: number;
+  resourcesCreated: number;
   missingService: number;
   errors: string[];
 };
@@ -429,6 +442,12 @@ export function previewBooklyAppointmentsImport(
   const staffByName = new Map(
     catalog.staff.map((s) => [normalizeName(s.full_name) ?? "", s]),
   );
+  const resourceByBookly = new Map(
+    catalog.resources.filter((r) => r.bookly_id != null).map((r) => [r.bookly_id as number, r]),
+  );
+  const resourceByName = new Map(
+    catalog.resources.map((r) => [normalizeName(r.name) ?? "", r]),
+  );
   const existing = new Set(catalog.existingAppointments.map((a) => a.bookly_id));
   const cutoff = startOfToday().getTime();
 
@@ -436,10 +455,10 @@ export function previewBooklyAppointmentsImport(
   let toUpdate = 0;
   let skipped = 0;
   let missingService = 0;
-  let unmatchedStaff = 0;
+  let resourcesToCreate = 0;
   let upcoming = 0;
   let past = 0;
-  const unmatchedStaffNames = new Set<string>();
+  const resourceNamesToCreate = new Set<string>();
   const missingServiceTitles = new Set<string>();
   const samples: BooklyAppointmentImportPreview["samples"] = [];
 
@@ -464,9 +483,12 @@ export function previewBooklyAppointmentsImport(
     const staffMatch =
       (row.staffBooklyId != null ? staffByBookly.get(row.staffBooklyId) : undefined) ??
       (row.staffName ? staffByName.get(normalizeName(row.staffName) ?? "") : undefined);
-    if (row.staffName && !staffMatch) {
-      unmatchedStaff += 1;
-      unmatchedStaffNames.add(row.staffName);
+    const resourceMatch =
+      (row.staffBooklyId != null ? resourceByBookly.get(row.staffBooklyId) : undefined) ??
+      (row.staffName ? resourceByName.get(normalizeName(row.staffName) ?? "") : undefined);
+    if (row.staffName && !staffMatch && !resourceMatch) {
+      resourcesToCreate += 1;
+      resourceNamesToCreate.add(row.staffName);
     }
 
     if (existing.has(row.booklyCaId)) toUpdate += 1;
@@ -492,11 +514,13 @@ export function previewBooklyAppointmentsImport(
     toUpdate,
     skipped,
     missingService,
-    unmatchedStaff,
+    unmatchedStaff: 0,
+    resourcesToCreate,
     upcoming,
     past,
     samples,
-    unmatchedStaffNames: [...unmatchedStaffNames].slice(0, 12),
+    unmatchedStaffNames: [],
+    resourceNamesToCreate: [...resourceNamesToCreate].slice(0, 12),
     missingServiceTitles: [...missingServiceTitles].slice(0, 12),
     errors: [],
   };
@@ -506,13 +530,17 @@ export async function fetchBooklyAppointmentCatalog(
   supabase: Db,
   tenantId: string,
 ): Promise<BooklyAppointmentCatalog> {
-  const [{ data: services }, { data: staff }, { data: extraLinks }, { data: existing }] =
+  const [{ data: services }, { data: staff }, { data: resources }, { data: extraLinks }, { data: existing }] =
     await Promise.all([
       supabase
         .from("inst_services")
         .select("id, name, bookly_id, visibility")
         .eq("tenant_id", tenantId),
       supabase.from("inst_staff").select("id, full_name, bookly_id").eq("tenant_id", tenantId),
+      supabase
+        .from("inst_resources")
+        .select("id, name, bookly_id, kind")
+        .eq("tenant_id", tenantId),
       supabase
         .from("inst_service_extras")
         .select("service_id, extra_service_id")
@@ -550,6 +578,12 @@ export async function fetchBooklyAppointmentCatalog(
   return {
     services: services ?? [],
     staff: staff ?? [],
+    resources: (resources ?? []).map((r) => ({
+      id: r.id,
+      name: r.name,
+      bookly_id: r.bookly_id,
+      kind: r.kind === "event" ? "event" : "cabin",
+    })),
     extras,
     existingAppointments: (existing ?? []).flatMap((a) =>
       typeof a.bookly_id === "number" ? [{ id: a.id, bookly_id: a.bookly_id }] : [],
@@ -557,21 +591,143 @@ export async function fetchBooklyAppointmentCatalog(
   };
 }
 
+function inferResourceKind(name: string): BooklyResourceKind {
+  const key = normalizeName(name) ?? "";
+  if (
+    /\b(anniversaire|atelier|event|evenement|soiree|workshop|seminaire|masterclass)\b/.test(key)
+  ) {
+    return "event";
+  }
+  return "cabin";
+}
+
 function resolveStaffId(
   row: BooklyAppointmentCsvRow,
   staffByBookly: Map<number, { id: string; full_name: string; bookly_id: number | null }>,
   staffByName: Map<string, { id: string; full_name: string; bookly_id: number | null }>,
-): { id: string | null; unmatched: boolean } {
+): { id: string | null } {
   if (row.staffBooklyId != null) {
     const byId = staffByBookly.get(row.staffBooklyId);
-    if (byId) return { id: byId.id, unmatched: false };
+    if (byId) return { id: byId.id };
   }
   const key = normalizeName(row.staffName);
   if (key) {
     const byName = staffByName.get(key);
-    if (byName) return { id: byName.id, unmatched: false };
+    if (byName) return { id: byName.id };
   }
-  return { id: null, unmatched: Boolean(row.staffName) };
+  return { id: null };
+}
+
+function resolveResourceRef(
+  row: BooklyAppointmentCsvRow,
+  resourceByBookly: Map<number, BooklyResourceRef>,
+  resourceByName: Map<string, BooklyResourceRef>,
+): BooklyResourceRef | null {
+  if (row.staffBooklyId != null) {
+    const byId = resourceByBookly.get(row.staffBooklyId);
+    if (byId) return byId;
+  }
+  const key = normalizeName(row.staffName);
+  if (key) {
+    const byName = resourceByName.get(key);
+    if (byName) return byName;
+  }
+  return null;
+}
+
+function rememberResource(
+  resource: BooklyResourceRef,
+  resourceByBookly: Map<number, BooklyResourceRef>,
+  resourceByName: Map<string, BooklyResourceRef>,
+) {
+  if (resource.bookly_id != null) resourceByBookly.set(resource.bookly_id, resource);
+  const key = normalizeName(resource.name);
+  if (key) resourceByName.set(key, resource);
+}
+
+async function ensureBooklyResource(
+  supabase: Db,
+  tenantId: string,
+  row: BooklyAppointmentCsvRow,
+  resourceByBookly: Map<number, BooklyResourceRef>,
+  resourceByName: Map<string, BooklyResourceRef>,
+): Promise<{ id: string | null; created: boolean }> {
+  const name = row.staffName.trim();
+  if (!name) return { id: null, created: false };
+
+  const existing = resolveResourceRef(row, resourceByBookly, resourceByName);
+  if (existing) {
+    if (row.staffBooklyId != null && existing.bookly_id == null) {
+      await supabase
+        .from("inst_resources")
+        .update({ bookly_id: row.staffBooklyId })
+        .eq("id", existing.id);
+      existing.bookly_id = row.staffBooklyId;
+      rememberResource(existing, resourceByBookly, resourceByName);
+    }
+    return { id: existing.id, created: false };
+  }
+
+  const kind = inferResourceKind(name);
+  const { data } = await supabase
+    .from("inst_resources")
+    .insert({
+      tenant_id: tenantId,
+      name,
+      bookly_id: row.staffBooklyId,
+      kind,
+    })
+    .select("id, name, bookly_id, kind")
+    .single();
+
+  if (data) {
+    const created: BooklyResourceRef = {
+      id: data.id,
+      name: data.name,
+      bookly_id: data.bookly_id,
+      kind: data.kind === "event" ? "event" : "cabin",
+    };
+    rememberResource(created, resourceByBookly, resourceByName);
+    return { id: created.id, created: true };
+  }
+
+  if (row.staffBooklyId != null) {
+    const { data: byId } = await supabase
+      .from("inst_resources")
+      .select("id, name, bookly_id, kind")
+      .eq("tenant_id", tenantId)
+      .eq("bookly_id", row.staffBooklyId)
+      .maybeSingle();
+    if (byId) {
+      const found: BooklyResourceRef = {
+        id: byId.id,
+        name: byId.name,
+        bookly_id: byId.bookly_id,
+        kind: byId.kind === "event" ? "event" : "cabin",
+      };
+      rememberResource(found, resourceByBookly, resourceByName);
+      return { id: found.id, created: false };
+    }
+  }
+
+  const { data: byName } = await supabase
+    .from("inst_resources")
+    .select("id, name, bookly_id, kind")
+    .eq("tenant_id", tenantId)
+    .ilike("name", name)
+    .maybeSingle();
+  if (byName) {
+    const found: BooklyResourceRef = {
+      id: byName.id,
+      name: byName.name,
+      bookly_id: byName.bookly_id,
+      kind: byName.kind === "event" ? "event" : "cabin",
+    };
+    rememberResource(found, resourceByBookly, resourceByName);
+    return { id: found.id, created: false };
+  }
+
+  return { id: null, created: false };
 }
 
 function resolveExtras(
@@ -610,6 +766,7 @@ export async function runBooklyAppointmentsImport(
     cancelled: 0,
     clientsCreated: 0,
     unmatchedStaff: 0,
+    resourcesCreated: 0,
     missingService: 0,
     errors: [],
   };
@@ -623,6 +780,12 @@ export async function runBooklyAppointmentsImport(
   );
   const staffByName = new Map(
     catalog.staff.map((s) => [normalizeName(s.full_name) ?? "", s]),
+  );
+  const resourceByBookly = new Map(
+    catalog.resources.filter((r) => r.bookly_id != null).map((r) => [r.bookly_id as number, r]),
+  );
+  const resourceByName = new Map(
+    catalog.resources.map((r) => [normalizeName(r.name) ?? "", r]),
   );
   const existingByBookly = new Map(
     catalog.existingAppointments.map((a) => [a.bookly_id, a.id]),
@@ -660,7 +823,6 @@ export async function runBooklyAppointmentsImport(
     }
 
     const staff = resolveStaffId(row, staffByBookly, staffByName);
-    if (staff.unmatched) result.unmatchedStaff += 1;
     if (staff.id && row.staffBooklyId != null && !staffByBookly.has(row.staffBooklyId)) {
       staffBooklyToPersist.set(staff.id, row.staffBooklyId);
       staffByBookly.set(row.staffBooklyId, {
@@ -668,6 +830,20 @@ export async function runBooklyAppointmentsImport(
         full_name: row.staffName,
         bookly_id: row.staffBooklyId,
       });
+    }
+
+    let resourceId: string | null = null;
+    if (!staff.id && row.staffName.trim()) {
+      const resource = await ensureBooklyResource(
+        supabase,
+        tenantId,
+        row,
+        resourceByBookly,
+        resourceByName,
+      );
+      resourceId = resource.id;
+      if (resource.created) result.resourcesCreated += 1;
+      if (!resource.id) result.unmatchedStaff += 1;
     }
 
     let clientId: string | null = null;
@@ -700,6 +876,7 @@ export async function runBooklyAppointmentsImport(
       client_id: clientId,
       service_id: service.id,
       staff_id: staff.id,
+      resource_id: resourceId,
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
       status: row.status,

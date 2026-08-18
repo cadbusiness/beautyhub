@@ -508,13 +508,13 @@
       "title": "Importar / sincronizar Bookly",
       "doneTitle": "Importación terminada",
       "csvTitle": "Importación manual (CSV / JSON)",
-      "intro": "Importe el CSV (o JSON) exportado desde WordPress → Herramientas → Export Bookly. Los servicios deben estar ya importados. Los clientes se crean o vinculan por teléfono / email. Volver a importar actualiza por el ID de Bookly.",
+      "intro": "Importe el CSV (o JSON) exportado desde WordPress → Herramientas → Export Bookly. Los servicios deben estar ya importados. Los clientes se crean o vinculan por teléfono / email. Los «profesionales» de Bookly se convierten en cabinas (o un evento) si no coinciden con un miembro del equipo. Volver a importar actualiza por el ID de Bookly.",
       "hint": "Archivo bookly-appointments.csv (separador ;) o JSON completo.",
       "chooseFile": "Elegir archivo",
       "fileHint": "CSV Bookly BeautyHub o JSON",
       "fileLabel": "Archivo",
       "analyzing": "Analizando el archivo…",
-      "previewIntro": "Revise el resumen antes de importar. Los nombres del equipo deben coincidir con Bookly.",
+      "previewIntro": "Revise el resumen antes de importar. Un nombre Bookly ya en el equipo sigue siendo profesional; si no, se crea una cabina / un evento.",
       "upcomingOnly": "Importar solo las citas a partir de hoy (recomendado para el cambio).",
       "stats": {
         "total": "Citas",
@@ -522,16 +522,18 @@
         "update": "A actualizar",
         "missingService": "Servicio no encontrado",
         "unmatchedStaff": "Profesional no vinculado",
+        "resourcesToCreate": "Cabinas / eventos a crear",
         "skip": "Omitidos"
       },
       "missingServiceHint": "Importe primero el catálogo Bookly (Servicios). Servicios faltantes",
       "unmatchedStaffHint": "Ningún profesional BeautyHub con el mismo nombre — la cita se importará sin columna. Alinee los nombres en Equipo",
+      "resourcesToCreateHint": "Estos nombres Bookly se crearán en Equipo → Cabinas",
       "samples": "Ejemplos",
       "back": "Elegir otro archivo",
       "confirmImport": "Iniciar importación",
       "importing": "Importando…",
       "progress": "{processed} / {total} procesados",
-      "doneMessage": "{created} creadas · {updated} actualizadas · {clientsCreated} clientes creados · {unmatchedStaff} sin profesional · {missingService} sin servicio.",
+      "doneMessage": "{created} creadas · {updated} actualizadas · {clientsCreated} clientes creados · {resourcesCreated} cabinas creadas · {missingService} sin servicio.",
       "errorsCount": "Avisos ({count})",
       "errors": {
         "missingColumns": "No se encontraron las columnas esperadas (bookly_ca_id, starts_at, service_bookly_id).",
@@ -2340,20 +2342,26 @@
       "cabines": {
         "add": "Añadir una cabina",
         "columns": {
-          "actions": "Comportamiento",
+          "actions": "Acciones",
+          "kind": "Tipo",
           "name": "Nombre"
+        },
+        "kinds": {
+          "cabin": "Cabina",
+          "event": "Evento"
         },
         "delete": "BORRAR",
         "dialogTitle": "Añadir una cabina",
         "empty": "No hay cabinas configuradas.",
-        "footer": "{recuento, plural, uno {# cabine} otro {# cabines}}",
+        "footer": "{count, plural, one {# cabina} other {# cabinas}}",
         "form": {
-          "name": "Nombre de la cabina/recurso",
-          "namePlaceholder": "Cabaña 1",
+          "name": "Nombre de la cabina / del evento",
+          "namePlaceholder": "Cabina 1",
+          "kind": "Tipo",
           "submit": "Agregar",
           "submitting": "Suma…"
         },
-        "subtitle": "Cabinas y salas de tratamiento."
+        "subtitle": "Cabinas de tratamiento y eventos"
       },
       "horairesTabs": {
         "absences": "Ausencias y cierres",

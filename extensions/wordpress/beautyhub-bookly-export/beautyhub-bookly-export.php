@@ -2,7 +2,7 @@
 /**
  * Plugin Name: BeautyHub - Export Bookly (services, extras & RDV)
  * Description: Exporte et synchronise les rendez-vous Bookly vers BeautyHub (migration).
- * Version: 1.3.1
+ * Version: 1.4.0
  * Author: BeautyHub
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -22,12 +22,15 @@ final class BeautyHub_Bookly_Export {
 	const OPTION_SYNC_LAST         = 'beautyhub_bookly_sync_last';
 	const OPTION_SYNC_ERROR        = 'beautyhub_bookly_sync_error';
 	const OPTION_SYNC_FINGERPRINT  = 'beautyhub_bookly_sync_fp';
+	const OPTION_SYNC_SUMMARY      = 'beautyhub_bookly_sync_summary';
+	const OPTION_SYNC_HISTORY      = 'beautyhub_bookly_sync_history';
 	const OPTION_CRON_VERSION      = 'beautyhub_bookly_cron_ver';
 	const CRON_HOOK                = 'bh_bookly_cron_sync';
 	const PUSH_HOOK                = 'bh_bookly_push_sync';
-	const CRON_VERSION             = '1.3.1';
+	const CRON_VERSION             = '1.4.0';
 	const MIN_SYNC_INTERVAL        = 60;
 	const MAX_SYNCS_PER_HOUR       = 20;
+	const HISTORY_MAX              = 8;
 
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'register_menu' ) );
@@ -922,24 +925,44 @@ final class BeautyHub_Bookly_Export {
 			add_action(
 				'admin_notices',
 				static function () {
-					$err = get_option( self::OPTION_SYNC_ERROR, '' );
+					$err     = get_option( self::OPTION_SYNC_ERROR, '' );
+					$summary = get_option( self::OPTION_SYNC_SUMMARY, array() );
 					if ( $err ) {
 						echo '<div class="notice notice-error is-dismissible"><p>Synchro : ' . esc_html( (string) $err ) . '</p></div>';
-					} else {
-						echo '<div class="notice notice-success is-dismissible"><p>Synchro BeautyHub envoyee.</p></div>';
+						return;
 					}
+					if ( ! is_array( $summary ) ) {
+						$summary = array();
+					}
+					$incoming = (int) ( $summary['incoming'] ?? 0 );
+					$created  = (int) ( $summary['created'] ?? 0 );
+					$updated  = (int) ( $summary['updated'] ?? 0 );
+					$missing  = (int) ( $summary['missingService'] ?? 0 );
+					$line     = sprintf( 'Synchro BeautyHub : %d rendez-vous envoyes · %d crees · %d mis a jour', $incoming, $created, $updated );
+					if ( $missing > 0 ) {
+						$line .= sprintf( ' · %d prestation(s) inconnues cote BeautyHub', $missing );
+					}
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $line ) . '</p></div>';
 				}
 			);
 		}
 	}
 
 	private static function render_sync_box() {
-		$url  = self::sync_url();
-		$last = get_option( self::OPTION_SYNC_LAST, '' );
-		$err  = get_option( self::OPTION_SYNC_ERROR, '' );
-		$next = wp_next_scheduled( self::CRON_HOOK );
+		$url     = self::sync_url();
+		$last    = get_option( self::OPTION_SYNC_LAST, '' );
+		$err     = get_option( self::OPTION_SYNC_ERROR, '' );
+		$summary = get_option( self::OPTION_SYNC_SUMMARY, array() );
+		$history = get_option( self::OPTION_SYNC_HISTORY, array() );
+		$next    = wp_next_scheduled( self::CRON_HOOK );
+		if ( ! is_array( $summary ) ) {
+			$summary = array();
+		}
+		if ( ! is_array( $history ) ) {
+			$history = array();
+		}
 
-		echo '<div class="notice notice-info" style="padding:12px 16px;max-width:720px;">';
+		echo '<div class="notice notice-info" style="padding:12px 16px;max-width:820px;">';
 		echo '<h2 style="margin:0 0 8px;">Synchro continue vers BeautyHub</h2>';
 		echo '<p>Pendant la transition, Bookly reste la source de verite. Les creations, modifications et annulations sont envoyees vers BeautyHub apres un court delai. Un rattrapage tourne toutes les 15 minutes : si rien n\'a change, la base WordPress n\'est pas relue en entier.</p>';
 		echo '<form method="post">';
@@ -952,7 +975,7 @@ final class BeautyHub_Bookly_Export {
 		echo '</p>';
 		echo '</form>';
 		if ( $url ) {
-			echo '<p style="margin-bottom:0;"><strong>Statut :</strong> active';
+			echo '<p style="margin-bottom:8px;"><strong>Statut :</strong> active';
 			if ( $next ) {
 				echo ' · prochain rattrapage ' . esc_html( wp_date( 'd/m/Y H:i', $next ) );
 			}
@@ -966,7 +989,152 @@ final class BeautyHub_Bookly_Export {
 		if ( $err ) {
 			echo '<p style="color:#b32d2e;margin:8px 0 0;"><strong>Derniere erreur :</strong> ' . esc_html( (string) $err ) . '</p>';
 		}
+
+		if ( $url ) {
+			self::render_sync_dashboard( $summary, $history );
+		}
 		echo '</div>';
+	}
+
+	private static function render_sync_dashboard( $summary, $history ) {
+		$upcoming = self::count_upcoming_appointments();
+
+		$incoming   = isset( $summary['incoming'] ) ? (int) $summary['incoming'] : null;
+		$created    = isset( $summary['created'] ) ? (int) $summary['created'] : 0;
+		$updated    = isset( $summary['updated'] ) ? (int) $summary['updated'] : 0;
+		$missing    = isset( $summary['missingService'] ) ? (int) $summary['missingService'] : 0;
+		$resources  = isset( $summary['resourcesCreated'] ) ? (int) $summary['resourcesCreated'] : 0;
+		$skipped    = isset( $summary['skipped'] ) ? (int) $summary['skipped'] : 0;
+		$chunks_ok  = isset( $summary['chunks_ok'] ) ? (int) $summary['chunks_ok'] : 0;
+		$chunks_tot = isset( $summary['chunks_total'] ) ? (int) $summary['chunks_total'] : 0;
+		$http_code  = isset( $summary['http_code'] ) ? (int) $summary['http_code'] : 0;
+		$duration   = isset( $summary['duration_ms'] ) ? (int) $summary['duration_ms'] : 0;
+		$forced     = ! empty( $summary['forced'] );
+		$err_last   = isset( $summary['error'] ) ? (string) $summary['error'] : '';
+		$missing_titles = array();
+		if ( isset( $summary['missingTitles'] ) && is_array( $summary['missingTitles'] ) ) {
+			$missing_titles = $summary['missingTitles'];
+		}
+
+		echo '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #dcdcde;">';
+		echo '<h3 style="margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:#50575e;">Suivi de la synchro</h3>';
+
+		echo '<div style="display:flex;flex-wrap:wrap;gap:16px 32px;margin:8px 0 4px;">';
+		self::stat_block( 'RDV Bookly a venir', number_format_i18n( $upcoming ) );
+		self::stat_block( 'Dernier envoi', $incoming === null ? '—' : number_format_i18n( $incoming ) . ' RDV' );
+		self::stat_block( 'Crees dans BeautyHub', number_format_i18n( $created ) );
+		self::stat_block( 'Mis a jour', number_format_i18n( $updated ) );
+		self::stat_block( 'Prestation inconnue', number_format_i18n( $missing ), $missing > 0 ? '#8a6a00' : '' );
+		self::stat_block( 'Cabines creees', number_format_i18n( $resources ) );
+		echo '</div>';
+
+		if ( $incoming !== null && $upcoming > 0 ) {
+			$pct = max( 0, min( 100, (int) round( ( $incoming / max( 1, $upcoming ) ) * 100 ) ) );
+			echo '<div style="margin:8px 0 4px;max-width:640px;">';
+			echo '<div style="height:8px;border-radius:4px;background:#f0f0f1;overflow:hidden;">';
+			echo '<div style="height:100%;width:' . (int) $pct . '%;background:#2271b1;transition:width .3s;"></div>';
+			echo '</div>';
+			echo '<p style="margin:4px 0 0;font-size:12px;color:#50575e;">' . esc_html( number_format_i18n( $incoming ) . ' / ' . number_format_i18n( $upcoming ) . ' rendez-vous envoyes (' . $pct . '%)' ) . '</p>';
+			echo '</div>';
+		} elseif ( $incoming !== null && $incoming === 0 ) {
+			echo '<p style="margin:4px 0 0;font-size:12px;color:#50575e;">Aucun rendez-vous a venir dans Bookly. La synchro continue s\'occupera automatiquement des nouveaux.</p>';
+		}
+
+		if ( ! empty( $summary['at'] ) ) {
+			$parts = array();
+			$parts[] = 'Dernier push : ' . esc_html( self::pretty_datetime( $summary['at'] ) );
+			if ( $http_code ) {
+				$parts[] = 'HTTP ' . $http_code;
+			}
+			if ( $chunks_tot ) {
+				$parts[] = 'chunks ' . $chunks_ok . '/' . $chunks_tot;
+			}
+			if ( $duration ) {
+				$parts[] = $duration . ' ms';
+			}
+			if ( $forced ) {
+				$parts[] = 'manuel';
+			}
+			echo '<p style="margin:8px 0 0;font-size:12px;color:#50575e;">' . implode( ' · ', $parts ) . '</p>';
+		}
+
+		if ( $skipped > 0 ) {
+			echo '<p style="margin:4px 0 0;font-size:12px;color:#50575e;">' . esc_html( number_format_i18n( $skipped ) . ' rendez-vous ignores cote BeautyHub (dates invalides ou statuts non geres).' ) . '</p>';
+		}
+
+		if ( $missing > 0 && ! empty( $missing_titles ) ) {
+			echo '<p style="margin:8px 0 0;color:#8a6a00;"><strong>Prestations a mapper dans BeautyHub :</strong> ' . esc_html( implode( ' · ', array_slice( $missing_titles, 0, 6 ) ) ) . ( count( $missing_titles ) > 6 ? ' …' : '' ) . '</p>';
+		}
+
+		if ( $err_last ) {
+			echo '<p style="color:#b32d2e;margin:8px 0 0;font-size:12px;"><strong>Erreur :</strong> ' . esc_html( $err_last ) . '</p>';
+		}
+
+		if ( ! empty( $history ) ) {
+			echo '<details style="margin-top:12px;">';
+			echo '<summary style="cursor:pointer;font-size:12px;color:#2271b1;">Historique des ' . (int) count( $history ) . ' dernieres synchros</summary>';
+			echo '<table class="widefat striped" style="max-width:720px;margin-top:8px;font-size:12px;"><thead><tr>';
+			echo '<th>Quand</th><th>Envoyes</th><th>Crees</th><th>MAJ</th><th>Prest. inconnue</th><th>HTTP</th><th>Duree</th><th>Erreur</th>';
+			echo '</tr></thead><tbody>';
+			foreach ( $history as $row ) {
+				if ( ! is_array( $row ) ) {
+					continue;
+				}
+				echo '<tr>';
+				echo '<td>' . esc_html( isset( $row['at'] ) ? self::pretty_datetime( $row['at'] ) : '—' ) . ( ! empty( $row['forced'] ) ? ' <span style="color:#50575e;">(manuel)</span>' : '' ) . '</td>';
+				echo '<td>' . esc_html( number_format_i18n( (int) ( $row['incoming'] ?? 0 ) ) ) . '</td>';
+				echo '<td>' . esc_html( number_format_i18n( (int) ( $row['created'] ?? 0 ) ) ) . '</td>';
+				echo '<td>' . esc_html( number_format_i18n( (int) ( $row['updated'] ?? 0 ) ) ) . '</td>';
+				echo '<td>' . esc_html( number_format_i18n( (int) ( $row['missingService'] ?? 0 ) ) ) . '</td>';
+				echo '<td>' . esc_html( (string) ( $row['http_code'] ?? '—' ) ) . '</td>';
+				echo '<td>' . esc_html( isset( $row['duration_ms'] ) ? ( (int) $row['duration_ms'] ) . ' ms' : '—' ) . '</td>';
+				echo '<td style="color:#b32d2e;">' . esc_html( isset( $row['error'] ) ? (string) $row['error'] : '' ) . '</td>';
+				echo '</tr>';
+			}
+			echo '</tbody></table>';
+			echo '</details>';
+		}
+
+		echo '</div>';
+	}
+
+	private static function stat_block( $label, $value, $color = '' ) {
+		$style = 'display:flex;flex-direction:column;gap:2px;';
+		echo '<div style="' . esc_attr( $style ) . '">';
+		echo '<span style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#50575e;">' . esc_html( $label ) . '</span>';
+		echo '<strong style="font-size:20px;line-height:1.1;' . ( $color ? 'color:' . esc_attr( $color ) . ';' : '' ) . '">' . esc_html( (string) $value ) . '</strong>';
+		echo '</div>';
+	}
+
+	private static function pretty_datetime( $iso ) {
+		if ( ! $iso ) {
+			return '—';
+		}
+		$ts = strtotime( (string) $iso );
+		if ( ! $ts ) {
+			return (string) $iso;
+		}
+		return wp_date( 'd/m/Y H:i:s', $ts );
+	}
+
+	private static function count_upcoming_appointments() {
+		global $wpdb;
+		$appt_table = self::find_table( array( 'bookly_appointments' ) );
+		$ca_table   = self::find_table( array( 'bookly_customer_appointments' ) );
+		if ( ! $appt_table || ! $ca_table ) {
+			return 0;
+		}
+		$appt_cols = self::table_columns( $appt_table );
+		if ( ! in_array( 'start_date', $appt_cols, true ) ) {
+			return (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$ca_table}`" ); // phpcs:ignore
+		}
+		$cutoff = date( 'Y-m-d 00:00:00', strtotime( current_time( 'mysql' ) ) - DAY_IN_SECONDS );
+		return (int) $wpdb->get_var( // phpcs:ignore
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM `{$ca_table}` ca INNER JOIN `{$appt_table}` a ON a.id = ca.appointment_id WHERE a.start_date >= %s",
+				$cutoff
+			)
+		);
 	}
 
 	private static function extras_catalog( $extras_table ) {
@@ -1093,7 +1261,21 @@ final class BeautyHub_Bookly_Export {
 		if ( empty( $chunks ) ) {
 			$chunks = array( array() );
 		}
-		$total = count( $chunks );
+		$total    = count( $chunks );
+		$started  = microtime( true );
+		$agg      = array(
+			'incoming'         => 0,
+			'created'          => 0,
+			'updated'          => 0,
+			'skipped'          => 0,
+			'cancelled'        => 0,
+			'missingService'   => 0,
+			'resourcesCreated' => 0,
+			'missingTitles'    => array(),
+			'chunks_ok'        => 0,
+			'chunks_total'     => $total,
+			'http_code'        => 0,
+		);
 		foreach ( $chunks as $i => $chunk ) {
 			$is_last = ( $i === $total - 1 );
 			$payload = array(
@@ -1116,13 +1298,54 @@ final class BeautyHub_Bookly_Export {
 				break;
 			}
 			$code = (int) wp_remote_retrieve_response_code( $res );
+			$agg['http_code'] = $code;
 			if ( $code < 200 || $code >= 300 ) {
 				$body     = (string) wp_remote_retrieve_body( $res );
 				$last_err = 'HTTP ' . $code . ' ' . substr( $body, 0, 180 );
 				break;
 			}
+			$body_txt  = (string) wp_remote_retrieve_body( $res );
+			$body_json = json_decode( $body_txt, true );
+			if ( is_array( $body_json ) ) {
+				$agg['incoming']         += isset( $body_json['incoming'] ) ? (int) $body_json['incoming'] : count( $chunk );
+				$agg['created']          += (int) ( $body_json['created'] ?? 0 );
+				$agg['updated']          += (int) ( $body_json['updated'] ?? 0 );
+				$agg['skipped']          += (int) ( $body_json['skipped'] ?? 0 );
+				$agg['cancelled']        += (int) ( $body_json['cancelled'] ?? 0 );
+				$agg['missingService']   += (int) ( $body_json['missingService'] ?? 0 );
+				$agg['resourcesCreated'] += (int) ( $body_json['resourcesCreated'] ?? 0 );
+				if ( ! empty( $body_json['missingTitles'] ) && is_array( $body_json['missingTitles'] ) ) {
+					foreach ( $body_json['missingTitles'] as $mt ) {
+						if ( is_string( $mt ) && ! in_array( $mt, $agg['missingTitles'], true ) ) {
+							$agg['missingTitles'][] = $mt;
+						}
+					}
+				}
+			} else {
+				$agg['incoming'] += count( $chunk );
+			}
+			$agg['chunks_ok']++;
 			$sent_last = $is_last;
 		}
+
+		$duration_ms = (int) round( ( microtime( true ) - $started ) * 1000 );
+		$summary     = array_merge(
+			$agg,
+			array(
+				'at'          => gmdate( 'c' ),
+				'duration_ms' => $duration_ms,
+				'forced'      => $force,
+				'error'       => $last_err,
+			)
+		);
+		update_option( self::OPTION_SYNC_SUMMARY, $summary );
+		$history = get_option( self::OPTION_SYNC_HISTORY, array() );
+		if ( ! is_array( $history ) ) {
+			$history = array();
+		}
+		array_unshift( $history, $summary );
+		$history = array_slice( $history, 0, self::HISTORY_MAX );
+		update_option( self::OPTION_SYNC_HISTORY, $history );
 
 		if ( $last_err ) {
 			update_option( self::OPTION_SYNC_ERROR, $last_err );

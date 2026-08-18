@@ -178,11 +178,13 @@ export function createBooklyWebhookClient(token: string) {
 
 export type BooklyImportPayloadResult = {
   ok: boolean;
+  incoming: number;
   created: number;
   updated: number;
   skipped: number;
   cancelled: number;
   missingService: number;
+  missingTitles: string[];
   resourcesCreated: number;
   errors: string[];
 };
@@ -192,13 +194,18 @@ function asImportResult(value: unknown): BooklyImportPayloadResult {
   const errors = Array.isArray(row.errors)
     ? row.errors.filter((e): e is string => typeof e === "string")
     : [];
+  const missingTitles = Array.isArray(row.missingTitles)
+    ? row.missingTitles.filter((e): e is string => typeof e === "string")
+    : [];
   return {
     ok: row.ok !== false,
+    incoming: Number(row.incoming) || 0,
     created: Number(row.created) || 0,
     updated: Number(row.updated) || 0,
     skipped: Number(row.skipped) || 0,
     cancelled: Number(row.cancelled) || 0,
     missingService: Number(row.missingService) || 0,
+    missingTitles,
     resourcesCreated: Number(row.resourcesCreated) || 0,
     errors,
   };

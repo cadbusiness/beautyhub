@@ -332,11 +332,13 @@ begin
 
   return jsonb_build_object(
     'ok', true,
+    'incoming', v_incoming,
     'created', v_created,
     'updated', v_updated,
     'skipped', v_skipped,
     'cancelled', v_cancelled,
     'missingService', v_missing,
+    'missingTitles', to_jsonb(v_missing_titles),
     'resourcesCreated', v_resources,
     'errors', to_jsonb(v_errors)
   );

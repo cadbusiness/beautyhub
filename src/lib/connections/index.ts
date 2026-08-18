@@ -115,7 +115,8 @@ export async function saveTenantConnection(
   externalId?: string,
 ): Promise<void> {
   const supabase = await createClient();
-  const enc = encryptCredentials(credentials);
+  const enc =
+    Object.keys(credentials).length === 0 ? {} : encryptCredentials(credentials);
 
   let existingQuery = supabase
     .from("connections")

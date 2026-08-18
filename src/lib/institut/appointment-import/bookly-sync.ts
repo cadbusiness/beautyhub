@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
-import { createServiceClient } from "@/lib/supabase/service";
+import { createClient } from "@/lib/supabase/server";
+import { tryCreateServiceClient } from "@/lib/supabase/service";
 import { saveTenantConnection, disconnectTenantConnection } from "@/lib/connections";
 import { apiBaseUrl } from "@/lib/app-url";
 
@@ -16,16 +17,9 @@ function syncUrl(token: string): string {
   return `${apiBaseUrl()}/api/webhooks/bookly/${token}`;
 }
 
-export async function getBooklySyncStatus(tenantId: string): Promise<BooklySyncStatus> {
-  const supabase = createServiceClient();
-  const { data } = await supabase
-    .from("connections")
-    .select("status, config")
-    .eq("provider", BOOKLY_PROVIDER)
-    .eq("scope_type", "tenant")
-    .eq("scope_id", tenantId)
-    .maybeSingle();
-
+function statusFromRow(
+  data: { status: string; config: unknown } | null,
+): BooklySyncStatus {
   if (!data || data.status !== "connected") {
     return { enabled: false, url: null, lastSyncAt: null, lastError: null };
   }
@@ -37,6 +31,19 @@ export async function getBooklySyncStatus(tenantId: string): Promise<BooklySyncS
     lastSyncAt: typeof config.last_sync_at === "string" ? config.last_sync_at : null,
     lastError: typeof config.last_error === "string" ? config.last_error : null,
   };
+}
+
+export async function getBooklySyncStatus(tenantId: string): Promise<BooklySyncStatus> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("connections")
+    .select("status, config")
+    .eq("provider", BOOKLY_PROVIDER)
+    .eq("scope_type", "tenant")
+    .eq("scope_id", tenantId)
+    .maybeSingle();
+
+  return statusFromRow(data);
 }
 
 export async function enableBooklySync(tenantId: string): Promise<BooklySyncStatus> {
@@ -85,7 +92,8 @@ export async function resolveBooklyWebhookTenant(
   token: string,
 ): Promise<{ connectionId: string; tenantId: string } | null> {
   if (!token || token.length < 16) return null;
-  const supabase = createServiceClient();
+  const supabase = tryCreateServiceClient();
+  if (!supabase) return null;
   const { data } = await supabase
     .from("connections")
     .select("id, scope_id, status, config")
@@ -102,7 +110,8 @@ export async function markBooklySyncResult(
   connectionId: string,
   error: string | null,
 ): Promise<void> {
-  const supabase = createServiceClient();
+  const supabase = tryCreateServiceClient();
+  if (!supabase) return;
   const { data } = await supabase
     .from("connections")
     .select("config")

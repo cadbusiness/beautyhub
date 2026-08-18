@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/service";
+import { tryCreateServiceClient } from "@/lib/supabase/service";
 import {
   markBooklySyncResult,
   resolveBooklyWebhookTenant,
@@ -68,7 +68,10 @@ export async function POST(
   }
 
   try {
-    const supabase = createServiceClient();
+    const supabase = tryCreateServiceClient();
+    if (!supabase) {
+      return NextResponse.json({ error: "server_misconfigured" }, { status: 503 });
+    }
     let resultOffset = 0;
 
     if (cancelledIds.length) {

@@ -3088,6 +3088,8 @@
         "allCategories": "Todas",
         "bestsellers": "Más vendidos",
         "uncategorized": "Sin categoría",
+        "searchCategory": "Buscar una categoría…",
+        "categoryAria": "Categoría",
         "soins": "Cuidados",
         "marques": "Marcas",
         "soinsOther": "Otros cuidados"

@@ -3006,6 +3006,8 @@
         "allCategories": "Toutes",
         "bestsellers": "Plus vendus",
         "uncategorized": "Sans catégorie",
+        "searchCategory": "Rechercher une catégorie…",
+        "categoryAria": "Catégorie",
         "soins": "Soins",
         "marques": "Marques",
         "soinsOther": "Autres soins",

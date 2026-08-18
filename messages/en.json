@@ -3505,6 +3505,8 @@
         "allCategories": "All",
         "bestsellers": "Best sellers",
         "uncategorized": "Uncategorized",
+        "searchCategory": "Search a category…",
+        "categoryAria": "Category",
         "soins": "Treatments",
         "marques": "Brands",
         "soinsOther": "Other treatments",

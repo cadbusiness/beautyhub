@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Check, ChevronDown, Search } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -250,6 +250,50 @@ export function PosTerminal({
     facet.startsWith("product:") && facet !== POS_FACET_INTERNAL_UNCATEGORIZED
       ? facet.slice("product:".length)
       : "";
+
+  const categoryOptions = useMemo(() => {
+    const opts: { id: string; label: string }[] = [
+      { id: POS_FACET_ALL, label: t("filters.allCategories") },
+      { id: POS_FACET_BESTSELLERS, label: t("filters.bestsellers") },
+    ];
+    for (const category of serviceCategoryFacets) {
+      opts.push({ id: serviceFacetId(category.id), label: category.name });
+    }
+    if (showUncategorized) {
+      opts.push({ id: POS_FACET_UNCATEGORIZED, label: t("filters.uncategorized") });
+    }
+    for (const category of productCategoryFacets) {
+      opts.push({ id: productFacetId(category.id), label: category.name });
+    }
+    if (showUncategorizedInternal) {
+      opts.push({
+        id: POS_FACET_INTERNAL_UNCATEGORIZED,
+        label: t("filters.uncategorized"),
+      });
+    }
+    if (wooNav.soins.length > 0) {
+      opts.push({ id: POS_FACET_SOINS, label: t("filters.soins") });
+    }
+    if (wooNav.marques.length > 0) {
+      opts.push({ id: POS_FACET_MARQUES, label: t("filters.marques") });
+    }
+    return opts;
+  }, [
+    productCategoryFacets,
+    serviceCategoryFacets,
+    showUncategorized,
+    showUncategorizedInternal,
+    t,
+    wooNav.marques.length,
+    wooNav.soins.length,
+  ]);
+
+  const categorySelectValue =
+    wooGroup === "soins"
+      ? POS_FACET_SOINS
+      : wooGroup === "marques"
+        ? POS_FACET_MARQUES
+        : facet;
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -507,118 +551,35 @@ export function PosTerminal({
           ))}
         </div>
 
-        <div className="relative">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-            aria-hidden
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative min-w-0 flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              aria-hidden
+            />
+            <Input
+              type="search"
+              autoComplete="off"
+              className="pl-9"
+              placeholder={t("searchArticles")}
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+              }}
+              aria-label={t("searchAria")}
+            />
+          </div>
+          <CatalogCategorySelect
+            value={categorySelectValue}
+            options={categoryOptions}
+            onChange={(id) => {
+              setFacet(id);
+              setPage(1);
+            }}
+            searchPlaceholder={t("filters.searchCategory")}
+            ariaLabel={t("filters.categoryAria")}
           />
-          <Input
-            type="search"
-            autoComplete="off"
-            className="pl-9"
-            placeholder={t("searchArticles")}
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
-            aria-label={t("searchAria")}
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1.5">
-          <CatalogFacetChip
-            active={facet === POS_FACET_ALL}
-            onClick={() => {
-              setFacet(POS_FACET_ALL);
-              setPage(1);
-            }}
-          >
-            {t("filters.allCategories")}
-          </CatalogFacetChip>
-          <CatalogFacetChip
-            active={facet === POS_FACET_BESTSELLERS}
-            onClick={() => {
-              setFacet(POS_FACET_BESTSELLERS);
-              setPage(1);
-            }}
-          >
-            {t("filters.bestsellers")}
-          </CatalogFacetChip>
-          {serviceCategoryFacets.map((category) => {
-            const id = serviceFacetId(category.id);
-            return (
-              <CatalogFacetChip
-                key={id}
-                active={facet === id}
-                onClick={() => {
-                  setFacet(id);
-                  setPage(1);
-                }}
-              >
-                {category.name}
-              </CatalogFacetChip>
-            );
-          })}
-          {showUncategorized ? (
-            <CatalogFacetChip
-              active={facet === POS_FACET_UNCATEGORIZED}
-              onClick={() => {
-                setFacet(POS_FACET_UNCATEGORIZED);
-                setPage(1);
-              }}
-            >
-              {t("filters.uncategorized")}
-            </CatalogFacetChip>
-          ) : null}
-          {productCategoryFacets.map((category) => {
-            const id = productFacetId(category.id);
-            return (
-              <CatalogFacetChip
-                key={id}
-                active={facet === id}
-                onClick={() => {
-                  setFacet(id);
-                  setPage(1);
-                }}
-              >
-                {category.name}
-              </CatalogFacetChip>
-            );
-          })}
-          {showUncategorizedInternal ? (
-            <CatalogFacetChip
-              active={facet === POS_FACET_INTERNAL_UNCATEGORIZED}
-              onClick={() => {
-                setFacet(POS_FACET_INTERNAL_UNCATEGORIZED);
-                setPage(1);
-              }}
-            >
-              {t("filters.uncategorized")}
-            </CatalogFacetChip>
-          ) : null}
-          {wooNav.soins.length > 0 ? (
-            <CatalogFacetChip
-              active={wooGroup === "soins"}
-              onClick={() => {
-                setFacet(POS_FACET_SOINS);
-                setPage(1);
-              }}
-            >
-              {t("filters.soins")}
-            </CatalogFacetChip>
-          ) : null}
-          {wooNav.marques.length > 0 ? (
-            <CatalogFacetChip
-              active={wooGroup === "marques"}
-              onClick={() => {
-                setFacet(POS_FACET_MARQUES);
-                setPage(1);
-              }}
-            >
-              {t("filters.marques")}
-            </CatalogFacetChip>
-          ) : null}
         </div>
 
         {wooGroup === "soins" && wooNav.soins.length > 0 ? (
@@ -1261,6 +1222,109 @@ export function PosTerminal({
       />
     ) : null}
     </>
+  );
+}
+
+function CatalogCategorySelect({
+  value,
+  options,
+  onChange,
+  searchPlaceholder,
+  ariaLabel,
+}: {
+  value: string;
+  options: { id: string; label: string }[];
+  onChange: (id: string) => void;
+  searchPlaceholder: string;
+  ariaLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const selected = options.find((option) => option.id === value) ?? options[0];
+  const filtered = options.filter((option) =>
+    option.label.toLocaleLowerCase().includes(q.trim().toLocaleLowerCase()),
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    setQ("");
+    const frame = window.requestAnimationFrame(() => searchRef.current?.focus());
+    function onPointer(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative w-full shrink-0 sm:w-72">
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        onClick={() => setOpen((current) => !current)}
+        className="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 text-left text-sm text-slate-900 outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+      >
+        <span className="min-w-0 truncate">{selected?.label ?? ariaLabel}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+      </button>
+      {open ? (
+        <div className="absolute right-0 z-30 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+          <div className="border-b border-slate-100 p-1.5">
+            <Input
+              ref={searchRef}
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="h-8"
+              aria-label={searchPlaceholder}
+            />
+          </div>
+          <ul role="listbox" className="max-h-64 overflow-y-auto py-1">
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-sm text-slate-500">{searchPlaceholder}</li>
+            ) : (
+              filtered.map((option) => {
+                const active = option.id === value;
+                return (
+                  <li key={option.id}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => {
+                        onChange(option.id);
+                        setOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm ${
+                        active
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="min-w-0 truncate">{option.label}</span>
+                      {active ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}
+                    </button>
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        </div>
+      ) : null}
+    </div>
   );
 }
 

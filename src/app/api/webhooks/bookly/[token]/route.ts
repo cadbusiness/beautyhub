@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { tryCreateServiceClient } from "@/lib/supabase/service";
 import {
+  createBooklyWebhookClient,
   markBooklySyncResult,
   resolveBooklyWebhookTenant,
 } from "@/lib/institut/appointment-import/bookly-sync";
@@ -60,7 +60,7 @@ export async function POST(
   const mode = body.mode === "full" ? "full" : "upsert";
 
   if (rows.length === 0 && cancelledIds.length === 0 && mode !== "full") {
-    await markBooklySyncResult(conn.connectionId, null);
+    await markBooklySyncResult(conn.connectionId, null, token);
     return NextResponse.json({ ok: true, created: 0, updated: 0, cancelled: 0 });
   }
   if (rows.length > 400) {
@@ -68,10 +68,7 @@ export async function POST(
   }
 
   try {
-    const supabase = tryCreateServiceClient();
-    if (!supabase) {
-      return NextResponse.json({ error: "server_misconfigured" }, { status: 503 });
-    }
+    const supabase = createBooklyWebhookClient(token);
     let resultOffset = 0;
 
     if (cancelledIds.length) {
@@ -99,11 +96,11 @@ export async function POST(
     result.cancelled += resultOffset;
 
     const errorSummary = result.errors.length ? result.errors.slice(0, 5).join(" | ") : null;
-    await markBooklySyncResult(conn.connectionId, errorSummary);
+    await markBooklySyncResult(conn.connectionId, errorSummary, token);
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     const message = error instanceof Error ? error.message : "sync_failed";
-    await markBooklySyncResult(conn.connectionId, message);
+    await markBooklySyncResult(conn.connectionId, message, token);
     console.error("[bookly-webhook]", error);
     return NextResponse.json({ error: message }, { status: 500 });
   }

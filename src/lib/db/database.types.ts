@@ -3723,6 +3723,13 @@ export type Database = {
       auth_has_brand_access: { Args: { bid: string }; Returns: boolean }
       auth_has_tenant_access: { Args: { tid: string }; Returns: boolean }
       auth_is_platform_admin: { Args: never; Returns: boolean }
+      bookly_resolve_webhook: {
+        Args: { p_token: string }
+        Returns: {
+          connection_id: string
+          tenant_id: string
+        }[]
+      }
       book_public_appointment: {
         Args: {
           p_email: string

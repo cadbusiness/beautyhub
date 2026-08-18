@@ -701,6 +701,7 @@ class MobileApiClient {
     String? discountReason,
     String? loyaltyRewardId,
     int? loyaltyCreditCents,
+    Map<String, int>? priceOverrides,
   }) async {
     final response = await _http.post(
       _uri('/api/mobile/institut/checkout'),
@@ -719,6 +720,8 @@ class MobileApiClient {
           'loyaltyRewardId': loyaltyRewardId,
         if (loyaltyCreditCents != null && loyaltyCreditCents > 0)
           'loyaltyCreditCents': loyaltyCreditCents,
+        if (priceOverrides != null && priceOverrides.isNotEmpty)
+          'priceOverrides': priceOverrides,
       }),
     );
     final body = await _decode(response);

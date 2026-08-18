@@ -1,5 +1,6 @@
 import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/pos_cart_provider.dart';
@@ -174,13 +175,17 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     );
   }
 
+  int _catalogPriceCents(PosContext ctx, String key) {
+    final item = ctx.catalog.where((i) => i.key == key).firstOrNull;
+    return item?.priceCents ?? 0;
+  }
+
   int _cartTotalCents(PosContext ctx, Map<String, int> cart) {
-    var total = 0;
-    for (final entry in cart.entries) {
-      final item = ctx.catalog.where((i) => i.key == entry.key).firstOrNull;
-      if (item != null) total += item.priceCents * entry.value;
-    }
-    return total;
+    return cartTotalCents(
+      cart: cart,
+      overrides: ref.read(posPriceOverridesProvider),
+      catalogPriceCents: (key) => _catalogPriceCents(ctx, key),
+    );
   }
 
   Future<void> _openDayWithoutFloat() async {
@@ -245,6 +250,11 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       return false;
     }
 
+    final overrides = activePriceOverrides(
+      cart: cart,
+      overrides: ref.read(posPriceOverridesProvider),
+      catalogPriceCents: (key) => _catalogPriceCents(ctx, key),
+    );
     final grossCents = _cartTotalCents(ctx, cart);
     var totalCents = grossCents - discountCents - loyaltyDiscountCents;
     if (totalCents < 0) totalCents = 0;
@@ -266,6 +276,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             loyaltyRewardId: loyaltyRewardId,
             loyaltyCreditCents:
                 loyaltyCreditCents > 0 ? loyaltyCreditCents : null,
+            priceOverrides: overrides.isEmpty ? null : overrides,
             payments: totalCents > 0
                 ? [
                     {'method': paymentMethod, 'amountCents': totalCents},
@@ -290,7 +301,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
           ? 'Ticket n° ${result.ticketNumber}'
           : 'Ticket';
       Future<void>.microtask(() {
-        ref.read(posCartProvider.notifier).clear();
+        clearPosCart(ref);
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!ticketContext.mounted) return;
@@ -1164,39 +1175,31 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
     final onCheckout = widget.onCheckout;
     final sessionBlocked = widget.sessionBlocked;
     final cart = ref.watch(posCartProvider);
+    final overrides = ref.watch(posPriceOverridesProvider);
     final checkingOut = ref.watch(posCheckoutBusyProvider);
+    ref.listen<Map<String, int>>(posCartProvider, (_, next) {
+      ref.read(posPriceOverridesProvider.notifier).retainKeys(next.keys);
+    });
     var total = 0;
     final lines = <Widget>[];
     for (final entry in cart.entries) {
       final item = ctx.catalog.where((i) => i.key == entry.key).firstOrNull;
       if (item == null) continue;
-      final lineTotal = item.priceCents * entry.value;
+      final unitCents = cartLineUnitCents(
+        key: entry.key,
+        catalogCents: item.priceCents,
+        overrides: overrides,
+      );
+      final lineTotal = unitCents * entry.value;
       total += lineTotal;
       lines.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            children: [
-              CatalogItemThumb(
-                imageUrl: item.imageUrl,
-                colorHex: item.color,
-                category: item.category,
-                size: 40,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  '${item.name} × ${entry.value}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Text(
-                formatEuros(lineTotal),
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
+        _CartLineRow(
+          item: item,
+          quantity: entry.value,
+          unitCents: unitCents,
+          lineTotalCents: lineTotal,
+          overridden: overrides.containsKey(entry.key) &&
+              overrides[entry.key] != item.priceCents,
         ),
       );
     }
@@ -1530,7 +1533,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                         );
                         if (ok && context.mounted) {
                           Navigator.pop(context);
-                          ref.read(posCartProvider.notifier).clear();
+                          clearPosCart(ref);
                         }
                       },
                 style: FilledButton.styleFrom(
@@ -1585,6 +1588,301 @@ InputDecoration _cartFieldDecoration({required String hint}) {
       borderSide: const BorderSide(color: black, width: 1.2),
     ),
   );
+}
+
+class _CartLineRow extends ConsumerStatefulWidget {
+  const _CartLineRow({
+    required this.item,
+    required this.quantity,
+    required this.unitCents,
+    required this.lineTotalCents,
+    required this.overridden,
+  });
+
+  final PosCatalogItem item;
+  final int quantity;
+  final int unitCents;
+  final int lineTotalCents;
+  final bool overridden;
+
+  @override
+  ConsumerState<_CartLineRow> createState() => _CartLineRowState();
+}
+
+class _CartLineRowState extends ConsumerState<_CartLineRow> {
+  late final TextEditingController _price;
+  var _editing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _price = TextEditingController(text: _euros(widget.unitCents));
+  }
+
+  @override
+  void didUpdateWidget(covariant _CartLineRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_editing && oldWidget.unitCents != widget.unitCents) {
+      _price.text = _euros(widget.unitCents);
+    }
+  }
+
+  @override
+  void dispose() {
+    _price.dispose();
+    super.dispose();
+  }
+
+  String _euros(int cents) => (cents / 100).toStringAsFixed(2);
+
+  void _commitPrice() {
+    if (!mounted) return;
+    _editing = false;
+    final parsed = double.tryParse(_price.text.replaceAll(',', '.'));
+    if (parsed == null) {
+      _price.text = _euros(widget.unitCents);
+      return;
+    }
+    final cents = (parsed * 100).round();
+    if (cents < 0) {
+      _price.text = _euros(widget.unitCents);
+      return;
+    }
+    if (cents == widget.item.priceCents) {
+      ref.read(posPriceOverridesProvider.notifier).reset(widget.item.key);
+    } else {
+      ref.read(posPriceOverridesProvider.notifier).setPrice(widget.item.key, cents);
+    }
+    _price.text = _euros(cents == widget.item.priceCents ? widget.item.priceCents : cents);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+    final qty = widget.quantity;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CatalogItemThumb(
+                imageUrl: item.imageUrl,
+                colorHex: item.color,
+                category: item.category,
+                size: 40,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Row(
+                  children: [
+                    if (widget.overridden) ...[
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF7C3AED),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
+                      child: Text(
+                        item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0A0A0A),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                formatEuros(widget.lineTotalCents),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _CartQtyChip(
+                quantity: qty,
+                onMinus: () =>
+                    ref.read(posCartProvider.notifier).removeOne(item.key),
+                onPlus: () => ref.read(posCartProvider.notifier).add(item.key),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 88,
+                height: 36,
+                child: Focus(
+                  onFocusChange: (hasFocus) {
+                    if (hasFocus) {
+                      _editing = true;
+                    } else {
+                      _commitPrice();
+                    }
+                  },
+                  child: TextField(
+                  controller: _price,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                  ],
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: widget.overridden
+                        ? const Color(0xFF6D28D9)
+                        : const Color(0xFF0A0A0A),
+                  ),
+                  onTap: () {
+                    _editing = true;
+                    _price.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: _price.text.length,
+                    );
+                  },
+                  onSubmitted: (_) => _commitPrice(),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    suffixText: '€',
+                    suffixStyle: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF737373),
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    filled: true,
+                    fillColor: widget.overridden
+                        ? const Color(0xFFF5F3FF)
+                        : const Color(0xFFF5F5F5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: widget.overridden
+                            ? const Color(0xFFDDD6FE)
+                            : const Color(0xFFE5E5E5),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: widget.overridden
+                            ? const Color(0xFFDDD6FE)
+                            : const Color(0xFFE5E5E5),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF0A0A0A)),
+                    ),
+                  ),
+                ),
+                ),
+              ),
+              if (widget.overridden)
+                Flexible(
+                  child: TextButton(
+                    onPressed: () {
+                      ref
+                          .read(posPriceOverridesProvider.notifier)
+                          .reset(item.key);
+                      _price.text = _euros(item.priceCents);
+                      _editing = false;
+                    },
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      foregroundColor: const Color(0xFF6D28D9),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    child: const Text(
+                      'Tarif catalogue',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                const Spacer(),
+              IconButton(
+                onPressed: () =>
+                    ref.read(posCartProvider.notifier).remove(item.key),
+                icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                color: const Color(0xFF737373),
+                visualDensity: VisualDensity.compact,
+                tooltip: 'Retirer',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CartQtyChip extends StatelessWidget {
+  const _CartQtyChip({
+    required this.quantity,
+    required this.onMinus,
+    required this.onPlus,
+  });
+
+  final int quantity;
+  final VoidCallback onMinus;
+  final VoidCallback onPlus;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            onPressed: onMinus,
+            icon: const Icon(Icons.remove, size: 16),
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 36),
+          ),
+          Text(
+            '$quantity',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          ),
+          IconButton(
+            onPressed: onPlus,
+            icon: const Icon(Icons.add, size: 16),
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 36),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _CartRule extends StatelessWidget {

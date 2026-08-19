@@ -596,7 +596,7 @@ class _CreateAppointmentSheetState
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   SearchablePickerField(
                     label: 'Cliente',
                     value: _clientTitle ??
@@ -607,7 +607,7 @@ class _CreateAppointmentSheetState
                     placeholder: 'Sans cliente',
                     onOpen: _openClientPicker,
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   SearchablePickerField(
                     label: 'Praticienne',
                     value: selectedStaff?.label.isNotEmpty == true
@@ -616,7 +616,7 @@ class _CreateAppointmentSheetState
                     placeholder: 'Non assignée',
                     onOpen: () => _openStaffPicker(pos.staff),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
@@ -624,7 +624,7 @@ class _CreateAppointmentSheetState
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const _FieldLabel('Date'),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                             OutlinedButton(
                               onPressed: _pickDate,
                               style: _outlineStyle(),
@@ -645,7 +645,7 @@ class _CreateAppointmentSheetState
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const _FieldLabel('Heure'),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                             OutlinedButton(
                               onPressed: _pickTime,
                               style: _outlineStyle(),
@@ -668,61 +668,49 @@ class _CreateAppointmentSheetState
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
                   for (var i = 0; i < _lines.length; i++) ...[
                     _buildServiceLine(services, _lines[i], i),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                   ],
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       onPressed: () => setState(() => _lines.add(_ServiceLine())),
-                      child: const Text('+ Ajouter une prestation'),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const _FieldLabel('Récurrence'),
-                  const SizedBox(height: 8),
-                  InputDecorator(
-                    decoration: _inputDecoration(),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _recurrence,
-                        isExpanded: true,
-                        items: const [
-                          DropdownMenuItem(value: 'none', child: Text('Ne pas répéter')),
-                          DropdownMenuItem(value: 'weekly', child: Text('Toutes les semaines')),
-                          DropdownMenuItem(
-                            value: 'biweekly',
-                            child: Text('Toutes les 2 semaines'),
-                          ),
-                          DropdownMenuItem(value: 'monthly', child: Text('Tous les mois')),
-                        ],
-                        onChanged: (value) => _setRecurrence(value ?? 'none'),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        foregroundColor: _black,
+                      ),
+                      child: const Text(
+                        '+ Ajouter une prestation',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Divider(height: 1, color: _border),
+                  _InlineRow(
+                    label: 'Récurrence',
+                    value: _recurrenceLabel(_recurrence),
+                    onTap: _openRecurrencePicker,
                   ),
                   if (_recurrence != 'none') ...[
-                    const SizedBox(height: 12),
-                    const _FieldLabel('Jusqu’au'),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      onPressed: _pickUntil,
-                      style: _outlineStyle(),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          untilFmt.format(untilDate),
-                          style: const TextStyle(color: _black),
-                        ),
+                    const Divider(height: 1, color: _border),
+                    _InlineRow(
+                      label: 'Jusqu’au',
+                      value: untilFmt.format(untilDate),
+                      onTap: _pickUntil,
+                    ),
+                    const Divider(height: 1, color: _border),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 4),
+                      child: Text(
+                        'Prochaine le ${untilFmt.format(nextDate)} · $occurrenceCount rendez-vous',
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF737373)),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Prochaine le ${untilFmt.format(nextDate)} · $occurrenceCount rendez-vous',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF737373)),
-                    ),
-                    const SizedBox(height: 12),
                     _RecurrencePreviewCard(
                       loading: _previewLoading,
                       error: _previewError,
@@ -739,20 +727,21 @@ class _CreateAppointmentSheetState
                         });
                       },
                     ),
-                  ],
-                  const SizedBox(height: 14),
-                  const _FieldLabel('Notes'),
-                  const SizedBox(height: 8),
+                    const Divider(height: 1, color: _border),
+                  ] else
+                    const Divider(height: 1, color: _border),
+                  const SizedBox(height: 10),
                   TextField(
                     controller: _notesController,
-                    decoration: _inputDecoration(hint: 'Optionnel'),
+                    decoration: _inputDecoration(hint: 'Ajouter une note (optionnel)'),
+                    style: const TextStyle(fontSize: 14),
                     maxLines: 2,
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: 12),
                     Text(_error!, style: const TextStyle(color: Color(0xFFDC2626))),
                   ],
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   SizedBox(
                     height: 52,
                     child: FilledButton(
@@ -803,94 +792,164 @@ class _CreateAppointmentSheetState
               (s) => s?.id == line.serviceId,
               orElse: () => null,
             );
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: _border),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Prestation ${index + 1}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _black,
+    final label = _lines.length > 1 ? 'Prestation ${index + 1}' : 'Prestation';
+    final canRemove = _lines.length > 1;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SearchablePickerField(
+          label: label,
+          labelTrailing: canRemove
+              ? InkWell(
+                  onTap: () => setState(() => _lines.removeAt(index)),
+                  borderRadius: BorderRadius.circular(999),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 16,
+                      color: Color(0xFF737373),
+                    ),
                   ),
-                ),
-              ),
-              if (_lines.length > 1)
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  onPressed: () => setState(() => _lines.removeAt(index)),
-                  icon: const Icon(Icons.close, size: 18),
-                ),
-            ],
-          ),
-          SearchablePickerField(
-            label: 'Prestation',
-            value: selectedService?.name.isNotEmpty == true
-                ? selectedService!.name
-                : null,
-            placeholder: 'Choisir une prestation',
-            selectedSubtitle: selectedService?.durationMin != null
-                ? '${selectedService!.durationMin} min'
-                : null,
-            onOpen: () => _openServicePicker(services, line),
-          ),
-          if (line.loadingExtras) ...[
-            const SizedBox(height: 10),
-            const Text(
+                )
+              : null,
+          value: selectedService?.name.isNotEmpty == true
+              ? selectedService!.name
+              : null,
+          placeholder: 'Choisir une prestation',
+          selectedSubtitle: selectedService?.durationMin != null
+              ? '${selectedService!.durationMin} min'
+              : null,
+          onOpen: () => _openServicePicker(services, line),
+        ),
+        if (line.loadingExtras) ...[
+          const SizedBox(height: 6),
+          const Padding(
+            padding: EdgeInsets.only(left: 4),
+            child: Text(
               'Chargement des extras…',
               style: TextStyle(fontSize: 12, color: Color(0xFF737373)),
             ),
-          ] else if (line.extrasError != null) ...[
-            const SizedBox(height: 10),
-            Text(
+          ),
+        ] else if (line.extrasError != null) ...[
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
               line.extrasError!,
               style: const TextStyle(fontSize: 12, color: Color(0xFFDC2626)),
             ),
-          ] else if (line.serviceId != null && line.catalog.isEmpty) ...[
-            const SizedBox(height: 10),
-            const Text(
-              'Aucun extra pour cette prestation.',
-              style: TextStyle(fontSize: 12, color: Color(0xFFA3A3A3)),
+          ),
+        ] else if (line.catalog.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          for (final extra in line.catalog)
+            _ExtraRow(
+              extra: extra,
+              quantity: line.extraQty[extra.extraServiceId] ?? 0,
+              onChanged: (qty) {
+                setState(() {
+                  if (qty <= 0) {
+                    line.extraQty.remove(extra.extraServiceId);
+                  } else {
+                    line.extraQty[extra.extraServiceId] = qty;
+                  }
+                });
+                _schedulePreview();
+              },
             ),
-          ] else if (line.catalog.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            const Text(
-              'Extras',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF404040),
-              ),
-            ),
-            const SizedBox(height: 8),
-            for (final extra in line.catalog)
-              _ExtraRow(
-                extra: extra,
-                quantity: line.extraQty[extra.extraServiceId] ?? 0,
-                    onChanged: (qty) {
-                  setState(() {
-                    if (qty <= 0) {
-                      line.extraQty.remove(extra.extraServiceId);
-                    } else {
-                      line.extraQty[extra.extraServiceId] = qty;
-                    }
-                  });
-                  _schedulePreview();
-                },
-              ),
-          ],
         ],
+      ],
+    );
+  }
+
+  String _recurrenceLabel(String value) {
+    switch (value) {
+      case 'weekly':
+        return 'Toutes les semaines';
+      case 'biweekly':
+        return 'Toutes les 2 semaines';
+      case 'monthly':
+        return 'Tous les mois';
+      default:
+        return 'Aucune';
+    }
+  }
+
+  Future<void> _openRecurrencePicker() async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 8),
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: _border,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 14, 20, 8),
+              child: Text(
+                'Répéter',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: _black,
+                ),
+              ),
+            ),
+            for (final option in const [
+              ('none', 'Aucune'),
+              ('weekly', 'Toutes les semaines'),
+              ('biweekly', 'Toutes les 2 semaines'),
+              ('monthly', 'Tous les mois'),
+            ]) ...[
+              InkWell(
+                onTap: () => Navigator.pop(ctx, option.$1),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          option.$2,
+                          style: const TextStyle(fontSize: 15, color: _black),
+                        ),
+                      ),
+                      if (option.$1 == _recurrence)
+                        const Icon(
+                          Icons.check_rounded,
+                          size: 20,
+                          color: _black,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              if (option.$1 != 'monthly')
+                const Divider(height: 1, color: _border, indent: 20, endIndent: 20),
+            ],
+            const SizedBox(height: 6),
+          ],
+        ),
       ),
     );
+    if (picked != null) _setRecurrence(picked);
   }
 
   InputDecoration _inputDecoration({String? hint}) {
@@ -1124,6 +1183,53 @@ class _FieldLabel extends StatelessWidget {
         fontSize: 13,
         fontWeight: FontWeight.w500,
         color: Color(0xFF404040),
+      ),
+    );
+  }
+}
+
+/// Ligne compacte style iOS Reminders : `Label ......... Valeur >`.
+/// Utilisée pour Récurrence / Jusqu'au — évite les gros dropdowns.
+class _InlineRow extends StatelessWidget {
+  const _InlineRow({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF0A0A0A),
+              ),
+            ),
+            const Spacer(),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF737373)),
+            ),
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: Color(0xFF9CA3AF),
+            ),
+          ],
+        ),
       ),
     );
   }

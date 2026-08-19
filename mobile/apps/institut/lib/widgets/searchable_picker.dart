@@ -52,6 +52,7 @@ class SearchablePickerField extends StatelessWidget {
     required this.placeholder,
     required this.onOpen,
     this.selectedSubtitle,
+    this.labelTrailing,
   });
 
   final String label;
@@ -59,6 +60,9 @@ class SearchablePickerField extends StatelessWidget {
   final String? selectedSubtitle;
   final String placeholder;
   final Future<void> Function() onOpen;
+
+  /// Petit widget affiché à droite du label (bouton X, par exemple).
+  final Widget? labelTrailing;
 
   static const _border = Color(0xFFE5E5E5);
   static const _labelColor = Color(0xFF404040);
@@ -72,15 +76,22 @@ class SearchablePickerField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: _labelColor,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: _labelColor,
+                ),
+              ),
+            ),
+            ?labelTrailing,
+          ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Material(
           color: Colors.white,
           shape: RoundedRectangleBorder(

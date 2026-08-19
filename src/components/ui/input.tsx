@@ -6,24 +6,28 @@ const base =
 
 export function Input({
   className,
+  ref,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(base, className)} {...props} />;
+}: React.ComponentPropsWithRef<"input">) {
+  return <input ref={ref} className={cn(base, className)} {...props} />;
 }
 
 export function Select({
   className,
+  ref,
   ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={cn(base, className)} {...props} />;
+}: React.ComponentPropsWithRef<"select">) {
+  return <select ref={ref} className={cn(base, className)} {...props} />;
 }
 
 export function Textarea({
   className,
+  ref,
   ...props
-}: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+}: React.ComponentPropsWithRef<"textarea">) {
   return (
     <textarea
+      ref={ref}
       className={cn(base, "h-auto min-h-20 py-2", className)}
       {...props}
     />

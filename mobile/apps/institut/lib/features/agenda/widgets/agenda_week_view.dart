@@ -9,11 +9,11 @@ import 'appointment_detail_sheet.dart';
 
 const int _hourStart = 8;
 const int _hourEnd = 20;
-const double _slotHeight = 46;
+const double _slotHeight = 58;
 const double _hourColumnWidth = 34;
 
 /// Seuil au-delà duquel on affiche les 7 jours d'un coup (tablette / iPad).
-/// En-dessous (téléphone) on montre 4 colonnes larges + scroll horizontal.
+/// En-dessous (téléphone) on montre 3 colonnes larges + scroll horizontal.
 const double _fullWeekBreakpoint = 640;
 
 /// Vue semaine grille horaire.
@@ -139,9 +139,9 @@ class _AgendaWeekViewState extends ConsumerState<AgendaWeekView> {
         return LayoutBuilder(builder: (context, constraints) {
           final availableWidth = constraints.maxWidth - _hourColumnWidth;
           final isTablet = constraints.maxWidth >= _fullWeekBreakpoint;
-          // Téléphone : 4 colonnes visibles, chaque colonne = un quart de
-          // l'espace disponible. Tablette : toutes visibles.
-          final visibleDays = isTablet ? 7 : 4;
+          // Téléphone : 3 colonnes visibles pour que l'heure + le prénom
+          // tiennent. Tablette : les 7 jours.
+          final visibleDays = isTablet ? 7 : 3;
           final dayColumnWidth = availableWidth / visibleDays;
           final totalDaysWidth = dayColumnWidth * 7;
           final horizontalPhysics = isTablet
@@ -155,6 +155,10 @@ class _AgendaWeekViewState extends ConsumerState<AgendaWeekView> {
                 days: days,
                 selectedDate: selectedDate,
                 today: today,
+                counts: {
+                  for (final d in days)
+                    _dateKey(d): (byDay[_dateKey(d)] ?? const []).length,
+                },
                 controller: _headerCtrl,
                 physics: horizontalPhysics,
                 dayColumnWidth: dayColumnWidth,
@@ -225,6 +229,7 @@ class _WeekHeader extends StatelessWidget {
     required this.days,
     required this.selectedDate,
     required this.today,
+    required this.counts,
     required this.onSelect,
     required this.controller,
     required this.physics,
@@ -234,6 +239,7 @@ class _WeekHeader extends StatelessWidget {
   final List<DateTime> days;
   final DateTime selectedDate;
   final DateTime today;
+  final Map<String, int> counts;
   final ValueChanged<DateTime> onSelect;
   final ScrollController controller;
   final ScrollPhysics physics;
@@ -243,7 +249,7 @@ class _WeekHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final dayFmt = DateFormat.E('fr_FR');
     return SizedBox(
-      height: 64,
+      height: 72,
       child: Row(
         children: [
           const SizedBox(width: _hourColumnWidth),
@@ -301,6 +307,19 @@ class _WeekHeader extends StatelessWidget {
                                     ),
                                   ),
                                 ),
+                                if ((counts[_dateKey(d)] ?? 0) > 0)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      '${counts[_dateKey(d)]} rdv',
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF737373),
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -320,6 +339,9 @@ class _WeekHeader extends StatelessWidget {
     if (s.isEmpty) return s;
     return s.substring(0, s.length >= 3 ? 3 : s.length).toUpperCase();
   }
+
+  String _dateKey(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -386,6 +408,9 @@ class _DayColumn extends StatelessWidget {
       ),
       child: LayoutBuilder(builder: (context, constraints) {
         final columnWidth = constraints.maxWidth;
+        const maxLanes = 2;
+        final visible = layouts.where((l) => l.lane < maxLanes).toList();
+        final overflow = layouts.where((l) => l.lane >= maxLanes).toList();
         return Stack(
           clipBehavior: Clip.hardEdge,
           children: [
@@ -403,20 +428,92 @@ class _DayColumn extends StatelessWidget {
                   ),
               ],
             ),
-            for (final layout in layouts)
+            for (final layout in visible)
               Positioned(
                 top: _positionTop(layout.appt, pxPerMin, totalMinutes),
                 height: _positionHeight(layout.appt, pxPerMin),
-                left: (layout.lane / layout.laneCount) * columnWidth,
-                width: columnWidth / layout.laneCount,
+                left: (layout.lane / (layout.laneCount.clamp(1, maxLanes))) *
+                    columnWidth,
+                width: columnWidth / layout.laneCount.clamp(1, maxLanes),
                 child: _WeekBlock(
                   appointment: layout.appt,
                   onTap: () => onTapAppointment(layout.appt),
                 ),
               ),
+            if (overflow.isNotEmpty)
+              Positioned(
+                top: _positionTop(overflow.first.appt, pxPerMin, totalMinutes),
+                right: 2,
+                child: GestureDetector(
+                  onTap: () => _showOverflow(context, overflow),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0A0A0A),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '+${overflow.length}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         );
       }),
+    );
+  }
+
+  void _showOverflow(BuildContext context, List<_LayoutSlot> overflow) {
+    final timeFmt = DateFormat.Hm();
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '${overflow.length} autres rendez-vous',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                for (final slot in overflow)
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(slot.appt.clientName),
+                    subtitle: Text(
+                      '${timeFmt.format(slot.appt.startsAt.toLocal())} · ${slot.appt.serviceName}',
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      onTapAppointment(slot.appt);
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -517,6 +614,7 @@ class _WeekBlock extends StatelessWidget {
     final accent = agendaAccentColor(appointment);
     final cancelled = appointment.isCancelled;
     final firstName = _firstName(appointment.clientName);
+    final timeLabel = DateFormat.Hm().format(appointment.startsAt.toLocal());
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
       child: Material(
@@ -527,13 +625,9 @@ class _WeekBlock extends StatelessWidget {
           child: Opacity(
             opacity: cancelled ? 0.55 : 1,
             child: LayoutBuilder(builder: (context, constraints) {
-              // Pas d'heure sur les blocs : l'échelle temporelle à gauche
-              // + la position verticale la donnent déjà. Dupliquer l'heure
-              // rendait illisible les zones denses (plusieurs "11:20" empilés).
-              // On affiche juste le prénom si la case est assez grande.
               final w = constraints.maxWidth;
               final h = constraints.maxHeight;
-              final hasRoom = w >= 44 && h >= 22 && firstName.isNotEmpty;
+              final showName = w >= 52 && h >= 30 && firstName.isNotEmpty;
               return ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: Container(
@@ -543,20 +637,39 @@ class _WeekBlock extends StatelessWidget {
                   ),
                   alignment: Alignment.topLeft,
                   padding: const EdgeInsets.fromLTRB(4, 2, 3, 2),
-                  child: hasRoom
-                      ? Text(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          timeLabel,
+                          maxLines: 1,
+                          softWrap: false,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            height: 1.1,
+                            color: Color(0xFF0A0A0A),
+                          ),
+                        ),
+                      ),
+                      if (showName)
+                        Text(
                           firstName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           softWrap: false,
                           style: const TextStyle(
                             fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            height: 1.1,
+                            height: 1.15,
                             color: Color(0xFF0A0A0A),
                           ),
-                        )
-                      : const SizedBox.shrink(),
+                        ),
+                    ],
+                  ),
                 ),
               );
             }),

@@ -6,8 +6,8 @@ import 'package:intl/intl.dart';
 import '../../../state/session_providers.dart';
 import '../agenda_colors.dart';
 
-/// Vue mois : grille 7 × 6 qui remplit l'espace, chaque case montre le numéro
-/// du jour et des points colorés (un par praticien) + total si > 3 RDV.
+/// Vue mois : grille 7 × 6. Chaque case montre le numéro du jour,
+/// le total « N rdv » et des points de couleur par praticienne.
 /// Tap sur un jour → sélectionne + bascule en vue jour.
 class AgendaMonthView extends ConsumerWidget {
   const AgendaMonthView({
@@ -197,10 +197,7 @@ class _MonthCell extends StatelessWidget {
       if (staffColors.length >= 4) break;
     }
 
-    final barCount = staffColors.length;
-    const maxBars = 3;
-    final shown = staffColors.take(maxBars).toList(growable: false);
-    final extra = count - shown.length;
+    final shown = staffColors.take(3).toList(growable: false);
 
     return InkWell(
       onTap: onTap,
@@ -222,65 +219,64 @@ class _MonthCell extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Ligne : numéro (pastille) — "+2" à droite si > 3 RDV.
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 22,
-                      height: 22,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? _black
-                            : isToday
-                                ? _accent
-                                : Colors.transparent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        '${day.day}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: isToday || isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: (isSelected || isToday)
-                              ? Colors.white
-                              : textColor,
-                        ),
-                      ),
+                Center(
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? _black
+                          : isToday
+                              ? _accent
+                              : Colors.transparent,
+                      shape: BoxShape.circle,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                // Barres colorées (une par praticien, max 3).
-                for (final c in shown)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 2),
-                    child: Container(
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: c,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                // Discret "+N" seulement si vraiment plus de 3 RDV en plus.
-                if (extra > 0 && barCount >= maxBars)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 1),
                     child: Text(
-                      '+$extra',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF9CA3AF),
-                        height: 1,
+                      '${day.day}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isToday || isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: (isSelected || isToday)
+                            ? Colors.white
+                            : textColor,
                       ),
                     ),
                   ),
+                ),
+                if (count > 0) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    count == 1 ? '1 rdv' : '$count rdv',
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.clip,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                      color: inMonth ? _black : _muted,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (final c in shown)
+                        Container(
+                          width: 6,
+                          height: 6,
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          decoration: BoxDecoration(
+                            color: c,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

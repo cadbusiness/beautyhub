@@ -171,6 +171,14 @@ export class WooClient {
     }
     if (!res.ok) {
       const text = await res.text().catch(() => "");
+      const canRetryWithoutStatus =
+        res.status === 400 &&
+        Boolean(init?.query && "status" in init.query) &&
+        text.includes("rest_invalid_param");
+      if (canRetryWithoutStatus && init?.query) {
+        const { status: _ignored, ...query } = init.query;
+        return this.request<T>(path, { ...init, query });
+      }
       throw new Error(
         `WooCommerce ${res.status}: ${text.slice(0, 200) || res.statusText}`,
       );
@@ -188,8 +196,6 @@ export class WooClient {
       query: {
         page,
         per_page: perPage,
-        // Un seul enum : any | publish | private | draft | … — pas de liste CSV.
-        status: "any",
         orderby: "modified",
         order: "desc",
       },

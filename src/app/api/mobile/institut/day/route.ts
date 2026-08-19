@@ -98,7 +98,7 @@ export async function GET(request: Request) {
     const { start, end } = roughUtcWindow(date);
     const weekWindow = weekUtcWindow(date);
 
-    const [dayRows, weekRows, staffRes] = await Promise.all([
+    const [dayRows, weekRows, staffRes, resourcesRes] = await Promise.all([
       fetchAppointmentsInRange(session.supabase, session.tenant.id, start, end),
       includeWeek
         ? fetchAppointmentsInRange(
@@ -114,6 +114,12 @@ export async function GET(request: Request) {
         .eq("tenant_id", session.tenant.id)
         .eq("is_active", true)
         .order("full_name"),
+      session.supabase
+        .from("inst_resources")
+        .select("id, name")
+        .eq("tenant_id", session.tenant.id)
+        .eq("is_active", true)
+        .order("name"),
     ]);
 
     const daySerialized = serializeCalendarAppointments(dayRows)
@@ -155,13 +161,10 @@ export async function GET(request: Request) {
       color: s.color,
     }));
 
-    const resources = [
-      ...new Map(
-        appointments
-          .filter((a) => a.resourceId && a.resourceName)
-          .map((a) => [a.resourceId, { id: a.resourceId, name: a.resourceName }]),
-      ).values(),
-    ];
+    const resources = (resourcesRes.data ?? []).map((r) => ({
+      id: r.id,
+      name: r.name,
+    }));
 
     return Response.json({
       date,

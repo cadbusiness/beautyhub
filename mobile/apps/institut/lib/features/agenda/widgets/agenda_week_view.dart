@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../state/session_providers.dart';
 import '../../../widgets/app_sheet.dart';
 import '../agenda_colors.dart';
+import 'agenda_staff_filter.dart';
 import 'appointment_detail_sheet.dart';
 
 const int _hourStart = 8;
@@ -109,6 +110,7 @@ class _AgendaWeekViewState extends ConsumerState<AgendaWeekView> {
     final rangeAsync = ref.watch(
       agendaRangeProvider(AgendaRangeArgs(from: monday, to: sunday)),
     );
+    final dayLists = ref.watch(dayAgendaProvider).asData?.value;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final selectedDate = ref.watch(selectedAgendaDateProvider);
@@ -152,6 +154,24 @@ class _AgendaWeekViewState extends ConsumerState<AgendaWeekView> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (dayLists != null)
+                AgendaFilters(
+                  staff: dayLists.staff,
+                  resources: dayLists.resources,
+                  selectedStaffId: widget.staffFilter,
+                  selectedResourceId: widget.resourceFilter,
+                  onStaffChanged: (id) {
+                    ref.read(selectedStaffFilterProvider.notifier).state = id;
+                  },
+                  onResourceChanged: (id) {
+                    ref.read(selectedResourceFilterProvider.notifier).state = id;
+                  },
+                  onClear: () {
+                    ref.read(selectedStaffFilterProvider.notifier).state = null;
+                    ref.read(selectedResourceFilterProvider.notifier).state =
+                        null;
+                  },
+                ),
               _WeekHeader(
                 days: days,
                 selectedDate: selectedDate,

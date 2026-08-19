@@ -204,51 +204,31 @@ class _DayView extends ConsumerWidget {
                         },
                       ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 12, 8),
-                      child: Row(
-                        children: [
-                          AgendaStatsStrip(stats: day.stats),
-                          const Spacer(),
-                          AgendaResourceFilter(
-                            resources: day.resources,
-                            selectedResourceId: resourceFilter,
-                            onChanged: (id) {
-                              ref
-                                  .read(selectedResourceFilterProvider.notifier)
-                                  .state = id;
-                            },
-                          ),
-                        ],
-                      ),
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+                      child: AgendaStatsStrip(stats: day.stats),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                      child: AgendaStaffFilter(
-                        staff: day.staff,
-                        selectedStaffId: staffFilter,
-                        onChanged: (id) {
-                          ref.read(selectedStaffFilterProvider.notifier).state = id;
-                        },
-                      ),
+                    AgendaFilters(
+                      staff: day.staff,
+                      resources: day.resources,
+                      selectedStaffId: staffFilter,
+                      selectedResourceId: resourceFilter,
+                      onStaffChanged: (id) {
+                        ref.read(selectedStaffFilterProvider.notifier).state =
+                            id;
+                      },
+                      onResourceChanged: (id) {
+                        ref
+                            .read(selectedResourceFilterProvider.notifier)
+                            .state = id;
+                      },
+                      onClear: () {
+                        ref.read(selectedStaffFilterProvider.notifier).state =
+                            null;
+                        ref
+                            .read(selectedResourceFilterProvider.notifier)
+                            .state = null;
+                      },
                     ),
-                    if (hasFilter)
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 12),
-                          child: TextButton(
-                            onPressed: () {
-                              ref
-                                  .read(selectedStaffFilterProvider.notifier)
-                                  .state = null;
-                              ref
-                                  .read(selectedResourceFilterProvider.notifier)
-                                  .state = null;
-                            },
-                            child: const Text('Tout voir'),
-                          ),
-                        ),
-                      ),
                     const Divider(height: 1, color: Color(0xFFE8E8E8)),
                   ],
                 ),

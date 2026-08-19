@@ -30,6 +30,17 @@ String appointmentServiceLine(DayAppointment appointment) {
   return '$name · $duration';
 }
 
+/// Nom de cabine pour un onglet filtre (« Cabine 1 » → « 1 »).
+String agendaCabinChipLabel(String name) {
+  final trimmed = name.trim();
+  if (trimmed.isEmpty) return trimmed;
+  final stripped = trimmed.replaceFirst(
+    RegExp(r'^cabine\s+', caseSensitive: false),
+    '',
+  );
+  return stripped.isNotEmpty ? stripped : trimmed;
+}
+
 String shortCabinLabel(String name) {
   final trimmed = name.trim();
   if (trimmed.isEmpty) return trimmed;

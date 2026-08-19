@@ -1,7 +1,73 @@
 import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
 
-import '../../shared/cabin_badge.dart';
+import '../agenda_format.dart';
+
+class AgendaFilters extends StatelessWidget {
+  const AgendaFilters({
+    super.key,
+    required this.staff,
+    required this.resources,
+    required this.selectedStaffId,
+    required this.selectedResourceId,
+    required this.onStaffChanged,
+    required this.onResourceChanged,
+    this.onClear,
+  });
+
+  final List<AgendaStaffMember> staff;
+  final List<AgendaResource> resources;
+  final String? selectedStaffId;
+  final String? selectedResourceId;
+  final ValueChanged<String?> onStaffChanged;
+  final ValueChanged<String?> onResourceChanged;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFilter = selectedStaffId != null || selectedResourceId != null;
+    final showCabins = resources.isNotEmpty;
+    final showStaff = staff.length >= 2;
+    if (!showCabins && !showStaff) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showCabins)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 2, 12, 0),
+            child: AgendaResourceFilter(
+              resources: resources,
+              selectedResourceId: selectedResourceId,
+              onChanged: onResourceChanged,
+            ),
+          ),
+        if (showStaff)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+            child: AgendaStaffFilter(
+              staff: staff,
+              selectedStaffId: selectedStaffId,
+              onChanged: onStaffChanged,
+            ),
+          ),
+        if (hasFilter && onClear != null)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: TextButton(
+                onPressed: onClear,
+                child: const Text('Tout voir'),
+              ),
+            ),
+          )
+        else
+          const SizedBox(height: 6),
+      ],
+    );
+  }
+}
 
 class AgendaStaffFilter extends StatelessWidget {
   const AgendaStaffFilter({
@@ -51,18 +117,18 @@ class AgendaResourceFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (resources.length < 2) return const SizedBox.shrink();
+    if (resources.isEmpty) return const SizedBox.shrink();
 
     return _FilterRow(
       children: [
         _TextTab(
-          label: 'Toutes',
+          label: 'Cabine',
           selected: selectedResourceId == null,
           onTap: () => onChanged(null),
         ),
         for (final resource in resources)
-          _CabinTab(
-            label: resource.name,
+          _TextTab(
+            label: agendaCabinChipLabel(resource.name),
             selected: selectedResourceId == resource.id,
             onTap: () => onChanged(resource.id),
           ),
@@ -117,33 +183,6 @@ class _TextTab extends StatelessWidget {
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             color: selected ? const Color(0xFF0A0A0A) : const Color(0xFF737373),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CabinTab extends StatelessWidget {
-  const _CabinTab({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        child: Opacity(
-          opacity: selected ? 1 : 0.45,
-          child: CabinMark(label: label, size: 26),
         ),
       ),
     );

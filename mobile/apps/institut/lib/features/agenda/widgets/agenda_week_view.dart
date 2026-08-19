@@ -12,10 +12,18 @@ const int _hourEnd = 20;
 const double _slotHeight = 46;
 const double _hourColumnWidth = 34;
 
-/// Vue semaine grille horaire (7 colonnes).
-/// Sur téléphone les colonnes sont fines : chaque bloc est une pastille
-/// colorée cliquable montrant juste l'heure de début. Tap → détail complet.
-class AgendaWeekView extends ConsumerWidget {
+/// Seuil au-delà duquel on affiche les 7 jours d'un coup (tablette / iPad).
+/// En-dessous (téléphone) on montre 4 colonnes larges + scroll horizontal.
+const double _fullWeekBreakpoint = 640;
+
+/// Vue semaine grille horaire.
+///
+/// - Téléphone (< 640 px) : 4 jours visibles à la fois, scroll horizontal.
+///   Le header des jours et la grille sont scrollés en synchronisation.
+/// - Tablette/iPad (≥ 640 px) : les 7 jours occupent tout l'espace,
+///   colonnes réparties équitablement, pas de scroll horizontal.
+/// Le scroll vertical (heures) est indépendant.
+class AgendaWeekView extends ConsumerStatefulWidget {
   const AgendaWeekView({
     super.key,
     required this.anchor,
@@ -27,8 +35,53 @@ class AgendaWeekView extends ConsumerWidget {
   final String? staffFilter;
   final String? resourceFilter;
 
+  @override
+  ConsumerState<AgendaWeekView> createState() => _AgendaWeekViewState();
+}
+
+class _AgendaWeekViewState extends ConsumerState<AgendaWeekView> {
+  final _verticalCtrl = ScrollController();
+  final _headerCtrl = ScrollController();
+  final _gridCtrl = ScrollController();
+  bool _syncing = false;
+
   static const _line = Color(0xFFE8E8E8);
   static const _muted = Color(0xFF737373);
+
+  @override
+  void initState() {
+    super.initState();
+    _headerCtrl.addListener(_syncFromHeader);
+    _gridCtrl.addListener(_syncFromGrid);
+  }
+
+  @override
+  void dispose() {
+    _headerCtrl.removeListener(_syncFromHeader);
+    _gridCtrl.removeListener(_syncFromGrid);
+    _headerCtrl.dispose();
+    _gridCtrl.dispose();
+    _verticalCtrl.dispose();
+    super.dispose();
+  }
+
+  void _syncFromHeader() {
+    if (_syncing) return;
+    if (!_gridCtrl.hasClients) return;
+    if (_gridCtrl.offset == _headerCtrl.offset) return;
+    _syncing = true;
+    _gridCtrl.jumpTo(_headerCtrl.offset);
+    _syncing = false;
+  }
+
+  void _syncFromGrid() {
+    if (_syncing) return;
+    if (!_headerCtrl.hasClients) return;
+    if (_headerCtrl.offset == _gridCtrl.offset) return;
+    _syncing = true;
+    _headerCtrl.jumpTo(_gridCtrl.offset);
+    _syncing = false;
+  }
 
   DateTime _mondayOf(DateTime d) {
     final day = DateTime(d.year, d.month, d.day);
@@ -36,14 +89,21 @@ class AgendaWeekView extends ConsumerWidget {
   }
 
   bool _matches(DayAppointment a) {
-    if (staffFilter != null && a.staffId != staffFilter) return false;
-    if (resourceFilter != null && a.resourceId != resourceFilter) return false;
+    if (widget.staffFilter != null && a.staffId != widget.staffFilter) {
+      return false;
+    }
+    if (widget.resourceFilter != null && a.resourceId != widget.resourceFilter) {
+      return false;
+    }
     return true;
   }
 
+  String _dateKey(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final monday = _mondayOf(anchor);
+  Widget build(BuildContext context) {
+    final monday = _mondayOf(widget.anchor);
     final sunday = monday.add(const Duration(days: 6));
     final rangeAsync = ref.watch(
       agendaRangeProvider(AgendaRangeArgs(from: monday, to: sunday)),
@@ -76,59 +136,88 @@ class AgendaWeekView extends ConsumerWidget {
         }
         final gridHeight = (_hourEnd - _hourStart) * _slotHeight;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _WeekHeader(
-              days: days,
-              selectedDate: selectedDate,
-              today: today,
-              onSelect: (d) {
-                ref.read(selectedAgendaDateProvider.notifier).state = d;
-                ref.read(agendaViewModeProvider.notifier).state =
-                    AgendaViewMode.day;
-              },
-            ),
-            const Divider(height: 1, color: _line),
-            Expanded(
-              child: SingleChildScrollView(
-                child: SizedBox(
-                  height: gridHeight,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _HourColumn(),
-                      Expanded(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (final day in days)
-                              Expanded(
-                                child: _DayColumn(
-                                  day: day,
-                                  today: today,
-                                  appointments:
-                                      byDay[_dateKey(day)] ?? const [],
-                                  onTapAppointment: (a) =>
-                                      showAppointmentDetailSheet(context, ref, a),
-                                ),
+        return LayoutBuilder(builder: (context, constraints) {
+          final availableWidth = constraints.maxWidth - _hourColumnWidth;
+          final isTablet = constraints.maxWidth >= _fullWeekBreakpoint;
+          // Téléphone : 4 colonnes visibles, chaque colonne = un quart de
+          // l'espace disponible. Tablette : toutes visibles.
+          final visibleDays = isTablet ? 7 : 4;
+          final dayColumnWidth = availableWidth / visibleDays;
+          final totalDaysWidth = dayColumnWidth * 7;
+          final horizontalPhysics = isTablet
+              ? const NeverScrollableScrollPhysics()
+              : const ClampingScrollPhysics();
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _WeekHeader(
+                days: days,
+                selectedDate: selectedDate,
+                today: today,
+                controller: _headerCtrl,
+                physics: horizontalPhysics,
+                dayColumnWidth: dayColumnWidth,
+                onSelect: (d) {
+                  ref.read(selectedAgendaDateProvider.notifier).state = d;
+                  ref.read(agendaViewModeProvider.notifier).state =
+                      AgendaViewMode.day;
+                },
+              ),
+              const Divider(height: 1, color: _line),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _verticalCtrl,
+                  primary: false,
+                  child: SizedBox(
+                    height: gridHeight,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _HourColumn(),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            controller: _gridCtrl,
+                            primary: false,
+                            physics: horizontalPhysics,
+                            scrollDirection: Axis.horizontal,
+                            child: SizedBox(
+                              width: totalDaysWidth,
+                              height: gridHeight,
+                              child: Row(
+                                children: [
+                                  for (final day in days)
+                                    SizedBox(
+                                      width: dayColumnWidth,
+                                      child: _DayColumn(
+                                        day: day,
+                                        today: today,
+                                        appointments:
+                                            byDay[_dateKey(day)] ?? const [],
+                                        onTapAppointment: (a) =>
+                                            showAppointmentDetailSheet(
+                                          context,
+                                          ref,
+                                          a,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
-                          ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        );
+            ],
+          );
+        });
       },
     );
   }
-
-  String _dateKey(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
 
 class _WeekHeader extends StatelessWidget {
@@ -137,81 +226,99 @@ class _WeekHeader extends StatelessWidget {
     required this.selectedDate,
     required this.today,
     required this.onSelect,
+    required this.controller,
+    required this.physics,
+    required this.dayColumnWidth,
   });
 
   final List<DateTime> days;
   final DateTime selectedDate;
   final DateTime today;
   final ValueChanged<DateTime> onSelect;
+  final ScrollController controller;
+  final ScrollPhysics physics;
+  final double dayColumnWidth;
 
   @override
   Widget build(BuildContext context) {
     final dayFmt = DateFormat.E('fr_FR');
-    return Row(
-      children: [
-        const SizedBox(width: _hourColumnWidth),
-        Expanded(
-          child: Row(
-            children: [
-              for (final d in days)
-                Expanded(
-                  child: InkWell(
-                    onTap: () => onSelect(d),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _shortWeekday(dayFmt.format(d)),
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
-                              color: Color(0xFF737373),
+    return SizedBox(
+      height: 56,
+      child: Row(
+        children: [
+          const SizedBox(width: _hourColumnWidth),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: controller,
+              primary: false,
+              physics: physics,
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: dayColumnWidth * 7,
+                child: Row(
+                  children: [
+                    for (final d in days)
+                      SizedBox(
+                        width: dayColumnWidth,
+                        child: InkWell(
+                          onTap: () => onSelect(d),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _shortWeekday(dayFmt.format(d)),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                    color: Color(0xFF737373),
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Container(
+                                  width: 26,
+                                  height: 26,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: _sameDay(d, selectedDate)
+                                        ? const Color(0xFF0A0A0A)
+                                        : _sameDay(d, today)
+                                            ? const Color(0xFF6D28D9)
+                                            : Colors.transparent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '${d.day}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: (_sameDay(d, selectedDate) ||
+                                              _sameDay(d, today))
+                                          ? Colors.white
+                                          : const Color(0xFF0A0A0A),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 3),
-                          Container(
-                            width: 24,
-                            height: 24,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: _sameDay(d, selectedDate)
-                                  ? const Color(0xFF0A0A0A)
-                                  : _sameDay(d, today)
-                                      ? const Color(0xFF6D28D9)
-                                      : Colors.transparent,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '${d.day}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: (_sameDay(d, selectedDate) ||
-                                        _sameDay(d, today))
-                                    ? Colors.white
-                                    : const Color(0xFF0A0A0A),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   String _shortWeekday(String s) {
-    // Sur téléphone : 2 lettres majuscules ("LU", "MA"…) pour tenir sur colonne fine.
     if (s.isEmpty) return s;
-    return s.substring(0, s.length >= 2 ? 2 : 1).toUpperCase();
+    return s.substring(0, s.length >= 3 ? 3 : s.length).toUpperCase();
   }
 
   bool _sameDay(DateTime a, DateTime b) =>
@@ -398,10 +505,20 @@ class _WeekBlock extends StatelessWidget {
   final DayAppointment appointment;
   final VoidCallback onTap;
 
+  String _firstName(String full) {
+    final trimmed = full.trim();
+    if (trimmed.isEmpty) return trimmed;
+    final space = trimmed.indexOf(' ');
+    return space < 0 ? trimmed : trimmed.substring(0, space);
+  }
+
   @override
   Widget build(BuildContext context) {
     final accent = agendaAccentColor(appointment);
     final cancelled = appointment.isCancelled;
+    final local = appointment.startsAt.toLocal();
+    final timeLabel = DateFormat.Hm().format(local);
+    final firstName = _firstName(appointment.clientName);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
       child: Material(
@@ -412,11 +529,71 @@ class _WeekBlock extends StatelessWidget {
           child: Opacity(
             opacity: cancelled ? 0.55 : 1,
             child: LayoutBuilder(builder: (context, constraints) {
-              final narrow = constraints.maxWidth < 34;
-              final local = appointment.startsAt.toLocal();
-              final label = narrow
-                  ? local.hour.toString().padLeft(2, '0')
-                  : DateFormat.Hm().format(local);
+              // Palier de rendu selon la largeur disponible du bloc :
+              // - étroit (< 34 px) : juste l'heure courte "09"
+              // - moyen (< 60 px)  : heure complète "09:00"
+              // - large (>= 60 px) : heure + prénom (2 lignes possibles)
+              final w = constraints.maxWidth;
+              final h = constraints.maxHeight;
+              final Widget content;
+              if (w < 34) {
+                content = Text(
+                  local.hour.toString().padLeft(2, '0'),
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  softWrap: false,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                    color: Color(0xFF0A0A0A),
+                  ),
+                );
+              } else if (w < 60 || h < 34) {
+                content = Text(
+                  timeLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  softWrap: false,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
+                    color: Color(0xFF0A0A0A),
+                  ),
+                );
+              } else {
+                content = Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      timeLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.clip,
+                      softWrap: false,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                        color: Color(0xFF0A0A0A),
+                      ),
+                    ),
+                    if (firstName.isNotEmpty)
+                      Text(
+                        firstName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: false,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          height: 1.15,
+                          color: Color(0xFF0A0A0A),
+                        ),
+                      ),
+                  ],
+                );
+              }
               return ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: Container(
@@ -425,19 +602,8 @@ class _WeekBlock extends StatelessWidget {
                     border: Border(left: BorderSide(color: accent, width: 2.5)),
                   ),
                   alignment: Alignment.topLeft,
-                  padding: EdgeInsets.fromLTRB(narrow ? 2 : 3, 2, 2, 0),
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.clip,
-                    softWrap: false,
-                    style: TextStyle(
-                      fontSize: narrow ? 8.5 : 9.5,
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                      color: const Color(0xFF0A0A0A),
-                    ),
-                  ),
+                  padding: const EdgeInsets.fromLTRB(4, 2, 3, 2),
+                  child: content,
                 ),
               );
             }),

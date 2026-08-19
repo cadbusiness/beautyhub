@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/session_providers.dart';
+import '../../widgets/app_sheet.dart';
 
 const _black = Color(0xFF0A0A0A);
 const _muted = Color(0xFF737373);
@@ -57,18 +58,10 @@ Future<void> _showEditorSheet({
   required Widget child,
   double heightFactor = 0.88,
 }) {
-  return showModalBottomSheet<void>(
+  return showAppSheet<void>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (_) => FractionallySizedBox(
-      heightFactor: heightFactor,
-      child: child,
-    ),
+    maxHeightFactor: heightFactor,
+    builder: (_) => child,
   );
 }
 

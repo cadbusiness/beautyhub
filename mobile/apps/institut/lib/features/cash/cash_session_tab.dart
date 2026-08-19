@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../state/session_providers.dart';
+import '../../widgets/app_sheet.dart';
 import '../shared/money.dart';
 import 'session_duration.dart';
 
@@ -67,14 +68,8 @@ class _CashOpenSessionViewState extends ConsumerState<CashOpenSessionView> {
   }
 
   Future<void> _openCloseSheet() async {
-    final report = await showModalBottomSheet<String>(
+    final report = await showAppSheet<String>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) => _CloseSessionSheet(session: widget.session),
     );
     if (report != null && report.isNotEmpty && mounted) {

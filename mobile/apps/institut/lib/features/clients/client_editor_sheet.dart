@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../state/session_providers.dart';
+import '../../widgets/app_sheet.dart';
 
 const _black = Color(0xFF0A0A0A);
 const _muted = Color(0xFF737373);
@@ -15,18 +16,9 @@ Future<SavedClientResult?> showClientEditorSheet({
   required BuildContext context,
   InstClient? client,
 }) {
-  return showModalBottomSheet<SavedClientResult>(
+  return showAppSheet<SavedClientResult>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (_) => FractionallySizedBox(
-      heightFactor: 0.94,
-      child: _ClientEditorSheet(client: client),
-    ),
+    builder: (_) => _ClientEditorSheet(client: client),
   );
 }
 

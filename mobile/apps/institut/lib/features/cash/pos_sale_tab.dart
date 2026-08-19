@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/pos_cart_provider.dart';
 import '../../state/session_providers.dart';
+import '../../widgets/app_sheet.dart';
 import '../../widgets/client_picker.dart';
 import '../../widgets/new_client_form.dart';
 import '../../widgets/searchable_picker.dart';
@@ -589,14 +590,8 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   }
 
   void _openCartSheet(PosContext ctx) {
-    showModalBottomSheet<void>(
+    showAppSheet<void>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) => _CartSheet(
         ctx: ctx,
         selectedClient: _selectedClient,

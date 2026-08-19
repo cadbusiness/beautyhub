@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/session_providers.dart';
+import '../../widgets/app_sheet.dart';
 import '../shared/money.dart';
 
 enum TicketActionIntent { credit, refund, replace }
@@ -37,14 +38,8 @@ Future<TicketActionOutcome?> showSaleTicketActionsSheet({
   required BuildContext context,
   required InstSale sale,
 }) {
-  return showModalBottomSheet<TicketActionOutcome>(
+  return showAppSheet<TicketActionOutcome>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (_) => _SaleTicketActionsSheet(sale: sale),
   );
 }

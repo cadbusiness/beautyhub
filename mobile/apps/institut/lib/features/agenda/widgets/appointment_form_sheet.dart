@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../state/session_providers.dart';
+import '../../../widgets/app_sheet.dart';
 import '../../../widgets/client_picker.dart';
 import '../../../widgets/new_client_form.dart';
 import '../../../widgets/searchable_picker.dart';
@@ -16,14 +17,8 @@ Future<void> showCreateAppointmentSheet(
   DateTime? initialDate,
   TimeOfDay? initialTime,
 }) {
-  return showModalBottomSheet<void>(
+  return showAppSheet<void>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
       child: ConstrainedBox(
@@ -876,12 +871,9 @@ class _CreateAppointmentSheetState
   }
 
   Future<void> _openRecurrencePicker() async {
-    final picked = await showModalBottomSheet<String>(
+    final picked = await showAppSheet<String>(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      isScrollControlled: false,
       builder: (ctx) => SafeArea(
         top: false,
         child: Column(

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../state/session_providers.dart';
+import '../../widgets/app_sheet.dart';
 import '../shared/money.dart';
 import '../shared/sale_doc.dart';
 import 'client_editor_sheet.dart';
@@ -14,14 +15,8 @@ Future<InstClient?> showClientDetailSheet({
   required InstClient client,
   ValueChanged<InstClient>? onChanged,
 }) {
-  return showModalBottomSheet<InstClient>(
+  return showAppSheet<InstClient>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (_) => _ClientDetailSheet(client: client, onChanged: onChanged),
   );
 }

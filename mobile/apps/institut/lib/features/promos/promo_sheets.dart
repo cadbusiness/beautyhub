@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/session_providers.dart';
+import '../../widgets/app_sheet.dart';
 
 const _black = Color(0xFF0A0A0A);
 const _fill = Color(0xFFF5F5F5);
@@ -70,14 +71,8 @@ Future<bool?> showPromoSheet(
   WidgetRef ref, {
   InstPromo? promo,
 }) {
-  return showModalBottomSheet<bool>(
+  return showAppSheet<bool>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (_) => _PromoSheet(promo: promo),
   );
 }

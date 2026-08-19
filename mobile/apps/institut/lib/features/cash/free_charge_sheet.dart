@@ -2,17 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/pos_cart_provider.dart';
+import '../../widgets/app_sheet.dart';
 
 Future<bool> showFreeChargeSheet(BuildContext context, WidgetRef ref) async {
   final amount = TextEditingController();
   final label = TextEditingController();
-  final added = await showModalBottomSheet<bool>(
+  final added = await showAppSheet<bool>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
     builder: (ctx) {
       return Padding(
         padding: EdgeInsets.only(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'alphabet_index.dart';
+import 'app_sheet.dart';
 
 /// Item générique pour le picker cherchable.
 class PickerItem {
@@ -209,14 +210,8 @@ Future<PickerItem?> showSearchablePicker({
   Future<List<PickerItem>> Function(String query, {String? fromLetter})? search,
   bool showAlphabet = false,
 }) {
-  return showModalBottomSheet<PickerItem?>(
+  return showAppSheet<PickerItem?>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (ctx) => _PickerSheet(
       title: title,
       items: items,

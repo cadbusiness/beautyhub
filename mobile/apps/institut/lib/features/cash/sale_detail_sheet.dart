@@ -2,6 +2,7 @@ import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../widgets/app_sheet.dart';
 import '../shared/money.dart';
 import '../shared/sale_doc.dart';
 import 'sale_ticket_actions_sheet.dart';
@@ -12,14 +13,8 @@ Future<void> showSaleDetailSheet({
   required InstSale sale,
   Future<void> Function()? onChanged,
 }) {
-  return showModalBottomSheet<void>(
+  return showAppSheet<void>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (_) => _SaleDetailSheet(sale: sale, onChanged: onChanged),
   );
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/pos_cart_provider.dart';
+import '../../widgets/app_sheet.dart';
 import '../shared/catalog_item_thumb.dart';
 import '../shared/money.dart';
 
@@ -11,13 +12,8 @@ void showCatalogItemDetailSheet(
   WidgetRef ref, {
   required PosCatalogItem item,
 }) {
-  showModalBottomSheet<void>(
+  showAppSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
     builder: (sheetContext) => Consumer(
       builder: (context, ref, _) {
         final quantity = ref.watch(posCartProvider)[item.key] ?? 0;

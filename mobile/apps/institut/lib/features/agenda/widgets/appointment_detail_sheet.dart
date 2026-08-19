@@ -10,6 +10,7 @@ import '../../../state/pos_cart_provider.dart';
 import '../../../state/session_providers.dart';
 import '../../clients/client_detail_sheet.dart';
 import '../../shared/money.dart';
+import '../../../widgets/app_sheet.dart';
 import 'appointment_edit_sheet.dart';
 
 Future<void> showAppointmentDetailSheet(
@@ -17,13 +18,8 @@ Future<void> showAppointmentDetailSheet(
   WidgetRef ref,
   DayAppointment appointment,
 ) {
-  return showModalBottomSheet<void>(
+  return showAppSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (ctx) => _AppointmentDetailSheet(appointment: appointment),
   );
 }
@@ -169,12 +165,186 @@ class _AppointmentDetailSheetState
     final email = a.clientEmail?.trim();
     final hasClient = a.clientId != null && a.clientId!.isNotEmpty;
 
+    final tablet = MediaQuery.sizeOf(context).shortestSide >= 600;
+    final details = <Widget>[
+      Text(
+        a.clientName,
+        style: TextStyle(
+          fontSize: tablet ? 26 : 22,
+          fontWeight: FontWeight.w700,
+          color: _black,
+          decoration: cancelled ? TextDecoration.lineThrough : null,
+        ),
+      ),
+      const SizedBox(height: 6),
+      Text(
+        a.serviceName,
+        style: const TextStyle(fontSize: 15, color: _muted),
+      ),
+      if (a.extras.isNotEmpty) ...[
+        const SizedBox(height: 4),
+        Text(
+          a.extras
+              .map(
+                (e) => e.quantity > 1 ? '${e.name} ×${e.quantity}' : e.name,
+              )
+              .join(' · '),
+          style: const TextStyle(fontSize: 13, color: _muted),
+        ),
+      ],
+      const SizedBox(height: 16),
+      _DetailRow(
+        icon: Icons.schedule_outlined,
+        label:
+            '${dateFmt.format(a.startsAt)} · ${timeFmt.format(a.startsAt)} – ${timeFmt.format(a.endsAt)}',
+      ),
+      if (a.resourceName != null)
+        _DetailRow(
+          icon: Icons.meeting_room_outlined,
+          label: a.resourceName!,
+        ),
+      if (a.staffName != null)
+        _DetailRow(
+          icon: Icons.person_outline,
+          label: a.staffName!,
+        ),
+      if (phone != null && phone.isNotEmpty)
+        _ContactRow(
+          icon: Icons.phone_outlined,
+          label: phone,
+          actions: [
+            _ContactAction(
+              icon: Icons.call_outlined,
+              tooltip: 'Appeler',
+              onTap: () => _launch(Uri.parse('tel:${_digits(phone)}')),
+            ),
+            _ContactAction(
+              icon: Icons.sms_outlined,
+              tooltip: 'SMS',
+              onTap: () => _launch(Uri.parse('sms:${_digits(phone)}')),
+            ),
+            _ContactAction(
+              icon: Icons.copy_outlined,
+              tooltip: 'Copier',
+              onTap: () => _copy(phone, 'Numéro'),
+            ),
+          ],
+        ),
+      if (email != null && email.isNotEmpty)
+        _ContactRow(
+          icon: Icons.mail_outline,
+          label: email,
+          actions: [
+            _ContactAction(
+              icon: Icons.send_outlined,
+              tooltip: 'Écrire',
+              onTap: () => _launch(Uri.parse('mailto:$email')),
+            ),
+            _ContactAction(
+              icon: Icons.copy_outlined,
+              tooltip: 'Copier',
+              onTap: () => _copy(email, 'E-mail'),
+            ),
+          ],
+        ),
+      if (a.priceCents != null && a.priceCents! > 0)
+        _DetailRow(
+          icon: Icons.euro_outlined,
+          label: formatEuros(a.priceCents!),
+        ),
+      _DetailRow(
+        icon: Icons.flag_outlined,
+        label: _statusLabel(a.status),
+      ),
+      if (a.notes != null && a.notes!.isNotEmpty) ...[
+        const SizedBox(height: 4),
+        Text(
+          a.notes!,
+          style: const TextStyle(fontSize: 14, color: _muted, height: 1.4),
+        ),
+      ],
+      if (_error != null) ...[
+        const SizedBox(height: 12),
+        Text(_error!, style: const TextStyle(color: Colors.red)),
+      ],
+    ];
+    final actions = <Widget>[
+      if (hasClient)
+        OutlinedButton.icon(
+          onPressed: _openingClient ? null : _openClient,
+          icon: _openingClient
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.person_outline, size: 18),
+          label: const Text('Fiche cliente'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _black,
+            side: const BorderSide(color: Color(0xFFE8E8E8)),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+        ),
+      if (!cancelled && a.status != 'completed') ...[
+        if (hasClient) const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _updating ? null : _editAppointment,
+          icon: const Icon(Icons.event_repeat_outlined, size: 18),
+          label: const Text('Modifier / reprogrammer'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _black,
+            side: const BorderSide(color: Color(0xFFE8E8E8)),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+        ),
+        const SizedBox(height: 8),
+        FilledButton(
+          onPressed: _updating ? null : _openCheckout,
+          child: const Text('Encaisser'),
+        ),
+      ],
+      if (!cancelled) ...[
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            if (a.status != 'confirmed' && a.status != 'completed')
+              _ActionChip(
+                label: 'Confirmer',
+                loading: _updating,
+                onTap: () => _setStatus('confirmed'),
+              ),
+            if (a.status != 'completed')
+              _ActionChip(
+                label: 'Terminer',
+                loading: _updating,
+                onTap: () => _setStatus('completed'),
+              ),
+            if (a.status != 'cancelled')
+              _ActionChip(
+                label: 'Annuler',
+                loading: _updating,
+                onTap: () => _setStatus('cancelled'),
+              ),
+            if (a.status != 'no_show' && a.status != 'completed')
+              _ActionChip(
+                label: 'Absent',
+                loading: _updating,
+                onTap: () => _setStatus('no_show'),
+              ),
+          ],
+        ),
+      ],
+    ];
+
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-          24,
+          tablet ? 36 : 24,
           12,
-          24,
+          tablet ? 36 : 24,
           24 + MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: SingleChildScrollView(
@@ -193,176 +363,31 @@ class _AppointmentDetailSheetState
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                a.clientName,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: _black,
-                  decoration: cancelled ? TextDecoration.lineThrough : null,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                a.serviceName,
-                style: const TextStyle(fontSize: 15, color: _muted),
-              ),
-              if (a.extras.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  a.extras
-                      .map(
-                        (e) => e.quantity > 1
-                            ? '${e.name} ×${e.quantity}'
-                            : e.name,
-                      )
-                      .join(' · '),
-                  style: const TextStyle(fontSize: 13, color: _muted),
-                ),
-              ],
-              const SizedBox(height: 16),
-              _DetailRow(
-                icon: Icons.schedule_outlined,
-                label:
-                    '${dateFmt.format(a.startsAt)} · ${timeFmt.format(a.startsAt)} – ${timeFmt.format(a.endsAt)}',
-              ),
-              if (a.resourceName != null)
-                _DetailRow(
-                  icon: Icons.meeting_room_outlined,
-                  label: a.resourceName!,
-                ),
-              if (a.staffName != null)
-                _DetailRow(
-                  icon: Icons.person_outline,
-                  label: a.staffName!,
-                ),
-              if (phone != null && phone.isNotEmpty)
-                _ContactRow(
-                  icon: Icons.phone_outlined,
-                  label: phone,
-                  actions: [
-                    _ContactAction(
-                      icon: Icons.call_outlined,
-                      tooltip: 'Appeler',
-                      onTap: () => _launch(Uri.parse('tel:${_digits(phone)}')),
-                    ),
-                    _ContactAction(
-                      icon: Icons.sms_outlined,
-                      tooltip: 'SMS',
-                      onTap: () => _launch(Uri.parse('sms:${_digits(phone)}')),
-                    ),
-                    _ContactAction(
-                      icon: Icons.copy_outlined,
-                      tooltip: 'Copier',
-                      onTap: () => _copy(phone, 'Numéro'),
-                    ),
-                  ],
-                ),
-              if (email != null && email.isNotEmpty)
-                _ContactRow(
-                  icon: Icons.mail_outline,
-                  label: email,
-                  actions: [
-                    _ContactAction(
-                      icon: Icons.send_outlined,
-                      tooltip: 'Écrire',
-                      onTap: () => _launch(Uri.parse('mailto:$email')),
-                    ),
-                    _ContactAction(
-                      icon: Icons.copy_outlined,
-                      tooltip: 'Copier',
-                      onTap: () => _copy(email, 'E-mail'),
-                    ),
-                  ],
-                ),
-              if (a.priceCents != null && a.priceCents! > 0)
-                _DetailRow(
-                  icon: Icons.euro_outlined,
-                  label: formatEuros(a.priceCents!),
-                ),
-              _DetailRow(
-                icon: Icons.flag_outlined,
-                label: _statusLabel(a.status),
-              ),
-              if (a.notes != null && a.notes!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  a.notes!,
-                  style: const TextStyle(fontSize: 14, color: _muted, height: 1.4),
-                ),
-              ],
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(_error!, style: const TextStyle(color: Colors.red)),
-              ],
-              const SizedBox(height: 18),
-              if (hasClient)
-                OutlinedButton.icon(
-                  onPressed: _openingClient ? null : _openClient,
-                  icon: _openingClient
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.person_outline, size: 18),
-                  label: const Text('Fiche cliente'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _black,
-                    side: const BorderSide(color: Color(0xFFE8E8E8)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              if (!cancelled && a.status != 'completed') ...[
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: _updating ? null : _editAppointment,
-                  icon: const Icon(Icons.event_repeat_outlined, size: 18),
-                  label: const Text('Modifier / reprogrammer'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _black,
-                    side: const BorderSide(color: Color(0xFFE8E8E8)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: _updating ? null : _openCheckout,
-                  child: const Text('Encaisser'),
-                ),
-              ],
-              if (!cancelled) ...[
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+              if (tablet)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (a.status != 'confirmed' && a.status != 'completed')
-                      _ActionChip(
-                        label: 'Confirmer',
-                        loading: _updating,
-                        onTap: () => _setStatus('confirmed'),
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: details,
                       ),
-                    if (a.status != 'completed')
-                      _ActionChip(
-                        label: 'Terminer',
-                        loading: _updating,
-                        onTap: () => _setStatus('completed'),
+                    ),
+                    const SizedBox(width: 40),
+                    Expanded(
+                      flex: 4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: actions,
                       ),
-                    if (a.status != 'cancelled')
-                      _ActionChip(
-                        label: 'Annuler',
-                        loading: _updating,
-                        onTap: () => _setStatus('cancelled'),
-                      ),
-                    if (a.status != 'no_show' && a.status != 'completed')
-                      _ActionChip(
-                        label: 'Absent',
-                        loading: _updating,
-                        onTap: () => _setStatus('no_show'),
-                      ),
+                    ),
                   ],
-                ),
+                )
+              else ...[
+                ...details,
+                if (actions.isNotEmpty) const SizedBox(height: 18),
+                ...actions,
               ],
             ],
           ),

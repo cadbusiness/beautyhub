@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/session_providers.dart';
+import '../../widgets/app_sheet.dart';
 import 'loyalty_labels.dart';
 
 const _black = Color(0xFF0A0A0A);
@@ -167,14 +168,8 @@ Future<String?> showLoyaltyNameSheet(
   required String hint,
   String? initial,
 }) {
-  return showModalBottomSheet<String>(
+  return showAppSheet<String>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (_) => _NameSheet(title: title, hint: hint, initial: initial),
   );
 }
@@ -256,14 +251,8 @@ Future<bool> showLoyaltySettingsSheet(
   WidgetRef ref, {
   required InstLoyaltyProgramAdmin program,
 }) async {
-  final saved = await showModalBottomSheet<bool>(
+  final saved = await showAppSheet<bool>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (_) => _SettingsSheet(program: program),
   );
   return saved == true;
@@ -477,14 +466,8 @@ Future<bool> showLoyaltyRuleSheet(
   required bool wooConnected,
   InstLoyaltyEarnRule? rule,
 }) async {
-  final saved = await showModalBottomSheet<bool>(
+  final saved = await showAppSheet<bool>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (_) => _RuleSheet(
       programId: programId,
       wooConnected: wooConnected,
@@ -701,14 +684,8 @@ Future<bool> showLoyaltyRewardSheet(
   required List<InstLoyaltyServiceOption> services,
   InstLoyaltyRewardAdmin? reward,
 }) async {
-  final saved = await showModalBottomSheet<bool>(
+  final saved = await showAppSheet<bool>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (_) => _RewardSheet(
       programId: programId,
       services: services,

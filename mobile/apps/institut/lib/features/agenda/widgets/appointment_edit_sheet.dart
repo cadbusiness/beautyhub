@@ -4,20 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../state/session_providers.dart';
+import '../../../widgets/app_sheet.dart';
 import '../../../widgets/searchable_picker.dart';
 
 Future<bool> showEditAppointmentSheet(
   BuildContext context,
   DayAppointment appointment,
 ) async {
-  final updated = await showModalBottomSheet<bool>(
+  final updated = await showAppSheet<bool>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
       child: ConstrainedBox(

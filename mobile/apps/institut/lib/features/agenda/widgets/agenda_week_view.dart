@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../state/session_providers.dart';
+import '../../../widgets/app_sheet.dart';
 import '../agenda_colors.dart';
 import 'appointment_detail_sheet.dart';
 
@@ -474,12 +475,9 @@ class _DayColumn extends StatelessWidget {
 
   void _showOverflow(BuildContext context, List<_LayoutSlot> overflow) {
     final timeFmt = DateFormat.Hm();
-    showModalBottomSheet<void>(
+    showAppSheet<void>(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      isScrollControlled: false,
       builder: (ctx) {
         return SafeArea(
           child: Padding(

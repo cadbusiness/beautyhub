@@ -750,9 +750,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             facet.startsWith('product:') && facet != 'product:none'
                 ? facet.substring('product:'.length)
                 : null;
-        final catalog = Stack(
-          children: [
-            CustomScrollView(
+        final catalog = CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 if (!ctx.sessionOpen)
@@ -1097,7 +1095,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                   )
                 else
                   SliverPadding(
-                    padding: EdgeInsets.fromLTRB(16, 0, 16, _tablet ? 24 : 96),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
@@ -1123,78 +1121,97 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                     ),
                   ),
               ],
-            ),
-            if (cartCount > 0 && !_tablet)
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 12,
-                child: Material(
-                  elevation: 8,
-                  shadowColor: Colors.black26,
-                  borderRadius: BorderRadius.circular(14),
-                  color: _black,
-                  child: InkWell(
-                    onTap: () => _openCartSheet(ctx),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.shopping_bag_outlined,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Panier · $cartCount',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            formatEuros(_cartTotalCents(ctx, cart)),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+            );
+        if (_tablet) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: catalog),
+              DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    left: BorderSide(color: Color(0xFFE8E8E8)),
                   ),
                 ),
-              ),
-          ],
-        );
-        if (!_tablet) return catalog;
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: catalog),
-            DecoratedBox(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  left: BorderSide(color: Color(0xFFE8E8E8)),
+                child: SizedBox(
+                  width: 400,
+                  child: _cartPanel(ctx, embedded: true),
                 ),
               ),
-              child: SizedBox(
-                width: 400,
-                child: _cartPanel(ctx, embedded: true),
+            ],
+          );
+        }
+        return Column(
+          children: [
+            Expanded(child: catalog),
+            if (cartCount > 0)
+              _DockedCartBar(
+                count: cartCount,
+                totalLabel: formatEuros(_cartTotalCents(ctx, cart)),
+                onTap: () => _openCartSheet(ctx),
               ),
-            ),
           ],
         );
       },
+    );
+  }
+}
+
+class _DockedCartBar extends StatelessWidget {
+  const _DockedCartBar({
+    required this.count,
+    required this.totalLabel,
+    required this.onTap,
+  });
+
+  final int count;
+  final String totalLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: _PosSaleTabState._black,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.shopping_bag_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Panier · $count',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                totalLabel,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.keyboard_arrow_up_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

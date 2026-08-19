@@ -45,8 +45,27 @@ export function AppointmentPopover({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const top = Math.min(anchorRect.bottom + 8, window.innerHeight - 320);
-  const left = Math.min(anchorRect.left, window.innerWidth - 340);
+  const popoverWidth = 320;
+  const popoverHeight = 360;
+  const gap = 8;
+  const viewportW = typeof window !== "undefined" ? window.innerWidth : 1024;
+  const viewportH = typeof window !== "undefined" ? window.innerHeight : 768;
+
+  const spaceRight = viewportW - anchorRect.right;
+  const spaceLeft = anchorRect.left;
+  let left: number;
+  if (spaceRight >= popoverWidth + gap + 16) {
+    left = anchorRect.right + gap;
+  } else if (spaceLeft >= popoverWidth + gap + 16) {
+    left = anchorRect.left - gap - popoverWidth;
+  } else {
+    left = Math.max(16, viewportW - popoverWidth - 16);
+  }
+
+  let top = anchorRect.top;
+  if (top + popoverHeight > viewportH - 16) {
+    top = Math.max(16, viewportH - popoverHeight - 16);
+  }
   const timeRange = `${format.dateTime(new Date(appt.starts_at), {
     hour: "2-digit",
     minute: "2-digit",
@@ -69,7 +88,7 @@ export function AppointmentPopover({
       <div
         ref={ref}
         className="fixed z-50 w-[min(100vw-2rem,320px)] rounded-xl border border-slate-200 bg-white p-4 shadow-xl"
-        style={{ top, left }}
+        style={{ top, left, maxHeight: `calc(100vh - 32px)`, overflowY: "auto" }}
       >
         <div className="mb-3 border-b border-slate-100 pb-3">
           <p className="font-semibold text-slate-900">

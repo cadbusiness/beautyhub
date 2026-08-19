@@ -34,6 +34,8 @@ export function AppointmentBlock({
   appt,
   columnId,
   columnKind,
+  laneIndex = 0,
+  laneCount = 1,
   onSelect,
   onMoveEnd,
   disabled,
@@ -41,6 +43,8 @@ export function AppointmentBlock({
   appt: CalendarAppointment;
   columnId: string;
   columnKind: ColumnKind;
+  laneIndex?: number;
+  laneCount?: number;
   onSelect: (appt: CalendarAppointment, el: HTMLElement) => void;
   onMoveEnd?: (payload: MovePayload) => void;
   disabled?: boolean;
@@ -62,6 +66,11 @@ export function AppointmentBlock({
 
   const displayTop = dragTop ?? top;
   const showDetails = height >= SLOT_PX * 3;
+  const compact = height < SLOT_PX * 2;
+
+  const laneWidthPct = 100 / Math.max(1, laneCount);
+  const laneLeftPct = laneWidthPct * laneIndex;
+  const hasLanes = laneCount > 1;
   const timeRange = `${format.dateTime(new Date(appt.starts_at), {
     hour: "2-digit",
     minute: "2-digit",
@@ -152,6 +161,11 @@ export function AppointmentBlock({
     onMoveEnd?.(payload);
   }
 
+  const startTime = format.dateTime(new Date(appt.starts_at), {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
     <button
       type="button"
@@ -163,27 +177,43 @@ export function AppointmentBlock({
         setDragTop(null);
       }}
       className={cn(
-        "absolute left-1 right-1 z-10 overflow-hidden rounded-md border border-slate-200 bg-white px-2 py-1 text-left text-xs shadow-sm transition-shadow hover:shadow-md",
+        "absolute z-[5] overflow-hidden rounded-md border border-slate-200 bg-white text-left text-xs shadow-sm transition-shadow hover:shadow-md hover:z-[15]",
+        compact ? "px-1.5 py-0.5" : "px-2 py-1",
         cancelled && "opacity-50",
-        dragTop !== null && "z-20 ring-2 ring-slate-400",
+        dragTop !== null && "z-30 ring-2 ring-slate-400",
       )}
       style={{
         top: displayTop,
         height,
+        left: hasLanes ? `calc(${laneLeftPct}% + 2px)` : 4,
+        width: hasLanes ? `calc(${laneWidthPct}% - 3px)` : "calc(100% - 8px)",
         borderLeftWidth: 3,
         borderLeftColor: color,
       }}
     >
-      <p className="truncate font-medium text-slate-900">{timeRange}</p>
-      <p className="truncate text-slate-800">{appt.service?.name ?? t("appointmentShort")}</p>
-      {showDetails ? (
+      {compact ? (
+        <p className="truncate text-[11px] leading-tight text-slate-800">
+          <span className="font-medium text-slate-900">{startTime}</span>
+          <span className="ml-1 text-slate-600">
+            {appt.service?.name ?? t("appointmentShort")}
+          </span>
+        </p>
+      ) : (
         <>
-          <p className="truncate text-slate-600">
-            {appt.client?.full_name ?? appt.client?.email ?? t("noClient")}
+          <p className="truncate font-medium text-slate-900">{timeRange}</p>
+          <p className="truncate text-slate-800">
+            {appt.service?.name ?? t("appointmentShort")}
           </p>
-          <p className="truncate text-[10px] text-slate-500">{statusLabel}</p>
+          {showDetails ? (
+            <>
+              <p className="truncate text-slate-600">
+                {appt.client?.full_name ?? appt.client?.email ?? t("noClient")}
+              </p>
+              <p className="truncate text-[10px] text-slate-500">{statusLabel}</p>
+            </>
+          ) : null}
         </>
-      ) : null}
+      )}
     </button>
   );
 }

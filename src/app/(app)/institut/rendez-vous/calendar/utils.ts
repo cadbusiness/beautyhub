@@ -1,4 +1,4 @@
-import type { CalendarViewMode } from "./types";
+import type { CalendarAppointment, CalendarViewMode } from "./types";
 import { HOUR_END, HOUR_START, SLOT_MINUTES, SLOT_PX } from "./types";
 
 export { parseDateOnly, todayDateString } from "@/lib/date";
@@ -105,4 +105,65 @@ export function isSameDay(a: Date, b: Date): boolean {
 
 export function accentColor(appt: { service?: { color?: string | null } | null }): string {
   return appt.service?.color ?? "#64748b";
+}
+
+export type OverlapLayout = {
+  appt: CalendarAppointment;
+  laneIndex: number;
+  laneCount: number;
+};
+
+/**
+ * Place appointments in parallel lanes when they overlap in time.
+ * Groups appointments that share any overlap into a "cluster", then assigns
+ * each appt to the lowest available lane inside its cluster. Every appt of
+ * the same cluster gets the same laneCount so blocks share the column width.
+ */
+export function computeOverlapLayout(appts: CalendarAppointment[]): OverlapLayout[] {
+  if (appts.length === 0) return [];
+  const items = appts
+    .map((a, idx) => ({
+      appt: a,
+      idx,
+      start: new Date(a.starts_at).getTime(),
+      end: new Date(a.ends_at).getTime(),
+    }))
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+
+  const clusters: (typeof items)[] = [];
+  let current: typeof items = [];
+  let currentEnd = -Infinity;
+
+  for (const it of items) {
+    if (current.length === 0 || it.start < currentEnd) {
+      current.push(it);
+      currentEnd = Math.max(currentEnd, it.end);
+    } else {
+      clusters.push(current);
+      current = [it];
+      currentEnd = it.end;
+    }
+  }
+  if (current.length) clusters.push(current);
+
+  const result: OverlapLayout[] = [];
+  for (const cluster of clusters) {
+    const laneEnd: number[] = [];
+    const assign: { item: (typeof items)[number]; lane: number }[] = [];
+    for (const it of cluster) {
+      let lane = laneEnd.findIndex((end) => end <= it.start);
+      if (lane === -1) {
+        lane = laneEnd.length;
+        laneEnd.push(it.end);
+      } else {
+        laneEnd[lane] = it.end;
+      }
+      assign.push({ item: it, lane });
+    }
+    const laneCount = laneEnd.length;
+    for (const a of assign) {
+      result.push({ appt: a.item.appt, laneIndex: a.lane, laneCount });
+    }
+  }
+  return result;
 }

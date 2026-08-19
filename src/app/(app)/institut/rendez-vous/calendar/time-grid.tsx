@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { StaffAvatar } from "@/components/ui/staff-avatar";
 import type { CalendarAppointment } from "./types";
 import { HOUR_END, HOUR_START, SLOT_MINUTES, SLOT_PX } from "./types";
-import { gridHeightPx, slotCount } from "./utils";
+import { computeOverlapLayout, gridHeightPx, slotCount } from "./utils";
 import { AppointmentBlock } from "./appointment-block";
 
 export type ColumnKind = "staff" | "resource" | "day";
@@ -71,7 +71,9 @@ export function TimeGrid({
                 <span className="truncate">{c.label}</span>
               </span>
             ) : (
-              <span className="text-center">{c.label}</span>
+              <span className="block truncate text-center" title={c.label}>
+                {c.label}
+              </span>
             )}
           </div>
         ))}
@@ -106,19 +108,21 @@ export function TimeGrid({
                 style={{ height: SLOT_PX }}
               />
             ))}
-            {appointments
-              .filter((a) => matchColumn(a, col.id))
-              .map((a) => (
-                <AppointmentBlock
-                  key={a.id}
-                  appt={a}
-                  columnId={col.id}
-                  columnKind={columnKind}
-                  onSelect={onSelect}
-                  onMoveEnd={onMove}
-                  disabled={movePending}
-                />
-              ))}
+            {computeOverlapLayout(
+              appointments.filter((a) => matchColumn(a, col.id)),
+            ).map(({ appt, laneIndex, laneCount }) => (
+              <AppointmentBlock
+                key={appt.id}
+                appt={appt}
+                columnId={col.id}
+                columnKind={columnKind}
+                laneIndex={laneIndex}
+                laneCount={laneCount}
+                onSelect={onSelect}
+                onMoveEnd={onMove}
+                disabled={movePending}
+              />
+            ))}
           </div>
         ))}
       </div>

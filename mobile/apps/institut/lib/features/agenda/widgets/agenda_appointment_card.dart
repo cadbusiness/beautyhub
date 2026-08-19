@@ -2,6 +2,7 @@ import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../shared/cabin_badge.dart';
 import '../../shared/money.dart';
 
 class AgendaAppointmentCard extends StatelessWidget {
@@ -9,10 +10,12 @@ class AgendaAppointmentCard extends StatelessWidget {
     super.key,
     required this.appointment,
     required this.onTap,
+    this.showTime = true,
   });
 
   final DayAppointment appointment;
   final VoidCallback onTap;
+  final bool showTime;
 
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
@@ -45,99 +48,182 @@ class AgendaAppointmentCard extends StatelessWidget {
     final timeFmt = DateFormat.Hm();
     final accent = _accentColor();
     final cancelled = appointment.isCancelled;
+    final serviceLine = [
+      appointment.serviceName,
+      if (appointment.durationLabel.isNotEmpty) appointment.durationLabel,
+      if (appointment.staffName != null) appointment.staffName!,
+    ].join(' · ');
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-      child: Material(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE8E8E8)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  width: 4,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(14),
-                    ),
-                  ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE8E8E8)),
+          ),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 4,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: BorderRadius.circular(99),
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              timeFmt.format(appointment.startsAt),
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: _black,
-                                decoration: cancelled
-                                    ? TextDecoration.lineThrough
-                                    : null,
+                        if (showTime) ...[
+                          Text(
+                            timeFmt.format(appointment.startsAt),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: _black,
+                              decoration: cancelled
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        if (appointment.resourceName != null)
+                          Flexible(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: CabinBadge(
+                                label: appointment.resourceName!,
+                                compact: true,
                               ),
                             ),
-                            const Spacer(),
-                            _StatusPill(
-                              label: _statusLabel(appointment.status),
-                              status: appointment.status,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          appointment.clientName,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: _black,
-                            decoration: cancelled
-                                ? TextDecoration.lineThrough
-                                : null,
+                          )
+                        else
+                          const Spacer(),
+                        if (appointment.status != 'booked')
+                          _StatusPill(
+                            label: _statusLabel(appointment.status),
+                            status: appointment.status,
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          [
-                            appointment.serviceName,
-                            if (appointment.staffName != null)
-                              appointment.staffName!,
-                          ].join(' · '),
-                          style: const TextStyle(fontSize: 13, color: _muted),
-                        ),
-                        if (appointment.priceCents != null &&
-                            appointment.priceCents! > 0) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            formatEuros(appointment.priceCents!),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: _black,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      appointment.clientName,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: _black,
+                        decoration: cancelled
+                            ? TextDecoration.lineThrough
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      serviceLine,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, color: _muted),
+                    ),
+                    if (appointment.priceCents != null &&
+                        appointment.priceCents! > 0) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        formatEuros(appointment.priceCents!),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _black,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AgendaTimeGroup extends StatelessWidget {
+  const AgendaTimeGroup({
+    super.key,
+    required this.group,
+    required this.onTap,
+  });
+
+  final AppointmentTimeGroup group;
+  final ValueChanged<DayAppointment> onTap;
+
+  static const _black = Color(0xFF0A0A0A);
+  static const _muted = Color(0xFF737373);
+
+  @override
+  Widget build(BuildContext context) {
+    final timeFmt = DateFormat.Hm();
+    final parallel = group.isParallel;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 48,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  timeFmt.format(group.startsAt),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _black,
                   ),
                 ),
+                if (parallel) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '${group.appointments.length} cab.',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _muted,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-        ),
+          Expanded(
+            child: Column(
+              children: [
+                for (var i = 0; i < group.appointments.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 8),
+                  AgendaAppointmentCard(
+                    appointment: group.appointments[i],
+                    showTime: false,
+                    onTap: () => onTap(group.appointments[i]),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

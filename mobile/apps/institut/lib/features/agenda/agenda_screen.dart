@@ -27,15 +27,20 @@ class AgendaScreen extends ConsumerWidget {
   List<DayAppointment> _filterAppointments(
     List<DayAppointment> appointments,
     String? staffId,
+    String? resourceId,
   ) {
-    if (staffId == null) return appointments;
-    return appointments.where((a) => a.staffId == staffId).toList();
+    return appointments.where((a) {
+      if (staffId != null && a.staffId != staffId) return false;
+      if (resourceId != null && a.resourceId != resourceId) return false;
+      return true;
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDate = ref.watch(selectedAgendaDateProvider);
     final staffFilter = ref.watch(selectedStaffFilterProvider);
+    final resourceFilter = ref.watch(selectedResourceFilterProvider);
     final dayAsync = ref.watch(dayAgendaProvider);
 
     return Scaffold(
@@ -57,28 +62,73 @@ class AgendaScreen extends ConsumerWidget {
           await ref.read(dayAgendaProvider.future);
         },
         child: dayAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => ListView(
+          loading: () => CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              _AgendaHeader(
-                selectedDate: selectedDate,
-                onPrevious: () {},
-                onNext: () {},
-                onToday: () {},
+            slivers: [
+              SliverFillRemaining(
+                child: Column(
+                  children: [
+                    SafeArea(
+                      bottom: false,
+                      child: _AgendaHeader(
+                        selectedDate: selectedDate,
+                        onPrevious: () {},
+                        onNext: () {},
+                        onToday: () {},
+                      ),
+                    ),
+                    const Expanded(
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ],
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text('$e', textAlign: TextAlign.center),
+            ],
+          ),
+          error: (e, _) => CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Column(
+                  children: [
+                    SafeArea(
+                      bottom: false,
+                      child: _AgendaHeader(
+                        selectedDate: selectedDate,
+                        onPrevious: () {},
+                        onNext: () {},
+                        onToday: () {},
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(
+                            'Impossible de charger l’agenda.\n$e',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: _muted),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
           data: (day) {
-            final filtered =
-                _filterAppointments(day.appointments, staffFilter);
+            final filtered = _filterAppointments(
+              day.appointments,
+              staffFilter,
+              resourceFilter,
+            );
+            final groups = groupAppointmentsByStart(filtered);
             final weekDays = day.weekDays
                 .map((d) => (date: d.date, count: d.count))
                 .toList();
+            final hasFilter = staffFilter != null || resourceFilter != null;
 
             return CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -136,13 +186,29 @@ class AgendaScreen extends ConsumerWidget {
                                 .state = id;
                           },
                         ),
+                        if (day.resources.length > 1) ...[
+                          const SizedBox(height: 8),
+                          AgendaResourceFilter(
+                            resources: day.resources,
+                            selectedResourceId: resourceFilter,
+                            onChanged: (id) {
+                              ref
+                                  .read(
+                                    selectedResourceFilterProvider.notifier,
+                                  )
+                                  .state = id;
+                            },
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Row(
                             children: [
                               Text(
-                                '${filtered.length} rendez-vous',
+                                filtered.length == 1
+                                    ? '1 rendez-vous'
+                                    : '${filtered.length} rendez-vous',
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
@@ -150,12 +216,18 @@ class AgendaScreen extends ConsumerWidget {
                                 ),
                               ),
                               const Spacer(),
-                              if (staffFilter != null)
+                              if (hasFilter)
                                 TextButton(
                                   onPressed: () {
                                     ref
                                         .read(
                                           selectedStaffFilterProvider.notifier,
+                                        )
+                                        .state = null;
+                                    ref
+                                        .read(
+                                          selectedResourceFilterProvider
+                                              .notifier,
                                         )
                                         .state = null;
                                   },
@@ -184,8 +256,8 @@ class AgendaScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              staffFilter != null
-                                  ? 'Aucun rendez-vous pour ce membre.'
+                              hasFilter
+                                  ? 'Aucun rendez-vous pour ce filtre.'
                                   : 'Aucun rendez-vous ce jour.',
                               textAlign: TextAlign.center,
                               style: const TextStyle(
@@ -215,17 +287,16 @@ class AgendaScreen extends ConsumerWidget {
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        final appointment = filtered[index];
-                        return AgendaAppointmentCard(
-                          appointment: appointment,
-                          onTap: () => showAppointmentDetailSheet(
+                        return AgendaTimeGroup(
+                          group: groups[index],
+                          onTap: (appointment) => showAppointmentDetailSheet(
                             context,
                             ref,
                             appointment,
                           ),
                         );
                       },
-                      childCount: filtered.length,
+                      childCount: groups.length,
                     ),
                   ),
                 const SliverToBoxAdapter(child: SizedBox(height: 88)),

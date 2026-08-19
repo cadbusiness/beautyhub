@@ -134,6 +134,11 @@ class _AppointmentDetailSheetState
               label:
                   '${dateFmt.format(a.startsAt)} · ${timeFmt.format(a.startsAt)} – ${timeFmt.format(a.endsAt)}',
             ),
+            if (a.resourceName != null)
+              _DetailRow(
+                icon: Icons.meeting_room_outlined,
+                label: a.resourceName!,
+              ),
             if (a.staffName != null)
               _DetailRow(
                 icon: Icons.person_outline,

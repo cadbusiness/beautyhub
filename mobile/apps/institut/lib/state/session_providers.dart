@@ -77,6 +77,8 @@ final selectedAgendaDateProvider = StateProvider<DateTime>((ref) {
 
 final selectedStaffFilterProvider = StateProvider<String?>((ref) => null);
 
+final selectedResourceFilterProvider = StateProvider<String?>((ref) => null);
+
 final dashboardSalesChannelProvider = StateProvider<String>((ref) => 'all');
 
 final dashboardProvider =

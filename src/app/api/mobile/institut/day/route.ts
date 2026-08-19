@@ -79,6 +79,8 @@ function serializeMobileAppointment(a: ReturnType<typeof serializeCalendarAppoin
     staffName: a.staff?.full_name ?? null,
     serviceColor: a.service?.color ?? null,
     staffColor: a.staff?.color ?? null,
+    resourceId: a.resource_id,
+    resourceName: a.resource?.name ?? null,
   };
 }
 
@@ -175,6 +177,14 @@ export async function GET(request: Request) {
       color: s.color,
     }));
 
+    const resources = [
+      ...new Map(
+        appointments
+          .filter((a) => a.resourceId && a.resourceName)
+          .map((a) => [a.resourceId, { id: a.resourceId, name: a.resourceName }]),
+      ).values(),
+    ];
+
     return Response.json({
       date,
       tenant: {
@@ -184,6 +194,7 @@ export async function GET(request: Request) {
       },
       stats: computeDayStats(appointments),
       staff,
+      resources,
       weekDays,
       nextAppointment: next,
       appointments,

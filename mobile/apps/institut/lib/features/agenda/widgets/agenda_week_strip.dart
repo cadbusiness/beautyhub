@@ -33,7 +33,7 @@ class AgendaWeekStrip extends StatelessWidget {
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
     return SizedBox(
-      height: 72,
+      height: 78,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -68,6 +68,7 @@ class AgendaWeekStrip extends StatelessWidget {
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       label.toUpperCase(),

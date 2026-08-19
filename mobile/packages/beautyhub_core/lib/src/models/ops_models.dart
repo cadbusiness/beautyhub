@@ -39,6 +39,8 @@ class DayAppointment {
     this.serviceDurationMin,
     this.staffId,
     this.staffColor,
+    this.resourceId,
+    this.resourceName,
   });
 
   final String id;
@@ -57,8 +59,23 @@ class DayAppointment {
   final int? serviceDurationMin;
   final String? staffId;
   final String? staffColor;
+  final String? resourceId;
+  final String? resourceName;
 
   bool get isCancelled => status == 'cancelled' || status == 'no_show';
+
+  int get durationMinutes {
+    if (serviceDurationMin != null && serviceDurationMin! > 0) {
+      return serviceDurationMin!;
+    }
+    final minutes = endsAt.difference(startsAt).inMinutes;
+    return minutes > 0 ? minutes : 0;
+  }
+
+  String get durationLabel {
+    final minutes = durationMinutes;
+    return minutes > 0 ? "$minutes'" : '';
+  }
 
   factory DayAppointment.fromJson(Map<String, dynamic> json) {
     return DayAppointment(
@@ -78,8 +95,80 @@ class DayAppointment {
       serviceDurationMin: json['serviceDurationMin'] as int?,
       staffId: json['staffId'] as String?,
       staffColor: json['staffColor'] as String?,
+      resourceId: json['resourceId'] as String?,
+      resourceName: json['resourceName'] as String?,
     );
   }
+}
+
+class AppointmentTimeGroup {
+  const AppointmentTimeGroup({
+    required this.startsAt,
+    required this.appointments,
+  });
+
+  final DateTime startsAt;
+  final List<DayAppointment> appointments;
+
+  bool get isParallel => appointments.length > 1;
+}
+
+String appointmentStartKey(DateTime startsAt) {
+  return '${startsAt.year.toString().padLeft(4, '0')}-'
+      '${startsAt.month.toString().padLeft(2, '0')}-'
+      '${startsAt.day.toString().padLeft(2, '0')} '
+      '${startsAt.hour.toString().padLeft(2, '0')}:'
+      '${startsAt.minute.toString().padLeft(2, '0')}';
+}
+
+List<AppointmentTimeGroup> groupAppointmentsByStart(
+  List<DayAppointment> appointments,
+) {
+  final groups = <String, AppointmentTimeGroup>{};
+  final order = <String>[];
+  for (final appointment in appointments) {
+    final key = appointmentStartKey(appointment.startsAt);
+    final existing = groups[key];
+    if (existing == null) {
+      groups[key] = AppointmentTimeGroup(
+        startsAt: appointment.startsAt,
+        appointments: [appointment],
+      );
+      order.add(key);
+    } else {
+      existing.appointments.add(appointment);
+    }
+  }
+  return [for (final key in order) groups[key]!];
+}
+
+/// Prochain créneau (et les RDV qui démarrent à la même minute, cabines différentes).
+List<DayAppointment> nextParallelAppointments(
+  List<DayAppointment> appointments, {
+  DateTime? now,
+  DayAppointment? hint,
+}) {
+  final moment = now ?? DateTime.now();
+  final horizon = moment.subtract(const Duration(minutes: 30));
+  final upcoming = appointments.where((a) {
+    if (a.isCancelled) return false;
+    if (hint != null && appointmentStartKey(a.startsAt) == appointmentStartKey(hint.startsAt)) {
+      return true;
+    }
+    return !a.endsAt.isBefore(moment) || !a.startsAt.isBefore(horizon);
+  }).toList()
+    ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
+
+  if (upcoming.isEmpty) return const [];
+
+  final anchor = hint != null &&
+          upcoming.any((a) => a.id == hint.id)
+      ? hint.startsAt
+      : upcoming.first.startsAt;
+  final key = appointmentStartKey(anchor);
+  return upcoming
+      .where((a) => appointmentStartKey(a.startsAt) == key)
+      .toList();
 }
 
 class AgendaStaffMember {
@@ -98,6 +187,23 @@ class AgendaStaffMember {
       id: json['id'] as String,
       name: json['name'] as String? ?? '',
       color: json['color'] as String?,
+    );
+  }
+}
+
+class AgendaResource {
+  const AgendaResource({
+    required this.id,
+    required this.name,
+  });
+
+  final String id;
+  final String name;
+
+  factory AgendaResource.fromJson(Map<String, dynamic> json) {
+    return AgendaResource(
+      id: json['id'] as String,
+      name: json['name'] as String? ?? '',
     );
   }
 }
@@ -160,6 +266,7 @@ class DayAgenda {
       revenueCents: 0,
     ),
     this.staff = const [],
+    this.resources = const [],
     this.weekDays = const [],
   });
 
@@ -169,6 +276,7 @@ class DayAgenda {
   final String? tenantName;
   final DayAgendaStats stats;
   final List<AgendaStaffMember> staff;
+  final List<AgendaResource> resources;
   final List<AgendaWeekDay> weekDays;
 
   factory DayAgenda.fromJson(Map<String, dynamic> json) {
@@ -178,6 +286,7 @@ class DayAgenda {
         .toList();
     final nextRaw = json['nextAppointment'];
     final staffRaw = json['staff'] as List? ?? const [];
+    final resourcesRaw = json['resources'] as List? ?? const [];
     final weekRaw = json['weekDays'] as List? ?? const [];
     return DayAgenda(
       date: json['date'] as String? ?? '',
@@ -192,6 +301,10 @@ class DayAgenda {
       staff: staffRaw
           .whereType<Map>()
           .map((e) => AgendaStaffMember.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+      resources: resourcesRaw
+          .whereType<Map>()
+          .map((e) => AgendaResource.fromJson(Map<String, dynamic>.from(e)))
           .toList(),
       weekDays: weekRaw
           .whereType<Map>()

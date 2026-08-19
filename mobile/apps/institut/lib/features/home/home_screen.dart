@@ -1,11 +1,14 @@
+import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../state/session_providers.dart';
+import '../agenda/widgets/appointment_detail_sheet.dart';
 import '../agenda/widgets/appointment_form_sheet.dart';
 import '../cash/session_duration.dart';
+import '../shared/cabin_badge.dart';
 import '../shared/money.dart';
 import '../shared/tenant_logo.dart';
 import 'widgets/dashboard_bar_chart.dart';
@@ -106,17 +109,26 @@ class HomeScreen extends ConsumerWidget {
                   loading: () => const _LoadingBlock(height: 220),
                   error: (e, _) => _ErrorBlock(message: '$e'),
                   data: (day) {
-                    final next = day.nextAppointment;
-                    if (next == null) {
+                    final nextGroup = nextParallelAppointments(
+                      day.appointments,
+                      hint: day.nextAppointment,
+                    );
+                    if (nextGroup.isEmpty) {
                       return EmptyNextAppointmentCard(
                         onNewAppointment: () =>
                             _showNewAppointmentSheet(context, ref),
                       );
                     }
                     return NextAppointmentHero(
-                      appointment: next,
+                      appointments: nextGroup,
                       onCheckout: () => _openCashSale(ref, context),
                       onAgenda: () => _openAgenda(context),
+                      onTapAppointment: (appointment) =>
+                          showAppointmentDetailSheet(
+                        context,
+                        ref,
+                        appointment,
+                      ),
                     );
                   },
                 ),
@@ -171,24 +183,61 @@ class HomeScreen extends ConsumerWidget {
                   loading: () => const SizedBox.shrink(),
                   error: (_, __) => const SizedBox.shrink(),
                   data: (day) {
-                    final next = day.nextAppointment;
+                    const previewLimit = 4;
+                    final nextGroup = nextParallelAppointments(
+                      day.appointments,
+                      hint: day.nextAppointment,
+                    );
+                    final nextIds = {for (final a in nextGroup) a.id};
+                    final now = DateTime.now();
                     final rest = day.appointments
-                        .where((a) => next == null || a.id != next.id)
+                        .where(
+                          (a) =>
+                              !nextIds.contains(a.id) &&
+                              !a.isCancelled &&
+                              !a.endsAt.isBefore(now),
+                        )
                         .toList();
                     if (rest.isEmpty) return const SizedBox.shrink();
+                    final preview = rest.take(previewLimit).toList();
+                    final remaining = rest.length - preview.length;
                     return _SectionCard(
                       title: 'Suite de la journée',
-                      subtitle: '${rest.length} rendez-vous',
+                      subtitle: rest.length == 1
+                          ? '1 rendez-vous'
+                          : '${rest.length} rendez-vous',
                       child: Column(
                         children: [
-                          for (var i = 0; i < rest.length; i++) ...[
+                          for (var i = 0; i < preview.length; i++) ...[
                             if (i > 0) const Divider(height: 1, color: _border),
                             _TimelineRow(
-                              time: timeFmt.format(rest[i].startsAt),
-                              title: rest[i].clientName,
-                              subtitle: rest[i].serviceName,
+                              appointment: preview[i],
+                              time: timeFmt.format(preview[i].startsAt),
+                              onTap: () => showAppointmentDetailSheet(
+                                context,
+                                ref,
+                                preview[i],
+                              ),
                             ),
                           ],
+                          if (remaining > 0) ...[
+                            const Divider(height: 1, color: _border),
+                            TextButton(
+                              onPressed: () => _openAgenda(context),
+                              child: Text(
+                                remaining == 1
+                                    ? 'Voir 1 autre dans l’agenda'
+                                    : 'Voir les $remaining autres dans l’agenda',
+                              ),
+                            ),
+                          ] else
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton(
+                                onPressed: () => _openAgenda(context),
+                                child: const Text('Ouvrir l’agenda'),
+                              ),
+                            ),
                         ],
                       ),
                     );
@@ -388,55 +437,83 @@ class _SectionCard extends StatelessWidget {
 
 class _TimelineRow extends StatelessWidget {
   const _TimelineRow({
+    required this.appointment,
     required this.time,
-    required this.title,
-    required this.subtitle,
+    required this.onTap,
   });
 
+  final DayAppointment appointment;
   final String time;
-  final String title;
-  final String subtitle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 48,
-            child: Text(
-              time,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: HomeScreen._black,
+    final serviceLine = [
+      appointment.serviceName,
+      if (appointment.durationLabel.isNotEmpty) appointment.durationLabel,
+      if (appointment.staffName != null) appointment.staffName!,
+    ].join(' · ');
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 48,
+              child: Text(
+                time,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: HomeScreen._black,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: HomeScreen._black,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          appointment.clientName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: HomeScreen._black,
+                          ),
+                        ),
+                      ),
+                      if (appointment.resourceName != null) ...[
+                        const SizedBox(width: 8),
+                        CabinBadge(
+                          label: appointment.resourceName!,
+                          compact: true,
+                        ),
+                      ],
+                    ],
                   ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: HomeScreen._muted,
+                  const SizedBox(height: 2),
+                  Text(
+                    serviceLine,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: HomeScreen._muted,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

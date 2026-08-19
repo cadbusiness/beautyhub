@@ -54,6 +54,48 @@ class AgendaStaffFilter extends StatelessWidget {
   }
 }
 
+class AgendaResourceFilter extends StatelessWidget {
+  const AgendaResourceFilter({
+    super.key,
+    required this.resources,
+    required this.selectedResourceId,
+    required this.onChanged,
+  });
+
+  final List<AgendaResource> resources;
+  final String? selectedResourceId;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    if (resources.length < 2) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        children: [
+          _Chip(
+            label: 'Toutes les cabines',
+            selected: selectedResourceId == null,
+            onTap: () => onChanged(null),
+          ),
+          const SizedBox(width: 8),
+          for (final resource in resources) ...[
+            _Chip(
+              label: resource.name,
+              selected: selectedResourceId == resource.id,
+              onTap: () => onChanged(resource.id),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _Chip extends StatelessWidget {
   const _Chip({
     required this.label,

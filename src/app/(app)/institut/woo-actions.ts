@@ -21,7 +21,6 @@ import {
   WooClient,
   generateWebhookCredentials,
 } from "@/lib/woocommerce";
-import { syncWooCatalogForTenant } from "@/lib/woocommerce/catalog-sync";
 
 export interface ActionResult {
   error?: string;
@@ -168,6 +167,9 @@ export async function syncWooProducts(): Promise<void> {
 async function syncWooProductsForTenant(
   tenantId: string,
 ): Promise<{ syncedCount: number; shopsCount: number }> {
+  const { syncWooCatalogForTenant } = await import(
+    "@/lib/woocommerce/catalog-sync"
+  );
   const supabase = await createClient();
   return syncWooCatalogForTenant(tenantId, supabase, supabase);
 }

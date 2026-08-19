@@ -84,15 +84,9 @@ export default async function CompteInstitutWooPage({
                     })}
                   </p>
                 ) : null}
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-slate-900">
-                    {tWoo("refreshTitle")}
-                  </h3>
-                  <p className="text-xs leading-relaxed text-slate-600">
-                    {tWoo("refreshHint")}
-                  </p>
-                  <WooConnectPanel defaultShopUrl={wooUrl} />
-                </div>
+                <p className="text-xs leading-relaxed text-slate-600">
+                  {tWoo("refreshHint")}
+                </p>
                 <form action={disconnectWoo}>
                   <Button variant="outline" type="submit" className="text-red-600">
                     {tCommon("disconnect")}

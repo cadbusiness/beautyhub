@@ -27,5 +27,12 @@ export default getRequestConfig(async () => {
     locale,
     timeZone: defaultTimeZone,
     messages: (await import(`../../messages/${locale}.json`)).default,
+    onError(error) {
+      if (error.code === "MISSING_MESSAGE") return;
+      console.error(error);
+    },
+    getMessageFallback({ namespace, key }) {
+      return namespace ? `${namespace}.${key}` : key;
+    },
   };
 });

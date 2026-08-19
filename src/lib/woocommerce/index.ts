@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveConnection } from "@/lib/connections";
-import type { Database } from "@/lib/db/database.types";
+import { encryptCredentials } from "@/lib/connections/crypto";
+import type { Database, Json } from "@/lib/db/database.types";
 import { tryCreateServiceClient } from "@/lib/supabase/service";
-import { WooClient } from "./client";
+import { WooClient, type WooCredentials } from "./client";
 import { parseStoredWooCredentials } from "./credentials";
 
 export const WOO_PROVIDER = "woocommerce";
@@ -100,8 +101,28 @@ export async function listWooConnectionsForTenant(
       shopUrl: typeof row.external_id === "string" ? row.external_id : creds.url,
       client: new WooClient(creds),
     });
+    void healWooCredentials(row.id, creds);
   }
   return out;
+}
+
+async function healWooCredentials(connectionId: string, creds: WooCredentials) {
+  const db = tryCreateServiceClient();
+  if (!db) return;
+  try {
+    await db
+      .from("connections")
+      .update({
+        credentials: encryptCredentials({
+          url: creds.url,
+          consumerKey: creds.consumerKey,
+          consumerSecret: creds.consumerSecret,
+        }) as Json,
+      })
+      .eq("id", connectionId);
+  } catch (error) {
+    console.error("[woo] heal credentials failed", (error as Error).message);
+  }
 }
 
 export {

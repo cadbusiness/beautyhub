@@ -27,13 +27,13 @@ export async function loadWooShopsForTenant(
   tenantId: string,
   userSupabase?: Db,
 ): Promise<WooShopConnection[]> {
+  const fromService = await listWooConnectionsForTenant(tenantId);
+  if (fromService.length > 0) return fromService;
+
   if (userSupabase) {
     const fromUser = await listWooConnectionsForTenant(tenantId, userSupabase);
     if (fromUser.length > 0) return fromUser;
   }
-
-  const fromService = await listWooConnectionsForTenant(tenantId);
-  if (fromService.length > 0) return fromService;
 
   const single =
     (userSupabase

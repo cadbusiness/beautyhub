@@ -170,8 +170,10 @@ async function syncWooProductsForTenant(
   const { syncWooCatalogForTenant } = await import(
     "@/lib/woocommerce/catalog-sync"
   );
+  const { tryCreateServiceClient } = await import("@/lib/supabase/service");
   const supabase = await createClient();
-  return syncWooCatalogForTenant(tenantId, supabase, supabase);
+  const db = tryCreateServiceClient() ?? supabase;
+  return syncWooCatalogForTenant(tenantId, db, supabase);
 }
 
 export async function syncWooProductsAction(

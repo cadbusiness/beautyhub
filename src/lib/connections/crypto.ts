@@ -43,6 +43,12 @@ function candidateKeys(): Buffer[] {
   if (envKey) addKey(out, seen, envKey);
   const derived = serviceRoleKey();
   if (derived) addKey(out, seen, derived);
+
+  // Anciennes dérivations vues en local / scripts.
+  const rawEnc = process.env.CONNECTIONS_ENCRYPTION_KEY?.trim();
+  if (rawEnc) addKey(out, seen, createHash("sha256").update(rawEnc).digest());
+  const sr = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (sr && sr.length >= 32) addKey(out, seen, Buffer.from(sr.slice(0, 32), "utf8"));
   return out;
 }
 

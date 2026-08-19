@@ -2042,7 +2042,7 @@
       "syncWooPending": "Synchronisation…",
       "syncWooDone": "{products} produits synchronisés ({shops} boutique(s))",
       "syncWooError": "Échec de la synchronisation",
-      "syncWooNoShop": "BeautyHub connaît la boutique mais n’a pas pu déverrouiller les clés API. Pas besoin de déconnecter : actualise le lien dans Compte → WooCommerce (même URL), ou relance Sync dans un instant.",
+      "syncWooNoShop": "La boutique Woo est liée. Relance Sync — pas besoin de déconnecter.",
       "emptyCatalog": "Commence par ajouter des prestations, des produits internes ou connecter WooCommerce dans les paramètres.",
       "linkServices": "Prestations",
       "linkProducts": "Produits internes",

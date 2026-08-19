@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../state/pos_cart_provider.dart';
 import '../../state/session_providers.dart';
+import '../agenda/agenda_colors.dart';
 import '../agenda/widgets/appointment_detail_sheet.dart';
 import '../agenda/widgets/appointment_form_sheet.dart';
 import '../cash/session_duration.dart';
@@ -470,63 +471,82 @@ class _TimelineRow extends StatelessWidget {
       if (appointment.durationLabel.isNotEmpty) appointment.durationLabel,
       if (appointment.staffName != null) appointment.staffName!,
     ].join(' · ');
+    final accent = agendaAccentColor(appointment);
 
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+      child: IntrinsicHeight(
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              width: 48,
-              child: Text(
-                time,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: HomeScreen._black,
-                ),
+            Container(
+              width: 3,
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: accent,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
+            const SizedBox(width: 10),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          appointment.clientName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: HomeScreen._black,
-                          ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 44,
+                      child: Text(
+                        time,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: HomeScreen._black,
                         ),
                       ),
-                      if (appointment.resourceName != null) ...[
-                        const SizedBox(width: 8),
-                        CabinBadge(
-                          label: appointment.resourceName!,
-                          compact: true,
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    serviceLine,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: HomeScreen._muted,
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  appointment.clientName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: HomeScreen._black,
+                                  ),
+                                ),
+                              ),
+                              if (appointment.resourceName != null) ...[
+                                const SizedBox(width: 8),
+                                CabinBadge(
+                                  label: appointment.resourceName!,
+                                  compact: true,
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            serviceLine,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: HomeScreen._muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

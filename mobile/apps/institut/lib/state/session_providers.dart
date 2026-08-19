@@ -88,6 +88,21 @@ final selectedResourceFilterProvider = StateProvider<String?>((ref) => null);
 
 final dashboardSalesChannelProvider = StateProvider<String>((ref) => 'all');
 
+enum DashboardPeriodFilter { today, week, month, year }
+
+enum DashboardMetricFilter { revenue, appointments }
+
+enum DashboardChartKind { line, pie }
+
+final dashboardPeriodProvider =
+    StateProvider<DashboardPeriodFilter>((ref) => DashboardPeriodFilter.week);
+
+final dashboardMetricProvider =
+    StateProvider<DashboardMetricFilter>((ref) => DashboardMetricFilter.revenue);
+
+final dashboardChartKindProvider =
+    StateProvider<DashboardChartKind>((ref) => DashboardChartKind.line);
+
 /// Émet DateTime.now() toutes les 30 secondes.
 /// Watch dans un widget → il rebuild périodiquement (utile pour recalculer
 /// "quel est le prochain RDV" ou "session ouverte depuis X min" sans que
@@ -111,6 +126,7 @@ final dashboardProvider =
   final token = ref.watch(accessTokenProvider);
   final tenantId = ref.watch(selectedTenantIdProvider);
   final channel = ref.watch(dashboardSalesChannelProvider);
+  final period = ref.watch(dashboardPeriodProvider);
   if (token == null || tenantId == null) {
     throw StateError('Session ou institut manquant');
   }
@@ -119,6 +135,7 @@ final dashboardProvider =
     accessToken: token,
     tenantId: tenantId,
     channel: channel,
+    period: period.name,
   );
 });
 

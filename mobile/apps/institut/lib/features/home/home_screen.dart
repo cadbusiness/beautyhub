@@ -13,10 +13,10 @@ import '../cash/session_duration.dart';
 import '../shared/cabin_badge.dart';
 import '../shared/money.dart';
 import '../shared/tenant_logo.dart';
-import 'widgets/dashboard_bar_chart.dart';
 import 'widgets/dashboard_kpi_strip.dart';
 import 'widgets/dashboard_quick_actions.dart';
 import 'widgets/dashboard_sales_channel_filter.dart';
+import 'widgets/dashboard_stats_card.dart';
 import 'widgets/next_appointment_hero.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -172,26 +172,10 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(20, 10, 20, 0),
               sliver: SliverToBoxAdapter(
-                child: _SectionCard(
-                  title: 'Chiffre d’affaires',
-                  subtitle: dashboardAsync.maybeWhen(
-                    data: (d) {
-                      final pct = d.weekRevenueChangePct;
-                      if (pct == null) return 'Cette semaine';
-                      final sign = pct >= 0 ? '+' : '';
-                      return 'Cette semaine · $sign${pct.toStringAsFixed(0)} %';
-                    },
-                    orElse: () => 'Cette semaine',
-                  ),
-                  child: dashboardAsync.when(
-                    loading: () => const _LoadingBlock(height: 108),
-                    error: (_, __) => const SizedBox.shrink(),
-                    data: (dash) => DashboardBarChart(series: dash.series),
-                  ),
-                ),
+                child: DashboardStatsCard(),
               ),
             ),
             SliverPadding(

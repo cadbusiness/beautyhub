@@ -5,6 +5,7 @@ import {
 import { getAnalyticsSettings } from "@/lib/institut/analytics-settings";
 import {
   fetchDashboardSnapshot,
+  parseDashboardPeriod,
   parseSalesChannel,
 } from "@/lib/institut/dashboard-stats";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
@@ -14,7 +15,9 @@ export async function GET(request: Request) {
     const session = await requireMobileTenantSession(request, {
       moduleId: "institut",
     });
-    const channel = parseSalesChannel(new URL(request.url).searchParams.get("channel"));
+    const params = new URL(request.url).searchParams;
+    const channel = parseSalesChannel(params.get("channel"));
+    const period = parseDashboardPeriod(params.get("period"));
     const [analyticsSettings, wooResult] = await Promise.all([
       getAnalyticsSettings(session.supabase, session.tenant.id),
       session.supabase
@@ -31,7 +34,7 @@ export async function GET(request: Request) {
     const snapshot = await fetchDashboardSnapshot(
       session.supabase,
       session.tenant.id,
-      "week",
+      period,
       "fr",
       {
         channel,
@@ -42,12 +45,19 @@ export async function GET(request: Request) {
 
     return Response.json({
       today: snapshot.today,
+      analytics: snapshot.analytics,
       week: {
+        period: snapshot.analytics.period,
         revenueCents: snapshot.analytics.revenueCents,
         revenueChangePct: snapshot.analytics.revenueChangePct,
         salesCount: snapshot.analytics.salesCount,
         salesChangePct: snapshot.analytics.salesChangePct,
         appointmentsTotal: snapshot.analytics.appointmentsTotal,
+        appointmentsChangePct: snapshot.analytics.appointmentsChangePct,
+        appointmentsCancelled: snapshot.analytics.appointmentsCancelled,
+        appointmentsCompleted: snapshot.analytics.appointmentsCompleted,
+        appointmentsNoShow: snapshot.analytics.appointmentsNoShow,
+        cancellationRate: snapshot.analytics.cancellationRate,
         series: snapshot.analytics.series,
       },
       salesChannel: snapshot.salesChannel,

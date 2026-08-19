@@ -442,6 +442,9 @@ class DashboardSeriesPoint {
     required this.revenueCents,
     required this.salesCount,
     required this.appointments,
+    this.cancelled = 0,
+    this.completed = 0,
+    this.noShow = 0,
   });
 
   final String key;
@@ -449,6 +452,9 @@ class DashboardSeriesPoint {
   final int revenueCents;
   final int salesCount;
   final int appointments;
+  final int cancelled;
+  final int completed;
+  final int noShow;
 
   factory DashboardSeriesPoint.fromJson(Map<String, dynamic> json) {
     return DashboardSeriesPoint(
@@ -457,6 +463,9 @@ class DashboardSeriesPoint {
       revenueCents: json['revenueCents'] as int? ?? 0,
       salesCount: json['salesCount'] as int? ?? 0,
       appointments: json['appointments'] as int? ?? 0,
+      cancelled: json['cancelled'] as int? ?? 0,
+      completed: json['completed'] as int? ?? 0,
+      noShow: json['noShow'] as int? ?? 0,
     );
   }
 }
@@ -464,38 +473,56 @@ class DashboardSeriesPoint {
 class MobileDashboard {
   const MobileDashboard({
     required this.today,
+    required this.period,
     required this.weekRevenueCents,
     this.weekRevenueChangePct,
     required this.weekSalesCount,
     this.weekSalesChangePct,
     required this.weekAppointmentsTotal,
+    this.appointmentsChangePct,
+    this.appointmentsCancelled = 0,
+    this.appointmentsCompleted = 0,
+    this.appointmentsNoShow = 0,
+    this.cancellationRate = 0,
     required this.series,
     this.salesChannel = 'all',
     this.wooSalesAvailable = false,
   });
 
   final DashboardTodaySummary today;
+  final String period;
   final int weekRevenueCents;
   final double? weekRevenueChangePct;
   final int weekSalesCount;
   final double? weekSalesChangePct;
   final int weekAppointmentsTotal;
+  final double? appointmentsChangePct;
+  final int appointmentsCancelled;
+  final int appointmentsCompleted;
+  final int appointmentsNoShow;
+  final double cancellationRate;
   final List<DashboardSeriesPoint> series;
   final String salesChannel;
   final bool wooSalesAvailable;
 
   factory MobileDashboard.fromJson(Map<String, dynamic> json) {
-    final week = json['week'] as Map? ?? const {};
-    final seriesRaw = week['series'] as List? ?? const [];
+    final block = json['analytics'] as Map? ?? json['week'] as Map? ?? const {};
+    final seriesRaw = block['series'] as List? ?? const [];
     return MobileDashboard(
       today: DashboardTodaySummary.fromJson(
         Map<String, dynamic>.from(json['today'] as Map? ?? const {}),
       ),
-      weekRevenueCents: week['revenueCents'] as int? ?? 0,
-      weekRevenueChangePct: (week['revenueChangePct'] as num?)?.toDouble(),
-      weekSalesCount: week['salesCount'] as int? ?? 0,
-      weekSalesChangePct: (week['salesChangePct'] as num?)?.toDouble(),
-      weekAppointmentsTotal: week['appointmentsTotal'] as int? ?? 0,
+      period: block['period'] as String? ?? 'week',
+      weekRevenueCents: block['revenueCents'] as int? ?? 0,
+      weekRevenueChangePct: (block['revenueChangePct'] as num?)?.toDouble(),
+      weekSalesCount: block['salesCount'] as int? ?? 0,
+      weekSalesChangePct: (block['salesChangePct'] as num?)?.toDouble(),
+      weekAppointmentsTotal: block['appointmentsTotal'] as int? ?? 0,
+      appointmentsChangePct: (block['appointmentsChangePct'] as num?)?.toDouble(),
+      appointmentsCancelled: block['appointmentsCancelled'] as int? ?? 0,
+      appointmentsCompleted: block['appointmentsCompleted'] as int? ?? 0,
+      appointmentsNoShow: block['appointmentsNoShow'] as int? ?? 0,
+      cancellationRate: (block['cancellationRate'] as num?)?.toDouble() ?? 0,
       series: seriesRaw
           .whereType<Map>()
           .map((e) => DashboardSeriesPoint.fromJson(Map<String, dynamic>.from(e)))

@@ -191,9 +191,13 @@ class MobileApiClient {
     required String accessToken,
     required String tenantId,
     String channel = 'all',
+    String period = 'week',
   }) async {
     final response = await _http.get(
-      _uri('/api/mobile/institut/dashboard', {'channel': channel}),
+      _uri('/api/mobile/institut/dashboard', {
+        'channel': channel,
+        'period': period,
+      }),
       headers: _headers(accessToken: accessToken, tenantId: tenantId),
     );
     final body = await _decode(response);

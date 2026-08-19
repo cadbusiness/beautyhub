@@ -52,6 +52,7 @@ export type DashboardPeriodStats = {
   salesCount: number;
   salesChangePct: number | null;
   appointmentsTotal: number;
+  appointmentsChangePct: number | null;
   appointmentsCancelled: number;
   appointmentsCompleted: number;
   appointmentsNoShow: number;
@@ -419,6 +420,7 @@ function aggregatePeriodStats(
     salesCount,
     salesChangePct: pctChange(salesCount, prevSalesCount),
     appointmentsTotal,
+    appointmentsChangePct: pctChange(appointmentsTotal, prevTotal),
     appointmentsCancelled,
     appointmentsCompleted,
     appointmentsNoShow,

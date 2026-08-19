@@ -160,6 +160,22 @@ Map<String, int> activePriceOverrides({
   return out;
 }
 
+int discountedUnitCents({
+  required int catalogCents,
+  required String kind,
+  required double value,
+}) {
+  if (catalogCents <= 0 || value <= 0) return catalogCents < 0 ? 0 : catalogCents;
+  if (kind == 'percent') {
+    final pct = value > 100 ? 100.0 : value;
+    final next = (catalogCents * (1 - pct / 100)).round();
+    return next < 0 ? 0 : next;
+  }
+  final off = (value * 100).round();
+  final next = catalogCents - off;
+  return next < 0 ? 0 : next;
+}
+
 int cartLineUnitCents({
   required String key,
   required int catalogCents,

@@ -11,6 +11,7 @@ import { Input, Select, Textarea } from "@/components/ui/input";
 import {
   applyPriceOverrides,
   createCustomPosKey,
+  discountedUnitCents,
   resolvePosCatalogItem,
   type PosCatalogItem,
   type PosCategory,
@@ -136,6 +137,9 @@ export function PosTerminal({
     initial,
   );
   const [lastSale, setLastSale] = useState<ActionResult | null>(null);
+  const [lineDiscountKey, setLineDiscountKey] = useState<string | null>(null);
+  const [lineDiscountKind, setLineDiscountKind] = useState<"percent" | "fixed">("percent");
+  const [lineDiscountValue, setLineDiscountValue] = useState("");
   const [freeChargeOpen, setFreeChargeOpen] = useState(false);
   const [freeChargeAmount, setFreeChargeAmount] = useState("");
   const [freeChargeLabel, setFreeChargeLabel] = useState("");
@@ -597,6 +601,21 @@ export function PosTerminal({
     } else {
       setPriceOverrides((po) => ({ ...po, [key]: cents }));
     }
+  }
+
+  function applyLineDiscount(key: string, catalogCents: number) {
+    const n = Number.parseFloat(lineDiscountValue.replace(",", "."));
+    if (!Number.isFinite(n) || n <= 0) return;
+    const cents = discountedUnitCents(catalogCents, lineDiscountKind, n);
+    setLastSale(null);
+    if (cents === catalogCents) {
+      resetPrice(key);
+    } else {
+      setPriceOverrides((po) => ({ ...po, [key]: cents }));
+      setPriceEdits((pe) => ({ ...pe, [key]: (cents / 100).toFixed(2) }));
+    }
+    setLineDiscountKey(null);
+    setLineDiscountValue("");
   }
 
   function resetPrice(key: string) {
@@ -1119,6 +1138,56 @@ export function PosTerminal({
                       ) : null}
                     </span>
                   </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {overridden && defaultCents > currentCents ? (
+                      <span className="text-[11px] font-medium text-violet-700">
+                        {t("cart.lineDiscountApplied", {
+                          amount: money(defaultCents - currentCents),
+                        })}
+                      </span>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLineDiscountKey(lineDiscountKey === key ? null : key);
+                        setLineDiscountKind("percent");
+                        setLineDiscountValue("");
+                      }}
+                      className="text-[11px] font-medium text-slate-600 underline decoration-dotted hover:text-slate-900"
+                    >
+                      {t("cart.lineDiscount")}
+                    </button>
+                  </div>
+                  {lineDiscountKey === key ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Select
+                        value={lineDiscountKind}
+                        onChange={(e) =>
+                          setLineDiscountKind(e.target.value === "fixed" ? "fixed" : "percent")
+                        }
+                        className="h-8 w-auto text-xs"
+                        aria-label={t("cart.lineDiscountType")}
+                      >
+                        <option value="percent">{t("cart.lineDiscountPercent")}</option>
+                        <option value="fixed">{t("cart.lineDiscountFixed")}</option>
+                      </Select>
+                      <Input
+                        inputMode="decimal"
+                        className="h-8 w-20 text-xs"
+                        placeholder={lineDiscountKind === "percent" ? "10" : "5,00"}
+                        value={lineDiscountValue}
+                        onChange={(e) => setLineDiscountValue(e.target.value)}
+                        aria-label={t("cart.lineDiscountValue")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => applyLineDiscount(key, defaultCents)}
+                        className="h-8 rounded-md bg-slate-900 px-2.5 text-[11px] font-medium text-white"
+                      >
+                        {t("cart.lineDiscountApply")}
+                      </button>
+                    </div>
+                  ) : null}
                 </li>
               );
             })}

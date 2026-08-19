@@ -2024,7 +2024,10 @@ class _CartLineRow extends ConsumerStatefulWidget {
 
 class _CartLineRowState extends ConsumerState<_CartLineRow> {
   late final TextEditingController _price;
+  final _lineDiscount = TextEditingController();
   var _editing = false;
+  var _showLineDiscount = false;
+  var _lineDiscountKind = 'percent';
 
   @override
   void initState() {
@@ -2043,7 +2046,26 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
   @override
   void dispose() {
     _price.dispose();
+    _lineDiscount.dispose();
     super.dispose();
+  }
+
+  void _applyLineDiscount() {
+    final n = double.tryParse(_lineDiscount.text.replaceAll(',', '.'));
+    if (n == null || n <= 0) return;
+    final cents = discountedUnitCents(
+      catalogCents: widget.item.priceCents,
+      kind: _lineDiscountKind,
+      value: n,
+    );
+    if (cents == widget.item.priceCents) {
+      ref.read(posPriceOverridesProvider.notifier).reset(widget.item.key);
+    } else {
+      ref.read(posPriceOverridesProvider.notifier).setPrice(widget.item.key, cents);
+    }
+    _price.text = _euros(cents);
+    _lineDiscount.clear();
+    setState(() => _showLineDiscount = false);
   }
 
   String _euros(int cents) => (cents / 100).toStringAsFixed(2);
@@ -2246,6 +2268,73 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              if (widget.overridden &&
+                  widget.item.priceCents > widget.unitCents) ...[
+                Text(
+                  '−${formatEuros(widget.item.priceCents - widget.unitCents)} / unité',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6D28D9),
+                  ),
+                ),
+                const SizedBox(width: 10),
+              ],
+              GestureDetector(
+                onTap: () =>
+                    setState(() => _showLineDiscount = !_showLineDiscount),
+                child: Text(
+                  _showLineDiscount ? 'Fermer' : 'Réduc. article',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF0A0A0A),
+                    decoration: TextDecoration.underline,
+                    decorationStyle: TextDecorationStyle.dotted,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_showLineDiscount) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                SizedBox(
+                  width: 92,
+                  child: _MiniSegmented(
+                    items: const [
+                      (id: 'percent', label: '%'),
+                      (id: 'fixed', label: '€'),
+                    ],
+                    selected: _lineDiscountKind,
+                    onSelected: (value) =>
+                        setState(() => _lineDiscountKind = value),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _lineDiscount,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: _cartFieldDecoration(
+                      hint: _lineDiscountKind == 'percent' ? '10' : '5,00',
+                    ),
+                    onSubmitted: (_) => _applyLineDiscount(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: _applyLineDiscount,
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

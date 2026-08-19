@@ -151,6 +151,22 @@ export function parsePriceOverrides(
   return out;
 }
 
+/** Remise sur le prix unitaire catalogue : % ou montant fixe en euros. */
+export function discountedUnitCents(
+  catalogCents: number,
+  kind: "percent" | "fixed",
+  value: number,
+): number {
+  if (!Number.isFinite(catalogCents) || catalogCents < 0) return 0;
+  if (!Number.isFinite(value) || value <= 0) return catalogCents;
+  if (kind === "percent") {
+    const pct = Math.min(100, value);
+    return Math.max(0, Math.round(catalogCents * (1 - pct / 100)));
+  }
+  const off = Math.round(value * 100);
+  return Math.max(0, catalogCents - off);
+}
+
 /** Applique des overrides de prix unitaires (par clé) à un ensemble de lignes résolues. */
 export function applyPriceOverrides(
   lines: ResolvedCartLine[],

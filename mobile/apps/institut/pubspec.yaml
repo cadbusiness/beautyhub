@@ -1,7 +1,7 @@
 name: beautyhub_institut
 description: "BeautyHub Pro — app mobile équipe institut (Flutter, iOS + Android)."
 publish_to: "none"
-version: 1.0.0+11
+version: 1.0.0+12
 
 environment:
   sdk: ^3.10.9

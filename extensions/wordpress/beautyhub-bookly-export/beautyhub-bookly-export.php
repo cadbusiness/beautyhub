@@ -2,7 +2,7 @@
 /**
  * Plugin Name: BeautyHub - Export Bookly (services, extras & RDV)
  * Description: Exporte et synchronise les rendez-vous Bookly vers BeautyHub (migration).
- * Version: 1.4.0
+ * Version: 1.4.1
  * Author: BeautyHub
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -27,7 +27,7 @@ final class BeautyHub_Bookly_Export {
 	const OPTION_CRON_VERSION      = 'beautyhub_bookly_cron_ver';
 	const CRON_HOOK                = 'bh_bookly_cron_sync';
 	const PUSH_HOOK                = 'bh_bookly_push_sync';
-	const CRON_VERSION             = '1.4.0';
+	const CRON_VERSION             = '1.4.1';
 	const MIN_SYNC_INTERVAL        = 60;
 	const MAX_SYNCS_PER_HOUR       = 20;
 	const HISTORY_MAX              = 8;
@@ -1255,7 +1255,7 @@ final class BeautyHub_Bookly_Export {
 			$keep_ids[] = (int) $a['bookly_ca_id'];
 		}
 
-		$chunks    = array_chunk( $appointments, 120 );
+		$chunks    = array_chunk( $appointments, 60 );
 		$last_err  = '';
 		$sent_last = false;
 		if ( empty( $chunks ) ) {
@@ -1283,21 +1283,40 @@ final class BeautyHub_Bookly_Export {
 				'rows'     => $chunk,
 				'keep_ids' => $is_last ? $keep_ids : array(),
 			);
-			$res = wp_remote_post(
-				$url,
-				array(
-					'timeout' => 45,
-					'headers' => array(
-						'Content-Type' => 'application/json; charset=utf-8',
-					),
-					'body'    => wp_json_encode( $payload ),
-				)
-			);
+			$attempt = 0;
+			$res     = null;
+			$code    = 0;
+			$body    = '';
+			while ( $attempt < 2 ) {
+				$attempt++;
+				$res = wp_remote_post(
+					$url,
+					array(
+						'timeout' => 45,
+						'headers' => array(
+							'Content-Type' => 'application/json; charset=utf-8',
+						),
+						'body'    => wp_json_encode( $payload ),
+					)
+				);
+				if ( is_wp_error( $res ) ) {
+					if ( $attempt < 2 ) {
+						usleep( 800000 );
+						continue;
+					}
+					break;
+				}
+				$code = (int) wp_remote_retrieve_response_code( $res );
+				if ( $code >= 500 && $attempt < 2 ) {
+					usleep( 800000 );
+					continue;
+				}
+				break;
+			}
 			if ( is_wp_error( $res ) ) {
 				$last_err = $res->get_error_message();
 				break;
 			}
-			$code = (int) wp_remote_retrieve_response_code( $res );
 			$agg['http_code'] = $code;
 			if ( $code < 200 || $code >= 300 ) {
 				$body     = (string) wp_remote_retrieve_body( $res );

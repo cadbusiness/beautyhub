@@ -586,7 +586,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
 
   Future<void> _addFreeCharge(PosContext ctx) async {
     final added = await showFreeChargeSheet(context, ref);
-    if (added && mounted) _openCartSheet(ctx);
+    if (!added || !mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    if (mounted) _openCartSheet(ctx);
   }
 
   void _openCartSheet(PosContext ctx) {

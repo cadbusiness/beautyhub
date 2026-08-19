@@ -5,18 +5,56 @@ import '../../state/pos_cart_provider.dart';
 import '../../widgets/app_sheet.dart';
 
 Future<bool> showFreeChargeSheet(BuildContext context, WidgetRef ref) async {
-  final amount = TextEditingController();
-  final label = TextEditingController();
   final added = await showAppSheet<bool>(
     context: context,
-    builder: (ctx) {
-      return Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 16,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-        ),
+    builder: (ctx) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
+      child: const _FreeChargeSheet(),
+    ),
+  );
+  return added == true;
+}
+
+class _FreeChargeSheet extends ConsumerStatefulWidget {
+  const _FreeChargeSheet();
+
+  @override
+  ConsumerState<_FreeChargeSheet> createState() => _FreeChargeSheetState();
+}
+
+class _FreeChargeSheetState extends ConsumerState<_FreeChargeSheet> {
+  final _amount = TextEditingController();
+  final _label = TextEditingController();
+
+  @override
+  void dispose() {
+    _amount.dispose();
+    _label.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final parsed = double.tryParse(_amount.text.replaceAll(',', '.'));
+    if (parsed == null || parsed <= 0) return;
+    final cents = (parsed * 100).round();
+    final key = createCustomPosKey(_label.text);
+    ref.read(posCartProvider.notifier).add(key);
+    ref.read(posPriceOverridesProvider.notifier).setPrice(key, cents);
+    ref.read(posInjectedCatalogProvider.notifier).state =
+        mergeCustomCatalogItems(
+      current: ref.read(posInjectedCatalogProvider),
+      lines: ref.read(posCartProvider),
+      overrides: ref.read(posPriceOverridesProvider),
+    );
+    Navigator.pop(context, true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -27,7 +65,7 @@ Future<bool> showFreeChargeSheet(BuildContext context, WidgetRef ref) async {
                 height: 4,
                 decoration: BoxDecoration(
                   color: const Color(0xFFE5E5E5),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(99),
                 ),
               ),
             ),
@@ -47,36 +85,25 @@ Future<bool> showFreeChargeSheet(BuildContext context, WidgetRef ref) async {
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: amount,
+              controller: _amount,
               autofocus: true,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              textInputAction: TextInputAction.next,
               decoration: _field('Montant (€)'),
             ),
             const SizedBox(height: 10),
             TextField(
-              controller: label,
+              controller: _label,
               textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
               decoration: _field('Libellé (optionnel)'),
             ),
             const SizedBox(height: 16),
             SizedBox(
               height: 48,
               child: FilledButton(
-                onPressed: () {
-                  final parsed = double.tryParse(amount.text.replaceAll(',', '.'));
-                  if (parsed == null || parsed <= 0) return;
-                  final cents = (parsed * 100).round();
-                  final key = createCustomPosKey(label.text);
-                  ref.read(posCartProvider.notifier).add(key);
-                  ref.read(posPriceOverridesProvider.notifier).setPrice(key, cents);
-                  ref.read(posInjectedCatalogProvider.notifier).state =
-                      mergeCustomCatalogItems(
-                    current: ref.read(posInjectedCatalogProvider),
-                    lines: ref.read(posCartProvider),
-                    overrides: ref.read(posPriceOverridesProvider),
-                  );
-                  Navigator.pop(ctx, true);
-                },
+                onPressed: _submit,
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF0A0A0A),
                   foregroundColor: Colors.white,
@@ -86,12 +113,9 @@ Future<bool> showFreeChargeSheet(BuildContext context, WidgetRef ref) async {
             ),
           ],
         ),
-      );
-    },
-  );
-  amount.dispose();
-  label.dispose();
-  return added == true;
+      ),
+    );
+  }
 }
 
 InputDecoration _field(String hint) {

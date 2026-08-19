@@ -200,13 +200,14 @@ export async function updateMobileAppointment(
         extras,
       );
       if ("error" in totals) {
+        const reason = totals.error;
         return {
           error:
-            totals.error === "service_not_found"
+            reason === "service_not_found"
               ? "Prestation introuvable."
-              : totals.error === "extra_not_found"
+              : reason === "extra_not_found"
                 ? "Prestation ajoutée introuvable."
-                : totals.error,
+                : reason || "Impossible de calculer la durée.",
           code: "invalid_input",
         };
       }

@@ -1973,7 +1973,7 @@
       "syncWooPending": "Synchroniseren…",
       "syncWooDone": "{products} producten gesynchroniseerd ({shops} winkel(s))",
       "syncWooError": "Synchronisatie mislukt",
-      "syncWooNoShop": "De WooCommerce-winkel is gekoppeld, maar BeautyHub kon de inloggegevens niet lezen. Koppel de winkel opnieuw via Account → WooCommerce en start de sync.",
+      "syncWooNoShop": "BeautyHub kent de winkel maar kon de API-sleutels niet ontgrendelen. Je hoeft niet te ontkoppelen: vernieuw de link via Account → WooCommerce (zelfde URL) of start Sync zo opnieuw.",
       "emptyCatalog": "Begin met het toevoegen van behandelingen, interne producten of koppel WooCommerce in de instellingen.",
       "linkServices": "Behandelingen",
       "linkProducts": "Interne producten",
@@ -2106,6 +2106,8 @@
       "connected": "Gekoppeld",
       "notConnected": "Niet gekoppeld",
       "connectSideTitle": "Verbinding",
+      "refreshTitle": "Nieuwe producten ontbreken in de kassa?",
+      "refreshHint": "Je hoeft niet te ontkoppelen. Klik op Verbinden met dezelfde URL, open de magische link in WordPress en start daarna Sync WooCommerce in de kassa.",
       "shop": "Winkel:",
       "disconnect": "Ontkoppelen",
       "form": {

@@ -17,15 +17,11 @@ import {
   normalizeShopUrl,
 } from "@/lib/connectors/pairing";
 import {
-  listWooConnectionsForTenant,
   WOO_PROVIDER,
   WooClient,
-  backfillOrphanWooSaleItems,
   generateWebhookCredentials,
-  mapWooProductToRow,
-  upsertWooVariations,
-  categoryTreeById,
 } from "@/lib/woocommerce";
+import { syncWooCatalogForTenant } from "@/lib/woocommerce/catalog-sync";
 
 export interface ActionResult {
   error?: string;
@@ -173,90 +169,7 @@ async function syncWooProductsForTenant(
   tenantId: string,
 ): Promise<{ syncedCount: number; shopsCount: number }> {
   const supabase = await createClient();
-  let connections = await listWooConnectionsForTenant(tenantId);
-  if (connections.length === 0) {
-    connections = await listWooConnectionsForTenant(tenantId, supabase);
-  }
-  if (connections.length === 0) {
-    throw new Error("woo_no_shop");
-  }
-
-  let syncedCount = 0;
-
-  for (const connection of connections) {
-    const tree = categoryTreeById(
-      await connection.client.listAllProductCategories(),
-    );
-
-    // La boutique Woo peut avoir plus de 250 produits. On ne veut pas rater
-    // des articles qui apparaitront ensuite sur des ventes → limite haute
-    // (50 pages × 50 = 2500 produits) tout en gardant un garde-fou.
-    for (let page = 1; page <= 50; page++) {
-      const products = await connection.client.listProducts(page, 50);
-      if (products.length === 0) break;
-
-      const rows = products.map((p) =>
-        mapWooProductToRow(tenantId, connection.connectionId, p, tree),
-      );
-
-      const { error } = await supabase
-        .from("inst_products")
-        .upsert(rows, { onConflict: "tenant_id,connection_id,woo_id" });
-      if (error) throw new Error(error.message);
-      syncedCount += rows.length;
-
-      // Pour chaque produit `variable`, on materialise ses variations comme
-      // rows separees dans inst_products : elles portent leur propre image,
-      // sku, prix, stock, ce qui permet a la caisse mobile de matcher un
-      // sale_item.product_id qui pointe vers une variation_id Woo.
-      const variableProducts = products.filter(
-        (p) => p.type === "variable" && Array.isArray(p.variations) && p.variations.length > 0,
-      );
-      for (const parent of variableProducts) {
-        try {
-          const variations = await connection.client.listAllProductVariations(
-            parent.id,
-          );
-          if (variations.length > 0) {
-            syncedCount += await upsertWooVariations(
-              supabase,
-              tenantId,
-              connection.connectionId,
-              parent,
-              variations,
-              tree,
-            );
-          }
-        } catch (err) {
-          console.error(
-            "[woo-sync] variations fetch failed",
-            { productId: parent.id, message: (err as Error).message },
-          );
-        }
-      }
-
-      if (products.length < 50) break;
-    }
-
-    // Rattachement des sale_items historiques après resync : maintenant que
-    // les variations sont en base, on peut lier les orphelins par woo_id.
-    try {
-      const linked = await backfillOrphanWooSaleItems(supabase, tenantId, {
-        fetchMissingFromWoo: true,
-        connectionId: connection.connectionId,
-      });
-      if (linked > 0) {
-        console.info("[woo-sync] backfill linked sale items", { tenantId, linked });
-      }
-    } catch (err) {
-      console.error("[woo-sync] backfill failed", {
-        tenantId,
-        message: (err as Error).message,
-      });
-    }
-  }
-
-  return { syncedCount, shopsCount: connections.length };
+  return syncWooCatalogForTenant(tenantId, supabase, supabase);
 }
 
 export async function syncWooProductsAction(

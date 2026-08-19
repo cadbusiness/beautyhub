@@ -6,8 +6,18 @@ import type { WooCredentials } from "./client";
  * (`consumerKey` / `consumer_key`).
  */
 export function parseStoredWooCredentials(raw: unknown): WooCredentials | null {
-  if (!raw || typeof raw !== "object") return null;
-  let stored = raw as Record<string, unknown>;
+  let input: unknown = raw;
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    if (!trimmed) return null;
+    try {
+      input = JSON.parse(trimmed) as unknown;
+    } catch {
+      return null;
+    }
+  }
+  if (!input || typeof input !== "object") return null;
+  let stored = input as Record<string, unknown>;
   try {
     if (typeof stored.enc === "string" && stored.enc.length > 0) {
       const decrypted = decryptCredentials({ enc: stored.enc }) as Record<

@@ -1925,7 +1925,7 @@
       "syncWooPending": "Sincronización…",
       "syncWooDone": "{products} productos sincronizados ({shops} tienda(s))",
       "syncWooError": "Error de sincronización",
-      "syncWooNoShop": "La tienda WooCommerce está conectada pero BeautyHub no pudo leer sus credenciales. Vuelve a conectarla en Cuenta → WooCommerce y lanza la sync.",
+      "syncWooNoShop": "BeautyHub conoce la tienda pero no pudo desbloquear las claves API. No hace falta desconectar: actualiza el enlace en Cuenta → WooCommerce (misma URL) o vuelve a lanzar Sync en un momento.",
       "wooNotConnected": "WooCommerce no está conectado: solo están disponibles productos y servicios internos."
     },
     "posTemplates": {
@@ -2562,6 +2562,8 @@
       },
       "notConnected": "No conectado",
       "connectSideTitle": "Conexión",
+      "refreshTitle": "¿Faltan productos nuevos en caja?",
+      "refreshHint": "No hace falta desconectar. Pulsa Conectar con la misma URL, abre el enlace mágico en WordPress y lanza Sync WooCommerce en caja.",
       "shop": "Comercio :",
       "title": "WooCommerce"
     }

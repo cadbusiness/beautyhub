@@ -2097,7 +2097,7 @@
       "syncWoo": "Sync WooCommerce",
       "syncWooDone": "{products} synchronized products ({shops} store(s))",
       "syncWooError": "Sync Failed",
-      "syncWooNoShop": "The WooCommerce store is connected but BeautyHub could not read its credentials. Reconnect it in Account → WooCommerce, then run sync again.",
+      "syncWooNoShop": "BeautyHub knows the store but could not unlock the API keys. No need to disconnect: refresh the link in Account → WooCommerce (same URL), or run Sync again in a moment.",
       "syncWooPending": "Synchronization…",
       "wooNotConnected": "WooCommerce not connected — only internal services and products are available."
     },
@@ -2760,6 +2760,8 @@
       "manualHint": "Reserved for advanced cases if the magic link does not work.",
       "notConnected": "Not connected",
       "pairedAt": "Connected on {date}",
+      "refreshTitle": "New products missing from the register?",
+      "refreshHint": "You don’t need to disconnect. Click Connect with the same URL, open the magic link in WordPress, then run Sync WooCommerce in the register.",
       "setup": {
         "connectedHint": "Connected store — stock syncs automatically.",
         "download": "Download the v{version} plugin",

@@ -87,6 +87,7 @@ function serializeMobileAppointment(a: ReturnType<typeof serializeCalendarAppoin
       quantity: e.quantity,
       name: e.name,
       priceCents: e.price_cents,
+      durationMin: e.duration_min,
     })),
   };
 }

@@ -78,6 +78,93 @@ export async function syncAppointmentExtras(
   return null;
 }
 
+export async function resolveAppointmentLineTotals(
+  supabase: Db,
+  tenantId: string,
+  serviceId: string,
+  extras: BookingExtraLine[],
+) {
+  const { data: main } = await supabase
+    .from("inst_services")
+    .select("duration_min, price_cents, buffer_before_min, buffer_after_min")
+    .eq("id", serviceId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  if (!main) return { error: "service_not_found" } as const;
+
+  let durationMin = main.duration_min ?? 0;
+  let priceCents = main.price_cents ?? 0;
+
+  if (extras.length) {
+    const { data: extraServices, error } = await supabase
+      .from("inst_services")
+      .select("id, duration_min, price_cents")
+      .eq("tenant_id", tenantId)
+      .in(
+        "id",
+        extras.map((e) => e.service_id),
+      );
+    if (error) return { error: error.message } as const;
+    for (const line of extras) {
+      if (line.quantity <= 0) continue;
+      const svc = extraServices?.find((row) => row.id === line.service_id);
+      if (!svc) return { error: "extra_not_found" } as const;
+      durationMin += (svc.duration_min ?? 0) * line.quantity;
+      priceCents += (svc.price_cents ?? 0) * line.quantity;
+    }
+  }
+
+  return {
+    durationMin: Math.max(15, durationMin),
+    priceCents,
+    bufferBeforeMin: main.buffer_before_min ?? 0,
+    bufferAfterMin: main.buffer_after_min ?? 0,
+  } as const;
+}
+
+/** Enregistre n'importe quelle prestation comme extra (pas seulement le catalogue d'extras). */
+export async function replaceAppointmentExtras(
+  supabase: Db,
+  tenantId: string,
+  appointmentId: string,
+  extras: BookingExtraLine[],
+) {
+  await supabase.from("inst_appointment_extras").delete().eq("appointment_id", appointmentId);
+  if (!extras.length) return null;
+
+  const { data: services, error } = await supabase
+    .from("inst_services")
+    .select("id, name, duration_min, price_cents")
+    .eq("tenant_id", tenantId)
+    .in(
+      "id",
+      extras.map((e) => e.service_id),
+    );
+  if (error) return error.message;
+
+  const inserts = extras.flatMap((line) => {
+    const svc = services?.find((row) => row.id === line.service_id);
+    if (!svc || line.quantity <= 0) return [];
+    return [
+      {
+        tenant_id: tenantId,
+        appointment_id: appointmentId,
+        service_id: line.service_id,
+        quantity: line.quantity,
+        price_cents: svc.price_cents,
+        duration_min: svc.duration_min,
+        name: svc.name,
+      },
+    ];
+  });
+
+  if (inserts.length) {
+    const { error: insErr } = await supabase.from("inst_appointment_extras").insert(inserts);
+    if (insErr) return insErr.message;
+  }
+  return null;
+}
+
 /** Valide que chaque extra est autorise pour la prestation principale. */
 export async function validateExtrasForService(
   supabase: Db,

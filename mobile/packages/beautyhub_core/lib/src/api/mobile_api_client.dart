@@ -320,6 +320,9 @@ class MobileApiClient {
     String? status,
     String? notes,
     String? startsAt,
+    String? serviceId,
+    List<BookingExtraLine>? extras,
+    bool force = false,
   }) async {
     final response = await _http.patch(
       _uri('/api/mobile/institut/appointments/$appointmentId'),
@@ -328,6 +331,9 @@ class MobileApiClient {
         if (status != null) 'status': status,
         if (notes != null) 'notes': notes,
         if (startsAt != null) 'startsAt': startsAt,
+        if (serviceId != null && serviceId.isNotEmpty) 'serviceId': serviceId,
+        if (extras != null) 'extras': extras.map((e) => e.toJson()).toList(),
+        if (force) 'force': true,
       }),
     );
     await _decode(response);

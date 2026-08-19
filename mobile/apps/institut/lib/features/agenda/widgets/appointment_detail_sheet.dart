@@ -10,6 +10,7 @@ import '../../../state/pos_cart_provider.dart';
 import '../../../state/session_providers.dart';
 import '../../clients/client_detail_sheet.dart';
 import '../../shared/money.dart';
+import 'appointment_edit_sheet.dart';
 
 Future<void> showAppointmentDetailSheet(
   BuildContext context,
@@ -114,16 +115,8 @@ class _AppointmentDetailSheetState
   Future<void> _editAppointment() async {
     final cancelled = a.isCancelled || a.status == 'completed';
     if (cancelled) return;
-    final updated = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => _EditAppointmentSheet(appointment: a),
-    );
-    if (updated == true && mounted) {
+    final updated = await showEditAppointmentSheet(context, a);
+    if (updated && mounted) {
       ref.invalidate(dayAgendaProvider);
       ref.invalidate(todayAgendaProvider);
       Navigator.pop(context);
@@ -214,6 +207,19 @@ class _AppointmentDetailSheetState
                 a.serviceName,
                 style: const TextStyle(fontSize: 15, color: _muted),
               ),
+              if (a.extras.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  a.extras
+                      .map(
+                        (e) => e.quantity > 1
+                            ? '${e.name} ×${e.quantity}'
+                            : e.name,
+                      )
+                      .join(' · '),
+                  style: const TextStyle(fontSize: 13, color: _muted),
+                ),
+              ],
               const SizedBox(height: 16),
               _DetailRow(
                 icon: Icons.schedule_outlined,
@@ -360,143 +366,6 @@ class _AppointmentDetailSheetState
               ],
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EditAppointmentSheet extends ConsumerStatefulWidget {
-  const _EditAppointmentSheet({required this.appointment});
-
-  final DayAppointment appointment;
-
-  @override
-  ConsumerState<_EditAppointmentSheet> createState() =>
-      _EditAppointmentSheetState();
-}
-
-class _EditAppointmentSheetState extends ConsumerState<_EditAppointmentSheet> {
-  late DateTime _date;
-  late TimeOfDay _time;
-  late final TextEditingController _notes;
-  bool _saving = false;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    final starts = widget.appointment.startsAt;
-    _date = DateTime(starts.year, starts.month, starts.day);
-    _time = TimeOfDay(hour: starts.hour, minute: starts.minute);
-    _notes = TextEditingController(text: widget.appointment.notes ?? '');
-  }
-
-  @override
-  void dispose() {
-    _notes.dispose();
-    super.dispose();
-  }
-
-  DateTime get _startsAt => DateTime(
-        _date.year,
-        _date.month,
-        _date.day,
-        _time.hour,
-        _time.minute,
-      );
-
-  Future<void> _save() async {
-    final token = ref.read(accessTokenProvider);
-    final tenantId = ref.read(selectedTenantIdProvider);
-    if (token == null || tenantId == null) return;
-
-    setState(() {
-      _saving = true;
-      _error = null;
-    });
-    try {
-      await ref.read(mobileApiProvider).updateAppointment(
-            accessToken: token,
-            tenantId: tenantId,
-            appointmentId: widget.appointment.id,
-            startsAt: _startsAt.toUtc().toIso8601String(),
-            notes: _notes.text,
-          );
-      if (mounted) Navigator.pop(context, true);
-    } catch (e) {
-      setState(() => _error = e.toString());
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dateFmt = DateFormat('EEEE d MMMM', 'fr_FR');
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          12,
-          24,
-          24 + MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Modifier le rendez-vous',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.calendar_today_outlined),
-              title: Text(dateFmt.format(_date)),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _date,
-                  firstDate: DateTime.now().subtract(const Duration(days: 1)),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                  locale: const Locale('fr', 'FR'),
-                );
-                if (picked != null) setState(() => _date = picked);
-              },
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.schedule_outlined),
-              title: Text(_time.format(context)),
-              onTap: () async {
-                final picked = await showTimePicker(
-                  context: context,
-                  initialTime: _time,
-                );
-                if (picked != null) setState(() => _time = picked);
-              },
-            ),
-            TextField(
-              controller: _notes,
-              minLines: 2,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Notes',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
-            ],
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child: Text(_saving ? 'Enregistrement…' : 'Enregistrer'),
-            ),
-          ],
         ),
       ),
     );

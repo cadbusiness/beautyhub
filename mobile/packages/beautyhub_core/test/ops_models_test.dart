@@ -40,6 +40,36 @@ void main() {
     expect(appointment.durationLabel, "60'");
   });
 
+  test('DayAppointment duration includes extras', () {
+    final appointment = DayAppointment.fromJson({
+      'id': 'a1',
+      'startsAt': '2026-08-19T13:30:00.000Z',
+      'endsAt': '2026-08-19T15:00:00.000Z',
+      'status': 'booked',
+      'clientName': 'Karina',
+      'serviceName': 'Épilation',
+      'serviceDurationMin': 30,
+      'extras': [
+        {
+          'serviceId': 'extra-1',
+          'quantity': 1,
+          'name': 'Jambes',
+          'durationMin': 30,
+        },
+        {
+          'serviceId': 'extra-2',
+          'quantity': 2,
+          'name': 'Maillot',
+          'durationMin': 15,
+        },
+      ],
+    });
+
+    expect(appointment.extrasDurationMin, 60);
+    expect(appointment.durationMinutes, 90);
+    expect(appointment.extras.first.durationMin, 30);
+  });
+
   test('groupAppointmentsByStart keeps parallel cabins together', () {
     final t1 = DateTime(2026, 8, 19, 13, 30);
     final t2 = DateTime(2026, 8, 19, 14, 0);

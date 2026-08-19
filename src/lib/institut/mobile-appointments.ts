@@ -8,7 +8,14 @@ import {
 import {
   processLoyaltyForCompletedAppointment,
 } from "@/lib/institut/loyalty";
-import { checkAppointmentConflict } from "@/lib/institut/slots";
+import {
+  replaceAppointmentExtras,
+  resolveAppointmentLineTotals,
+} from "@/lib/institut/appointment-extras";
+import {
+  checkAppointmentConflict,
+  validateStaffSchedule,
+} from "@/lib/institut/slots";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 
@@ -44,6 +51,9 @@ export type MobileUpdateAppointmentInput = {
   status?: string;
   notes?: string | null;
   startsAt?: string;
+  serviceId?: string;
+  extras?: unknown;
+  force?: boolean;
 };
 
 export async function createMobileAppointment(
@@ -112,6 +122,8 @@ export async function updateMobileAppointment(
     notes?: string | null;
     starts_at?: string;
     ends_at?: string;
+    service_id?: string;
+    price_cents?: number;
   } = {};
 
   if (input.status != null) {
@@ -127,7 +139,7 @@ export async function updateMobileAppointment(
 
   const { data: previousAppt } = await supabase
     .from("inst_appointments")
-    .select("status, starts_at, ends_at, staff_id, resource_id")
+    .select("status, starts_at, ends_at, staff_id, resource_id, service_id")
     .eq("id", appointmentId)
     .eq("tenant_id", tenantId)
     .maybeSingle();
@@ -136,27 +148,112 @@ export async function updateMobileAppointment(
     return { error: "Rendez-vous introuvable.", code: "not_found" };
   }
 
-  if (input.startsAt != null) {
-    const startsAt = new Date(input.startsAt);
+  const serviceChanged = input.serviceId != null && input.serviceId.trim() !== "";
+  const extrasChanged = input.extras !== undefined;
+  const timeChanged = input.startsAt != null;
+  const force = input.force === true;
+  let extrasToSync: ReturnType<typeof parseExtras> | null = extrasChanged
+    ? parseExtras(input.extras)
+    : null;
+
+  if (serviceChanged || extrasChanged || timeChanged) {
+    const startsAt = timeChanged
+      ? new Date(input.startsAt!)
+      : new Date(previousAppt.starts_at);
     if (Number.isNaN(startsAt.getTime())) {
       return { error: "Date invalide.", code: "invalid_input" };
     }
-    const previousDuration = Math.max(
-      15 * 60_000,
-      new Date(previousAppt.ends_at).getTime() -
-        new Date(previousAppt.starts_at).getTime(),
-    );
-    const endsAt = new Date(startsAt.getTime() + previousDuration);
+
+    const serviceId = serviceChanged
+      ? String(input.serviceId).trim()
+      : previousAppt.service_id;
+
+    let extras = extrasToSync ?? [];
+    if (!extrasChanged) {
+      const { data: extraRows } = await supabase
+        .from("inst_appointment_extras")
+        .select("service_id, quantity")
+        .eq("appointment_id", appointmentId);
+      extras = (extraRows ?? [])
+        .map((row) => ({
+          service_id: row.service_id,
+          quantity: row.quantity,
+        }))
+        .filter((e) => e.service_id && e.quantity > 0);
+    }
+
+    let endsAt: Date;
+    let bufferBeforeMin = 0;
+    let bufferAfterMin = 0;
+
+    if (serviceId) {
+      const totals = await resolveAppointmentLineTotals(
+        supabase,
+        tenantId,
+        serviceId,
+        extras,
+      );
+      if ("error" in totals) {
+        return {
+          error:
+            totals.error === "service_not_found"
+              ? "Prestation introuvable."
+              : totals.error === "extra_not_found"
+                ? "Prestation ajoutée introuvable."
+                : totals.error,
+          code: "invalid_input",
+        };
+      }
+      endsAt = new Date(startsAt.getTime() + totals.durationMin * 60_000);
+      bufferBeforeMin = totals.bufferBeforeMin;
+      bufferAfterMin = totals.bufferAfterMin;
+      if (serviceChanged) patch.service_id = serviceId;
+      patch.price_cents = totals.priceCents;
+    } else {
+      const previousDuration = Math.max(
+        15 * 60_000,
+        new Date(previousAppt.ends_at).getTime() -
+          new Date(previousAppt.starts_at).getTime(),
+      );
+      endsAt = new Date(startsAt.getTime() + previousDuration);
+    }
+
     const conflict = await checkAppointmentConflict(supabase, tenantId, {
       staffId: previousAppt.staff_id,
       resourceId: previousAppt.resource_id,
       startsAt,
       endsAt,
+      bufferBeforeMin,
+      bufferAfterMin,
       excludeId: appointmentId,
     });
-    if (conflict) {
-      return { error: "Ce créneau est déjà occupé.", code: "conflict" };
+    if (conflict && !force) {
+      return {
+        error:
+          conflict === "resourceBusy"
+            ? "Cette cabine est déjà occupée sur ce créneau."
+            : "Ce créneau est déjà occupé.",
+        code: "conflict",
+      };
     }
+
+    const scheduleWarning = await validateStaffSchedule(
+      supabase,
+      tenantId,
+      previousAppt.staff_id,
+      startsAt,
+      endsAt,
+    );
+    if (scheduleWarning && !force) {
+      return {
+        error:
+          scheduleWarning === "noHoursToday"
+            ? "Pas d’horaires ce jour-là."
+            : "Ce créneau est hors horaires d’ouverture.",
+        code: "schedule",
+      };
+    }
+
     patch.starts_at = startsAt.toISOString();
     patch.ends_at = endsAt.toISOString();
   }
@@ -173,6 +270,18 @@ export async function updateMobileAppointment(
 
   if (error) {
     return { error: error.message, code: "update_failed" };
+  }
+
+  if (extrasToSync) {
+    const extraErr = await replaceAppointmentExtras(
+      supabase,
+      tenantId,
+      appointmentId,
+      extrasToSync,
+    );
+    if (extraErr) {
+      return { error: extraErr, code: "update_failed" };
+    }
   }
 
   if (patch.status === "completed") {

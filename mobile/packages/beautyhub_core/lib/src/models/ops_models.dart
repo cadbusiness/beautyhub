@@ -68,9 +68,14 @@ class DayAppointment {
 
   bool get isCancelled => status == 'cancelled' || status == 'no_show';
 
+  int get extrasDurationMin => extras.fold<int>(
+        0,
+        (sum, extra) => sum + extra.durationMin * extra.quantity,
+      );
+
   int get durationMinutes {
     if (serviceDurationMin != null && serviceDurationMin! > 0) {
-      return serviceDurationMin!;
+      return serviceDurationMin! + extrasDurationMin;
     }
     final minutes = endsAt.difference(startsAt).inMinutes;
     return minutes > 0 ? minutes : 0;
@@ -116,12 +121,14 @@ class AppointmentExtra {
     required this.quantity,
     required this.name,
     this.priceCents,
+    this.durationMin = 0,
   });
 
   final String serviceId;
   final int quantity;
   final String name;
   final int? priceCents;
+  final int durationMin;
 
   factory AppointmentExtra.fromJson(Map<String, dynamic> json) {
     return AppointmentExtra(
@@ -129,6 +136,7 @@ class AppointmentExtra {
       quantity: json['quantity'] as int? ?? 1,
       name: json['name'] as String? ?? 'Option',
       priceCents: json['priceCents'] as int?,
+      durationMin: (json['durationMin'] as num?)?.toInt() ?? 0,
     );
   }
 }

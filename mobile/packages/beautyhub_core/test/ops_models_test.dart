@@ -153,4 +153,37 @@ void main() {
 
     expect(next.map((a) => a.id), ['1']);
   });
+
+  test('RecurrencePreview parses conflict dates', () {
+    final preview = RecurrencePreview.fromJson({
+      'frequency': 'weekly',
+      'durationMin': 30,
+      'freeCount': 1,
+      'conflictCount': 1,
+      'occurrences': [
+        {
+          'date': '2026-08-19',
+          'startsAt': '2026-08-19T07:00:00.000Z',
+          'endsAt': '2026-08-19T07:30:00.000Z',
+          'isFirst': true,
+          'conflict': false,
+        },
+        {
+          'date': '2026-08-26',
+          'startsAt': '2026-08-26T07:00:00.000Z',
+          'endsAt': '2026-08-26T07:30:00.000Z',
+          'isFirst': false,
+          'conflict': true,
+          'kind': 'clientBusy',
+          'reason': 'Cette cliente a déjà un rendez-vous.',
+          'otherClientName': 'Karina',
+          'otherServiceName': 'Soin visage',
+        },
+      ],
+    });
+
+    expect(preview.conflictCount, 1);
+    expect(preview.occurrences.last.conflict, isTrue);
+    expect(preview.occurrences.last.kind, 'clientBusy');
+  });
 }

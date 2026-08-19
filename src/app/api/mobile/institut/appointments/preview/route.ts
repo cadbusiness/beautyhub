@@ -2,7 +2,8 @@ import {
   mobileErrorResponse,
   requireMobileTenantSession,
 } from "@/lib/mobile/session";
-import { createMobileAppointment } from "@/lib/institut/mobile-appointments";
+import { parseAppointmentLinesJson } from "@/lib/institut/appointment-booking";
+import { previewVisitRecurrence } from "@/lib/institut/recurrence-preview";
 
 export async function POST(request: Request) {
   try {
@@ -10,37 +11,31 @@ export async function POST(request: Request) {
       moduleId: "institut",
     });
     const body = (await request.json()) as Record<string, unknown>;
-    const result = await createMobileAppointment(
+    const lines = parseAppointmentLinesJson(JSON.stringify(body.lines ?? []));
+    const result = await previewVisitRecurrence(
       session.supabase,
       session.tenant.id,
       {
-        serviceId: body.serviceId != null ? String(body.serviceId) : undefined,
-        startsAt: String(body.startsAt ?? ""),
-        clientId: body.clientId != null ? String(body.clientId) : null,
+        startsAt: new Date(String(body.startsAt ?? "")),
+        lines,
         staffId: body.staffId != null ? String(body.staffId) : null,
         resourceId: body.resourceId != null ? String(body.resourceId) : null,
-        notes: body.notes != null ? String(body.notes) : null,
-        extras: body.extras,
-        lines: body.lines,
+        clientId: body.clientId != null ? String(body.clientId) : null,
         recurrenceFrequency:
           body.recurrenceFrequency != null ? String(body.recurrenceFrequency) : null,
         recurrenceUntil:
           body.recurrenceUntil != null ? String(body.recurrenceUntil) : null,
-        skipDates: Array.isArray(body.skipDates)
-          ? body.skipDates.map((d) => String(d))
-          : null,
-        force: body.force === true,
       },
     );
 
     if ("error" in result) {
       return Response.json(
-        { error: result.code ?? "create_failed", message: result.error },
+        { error: result.code, message: result.error },
         { status: 400 },
       );
     }
 
-    return Response.json({ ok: true, id: result.id, ids: result.ids });
+    return Response.json(result);
   } catch (error) {
     return mobileErrorResponse(error);
   }

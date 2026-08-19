@@ -1445,6 +1445,77 @@ class BookingExtraLine {
       };
 }
 
+class RecurrenceOccurrencePreview {
+  const RecurrenceOccurrencePreview({
+    required this.date,
+    required this.startsAt,
+    required this.endsAt,
+    required this.isFirst,
+    required this.conflict,
+    this.kind,
+    this.reason,
+    this.otherClientName,
+    this.otherServiceName,
+  });
+
+  final String date;
+  final DateTime startsAt;
+  final DateTime endsAt;
+  final bool isFirst;
+  final bool conflict;
+  final String? kind;
+  final String? reason;
+  final String? otherClientName;
+  final String? otherServiceName;
+
+  factory RecurrenceOccurrencePreview.fromJson(Map<String, dynamic> json) {
+    return RecurrenceOccurrencePreview(
+      date: json['date'] as String? ?? '',
+      startsAt: DateTime.parse(json['startsAt'] as String).toLocal(),
+      endsAt: DateTime.parse(json['endsAt'] as String).toLocal(),
+      isFirst: json['isFirst'] as bool? ?? false,
+      conflict: json['conflict'] as bool? ?? false,
+      kind: json['kind'] as String?,
+      reason: json['reason'] as String?,
+      otherClientName: json['otherClientName'] as String?,
+      otherServiceName: json['otherServiceName'] as String?,
+    );
+  }
+}
+
+class RecurrencePreview {
+  const RecurrencePreview({
+    required this.frequency,
+    required this.durationMin,
+    required this.freeCount,
+    required this.conflictCount,
+    required this.occurrences,
+  });
+
+  final String frequency;
+  final int durationMin;
+  final int freeCount;
+  final int conflictCount;
+  final List<RecurrenceOccurrencePreview> occurrences;
+
+  factory RecurrencePreview.fromJson(Map<String, dynamic> json) {
+    return RecurrencePreview(
+      frequency: json['frequency'] as String? ?? 'none',
+      durationMin: (json['durationMin'] as num?)?.toInt() ?? 0,
+      freeCount: (json['freeCount'] as num?)?.toInt() ?? 0,
+      conflictCount: (json['conflictCount'] as num?)?.toInt() ?? 0,
+      occurrences: (json['occurrences'] as List? ?? const [])
+          .whereType<Map>()
+          .map(
+            (e) => RecurrenceOccurrencePreview.fromJson(
+              Map<String, dynamic>.from(e),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
 class AppointmentLineInput {
   const AppointmentLineInput({
     required this.serviceId,

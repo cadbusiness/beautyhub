@@ -12,6 +12,7 @@ import {
 import { processSameDayRebookOnNewAppointment } from "@/lib/institut/loyalty-events";
 import { checkAppointmentConflict, type ConflictKey } from "@/lib/institut/slots";
 import {
+  dateKeyLocal,
   defaultUntilDate,
   isRecurrenceFrequency,
   occurrenceStarts,
@@ -34,6 +35,8 @@ export type CreateVisitInput = {
   lines: AppointmentLineInput[];
   recurrenceFrequency?: RecurrenceFrequency;
   recurrenceUntil?: string | null;
+  skipDates?: string[] | null;
+  force?: boolean;
 };
 
 export type CreateVisitSuccess = {
@@ -123,7 +126,19 @@ export async function createVisitAppointments(
     frequency === "none"
       ? null
       : input.recurrenceUntil || defaultUntilDate(input.startsAt, frequency);
-  const starts = occurrenceStarts(input.startsAt, frequency, untilDate);
+  const skip = new Set(
+    (input.skipDates ?? []).map((d) => d.trim()).filter(Boolean),
+  );
+  const starts = occurrenceStarts(input.startsAt, frequency, untilDate).filter(
+    (start) => !skip.has(dateKeyLocal(start)),
+  );
+  if (!starts.length) {
+    return {
+      ok: false,
+      code: "invalid_input",
+      error: "Aucune date libre pour cette récurrence.",
+    };
+  }
 
   const resolved: ResolvedLine[] = [];
   for (const line of lines) {
@@ -184,7 +199,7 @@ export async function createVisitAppointments(
       bufferBeforeMin: item.line.bufferBeforeMin,
       bufferAfterMin: item.line.bufferAfterMin,
     });
-    if (conflict) {
+    if (conflict && !input.force) {
       return {
         ok: false,
         code: "conflict",

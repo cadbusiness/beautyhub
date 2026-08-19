@@ -45,6 +45,8 @@ export type MobileCreateAppointmentInput = {
   lines?: unknown;
   recurrenceFrequency?: string | null;
   recurrenceUntil?: string | null;
+  skipDates?: string[] | null;
+  force?: boolean;
 };
 
 export type MobileUpdateAppointmentInput = {
@@ -91,6 +93,10 @@ export async function createMobileAppointment(
     lines,
     recurrenceFrequency: parseRecurrenceFrequency(input.recurrenceFrequency),
     recurrenceUntil: input.recurrenceUntil?.trim() || null,
+    skipDates: Array.isArray(input.skipDates)
+      ? input.skipDates.map((d) => String(d))
+      : null,
+    force: input.force === true,
   });
 
   if (!result.ok) {

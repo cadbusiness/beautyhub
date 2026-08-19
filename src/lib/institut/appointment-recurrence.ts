@@ -7,11 +7,13 @@ export function isRecurrenceFrequency(value: string): value is RecurrenceFrequen
   return (RECURRENCE_FREQUENCIES as readonly string[]).includes(value);
 }
 
-function dateKeyLocal(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+export function dateKeyLocal(d: Date, timeZone = "Europe/Paris"): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
 }
 
 function addMonthsKeepingDay(source: Date, months: number): Date {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,6 +76,11 @@ class _CreateAppointmentSheetState
   bool _untilManual = false;
   bool _saving = false;
   String? _error;
+  Timer? _previewDebounce;
+  RecurrencePreview? _preview;
+  bool _previewLoading = false;
+  String? _previewError;
+  final Set<String> _skippedDates = {};
 
   static const _black = Color(0xFF0A0A0A);
   static const _border = Color(0xFFE5E5E5);
@@ -89,6 +96,7 @@ class _CreateAppointmentSheetState
 
   @override
   void dispose() {
+    _previewDebounce?.cancel();
     _notesController.dispose();
     super.dispose();
   }
@@ -119,6 +127,7 @@ class _CreateAppointmentSheetState
         _untilManual = false;
       }
     });
+    _schedulePreview();
   }
 
   Future<void> _pickTime() async {
@@ -126,7 +135,10 @@ class _CreateAppointmentSheetState
       context: context,
       initialTime: _time,
     );
-    if (picked != null) setState(() => _time = picked);
+    if (picked != null) {
+      setState(() => _time = picked);
+      _schedulePreview();
+    }
   }
 
   Future<void> _pickUntil() async {
@@ -143,6 +155,7 @@ class _CreateAppointmentSheetState
         _until = picked;
         _untilManual = true;
       });
+      _schedulePreview();
     }
   }
 
@@ -204,7 +217,94 @@ class _CreateAppointmentSheetState
       _recurrence = frequency;
       _untilManual = false;
       _until = frequency == 'none' ? null : _defaultUntil(frequency);
+      if (frequency == 'none') {
+        _preview = null;
+        _previewError = null;
+        _skippedDates.clear();
+      }
     });
+    if (frequency != 'none') _schedulePreview();
+  }
+
+  List<AppointmentLineInput> _bookingLines() {
+    return _lines
+        .where((l) => l.serviceId != null && l.serviceId!.isNotEmpty)
+        .map(
+          (line) => AppointmentLineInput(
+            serviceId: line.serviceId!,
+            extras: line.extraQty.entries
+                .where((e) => e.value > 0)
+                .map(
+                  (e) => BookingExtraLine(serviceId: e.key, quantity: e.value),
+                )
+                .toList(),
+            staffId: _staffId,
+          ),
+        )
+        .toList();
+  }
+
+  DateTime get _startsAt => DateTime(
+        _date.year,
+        _date.month,
+        _date.day,
+        _time.hour,
+        _time.minute,
+      );
+
+  void _schedulePreview() {
+    _previewDebounce?.cancel();
+    if (_recurrence == 'none' || _bookingLines().isEmpty) {
+      setState(() {
+        _preview = null;
+        _previewError = null;
+        _previewLoading = false;
+        _skippedDates.clear();
+      });
+      return;
+    }
+    setState(() => _previewLoading = true);
+    _previewDebounce = Timer(const Duration(milliseconds: 350), _loadPreview);
+  }
+
+  Future<void> _loadPreview() async {
+    final token = ref.read(accessTokenProvider);
+    final tenantId = ref.read(selectedTenantIdProvider);
+    final lines = _bookingLines();
+    if (token == null || tenantId == null || lines.isEmpty) return;
+    try {
+      final preview = await ref.read(mobileApiProvider).previewRecurrence(
+            accessToken: token,
+            tenantId: tenantId,
+            startsAt: _startsAt.toUtc().toIso8601String(),
+            lines: lines,
+            clientId: _clientId,
+            staffId: _staffId,
+            recurrenceFrequency: _recurrence,
+            recurrenceUntil: _until == null
+                ? null
+                : DateFormat('yyyy-MM-dd').format(_until!),
+          );
+      if (!mounted) return;
+      setState(() {
+        _preview = preview;
+        _previewLoading = false;
+        _previewError = null;
+        _skippedDates
+          ..clear()
+          ..addAll(
+            preview.occurrences
+                .where((o) => o.conflict && !o.isFirst)
+                .map((o) => o.date),
+          );
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _previewLoading = false;
+        _previewError = e.toString();
+      });
+    }
   }
 
   Future<void> _loadExtras(_ServiceLine line) async {
@@ -242,6 +342,7 @@ class _CreateAppointmentSheetState
         line.extraQty = qty;
         line.loadingExtras = false;
       });
+      _schedulePreview();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -264,13 +365,36 @@ class _CreateAppointmentSheetState
     final tenantId = ref.read(selectedTenantIdProvider);
     if (token == null || tenantId == null) return;
 
-    final startsAt = DateTime(
-      _date.year,
-      _date.month,
-      _date.day,
-      _time.hour,
-      _time.minute,
-    );
+    final firstConflict = _preview?.occurrences.any((o) => o.isFirst && o.conflict) ?? false;
+    if (firstConflict) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Premier créneau occupé'),
+          content: Text(
+            _preview?.occurrences.first.reason ??
+                'Ce créneau est déjà pris. Voulez-vous le placer quand même ?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(backgroundColor: _black),
+              child: const Text('Placer quand même'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+
+    final keptConflicts = _preview?.occurrences
+            .where((o) => o.conflict && !_skippedDates.contains(o.date))
+            .isNotEmpty ??
+        false;
 
     setState(() {
       _saving = true;
@@ -278,24 +402,11 @@ class _CreateAppointmentSheetState
     });
 
     try {
-      final lines = filled
-          .map(
-            (line) => AppointmentLineInput(
-              serviceId: line.serviceId!,
-              extras: line.extraQty.entries
-                  .where((e) => e.value > 0)
-                  .map(
-                    (e) => BookingExtraLine(serviceId: e.key, quantity: e.value),
-                  )
-                  .toList(),
-              staffId: _staffId,
-            ),
-          )
-          .toList();
+      final lines = _bookingLines();
       await ref.read(mobileApiProvider).createAppointment(
             accessToken: token,
             tenantId: tenantId,
-            startsAt: startsAt.toUtc().toIso8601String(),
+            startsAt: _startsAt.toUtc().toIso8601String(),
             clientId: _clientId,
             staffId: _staffId,
             notes: _notesController.text.trim(),
@@ -304,6 +415,8 @@ class _CreateAppointmentSheetState
             recurrenceUntil: _recurrence == 'none' || _until == null
                 ? null
                 : DateFormat('yyyy-MM-dd').format(_until!),
+            skipDates: _skippedDates.toList(),
+            force: firstConflict || keptConflicts,
           );
       ref.invalidate(dayAgendaProvider);
       ref.invalidate(todayAgendaProvider);
@@ -359,6 +472,7 @@ class _CreateAppointmentSheetState
       line.extraQty = {};
     });
     await _loadExtras(line);
+    _schedulePreview();
   }
 
   Future<void> _openClientPicker() async {
@@ -390,6 +504,7 @@ class _CreateAppointmentSheetState
         _clientSubtitle = picked.subtitle;
       }
     });
+    _schedulePreview();
   }
 
   Future<void> _openStaffPicker(List<PosOption> staff) async {
@@ -406,6 +521,7 @@ class _CreateAppointmentSheetState
     setState(() {
       _staffId = picked.id == '__none__' ? null : picked.id;
     });
+    _schedulePreview();
   }
 
   @override
@@ -606,6 +722,23 @@ class _CreateAppointmentSheetState
                       'Prochaine le ${untilFmt.format(nextDate)} · $occurrenceCount rendez-vous',
                       style: const TextStyle(fontSize: 12, color: Color(0xFF737373)),
                     ),
+                    const SizedBox(height: 12),
+                    _RecurrencePreviewCard(
+                      loading: _previewLoading,
+                      error: _previewError,
+                      preview: _preview,
+                      skipped: _skippedDates,
+                      dateFmt: untilFmt,
+                      onToggleSkip: (date) {
+                        setState(() {
+                          if (_skippedDates.contains(date)) {
+                            _skippedDates.remove(date);
+                          } else {
+                            _skippedDates.add(date);
+                          }
+                        });
+                      },
+                    ),
                   ],
                   const SizedBox(height: 14),
                   const _FieldLabel('Notes'),
@@ -743,7 +876,7 @@ class _CreateAppointmentSheetState
               _ExtraRow(
                 extra: extra,
                 quantity: line.extraQty[extra.extraServiceId] ?? 0,
-                onChanged: (qty) {
+                    onChanged: (qty) {
                   setState(() {
                     if (qty <= 0) {
                       line.extraQty.remove(extra.extraServiceId);
@@ -751,6 +884,7 @@ class _CreateAppointmentSheetState
                       line.extraQty[extra.extraServiceId] = qty;
                     }
                   });
+                  _schedulePreview();
                 },
               ),
           ],
@@ -842,6 +976,134 @@ class _ExtraRow extends StatelessWidget {
                 ? null
                 : () => onChanged(quantity + 1),
             icon: const Icon(Icons.add_circle_outline, size: 20),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecurrencePreviewCard extends StatelessWidget {
+  const _RecurrencePreviewCard({
+    required this.loading,
+    required this.error,
+    required this.preview,
+    required this.skipped,
+    required this.dateFmt,
+    required this.onToggleSkip,
+  });
+
+  final bool loading;
+  final String? error;
+  final RecurrencePreview? preview;
+  final Set<String> skipped;
+  final DateFormat dateFmt;
+  final ValueChanged<String> onToggleSkip;
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading && preview == null) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 4),
+        child: Text(
+          'Vérification des créneaux…',
+          style: TextStyle(fontSize: 12, color: Color(0xFF737373)),
+        ),
+      );
+    }
+    if (error != null && preview == null) {
+      return Text(
+        error!,
+        style: const TextStyle(fontSize: 12, color: Color(0xFFDC2626)),
+      );
+    }
+    final data = preview;
+    if (data == null) return const SizedBox.shrink();
+
+    final conflicts = data.occurrences.where((o) => o.conflict).toList();
+    if (conflicts.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0FDF4),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFBBF7D0)),
+        ),
+        child: Text(
+          '${data.freeCount} dates libres — la récurrence est possible.',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF166534)),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFED7AA)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            data.freeCount == 0
+                ? 'Aucune date libre sur cette récurrence.'
+                : '${data.conflictCount} date${data.conflictCount > 1 ? 's' : ''} occupée${data.conflictCount > 1 ? 's' : ''} · ${data.freeCount} libre${data.freeCount > 1 ? 's' : ''}',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF9A3412),
+            ),
+          ),
+          const SizedBox(height: 8),
+          for (final item in conflicts) ...[
+            Text(
+              dateFmt.format(item.startsAt),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0A0A0A),
+              ),
+            ),
+            Text(
+              item.reason ?? 'Créneau déjà occupé.',
+              style: const TextStyle(fontSize: 12, color: Color(0xFF737373)),
+            ),
+            if (!item.isFirst)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => onToggleSkip(item.date),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    foregroundColor: const Color(0xFF0A0A0A),
+                  ),
+                  child: Text(
+                    skipped.contains(item.date)
+                        ? 'Date sautée — appuyer pour la garder'
+                        : 'Garder cette date quand même',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8, top: 2),
+                child: Text(
+                  'Changez l’heure, ou confirmez au moment de créer.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF9A3412)),
+                ),
+              ),
+            const SizedBox(height: 6),
+          ],
+          Text(
+            skipped.isEmpty
+                ? 'Les dates occupées seront tout de même créées.'
+                : 'Solution : les dates occupées seront sautées, le reste de la série est créé.',
+            style: const TextStyle(fontSize: 12, color: Color(0xFF9A3412)),
           ),
         ],
       ),

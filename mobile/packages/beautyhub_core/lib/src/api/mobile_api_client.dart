@@ -272,6 +272,8 @@ class MobileApiClient {
     List<BookingExtraLine>? extras,
     String? recurrenceFrequency,
     String? recurrenceUntil,
+    List<String>? skipDates,
+    bool force = false,
   }) async {
     final response = await _http.post(
       _uri('/api/mobile/institut/appointments'),
@@ -290,10 +292,40 @@ class MobileApiClient {
           'recurrenceFrequency': recurrenceFrequency,
         if (recurrenceUntil != null && recurrenceUntil.isNotEmpty)
           'recurrenceUntil': recurrenceUntil,
+        if (skipDates != null && skipDates.isNotEmpty) 'skipDates': skipDates,
+        if (force) 'force': true,
       }),
     );
     final body = await _decode(response);
     return body['id'] as String? ?? '';
+  }
+
+  Future<RecurrencePreview> previewRecurrence({
+    required String accessToken,
+    required String tenantId,
+    required String startsAt,
+    required List<AppointmentLineInput> lines,
+    String? clientId,
+    String? staffId,
+    String? recurrenceFrequency,
+    String? recurrenceUntil,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/appointments/preview'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'startsAt': startsAt,
+        'lines': lines.map((e) => e.toJson()).toList(),
+        if (clientId != null && clientId.isNotEmpty) 'clientId': clientId,
+        if (staffId != null && staffId.isNotEmpty) 'staffId': staffId,
+        if (recurrenceFrequency != null && recurrenceFrequency.isNotEmpty)
+          'recurrenceFrequency': recurrenceFrequency,
+        if (recurrenceUntil != null && recurrenceUntil.isNotEmpty)
+          'recurrenceUntil': recurrenceUntil,
+      }),
+    );
+    final body = await _decode(response);
+    return RecurrencePreview.fromJson(body);
   }
 
   Future<List<ServiceExtraConfig>> fetchServiceExtras({

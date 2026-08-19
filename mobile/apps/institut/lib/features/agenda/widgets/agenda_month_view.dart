@@ -197,6 +197,11 @@ class _MonthCell extends StatelessWidget {
       if (staffColors.length >= 4) break;
     }
 
+    final barCount = staffColors.length;
+    const maxBars = 3;
+    final shown = staffColors.take(maxBars).toList(growable: false);
+    final extra = count - shown.length;
+
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -212,100 +217,72 @@ class _MonthCell extends StatelessWidget {
           ),
         ),
         child: ClipRect(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Center(
-                  child: Container(
-                    width: 22,
-                    height: 22,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? _black
-                          : isToday
-                              ? _accent
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(3, 4, 3, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Ligne : numéro (pastille) — "+2" à droite si > 3 RDV.
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 22,
+                      height: 22,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? _black
+                            : isToday
+                                ? _accent
+                                : Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '${day.day}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: isToday || isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: (isSelected || isToday)
+                              ? Colors.white
+                              : textColor,
+                        ),
+                      ),
                     ),
-                    child: Text(
-                      '${day.day}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isToday || isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: (isSelected || isToday)
-                            ? Colors.white
-                            : textColor,
+                  ],
+                ),
+                const SizedBox(height: 3),
+                // Barres colorées (une par praticien, max 3).
+                for (final c in shown)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Container(
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: c,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Expanded(
-                child: staffColors.isEmpty
-                    ? const SizedBox.shrink()
-                    : LayoutBuilder(
-                        builder: (context, constraints) {
-                          // Barres colorées empilées (une par praticien).
-                          // Compact et visuel — le nombre exact est en bas
-                          // en petit chiffre.
-                          final barCount = staffColors.length;
-                          final maxBars = 3;
-                          final shown =
-                              staffColors.take(maxBars).toList(growable: false);
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              for (final c in shown)
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                      3, 0, 3, 1.5),
-                                  child: Container(
-                                    height: 3,
-                                    decoration: BoxDecoration(
-                                      color: c,
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                ),
-                              if (barCount > maxBars)
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                      3, 0, 3, 1.5),
-                                  child: Container(
-                                    height: 3,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF9CA3AF),
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                ),
-                              const Spacer(),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 3),
-                                child: Text(
-                                  '$count',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF737373),
-                                    height: 1,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                // Discret "+N" seulement si vraiment plus de 3 RDV en plus.
+                if (extra > 0 && barCount >= maxBars)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Text(
+                      '+$extra',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF9CA3AF),
+                        height: 1,
                       ),
-              ),
-            ],
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

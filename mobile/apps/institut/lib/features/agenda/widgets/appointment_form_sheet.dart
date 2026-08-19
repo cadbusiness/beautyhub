@@ -71,6 +71,7 @@ class _CreateAppointmentSheetState
   final _notesController = TextEditingController();
   String _recurrence = 'none';
   DateTime? _until;
+  bool _untilManual = false;
   bool _saving = false;
   String? _error;
 
@@ -108,7 +109,16 @@ class _CreateAppointmentSheetState
       lastDate: DateTime.now().add(const Duration(days: 365)),
       locale: const Locale('fr', 'FR'),
     );
-    if (picked != null) setState(() => _date = picked);
+    if (picked == null) return;
+    setState(() {
+      _date = picked;
+      if (_recurrence != 'none' && !_untilManual) {
+        _until = _defaultUntil(_recurrence);
+      } else if (_until != null && _until!.isBefore(_date)) {
+        _until = _defaultUntil(_recurrence);
+        _untilManual = false;
+      }
+    });
   }
 
   Future<void> _pickTime() async {
@@ -120,7 +130,7 @@ class _CreateAppointmentSheetState
   }
 
   Future<void> _pickUntil() async {
-    final initial = _until ?? _date.add(const Duration(days: 90));
+    final initial = _until ?? _defaultUntil(_recurrence);
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -128,7 +138,73 @@ class _CreateAppointmentSheetState
       lastDate: DateTime.now().add(const Duration(days: 400)),
       locale: const Locale('fr', 'FR'),
     );
-    if (picked != null) setState(() => _until = picked);
+    if (picked != null) {
+      setState(() {
+        _until = picked;
+        _untilManual = true;
+      });
+    }
+  }
+
+  DateTime _addMonths(DateTime source, int months) {
+    final day = source.day;
+    final cursor = DateTime(source.year, source.month + months, 1);
+    final lastDay = DateTime(cursor.year, cursor.month + 1, 0).day;
+    return DateTime(cursor.year, cursor.month, day > lastDay ? lastDay : day);
+  }
+
+  DateTime _defaultUntil(String frequency) {
+    switch (frequency) {
+      case 'weekly':
+        return _date.add(const Duration(days: 7 * 12));
+      case 'biweekly':
+        return _date.add(const Duration(days: 14 * 6));
+      case 'monthly':
+        return _addMonths(_date, 6);
+      default:
+        return _date.add(const Duration(days: 90));
+    }
+  }
+
+  DateTime _nextOccurrence(String frequency) {
+    switch (frequency) {
+      case 'weekly':
+        return _date.add(const Duration(days: 7));
+      case 'biweekly':
+        return _date.add(const Duration(days: 14));
+      case 'monthly':
+        return _addMonths(_date, 1);
+      default:
+        return _date;
+    }
+  }
+
+  int _occurrenceCount(String frequency, DateTime until) {
+    var count = 1;
+    var cursor = _date;
+    const max = 52;
+    while (count < max) {
+      if (frequency == 'weekly') {
+        cursor = cursor.add(const Duration(days: 7));
+      } else if (frequency == 'biweekly') {
+        cursor = cursor.add(const Duration(days: 14));
+      } else if (frequency == 'monthly') {
+        cursor = _addMonths(cursor, 1);
+      } else {
+        return count;
+      }
+      if (cursor.isAfter(until)) break;
+      count++;
+    }
+    return count;
+  }
+
+  void _setRecurrence(String frequency) {
+    setState(() {
+      _recurrence = frequency;
+      _untilManual = false;
+      _until = frequency == 'none' ? null : _defaultUntil(frequency);
+    });
   }
 
   Future<void> _loadExtras(_ServiceLine line) async {
@@ -349,6 +425,9 @@ class _CreateAppointmentSheetState
           error: (e, _) => Text('$e'),
           data: (pos) {
             final services = _catalogServices(pos);
+            final untilDate = _until ?? _defaultUntil(_recurrence);
+            final nextDate = _nextOccurrence(_recurrence);
+            final occurrenceCount = _occurrenceCount(_recurrence, untilDate);
             final selectedClient = _clientId == null
                 ? null
                 : pos.clients.firstWhere(
@@ -503,14 +582,7 @@ class _CreateAppointmentSheetState
                           ),
                           DropdownMenuItem(value: 'monthly', child: Text('Tous les mois')),
                         ],
-                        onChanged: (value) {
-                          setState(() {
-                            _recurrence = value ?? 'none';
-                            if (_recurrence != 'none') {
-                              _until ??= _date.add(const Duration(days: 90));
-                            }
-                          });
-                        },
+                        onChanged: (value) => _setRecurrence(value ?? 'none'),
                       ),
                     ),
                   ),
@@ -524,15 +596,15 @@ class _CreateAppointmentSheetState
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          untilFmt.format(_until ?? _date.add(const Duration(days: 90))),
+                          untilFmt.format(untilDate),
                           style: const TextStyle(color: _black),
                         ),
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      'Les occurrences reprennent les mêmes prestations et extras.',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF737373)),
+                    Text(
+                      'Prochaine le ${untilFmt.format(nextDate)} · $occurrenceCount rendez-vous',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF737373)),
                     ),
                   ],
                   const SizedBox(height: 14),

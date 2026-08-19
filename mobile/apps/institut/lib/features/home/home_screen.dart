@@ -117,7 +117,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
               sliver: SliverToBoxAdapter(
                 child: dayAsync.when(
                   loading: () => const _LoadingBlock(height: 96),
@@ -153,13 +153,13 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
               sliver: SliverToBoxAdapter(
                 child: const DashboardSalesChannelFilter(),
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               sliver: SliverToBoxAdapter(
                 child: dashboardAsync.when(
                   loading: () => const _LoadingBlock(height: 88),
@@ -173,7 +173,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
               sliver: SliverToBoxAdapter(
                 child: _SectionCard(
                   title: 'Chiffre d’affaires',
@@ -187,7 +187,7 @@ class HomeScreen extends ConsumerWidget {
                     orElse: () => 'Cette semaine',
                   ),
                   child: dashboardAsync.when(
-                    loading: () => const _LoadingBlock(height: 160),
+                    loading: () => const _LoadingBlock(height: 108),
                     error: (_, __) => const SizedBox.shrink(),
                     data: (dash) => DashboardBarChart(series: dash.series),
                   ),
@@ -195,7 +195,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
               sliver: SliverToBoxAdapter(
                 child: dayAsync.when(
                   loading: () => const SizedBox.shrink(),
@@ -224,6 +224,14 @@ class HomeScreen extends ConsumerWidget {
                       subtitle: rest.length == 1
                           ? '1 rendez-vous'
                           : '${rest.length} rendez-vous',
+                      trailing: _HeaderLink(
+                        label: remaining > 0
+                            ? remaining == 1
+                                ? '+1'
+                                : '+$remaining'
+                            : 'Agenda',
+                        onTap: () => _openAgenda(context),
+                      ),
                       child: Column(
                         children: [
                           for (var i = 0; i < preview.length; i++) ...[
@@ -238,24 +246,6 @@ class HomeScreen extends ConsumerWidget {
                               ),
                             ),
                           ],
-                          if (remaining > 0) ...[
-                            const Divider(height: 1, color: _border),
-                            TextButton(
-                              onPressed: () => _openAgenda(context),
-                              child: Text(
-                                remaining == 1
-                                    ? 'Voir 1 autre dans l’agenda'
-                                    : 'Voir les $remaining autres dans l’agenda',
-                              ),
-                            ),
-                          ] else
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton(
-                                onPressed: () => _openAgenda(context),
-                                child: const Text('Ouvrir l’agenda'),
-                              ),
-                            ),
                         ],
                       ),
                     );
@@ -264,7 +254,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
               sliver: SliverToBoxAdapter(
                 child: cashAsync.when(
                   loading: () => const SizedBox.shrink(),
@@ -408,46 +398,100 @@ class _SectionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.child,
+    this.trailing,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: HomeScreen._border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: HomeScreen._black,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: HomeScreen._black,
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 1),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: HomeScreen._muted,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              ?trailing,
+            ],
           ),
-          if (subtitle.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: HomeScreen._muted),
-            ),
-          ],
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           child,
         ],
+      ),
+    );
+  }
+}
+
+class _HeaderLink extends StatelessWidget {
+  const _HeaderLink({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 2, 0, 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: HomeScreen._black,
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: HomeScreen._muted,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -481,16 +525,16 @@ class _TimelineRow extends StatelessWidget {
           children: [
             Container(
               width: 3,
-              margin: const EdgeInsets.symmetric(vertical: 10),
+              margin: const EdgeInsets.symmetric(vertical: 6),
               decoration: BoxDecoration(
                 color: accent,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 7),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

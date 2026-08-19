@@ -8,7 +8,7 @@ class DashboardBarChart extends StatelessWidget {
   const DashboardBarChart({
     super.key,
     required this.series,
-    this.height = 132,
+    this.height = 108,
   });
 
   final List<DashboardSeriesPoint> series;
@@ -58,7 +58,7 @@ class DashboardBarChart extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

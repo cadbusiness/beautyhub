@@ -141,6 +141,33 @@ class AppointmentExtra {
   }
 }
 
+class AgendaRange {
+  const AgendaRange({
+    required this.from,
+    required this.to,
+    required this.appointments,
+    this.tenantName,
+  });
+
+  final String from;
+  final String to;
+  final List<DayAppointment> appointments;
+  final String? tenantName;
+
+  factory AgendaRange.fromJson(Map<String, dynamic> json) {
+    final list = (json['appointments'] as List? ?? const [])
+        .whereType<Map>()
+        .map((e) => DayAppointment.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+    return AgendaRange(
+      from: json['from'] as String? ?? '',
+      to: json['to'] as String? ?? '',
+      tenantName: (json['tenant'] as Map?)?['name'] as String?,
+      appointments: list,
+    );
+  }
+}
+
 class AppointmentTimeGroup {
   const AppointmentTimeGroup({
     required this.startsAt,

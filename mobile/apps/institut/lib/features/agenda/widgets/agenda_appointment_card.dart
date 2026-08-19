@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../shared/cabin_badge.dart';
 import '../../shared/money.dart';
+import '../agenda_colors.dart';
 import '../agenda_format.dart';
 
 class AgendaTimeGroup extends StatelessWidget {
@@ -126,57 +127,72 @@ class _AgendaSlot extends StatelessWidget {
     final exception = _exceptionLabel();
     final price = appointment.priceCents;
     final cabin = appointment.resourceName;
+    final accent = agendaAccentColor(appointment);
+    final pastel = agendaPastel(accent);
 
-    return InkWell(
-      onTap: onTap,
-      child: Opacity(
-        opacity: cancelled ? 0.45 : 1,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Opacity(
+          opacity: cancelled ? 0.55 : 1,
+          child: Container(
+            decoration: BoxDecoration(
+              color: pastel,
+              borderRadius: BorderRadius.circular(10),
+              border: Border(left: BorderSide(color: accent, width: 4)),
+            ),
+            padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (cabin != null) ...[
-                  CabinMark(label: cabin, size: 20),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: Text(
-                    appointment.clientName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: _black,
-                      decoration: cancelled ? TextDecoration.lineThrough : null,
+                Row(
+                  children: [
+                    if (cabin != null) ...[
+                      CabinMark(label: cabin, size: 20),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: Text(
+                        appointment.clientName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: _black,
+                          decoration:
+                              cancelled ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (price != null && price > 0) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        formatEuros(price),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _black,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                if (price != null && price > 0) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    formatEuros(price),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _black,
-                    ),
-                  ),
-                ],
+                const SizedBox(height: 3),
+                Text(
+                  [
+                    appointmentServiceLine(appointment),
+                    ?exception,
+                  ].join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12, color: _muted, height: 1.25),
+                ),
               ],
             ),
-            const SizedBox(height: 3),
-            Text(
-              [
-                appointmentServiceLine(appointment),
-                ?exception,
-              ].join(' · '),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: _muted, height: 1.25),
-            ),
-          ],
+          ),
         ),
       ),
     );

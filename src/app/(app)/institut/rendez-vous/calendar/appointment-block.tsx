@@ -9,6 +9,8 @@ import {
   accentColor,
   apptBlockStyle,
   minutesFromMidnight,
+  pastelBackground,
+  pastelForeground,
   snapMinutes,
   startOfDay,
 } from "./utils";
@@ -177,7 +179,7 @@ export function AppointmentBlock({
         setDragTop(null);
       }}
       className={cn(
-        "absolute z-[5] overflow-hidden rounded-md border border-slate-200 bg-white text-left text-xs shadow-sm transition-shadow hover:shadow-md hover:z-[15]",
+        "absolute z-[5] overflow-hidden rounded-md border border-transparent text-left text-xs shadow-sm transition-shadow hover:shadow-md hover:z-[15]",
         compact ? "px-1.5 py-0.5" : "px-2 py-1",
         cancelled && "opacity-50",
         dragTop !== null && "z-30 ring-2 ring-slate-400",
@@ -187,7 +189,9 @@ export function AppointmentBlock({
         height,
         left: hasLanes ? `calc(${laneLeftPct}% + 2px)` : 4,
         width: hasLanes ? `calc(${laneWidthPct}% - 3px)` : "calc(100% - 8px)",
-        borderLeftWidth: 3,
+        backgroundColor: pastelBackground(color),
+        color: pastelForeground(color),
+        borderLeftWidth: 4,
         borderLeftColor: color,
       }}
     >

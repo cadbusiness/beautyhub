@@ -6,6 +6,7 @@ import {
   fetchAppointmentsInRange,
   serializeCalendarAppointments,
 } from "@/lib/institut/slots";
+import { serializeMobileAppointment } from "@/lib/mobile/institut-appointments";
 
 function todayYmd(timeZone = "Europe/Paris") {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -59,37 +60,6 @@ function addDaysYmd(dateYmd: string, days: number) {
   const d = new Date(`${dateYmd}T12:00:00.000Z`);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
-}
-
-function serializeMobileAppointment(a: ReturnType<typeof serializeCalendarAppointments>[number]) {
-  return {
-    id: a.id,
-    startsAt: a.starts_at,
-    endsAt: a.ends_at,
-    status: a.status,
-    notes: a.notes,
-    priceCents: a.price_cents,
-    clientId: a.client_id,
-    clientName: a.client?.full_name ?? a.client?.email ?? "Client",
-    clientPhone: a.client?.phone ?? null,
-    clientEmail: a.client?.email ?? null,
-    serviceId: a.service_id,
-    serviceName: a.service?.name ?? "Prestation",
-    serviceDurationMin: a.service?.duration_min ?? null,
-    staffId: a.staff_id,
-    staffName: a.staff?.full_name ?? null,
-    serviceColor: a.service?.color ?? null,
-    staffColor: a.staff?.color ?? null,
-    resourceId: a.resource_id,
-    resourceName: a.resource?.name ?? null,
-    extras: (a.extras ?? []).map((e) => ({
-      serviceId: e.service_id,
-      quantity: e.quantity,
-      name: e.name,
-      priceCents: e.price_cents,
-      durationMin: e.duration_min,
-    })),
-  };
 }
 
 function computeDayStats(

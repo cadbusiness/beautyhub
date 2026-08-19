@@ -260,6 +260,20 @@ class MobileApiClient {
     return DayAgenda.fromJson(body);
   }
 
+  Future<AgendaRange> fetchAgendaRange({
+    required String accessToken,
+    required String tenantId,
+    required String from,
+    required String to,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/agenda/range', {'from': from, 'to': to}),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return AgendaRange.fromJson(body);
+  }
+
   Future<String> createAppointment({
     required String accessToken,
     required String tenantId,

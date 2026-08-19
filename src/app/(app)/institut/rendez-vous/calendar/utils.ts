@@ -103,8 +103,45 @@ export function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-export function accentColor(appt: { service?: { color?: string | null } | null }): string {
-  return appt.service?.color ?? "#64748b";
+export function accentColor(appt: {
+  staff?: { color?: string | null } | null;
+  service?: { color?: string | null } | null;
+}): string {
+  return appt.staff?.color ?? appt.service?.color ?? "#64748b";
+}
+
+function parseHex(input: string): { r: number; g: number; b: number } | null {
+  const hex = input.trim().replace(/^#/, "");
+  if (hex.length === 3) {
+    const r = parseInt(hex[0] + hex[0], 16);
+    const g = parseInt(hex[1] + hex[1], 16);
+    const b = parseInt(hex[2] + hex[2], 16);
+    if ([r, g, b].some((n) => Number.isNaN(n))) return null;
+    return { r, g, b };
+  }
+  if (hex.length === 6) {
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    if ([r, g, b].some((n) => Number.isNaN(n))) return null;
+    return { r, g, b };
+  }
+  return null;
+}
+
+/** Fond très pâle dérivé d'une couleur hex (fallback gris si parse KO). */
+export function pastelBackground(hex: string, opacity = 0.16): string {
+  const rgb = parseHex(hex);
+  if (!rgb) return "rgba(148, 163, 184, 0.12)";
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
+}
+
+/** Couleur de texte lisible sur un fond pastel dérivé de `hex`. */
+export function pastelForeground(hex: string): string {
+  const rgb = parseHex(hex);
+  if (!rgb) return "#0f172a";
+  const luminance = 0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b;
+  return luminance < 96 ? "#0f172a" : "#0f172a";
 }
 
 export type OverlapLayout = {

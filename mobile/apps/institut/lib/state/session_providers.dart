@@ -75,6 +75,11 @@ final selectedAgendaDateProvider = StateProvider<DateTime>((ref) {
   return DateTime(now.year, now.month, now.day);
 });
 
+enum AgendaViewMode { day, week, month }
+
+final agendaViewModeProvider =
+    StateProvider<AgendaViewMode>((ref) => AgendaViewMode.day);
+
 final selectedStaffFilterProvider = StateProvider<String?>((ref) => null);
 
 final selectedResourceFilterProvider = StateProvider<String?>((ref) => null);
@@ -130,13 +135,50 @@ final dayAgendaProvider = FutureProvider.autoDispose<DayAgenda>((ref) async {
     throw StateError('Session ou institut manquant');
   }
   final api = ref.watch(mobileApiProvider);
-  final date =
-      '${selectedDate.year.toString().padLeft(4, '0')}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+  final date = _formatYmd(selectedDate);
   return api.fetchDay(
     accessToken: token,
     tenantId: tenantId,
     date: date,
     includeWeek: true,
+  );
+});
+
+String _formatYmd(DateTime date) {
+  return '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
+}
+
+class AgendaRangeArgs {
+  const AgendaRangeArgs({required this.from, required this.to});
+  final DateTime from;
+  final DateTime to;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AgendaRangeArgs &&
+          _formatYmd(other.from) == _formatYmd(from) &&
+          _formatYmd(other.to) == _formatYmd(to);
+
+  @override
+  int get hashCode => Object.hash(_formatYmd(from), _formatYmd(to));
+}
+
+final agendaRangeProvider = FutureProvider.autoDispose
+    .family<AgendaRange, AgendaRangeArgs>((ref, args) async {
+  final token = ref.watch(accessTokenProvider);
+  final tenantId = ref.watch(selectedTenantIdProvider);
+  if (token == null || tenantId == null) {
+    throw StateError('Session ou institut manquant');
+  }
+  final api = ref.watch(mobileApiProvider);
+  return api.fetchAgendaRange(
+    accessToken: token,
+    tenantId: tenantId,
+    from: _formatYmd(args.from),
+    to: _formatYmd(args.to),
   );
 });
 

@@ -210,27 +210,40 @@ List<AppointmentTimeGroup> groupAppointmentsByStart(
 }
 
 /// Prochain créneau (et les RDV qui démarrent à la même minute, cabines différentes).
+///
+/// Utilise `now` (par défaut DateTime.now()) pour décider ce qui est encore
+/// à venir. Le `hint` (renvoyé par l'API au moment de la requête) sert
+/// uniquement d'ancre si l'heure de démarrage n'est PAS déjà terminée du
+/// point de vue de `now` — sinon on l'ignore et on repart du premier RDV
+/// à venir. Ça évite de rester bloqué sur le RDV de 10h alors qu'il est
+/// 10h20 et qu'il aurait fallu proposer le RDV de 10h15.
 List<DayAppointment> nextParallelAppointments(
   List<DayAppointment> appointments, {
   DateTime? now,
   DayAppointment? hint,
 }) {
   final moment = now ?? DateTime.now();
-  final horizon = moment.subtract(const Duration(minutes: 30));
+
+  final hintIsStale = hint != null && hint.endsAt.isBefore(moment);
+  final activeHint = hintIsStale ? null : hint;
+
   final upcoming = appointments.where((a) {
     if (a.isCancelled) return false;
-    if (hint != null && appointmentStartKey(a.startsAt) == appointmentStartKey(hint.startsAt)) {
+    if (activeHint != null &&
+        appointmentStartKey(a.startsAt) ==
+            appointmentStartKey(activeHint.startsAt)) {
       return true;
     }
-    return !a.endsAt.isBefore(moment) || !a.startsAt.isBefore(horizon);
+    // Un RDV terminé (endsAt < now) n'est plus un prochain RDV.
+    return !a.endsAt.isBefore(moment);
   }).toList()
     ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
 
   if (upcoming.isEmpty) return const [];
 
-  final anchor = hint != null &&
-          upcoming.any((a) => a.id == hint.id)
-      ? hint.startsAt
+  final anchor = activeHint != null &&
+          upcoming.any((a) => a.id == activeHint.id)
+      ? activeHint.startsAt
       : upcoming.first.startsAt;
   final key = appointmentStartKey(anchor);
   return upcoming

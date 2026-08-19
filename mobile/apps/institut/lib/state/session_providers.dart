@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -85,6 +87,24 @@ final selectedStaffFilterProvider = StateProvider<String?>((ref) => null);
 final selectedResourceFilterProvider = StateProvider<String?>((ref) => null);
 
 final dashboardSalesChannelProvider = StateProvider<String>((ref) => 'all');
+
+/// Émet DateTime.now() toutes les 30 secondes.
+/// Watch dans un widget → il rebuild périodiquement (utile pour recalculer
+/// "quel est le prochain RDV" ou "session ouverte depuis X min" sans que
+/// l'utilisateur ait à faire un pull-to-refresh).
+final minuteTickerProvider = StreamProvider<DateTime>((ref) {
+  final controller = StreamController<DateTime>();
+  controller.add(DateTime.now());
+  final timer = Timer.periodic(
+    const Duration(seconds: 30),
+    (_) => controller.add(DateTime.now()),
+  );
+  ref.onDispose(() {
+    timer.cancel();
+    controller.close();
+  });
+  return controller.stream;
+});
 
 final dashboardProvider =
     FutureProvider.autoDispose<MobileDashboard>((ref) async {

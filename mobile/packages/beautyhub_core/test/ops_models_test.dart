@@ -154,6 +154,34 @@ void main() {
     expect(next.map((a) => a.id), ['1']);
   });
 
+  test('nextParallelAppointments ignores a hint that has already ended', () {
+    // À 10h15, on ne veut plus voir le RDV de 10h (terminé à 10h10)
+    // mais celui de 10h15 même si le serveur avait renvoyé le premier.
+    final now = DateTime(2026, 8, 19, 10, 15);
+    final ten = DateTime(2026, 8, 19, 10, 0);
+    final tenTen = DateTime(2026, 8, 19, 10, 10);
+    final tenFifteen = DateTime(2026, 8, 19, 10, 15);
+    final staleHint = _appt(
+      id: '1',
+      startsAt: ten,
+      endsAt: tenTen,
+    );
+    final next = nextParallelAppointments(
+      [
+        staleHint,
+        _appt(
+          id: '2',
+          startsAt: tenFifteen,
+          endsAt: tenFifteen.add(const Duration(minutes: 30)),
+        ),
+      ],
+      now: now,
+      hint: staleHint,
+    );
+
+    expect(next.map((a) => a.id), ['2']);
+  });
+
   test('RecurrencePreview parses conflict dates', () {
     final preview = RecurrencePreview.fromJson({
       'frequency': 'weekly',

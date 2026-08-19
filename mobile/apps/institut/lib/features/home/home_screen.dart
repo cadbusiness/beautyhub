@@ -54,6 +54,10 @@ class HomeScreen extends ConsumerWidget {
     final dashboardAsync = ref.watch(dashboardProvider);
     final dayAsync = ref.watch(todayAgendaProvider);
     final cashAsync = ref.watch(cashSessionProvider);
+    // Rebuild toutes les 30 s pour que "prochain RDV" avance
+    // automatiquement quand l'heure d'un RDV est passée, sans exiger
+    // un pull-to-refresh manuel.
+    ref.watch(minuteTickerProvider);
     final timeFmt = DateFormat.Hm();
     final todayLabel = DateFormat('EEEE d MMMM', 'fr_FR').format(DateTime.now());
 

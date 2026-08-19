@@ -12,6 +12,8 @@ class PickerItem {
     this.subtitle,
     this.trailing,
     this.searchKeywords,
+    this.groupId,
+    this.groupLabel,
   });
 
   final String id;
@@ -23,6 +25,10 @@ class PickerItem {
 
   /// Champs supplémentaires à inclure dans la recherche (téléphone, SKU…).
   final List<String>? searchKeywords;
+
+  /// Catégorie pour le filtre (prestations, etc.).
+  final String? groupId;
+  final String? groupLabel;
 
   bool matches(String query) {
     if (query.isEmpty) return true;
@@ -257,6 +263,8 @@ class _PickerSheetState extends State<_PickerSheet>
   int _searchGen = 0;
   String? _fromLetter;
   String? _scrubLetter;
+  String? _groupId;
+  bool _showGroups = true;
 
   static const _border = Color(0xFFE5E5E5);
 
@@ -430,6 +438,14 @@ class _PickerSheetState extends State<_PickerSheet>
                             }
                           },
                           autofocusSearch: !widget.showAlphabet,
+                          selectedGroupId: _groupId,
+                          showGroups: _showGroups,
+                          onToggleGroups: () {
+                            setState(() => _showGroups = !_showGroups);
+                          },
+                          onGroupChanged: (id) {
+                            setState(() => _groupId = id);
+                          },
                         ),
                       ),
               ),
@@ -551,6 +567,10 @@ class _BrowseView extends StatelessWidget {
     required this.onLetter,
     required this.onLetterDragEnd,
     required this.autofocusSearch,
+    required this.selectedGroupId,
+    required this.showGroups,
+    required this.onToggleGroups,
+    required this.onGroupChanged,
   });
 
   final TextEditingController searchController;
@@ -572,66 +592,136 @@ class _BrowseView extends StatelessWidget {
   final ValueChanged<String> onLetter;
   final VoidCallback onLetterDragEnd;
   final bool autofocusSearch;
+  final String? selectedGroupId;
+  final bool showGroups;
+  final VoidCallback onToggleGroups;
+  final ValueChanged<String?> onGroupChanged;
 
   static const _muted = Color(0xFF737373);
   static const _black = Color(0xFF0A0A0A);
   static const _fill = Color(0xFFF5F5F5);
 
+  List<({String id, String label})> get _groups {
+    final seen = <String, String>{};
+    for (final item in items) {
+      final id = item.groupId;
+      if (id == null || id.isEmpty) continue;
+      seen.putIfAbsent(
+        id,
+        () => (item.groupLabel != null && item.groupLabel!.isNotEmpty)
+            ? item.groupLabel!
+            : id,
+      );
+    }
+    final groups = seen.entries
+        .map((e) => (id: e.key, label: e.value))
+        .toList()
+      ..sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
+    return groups;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filtered = searchResults ?? items.where((i) => i.matches(query)).toList();
+    final groups = _groups;
+    final source = searchResults ?? items;
+    final filtered = source.where((item) {
+      if (!item.matches(query)) return false;
+      if (selectedGroupId != null && item.groupId != selectedGroupId) {
+        return false;
+      }
+      return true;
+    }).toList()
+      ..sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: TextField(
-            controller: searchController,
-            focusNode: focusNode,
-            autofocus: autofocusSearch,
-            onChanged: onQueryChanged,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              hintText: searchHint,
-              hintStyle: const TextStyle(color: _muted, fontSize: 15),
-              prefixIcon: const Icon(
-                Icons.search_rounded,
-                size: 20,
-                color: _muted,
-              ),
-              suffixIcon: query.isNotEmpty
-                  ? IconButton(
-                      onPressed: () {
-                        searchController.clear();
-                        onQueryChanged('');
-                        focusNode.requestFocus();
-                      },
-                      icon: const Icon(Icons.close_rounded, size: 18),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: searchController,
+                  focusNode: focusNode,
+                  autofocus: autofocusSearch,
+                  onChanged: onQueryChanged,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: searchHint,
+                    hintStyle: const TextStyle(color: _muted, fontSize: 15),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      size: 20,
                       color: _muted,
-                      splashRadius: 18,
-                    )
-                  : null,
-              filled: true,
-              fillColor: _fill,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
+                    ),
+                    suffixIcon: query.isNotEmpty
+                        ? IconButton(
+                            onPressed: () {
+                              searchController.clear();
+                              onQueryChanged('');
+                              focusNode.requestFocus();
+                            },
+                            icon: const Icon(Icons.close_rounded, size: 18),
+                            color: _muted,
+                            splashRadius: 18,
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: _fill,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: _black, width: 1.2),
+                    ),
+                  ),
+                ),
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: _black, width: 1.2),
-              ),
-            ),
+              if (groups.length > 1) ...[
+                const SizedBox(width: 8),
+                _FilterButton(
+                  active: showGroups || selectedGroupId != null,
+                  onTap: onToggleGroups,
+                ),
+              ],
+            ],
           ),
         ),
+        if (groups.length > 1 && showGroups) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 34,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              children: [
+                _GroupChip(
+                  label: 'Toutes',
+                  selected: selectedGroupId == null,
+                  onTap: () => onGroupChanged(null),
+                ),
+                for (final group in groups)
+                  _GroupChip(
+                    label: group.label,
+                    selected: selectedGroupId == group.id,
+                    onTap: () => onGroupChanged(
+                      selectedGroupId == group.id ? null : group.id,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 6),
         if (searching)
           const Padding(
@@ -737,6 +827,72 @@ class _BrowseView extends StatelessWidget {
           onTap: () => Navigator.of(context).pop<PickerItem?>(item),
         );
       },
+    );
+  }
+}
+
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({required this.active, required this.onTap});
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: active ? const Color(0xFF0A0A0A) : const Color(0xFFF5F5F5),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Icon(
+            Icons.tune_rounded,
+            size: 20,
+            color: active ? Colors.white : const Color(0xFF0A0A0A),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupChip extends StatelessWidget {
+  const _GroupChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Material(
+        color: selected ? const Color(0xFF0A0A0A) : const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(99),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(99),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: selected ? Colors.white : const Color(0xFF0A0A0A),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

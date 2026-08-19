@@ -249,6 +249,12 @@ class _CreateAppointmentSheetState
                 ? '${(s.priceCents / 100).toStringAsFixed(2)} €'
                 : null,
             trailing: s.durationMin != null ? '${s.durationMin} min' : null,
+            groupId: s.serviceCategoryId?.isNotEmpty == true
+                ? s.serviceCategoryId
+                : '__none__',
+            groupLabel: s.serviceCategoryName?.trim().isNotEmpty == true
+                ? s.serviceCategoryName
+                : 'Sans catégorie',
           ),
         )
         .toList();

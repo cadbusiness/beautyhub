@@ -35,6 +35,7 @@ class DayAppointment {
     this.serviceColor,
     this.clientId,
     this.clientPhone,
+    this.clientEmail,
     this.serviceId,
     this.serviceDurationMin,
     this.staffId,
@@ -55,6 +56,7 @@ class DayAppointment {
   final String? serviceColor;
   final String? clientId;
   final String? clientPhone;
+  final String? clientEmail;
   final String? serviceId;
   final int? serviceDurationMin;
   final String? staffId;
@@ -91,6 +93,7 @@ class DayAppointment {
       serviceColor: json['serviceColor'] as String?,
       clientId: json['clientId'] as String?,
       clientPhone: json['clientPhone'] as String?,
+      clientEmail: json['clientEmail'] as String?,
       serviceId: json['serviceId'] as String?,
       serviceDurationMin: json['serviceDurationMin'] as int?,
       staffId: json['staffId'] as String?,

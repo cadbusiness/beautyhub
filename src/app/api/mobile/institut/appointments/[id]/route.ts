@@ -22,6 +22,7 @@ export async function PATCH(
       {
         status: body.status != null ? String(body.status) : undefined,
         notes: body.notes !== undefined ? String(body.notes ?? "") : undefined,
+        startsAt: body.startsAt != null ? String(body.startsAt) : undefined,
       },
     );
 

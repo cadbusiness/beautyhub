@@ -8,6 +8,7 @@ import {
 import {
   processLoyaltyForCompletedAppointment,
 } from "@/lib/institut/loyalty";
+import { checkAppointmentConflict } from "@/lib/institut/slots";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 
@@ -42,6 +43,7 @@ export type MobileCreateAppointmentInput = {
 export type MobileUpdateAppointmentInput = {
   status?: string;
   notes?: string | null;
+  startsAt?: string;
 };
 
 export async function createMobileAppointment(
@@ -108,6 +110,8 @@ export async function updateMobileAppointment(
   const patch: {
     status?: string;
     notes?: string | null;
+    starts_at?: string;
+    ends_at?: string;
   } = {};
 
   if (input.status != null) {
@@ -121,19 +125,44 @@ export async function updateMobileAppointment(
     patch.notes = input.notes?.trim() || null;
   }
 
-  if (Object.keys(patch).length === 0) {
-    return { error: "Aucune modification.", code: "invalid_input" };
-  }
-
   const { data: previousAppt } = await supabase
     .from("inst_appointments")
-    .select("status")
+    .select("status, starts_at, ends_at, staff_id, resource_id")
     .eq("id", appointmentId)
     .eq("tenant_id", tenantId)
     .maybeSingle();
 
   if (!previousAppt) {
     return { error: "Rendez-vous introuvable.", code: "not_found" };
+  }
+
+  if (input.startsAt != null) {
+    const startsAt = new Date(input.startsAt);
+    if (Number.isNaN(startsAt.getTime())) {
+      return { error: "Date invalide.", code: "invalid_input" };
+    }
+    const previousDuration = Math.max(
+      15 * 60_000,
+      new Date(previousAppt.ends_at).getTime() -
+        new Date(previousAppt.starts_at).getTime(),
+    );
+    const endsAt = new Date(startsAt.getTime() + previousDuration);
+    const conflict = await checkAppointmentConflict(supabase, tenantId, {
+      staffId: previousAppt.staff_id,
+      resourceId: previousAppt.resource_id,
+      startsAt,
+      endsAt,
+      excludeId: appointmentId,
+    });
+    if (conflict) {
+      return { error: "Ce créneau est déjà occupé.", code: "conflict" };
+    }
+    patch.starts_at = startsAt.toISOString();
+    patch.ends_at = endsAt.toISOString();
+  }
+
+  if (Object.keys(patch).length === 0) {
+    return { error: "Aucune modification.", code: "invalid_input" };
   }
 
   const { error } = await supabase

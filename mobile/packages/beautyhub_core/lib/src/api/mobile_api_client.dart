@@ -319,6 +319,7 @@ class MobileApiClient {
     required String appointmentId,
     String? status,
     String? notes,
+    String? startsAt,
   }) async {
     final response = await _http.patch(
       _uri('/api/mobile/institut/appointments/$appointmentId'),
@@ -326,6 +327,7 @@ class MobileApiClient {
       body: jsonEncode({
         if (status != null) 'status': status,
         if (notes != null) 'notes': notes,
+        if (startsAt != null) 'startsAt': startsAt,
       }),
     );
     await _decode(response);

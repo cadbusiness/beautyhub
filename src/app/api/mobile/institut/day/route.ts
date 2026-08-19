@@ -72,6 +72,7 @@ function serializeMobileAppointment(a: ReturnType<typeof serializeCalendarAppoin
     clientId: a.client_id,
     clientName: a.client?.full_name ?? a.client?.email ?? "Client",
     clientPhone: a.client?.phone ?? null,
+    clientEmail: a.client?.email ?? null,
     serviceId: a.service_id,
     serviceName: a.service?.name ?? "Prestation",
     serviceDurationMin: a.service?.duration_min ?? null,

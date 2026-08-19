@@ -47,5 +47,11 @@
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choisissez le logo de votre institut affiché dans l’application.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>sms</string>
+		<string>mailto</string>
+	</array>
 </dict>
 </plist>

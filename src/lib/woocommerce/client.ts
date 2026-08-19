@@ -188,7 +188,8 @@ export class WooClient {
       query: {
         page,
         per_page: perPage,
-        status: "publish,private",
+        // Un seul enum : any | publish | private | draft | … — pas de liste CSV.
+        status: "any",
         orderby: "modified",
         order: "desc",
       },

@@ -9,10 +9,12 @@ import 'appointment_detail_sheet.dart';
 
 const int _hourStart = 8;
 const int _hourEnd = 20;
-const double _slotHeight = 44;
-const double _hourColumnWidth = 44;
+const double _slotHeight = 46;
+const double _hourColumnWidth = 34;
 
-/// Vue semaine grille horaire (7 colonnes, une par jour).
+/// Vue semaine grille horaire (7 colonnes).
+/// Sur téléphone les colonnes sont fines : chaque bloc est une pastille
+/// colorée cliquable montrant juste l'heure de début. Tap → détail complet.
 class AgendaWeekView extends ConsumerWidget {
   const AgendaWeekView({
     super.key,
@@ -33,7 +35,7 @@ class AgendaWeekView extends ConsumerWidget {
     return day.subtract(Duration(days: day.weekday - 1));
   }
 
-  bool _matchesFilter(DayAppointment a) {
+  bool _matches(DayAppointment a) {
     if (staffFilter != null && a.staffId != staffFilter) return false;
     if (resourceFilter != null && a.resourceId != resourceFilter) return false;
     return true;
@@ -68,12 +70,11 @@ class AgendaWeekView extends ConsumerWidget {
             List<DateTime>.generate(7, (i) => monday.add(Duration(days: i)));
         final byDay = <String, List<DayAppointment>>{};
         for (final appt in range.appointments) {
-          if (!_matchesFilter(appt)) continue;
+          if (!_matches(appt)) continue;
           final key = _dateKey(appt.startsAt.toLocal());
           byDay.putIfAbsent(key, () => []).add(appt);
         }
-        final totalRows = (_hourEnd - _hourStart);
-        final gridHeight = totalRows * _slotHeight;
+        final gridHeight = (_hourEnd - _hourStart) * _slotHeight;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -106,10 +107,10 @@ class AgendaWeekView extends ConsumerWidget {
                                 child: _DayColumn(
                                   day: day,
                                   today: today,
-                                  appointments: byDay[_dateKey(day)] ?? const [],
-                                  onTapAppointment: (a) {
-                                    showAppointmentDetailSheet(context, ref, a);
-                                  },
+                                  appointments:
+                                      byDay[_dateKey(day)] ?? const [],
+                                  onTapAppointment: (a) =>
+                                      showAppointmentDetailSheet(context, ref, a),
                                 ),
                               ),
                           ],
@@ -157,22 +158,23 @@ class _WeekHeader extends StatelessWidget {
                   child: InkWell(
                     onTap: () => onSelect(d),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            dayFmt.format(d).toUpperCase(),
+                            _shortWeekday(dayFmt.format(d)),
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
+                              letterSpacing: 0.3,
                               color: Color(0xFF737373),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           Container(
-                            width: 26,
-                            height: 26,
+                            width: 24,
+                            height: 24,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: _sameDay(d, selectedDate)
@@ -185,7 +187,7 @@ class _WeekHeader extends StatelessWidget {
                             child: Text(
                               '${d.day}',
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 color: (_sameDay(d, selectedDate) ||
                                         _sameDay(d, today))
@@ -206,6 +208,12 @@ class _WeekHeader extends StatelessWidget {
     );
   }
 
+  String _shortWeekday(String s) {
+    // Sur téléphone : 2 lettres majuscules ("LU", "MA"…) pour tenir sur colonne fine.
+    if (s.isEmpty) return s;
+    return s.substring(0, s.length >= 2 ? 2 : 1).toUpperCase();
+  }
+
   bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 }
@@ -221,12 +229,12 @@ class _HourColumn extends StatelessWidget {
             SizedBox(
               height: _slotHeight,
               child: Padding(
-                padding: const EdgeInsets.only(top: 2, right: 6),
+                padding: const EdgeInsets.only(top: 2, right: 4),
                 child: Text(
                   '${h.toString().padLeft(2, '0')}h',
                   textAlign: TextAlign.right,
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 9,
                     color: Color(0xFF737373),
                   ),
                 ),
@@ -269,35 +277,39 @@ class _DayColumn extends StatelessWidget {
           left: BorderSide(color: _line, width: 0.5),
         ),
       ),
-      child: Stack(
-        children: [
-          Column(
-            children: [
-              for (var h = _hourStart; h < _hourEnd; h++)
-                SizedBox(
-                  height: _slotHeight,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: _line, width: 0.4)),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final columnWidth = constraints.maxWidth;
+        return Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            Column(
+              children: [
+                for (var h = _hourStart; h < _hourEnd; h++)
+                  SizedBox(
+                    height: _slotHeight,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        border:
+                            Border(bottom: BorderSide(color: _line, width: 0.4)),
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          for (final layout in layouts)
-            Positioned(
-              top: _positionTop(layout.appt, pxPerMin, totalMinutes),
-              height: _positionHeight(layout.appt, pxPerMin),
-              left: (layout.lane / layout.laneCount) * 100,
-              right: ((layout.laneCount - layout.lane - 1) / layout.laneCount) *
-                  100,
-              child: _WeekBlock(
-                appointment: layout.appt,
-                onTap: () => onTapAppointment(layout.appt),
-              ),
+              ],
             ),
-        ],
-      ),
+            for (final layout in layouts)
+              Positioned(
+                top: _positionTop(layout.appt, pxPerMin, totalMinutes),
+                height: _positionHeight(layout.appt, pxPerMin),
+                left: (layout.lane / layout.laneCount) * columnWidth,
+                width: columnWidth / layout.laneCount,
+                child: _WeekBlock(
+                  appointment: layout.appt,
+                  onTap: () => onTapAppointment(layout.appt),
+                ),
+              ),
+          ],
+        );
+      }),
     );
   }
 
@@ -389,48 +401,37 @@ class _WeekBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = agendaAccentColor(appointment);
-    final pastel = agendaPastel(accent);
     final cancelled = appointment.isCancelled;
-    final timeFmt = DateFormat.Hm();
-    final startLabel = timeFmt.format(appointment.startsAt.toLocal());
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(4),
           child: Opacity(
             opacity: cancelled ? 0.55 : 1,
-            child: Container(
-              decoration: BoxDecoration(
-                color: pastel,
-                borderRadius: BorderRadius.circular(6),
-                border: Border(left: BorderSide(color: accent, width: 3)),
-              ),
-              padding: const EdgeInsets.fromLTRB(4, 3, 4, 3),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    startLabel,
-                    style: const TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0A0A0A),
-                    ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.28),
+                  border: Border(left: BorderSide(color: accent, width: 2.5)),
+                ),
+                alignment: Alignment.topLeft,
+                padding: const EdgeInsets.fromLTRB(3, 2, 2, 0),
+                child: Text(
+                  DateFormat.Hm().format(appointment.startsAt.toLocal()),
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  softWrap: false,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                    color: Color(0xFF0A0A0A),
                   ),
-                  Text(
-                    appointment.clientName,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Color(0xFF0A0A0A),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

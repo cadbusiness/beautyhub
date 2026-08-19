@@ -70,6 +70,19 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     }
     if (facet == 'woo-group:soins') return item.wooSoins.isNotEmpty;
     if (facet == 'woo-group:marques') return item.wooBrands.isNotEmpty;
+    if (facet == 'woo:none') {
+      return item.category == 'woocommerce' &&
+          item.wooBrands.isEmpty &&
+          item.wooCategories.isEmpty;
+    }
+    if (facet.startsWith('woo-brand-child:')) {
+      final rest = facet.substring('woo-brand-child:'.length);
+      final idx = rest.indexOf('::');
+      if (idx <= 0) return false;
+      final brand = rest.substring(0, idx);
+      final child = rest.substring(idx + 2);
+      return item.wooBrands.contains(brand) && item.wooCategories.contains(child);
+    }
     if (facet.startsWith('woo-soins:')) {
       return item.wooSoins.contains(facet.substring('woo-soins:'.length));
     }
@@ -81,6 +94,54 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       return item.wooCategories.contains(name) || item.wooBrands.contains(name);
     }
     return true;
+  }
+
+  List<({String id, String brand, String child, String label})>
+      _wooBrandChildren(PosContext ctx, String type) {
+    if (type != 'all' && type != 'woocommerce') return const [];
+    final allBrands = <String>{};
+    for (final item in ctx.catalog) {
+      if (item.category != 'woocommerce') continue;
+      allBrands.addAll(item.wooBrands);
+    }
+    if (allBrands.isEmpty) return const [];
+    const soinsLabels = <String>{
+      'Visage', 'Corps', 'Cheveux', 'Soins', 'Marques', 'soins', 'marques',
+    };
+    final pairs = <String, ({String brand, String child})>{};
+    for (final item in ctx.catalog) {
+      if (item.category != 'woocommerce') continue;
+      if (item.wooBrands.isEmpty) continue;
+      for (final rawCat in item.wooCategories) {
+        final cat = rawCat.trim();
+        if (cat.isEmpty) continue;
+        if (allBrands.contains(cat)) continue;
+        if (soinsLabels.contains(cat)) continue;
+        for (final brand in item.wooBrands) {
+          pairs['$brand::$cat'] = (brand: brand, child: cat);
+        }
+      }
+    }
+    final list = pairs.values
+        .map((p) => (
+              id: 'woo-brand-child:${p.brand}::${p.child}',
+              brand: p.brand,
+              child: p.child,
+              label: '${p.brand} — ${p.child}',
+            ))
+        .toList();
+    list.sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
+    return list;
+  }
+
+  bool _hasUncategorizedWoo(PosContext ctx, String type) {
+    if (type != 'all' && type != 'woocommerce') return false;
+    return ctx.catalog.any(
+      (item) =>
+          item.category == 'woocommerce' &&
+          item.wooBrands.isEmpty &&
+          item.wooCategories.isEmpty,
+    );
   }
 
   bool _matchesQuery(PosCatalogItem item, String query) {
@@ -151,8 +212,23 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     if (facet == 'woo-group:soins' || facet.startsWith('woo-soins:')) {
       return 'soins';
     }
-    if (facet == 'woo-group:marques' || facet.startsWith('woo-brand:')) {
+    if (facet == 'woo-group:marques' ||
+        facet.startsWith('woo-brand:') ||
+        facet.startsWith('woo-brand-child:')) {
       return 'marques';
+    }
+    return null;
+  }
+
+  String? _activeBrandName(String facet) {
+    if (facet.startsWith('woo-brand:')) {
+      return facet.substring('woo-brand:'.length);
+    }
+    if (facet.startsWith('woo-brand-child:')) {
+      final rest = facet.substring('woo-brand-child:'.length);
+      final idx = rest.indexOf('::');
+      if (idx <= 0) return null;
+      return rest.substring(0, idx);
     }
     return null;
   }
@@ -395,6 +471,12 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         final serviceFacets = _serviceFacets(ctx, filter);
         final productFacets = _productFacets(ctx, filter);
         final wooNav = _wooNav(ctx, filter);
+        final wooBrandChildren = _wooBrandChildren(ctx, filter);
+        final showUncategorizedWoo = _hasUncategorizedWoo(ctx, filter);
+        final activeBrand = _activeBrandName(facet);
+        final activeBrandChildren = activeBrand == null
+            ? const <({String id, String brand, String child, String label})>[]
+            : wooBrandChildren.where((c) => c.brand == activeBrand).toList();
         final wooGroup = _expandedWooGroup(facet);
         final showUncategorized = _hasUncategorizedServices(ctx, filter);
         final showUncategorizedInternal = _hasUncategorizedInternal(ctx, filter);
@@ -653,6 +735,12 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                                 ? 'woo-group:marques'
                                 : facet,
                           ),
+                        if (showUncategorizedWoo)
+                          _FacetChip(
+                            label: 'Woo sans cat.',
+                            value: 'woo:none',
+                            selected: facet,
+                          ),
                       ],
                     ),
                   ),
@@ -684,6 +772,23 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                           for (final child in wooNav.marques)
                             _FacetChip(
                               label: child.name,
+                              value: child.id,
+                              selected: facet,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (wooGroup == 'marques' && activeBrandChildren.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.fromLTRB(28, 0, 16, 8),
+                      child: Row(
+                        children: [
+                          for (final child in activeBrandChildren)
+                            _FacetChip(
+                              label: child.child,
                               value: child.id,
                               selected: facet,
                             ),

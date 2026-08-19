@@ -21,12 +21,15 @@ import {
   POS_FACET_MARQUES,
   POS_FACET_SOINS,
   POS_FACET_UNCATEGORIZED,
+  POS_FACET_WOO_NONE,
   expandedWooGroup,
   filterPosCatalog,
   hasUncategorizedInternalProducts,
   hasUncategorizedServices,
+  hasUncategorizedWooProducts,
   listProductCategoryFacets,
   listServiceCategoryFacets,
+  listWooBrandChildren,
   listWooNavGroups,
   productFacetId,
   serviceFacetId,
@@ -246,6 +249,26 @@ export function PosTerminal({
     () => hasUncategorizedInternalProducts(catalog, tab),
     [catalog, tab],
   );
+  const wooBrandChildren = useMemo(
+    () => listWooBrandChildren(catalog, tab),
+    [catalog, tab],
+  );
+  const activeBrandChildren = useMemo(() => {
+    let brandName: string | null = null;
+    if (facet.startsWith("woo-brand:")) {
+      brandName = facet.slice("woo-brand:".length);
+    } else if (facet.startsWith("woo-brand-child:")) {
+      const rest = facet.slice("woo-brand-child:".length);
+      const idx = rest.indexOf("::");
+      brandName = idx > 0 ? rest.slice(0, idx) : null;
+    }
+    if (!brandName) return [];
+    return wooBrandChildren.filter((child) => child.brand === brandName);
+  }, [facet, wooBrandChildren]);
+  const showUncategorizedWoo = useMemo(
+    () => hasUncategorizedWooProducts(catalog, tab),
+    [catalog, tab],
+  );
   const selectedProductCategoryId =
     facet.startsWith("product:") && facet !== POS_FACET_INTERNAL_UNCATEGORIZED
       ? facet.slice("product:".length)
@@ -277,14 +300,25 @@ export function PosTerminal({
     if (wooNav.marques.length > 0) {
       opts.push({ id: POS_FACET_MARQUES, label: t("filters.marques") });
     }
+    for (const brand of wooNav.marques) {
+      opts.push({ id: brand.id, label: brand.name });
+    }
+    for (const child of wooBrandChildren) {
+      opts.push({ id: child.id, label: child.label });
+    }
+    if (showUncategorizedWoo) {
+      opts.push({ id: POS_FACET_WOO_NONE, label: t("filters.wooUncategorized") });
+    }
     return opts;
   }, [
     productCategoryFacets,
     serviceCategoryFacets,
     showUncategorized,
     showUncategorizedInternal,
+    showUncategorizedWoo,
     t,
-    wooNav.marques.length,
+    wooBrandChildren,
+    wooNav.marques,
     wooNav.soins.length,
   ]);
 
@@ -611,6 +645,23 @@ export function PosTerminal({
                 }}
               >
                 {child.name}
+              </CatalogFacetChip>
+            ))}
+          </div>
+        ) : null}
+
+        {wooGroup === "marques" && activeBrandChildren.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-1.5 pl-2">
+            {activeBrandChildren.map((child) => (
+              <CatalogFacetChip
+                key={child.id}
+                active={facet === child.id}
+                onClick={() => {
+                  setFacet(child.id);
+                  setPage(1);
+                }}
+              >
+                {child.child}
               </CatalogFacetChip>
             ))}
           </div>

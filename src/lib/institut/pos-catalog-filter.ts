@@ -12,6 +12,24 @@ export const POS_FACET_UNCATEGORIZED = "service:none";
 export const POS_FACET_INTERNAL_UNCATEGORIZED = "product:none";
 export const POS_FACET_SOINS = "woo-group:soins";
 export const POS_FACET_MARQUES = "woo-group:marques";
+export const POS_FACET_WOO_NONE = "woo:none";
+const BRAND_CHILD_PREFIX = "woo-brand-child:";
+const BRAND_CHILD_SEP = "::";
+
+export function wooBrandChildFacetId(brand: string, child: string) {
+  return `${BRAND_CHILD_PREFIX}${brand}${BRAND_CHILD_SEP}${child}`;
+}
+
+function parseBrandChild(facet: string): { brand: string; child: string } | null {
+  if (!facet.startsWith(BRAND_CHILD_PREFIX)) return null;
+  const rest = facet.slice(BRAND_CHILD_PREFIX.length);
+  const idx = rest.indexOf(BRAND_CHILD_SEP);
+  if (idx < 0) return null;
+  const brand = rest.slice(0, idx);
+  const child = rest.slice(idx + BRAND_CHILD_SEP.length);
+  if (!brand || !child) return null;
+  return { brand, child };
+}
 
 const SOINS_ORDER: WooSoinsChild[] = ["Visage", "Corps", "Cheveux", "autres"];
 const SOINS_LABELS: Record<WooSoinsChild, string> = {
@@ -67,6 +85,20 @@ export function itemMatchesFacet(item: PosCatalogItem, facet: string): boolean {
   if (facet === POS_FACET_MARQUES) {
     return (item.woo_brands ?? []).length > 0;
   }
+  if (facet === POS_FACET_WOO_NONE) {
+    return (
+      item.category === "woocommerce" &&
+      (item.woo_brands ?? []).length === 0 &&
+      (item.woo_categories ?? []).length === 0
+    );
+  }
+  const brandChild = parseBrandChild(facet);
+  if (brandChild) {
+    return (
+      (item.woo_brands ?? []).includes(brandChild.brand) &&
+      (item.woo_categories ?? []).includes(brandChild.child)
+    );
+  }
   if (facet.startsWith("woo-soins:")) {
     const child = facet.slice("woo-soins:".length) as WooSoinsChild;
     return (item.woo_soins ?? []).includes(child);
@@ -81,6 +113,69 @@ export function itemMatchesFacet(item: PosCatalogItem, facet: string): boolean {
     return (item.woo_brands ?? []).includes(name);
   }
   return true;
+}
+
+/** Enfants de la marque (catégories Woo qui ne sont pas d'autres marques ni un soin). */
+export type WooBrandChild = { id: string; brand: string; child: string; label: string };
+
+export function listWooBrandChildren(
+  catalog: PosCatalogItem[],
+  tab: PosCategory,
+): WooBrandChild[] {
+  if (tab !== "all" && tab !== "woocommerce") return [];
+  const allBrands = new Set<string>();
+  for (const item of catalog) {
+    if (item.category !== "woocommerce") continue;
+    for (const brand of item.woo_brands ?? []) allBrands.add(brand);
+  }
+  if (allBrands.size === 0) return [];
+
+  const pairs = new Map<string, { brand: string; child: string }>();
+  for (const item of catalog) {
+    if (item.category !== "woocommerce") continue;
+    const brands = item.woo_brands ?? [];
+    if (brands.length === 0) continue;
+    const soinsLabels = new Set<string>([
+      "Visage",
+      "Corps",
+      "Cheveux",
+      "Soins",
+      "Marques",
+      "soins",
+      "marques",
+    ]);
+    for (const cat of item.woo_categories ?? []) {
+      const trimmed = cat.trim();
+      if (!trimmed) continue;
+      if (allBrands.has(trimmed)) continue;
+      if (soinsLabels.has(trimmed)) continue;
+      for (const brand of brands) {
+        pairs.set(`${brand}${BRAND_CHILD_SEP}${trimmed}`, { brand, child: trimmed });
+      }
+    }
+  }
+  return Array.from(pairs.values())
+    .map(({ brand, child }) => ({
+      id: wooBrandChildFacetId(brand, child),
+      brand,
+      child,
+      label: `${brand} — ${child}`,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, "fr"));
+}
+
+/** Produits Woo sans marque et sans catégorie remontée depuis Woo. */
+export function hasUncategorizedWooProducts(
+  catalog: PosCatalogItem[],
+  tab: PosCategory,
+): boolean {
+  if (tab !== "all" && tab !== "woocommerce") return false;
+  return catalog.some(
+    (item) =>
+      item.category === "woocommerce" &&
+      (item.woo_brands ?? []).length === 0 &&
+      (item.woo_categories ?? []).length === 0,
+  );
 }
 
 export function itemMatchesQuery(item: PosCatalogItem, query: string): boolean {
@@ -191,7 +286,11 @@ export function expandedWooGroup(
   facet: string,
 ): "soins" | "marques" | null {
   if (facet === POS_FACET_SOINS || facet.startsWith("woo-soins:")) return "soins";
-  if (facet === POS_FACET_MARQUES || facet.startsWith("woo-brand:")) {
+  if (
+    facet === POS_FACET_MARQUES ||
+    facet.startsWith("woo-brand:") ||
+    facet.startsWith(BRAND_CHILD_PREFIX)
+  ) {
     return "marques";
   }
   return null;

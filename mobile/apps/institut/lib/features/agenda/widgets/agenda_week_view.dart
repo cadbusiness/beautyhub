@@ -516,8 +516,6 @@ class _WeekBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = agendaAccentColor(appointment);
     final cancelled = appointment.isCancelled;
-    final local = appointment.startsAt.toLocal();
-    final timeLabel = DateFormat.Hm().format(local);
     final firstName = _firstName(appointment.clientName);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
@@ -529,71 +527,13 @@ class _WeekBlock extends StatelessWidget {
           child: Opacity(
             opacity: cancelled ? 0.55 : 1,
             child: LayoutBuilder(builder: (context, constraints) {
-              // Palier de rendu selon la largeur disponible du bloc :
-              // - étroit (< 34 px) : juste l'heure courte "09"
-              // - moyen (< 60 px)  : heure complète "09:00"
-              // - large (>= 60 px) : heure + prénom (2 lignes possibles)
+              // Pas d'heure sur les blocs : l'échelle temporelle à gauche
+              // + la position verticale la donnent déjà. Dupliquer l'heure
+              // rendait illisible les zones denses (plusieurs "11:20" empilés).
+              // On affiche juste le prénom si la case est assez grande.
               final w = constraints.maxWidth;
               final h = constraints.maxHeight;
-              final Widget content;
-              if (w < 34) {
-                content = Text(
-                  local.hour.toString().padLeft(2, '0'),
-                  maxLines: 1,
-                  overflow: TextOverflow.clip,
-                  softWrap: false,
-                  style: const TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    height: 1,
-                    color: Color(0xFF0A0A0A),
-                  ),
-                );
-              } else if (w < 60 || h < 34) {
-                content = Text(
-                  timeLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.clip,
-                  softWrap: false,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    height: 1.1,
-                    color: Color(0xFF0A0A0A),
-                  ),
-                );
-              } else {
-                content = Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      timeLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.clip,
-                      softWrap: false,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        height: 1.1,
-                        color: Color(0xFF0A0A0A),
-                      ),
-                    ),
-                    if (firstName.isNotEmpty)
-                      Text(
-                        firstName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: false,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          height: 1.15,
-                          color: Color(0xFF0A0A0A),
-                        ),
-                      ),
-                  ],
-                );
-              }
+              final hasRoom = w >= 44 && h >= 22 && firstName.isNotEmpty;
               return ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: Container(
@@ -603,7 +543,20 @@ class _WeekBlock extends StatelessWidget {
                   ),
                   alignment: Alignment.topLeft,
                   padding: const EdgeInsets.fromLTRB(4, 2, 3, 2),
-                  child: content,
+                  child: hasRoom
+                      ? Text(
+                          firstName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: false,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            height: 1.1,
+                            color: Color(0xFF0A0A0A),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                 ),
               );
             }),

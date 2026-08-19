@@ -625,50 +625,58 @@ class _WeekBlock extends StatelessWidget {
           child: Opacity(
             opacity: cancelled ? 0.55 : 1,
             child: LayoutBuilder(builder: (context, constraints) {
-              final w = constraints.maxWidth;
-              final h = constraints.maxHeight;
-              final showName = w >= 52 && h >= 30 && firstName.isNotEmpty;
+              final showName = constraints.maxWidth >= 52 &&
+                  constraints.maxHeight >= 36 &&
+                  firstName.isNotEmpty;
               return ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: Container(
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
                   decoration: BoxDecoration(
                     color: accent.withValues(alpha: 0.28),
                     border: Border(left: BorderSide(color: accent, width: 2.5)),
                   ),
+                  padding: const EdgeInsets.fromLTRB(4, 2, 3, 1),
                   alignment: Alignment.topLeft,
-                  padding: const EdgeInsets.fromLTRB(4, 2, 3, 2),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          timeLabel,
-                          maxLines: 1,
-                          softWrap: false,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            height: 1.1,
-                            color: Color(0xFF0A0A0A),
-                          ),
-                        ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.topLeft,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: (constraints.maxWidth - 7).clamp(12, 400),
                       ),
-                      if (showName)
-                        Text(
-                          firstName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          softWrap: false,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            height: 1.15,
-                            color: Color(0xFF0A0A0A),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            timeLabel,
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.clip,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              height: 1,
+                              color: Color(0xFF0A0A0A),
+                            ),
                           ),
-                        ),
-                    ],
+                          if (showName)
+                            Text(
+                              firstName,
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                height: 1,
+                                color: Color(0xFF0A0A0A),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               );

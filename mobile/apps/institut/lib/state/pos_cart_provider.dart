@@ -1,4 +1,7 @@
+import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'session_providers.dart';
 
 class PosCartNotifier extends StateNotifier<Map<String, int>> {
   PosCartNotifier() : super(const {});
@@ -115,5 +118,58 @@ final posCategoryFilterProvider = StateProvider<String>((ref) => 'all');
 final posCatalogFacetProvider = StateProvider<String>((ref) => 'all');
 
 final posCatalogQueryProvider = StateProvider<String>((ref) => '');
+
+class PosAppointmentPrefill {
+  const PosAppointmentPrefill({
+    required this.appointmentId,
+    required this.serviceName,
+    this.clientId,
+    this.clientName,
+    this.staffId,
+    this.staffName,
+    this.serviceId,
+    this.priceCents,
+    this.extras = const [],
+  });
+
+  final String appointmentId;
+  final String? clientId;
+  final String? clientName;
+  final String? staffId;
+  final String? staffName;
+  final String? serviceId;
+  final String serviceName;
+  final int? priceCents;
+  final List<AppointmentExtra> extras;
+
+  factory PosAppointmentPrefill.fromAppointment(DayAppointment appointment) {
+    return PosAppointmentPrefill(
+      appointmentId: appointment.id,
+      clientId: appointment.clientId,
+      clientName: appointment.clientName,
+      staffId: appointment.staffId,
+      staffName: appointment.staffName,
+      serviceId: appointment.serviceId,
+      serviceName: appointment.serviceName,
+      priceCents: appointment.priceCents,
+      extras: appointment.extras,
+    );
+  }
+}
+
+final pendingPosPrefillProvider =
+    StateProvider<PosAppointmentPrefill?>((ref) => null);
+
+final posInjectedCatalogProvider =
+    StateProvider<List<PosCatalogItem>>((ref) => const []);
+
+void startAppointmentCheckout(
+  WidgetRef ref,
+  DayAppointment appointment,
+) {
+  ref.read(pendingPosPrefillProvider.notifier).state =
+      PosAppointmentPrefill.fromAppointment(appointment);
+  ref.read(cashInitialTabProvider.notifier).state = 1;
+}
 
 final posCheckoutBusyProvider = StateProvider<bool>((ref) => false);

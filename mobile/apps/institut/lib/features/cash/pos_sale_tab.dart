@@ -27,9 +27,109 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   PickerItem? _selectedStaff;
   String _paymentMethod = 'cash';
   bool _openingDay = false;
+  bool _openCartAfterPrefill = false;
 
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pending = ref.read(pendingPosPrefillProvider);
+      if (pending != null) _applyPrefill(pending);
+    });
+  }
+
+  void _applyPrefill(PosAppointmentPrefill prefill) {
+    final ctx = ref.read(posContextProvider).asData?.value;
+    clearPosCart(ref);
+    ref.read(posInjectedCatalogProvider.notifier).state = const [];
+
+    final cart = ref.read(posCartProvider.notifier);
+    final overrides = ref.read(posPriceOverridesProvider.notifier);
+    final injected = <PosCatalogItem>[];
+
+    PosCatalogItem? serviceItem;
+    if (prefill.serviceId != null && prefill.serviceId!.isNotEmpty) {
+      serviceItem = ctx?.catalog
+          .where((i) => i.key == 'service:${prefill.serviceId}')
+          .firstOrNull;
+    }
+    serviceItem ??= ctx?.catalog
+        .where(
+          (i) =>
+              i.type == 'service' &&
+              i.name.toLowerCase() == prefill.serviceName.toLowerCase(),
+        )
+        .firstOrNull;
+
+    if (serviceItem == null &&
+        prefill.serviceId != null &&
+        prefill.serviceId!.isNotEmpty) {
+      serviceItem = PosCatalogItem(
+        key: 'service:${prefill.serviceId}',
+        type: 'service',
+        id: prefill.serviceId!,
+        name: prefill.serviceName,
+        priceCents: prefill.priceCents ?? 0,
+        category: 'service',
+      );
+      injected.add(serviceItem);
+    }
+
+    if (serviceItem != null) {
+      cart.add(serviceItem.key);
+      if (prefill.extras.isEmpty &&
+          prefill.priceCents != null &&
+          prefill.priceCents! > 0 &&
+          prefill.priceCents != serviceItem.priceCents) {
+        overrides.setPrice(serviceItem.key, prefill.priceCents!);
+      }
+    }
+
+    for (final extra in prefill.extras) {
+      if (extra.serviceId.isEmpty) continue;
+      final key = 'service:${extra.serviceId}';
+      var extraItem = ctx?.catalog.where((i) => i.key == key).firstOrNull;
+      extraItem ??= injected.where((i) => i.key == key).firstOrNull;
+      if (extraItem == null) {
+        extraItem = PosCatalogItem(
+          key: key,
+          type: 'service',
+          id: extra.serviceId,
+          name: extra.name,
+          priceCents: extra.priceCents ?? 0,
+          category: 'service',
+        );
+        injected.add(extraItem);
+      }
+      for (var i = 0; i < extra.quantity; i++) {
+        cart.add(key);
+      }
+    }
+
+    if (injected.isNotEmpty) {
+      ref.read(posInjectedCatalogProvider.notifier).state = injected;
+    }
+
+    if (prefill.clientId != null && prefill.clientId!.isNotEmpty) {
+      _selectedClient = PickerItem(
+        id: prefill.clientId!,
+        title: prefill.clientName ?? 'Cliente',
+      );
+    }
+    if (prefill.staffId != null && prefill.staffId!.isNotEmpty) {
+      _selectedStaff = PickerItem(
+        id: prefill.staffId!,
+        title: prefill.staffName ?? 'Praticienne',
+      );
+    }
+
+    ref.read(pendingPosPrefillProvider.notifier).state = null;
+    _openCartAfterPrefill = serviceItem != null || prefill.extras.isNotEmpty;
+    if (mounted) setState(() {});
+  }
 
   List<PosCatalogItem> _filtered(
     PosContext ctx,
@@ -251,9 +351,16 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     );
   }
 
+  PosCatalogItem? _itemForKey(PosContext ctx, String key) {
+    return ctx.catalog.where((i) => i.key == key).firstOrNull ??
+        ref
+            .read(posInjectedCatalogProvider)
+            .where((i) => i.key == key)
+            .firstOrNull;
+  }
+
   int _catalogPriceCents(PosContext ctx, String key) {
-    final item = ctx.catalog.where((i) => i.key == key).firstOrNull;
-    return item?.priceCents ?? 0;
+    return _itemForKey(ctx, key)?.priceCents ?? 0;
   }
 
   int _cartTotalCents(PosContext ctx, Map<String, int> cart) {
@@ -449,6 +556,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<PosAppointmentPrefill?>(pendingPosPrefillProvider, (_, next) {
+      if (next != null) _applyPrefill(next);
+    });
     final posAsync = ref.watch(posContextProvider);
     final filter = ref.watch(posCategoryFilterProvider);
     final facet = ref.watch(posCatalogFacetProvider);
@@ -466,6 +576,12 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         children: [Text('$e')],
       ),
       data: (ctx) {
+        if (_openCartAfterPrefill) {
+          _openCartAfterPrefill = false;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _openCartSheet(ctx);
+          });
+        }
         final items = _filtered(ctx, filter, facet, query);
         final queryTrimmed = query.trim();
         final serviceFacets = _serviceFacets(ctx, filter);
@@ -1287,8 +1403,10 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
     });
     var total = 0;
     final lines = <Widget>[];
+    final injected = ref.watch(posInjectedCatalogProvider);
     for (final entry in cart.entries) {
-      final item = ctx.catalog.where((i) => i.key == entry.key).firstOrNull;
+      final item = ctx.catalog.where((i) => i.key == entry.key).firstOrNull ??
+          injected.where((i) => i.key == entry.key).firstOrNull;
       if (item == null) continue;
       final unitCents = cartLineUnitCents(
         key: entry.key,

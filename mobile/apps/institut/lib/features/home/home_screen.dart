@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../state/pos_cart_provider.dart';
 import '../../state/session_providers.dart';
 import '../agenda/widgets/appointment_detail_sheet.dart';
 import '../agenda/widgets/appointment_form_sheet.dart';
@@ -25,8 +26,16 @@ class HomeScreen extends ConsumerWidget {
   static const _muted = Color(0xFF737373);
   static const _border = Color(0xFFE8E8E8);
 
-  void _openCashSale(WidgetRef ref, BuildContext context) {
-    ref.read(cashInitialTabProvider.notifier).state = 1;
+  void _openCashSale(
+    WidgetRef ref,
+    BuildContext context, {
+    DayAppointment? appointment,
+  }) {
+    if (appointment != null) {
+      startAppointmentCheckout(ref, appointment);
+    } else {
+      ref.read(cashInitialTabProvider.notifier).state = 1;
+    }
     context.go('/app/cash');
   }
 
@@ -121,7 +130,11 @@ class HomeScreen extends ConsumerWidget {
                     }
                     return NextAppointmentHero(
                       appointments: nextGroup,
-                      onCheckout: () => _openCashSale(ref, context),
+                      onCheckout: () => _openCashSale(
+                        ref,
+                        context,
+                        appointment: nextGroup.first,
+                      ),
                       onAgenda: () => _openAgenda(context),
                       onTapAppointment: (appointment) =>
                           showAppointmentDetailSheet(

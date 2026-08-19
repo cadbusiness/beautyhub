@@ -42,6 +42,7 @@ class DayAppointment {
     this.staffColor,
     this.resourceId,
     this.resourceName,
+    this.extras = const [],
   });
 
   final String id;
@@ -63,6 +64,7 @@ class DayAppointment {
   final String? staffColor;
   final String? resourceId;
   final String? resourceName;
+  final List<AppointmentExtra> extras;
 
   bool get isCancelled => status == 'cancelled' || status == 'no_show';
 
@@ -100,6 +102,33 @@ class DayAppointment {
       staffColor: json['staffColor'] as String?,
       resourceId: json['resourceId'] as String?,
       resourceName: json['resourceName'] as String?,
+      extras: (json['extras'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => AppointmentExtra.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+    );
+  }
+}
+
+class AppointmentExtra {
+  const AppointmentExtra({
+    required this.serviceId,
+    required this.quantity,
+    required this.name,
+    this.priceCents,
+  });
+
+  final String serviceId;
+  final int quantity;
+  final String name;
+  final int? priceCents;
+
+  factory AppointmentExtra.fromJson(Map<String, dynamic> json) {
+    return AppointmentExtra(
+      serviceId: json['serviceId'] as String? ?? '',
+      quantity: json['quantity'] as int? ?? 1,
+      name: json['name'] as String? ?? 'Option',
+      priceCents: json['priceCents'] as int?,
     );
   }
 }

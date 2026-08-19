@@ -82,6 +82,12 @@ function serializeMobileAppointment(a: ReturnType<typeof serializeCalendarAppoin
     staffColor: a.staff?.color ?? null,
     resourceId: a.resource_id,
     resourceName: a.resource?.name ?? null,
+    extras: (a.extras ?? []).map((e) => ({
+      serviceId: e.service_id,
+      quantity: e.quantity,
+      name: e.name,
+      priceCents: e.price_cents,
+    })),
   };
 }
 

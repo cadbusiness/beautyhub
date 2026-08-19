@@ -21,11 +21,11 @@ class PosCartSwitcher extends ConsumerWidget {
   }
 
   static String clientTitle(PosCartSnapshot cart) {
-    final fromClient = _firstName(cart.clientName);
-    if (fromClient.isNotEmpty) return fromClient;
+    final client = cart.clientName?.trim() ?? '';
+    if (client.isNotEmpty) return client;
     final fromLabel = cart.label.trim();
     if (fromLabel.isNotEmpty && !fromLabel.toLowerCase().startsWith('panier')) {
-      return _firstName(fromLabel);
+      return fromLabel;
     }
     return 'Sans cliente';
   }
@@ -307,71 +307,72 @@ class _CartTicket extends StatelessWidget {
         onLongPress: onDelete,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          width: 124,
-          padding: const EdgeInsets.fromLTRB(12, 9, 10, 9),
+          constraints: const BoxConstraints(minWidth: 148, maxWidth: 260),
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: border),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+          child: Stack(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
+              Padding(
+                padding: EdgeInsets.only(
+                  right: onDelete != null && selected ? 18 : 0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
                       title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
+                        height: 1.25,
                         color: titleColor,
                       ),
                     ),
-                  ),
-                  if (onDelete != null && selected) ...[
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: onDelete,
-                      child: Icon(
-                        Icons.close,
-                        size: 14,
-                        color: titleColor.withValues(alpha: 0.7),
-                      ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (occupied) ...[
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: PosCartSwitcher._amber,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                        ],
+                        Text(
+                          items > 0 ? '$owner  ·  $items' : owner,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: ownerColor,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ],
+                ),
               ),
-              const SizedBox(height: 3),
-              Row(
-                children: [
-                  if (occupied) ...[
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: PosCartSwitcher._amber,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                  ],
-                  Expanded(
-                    child: Text(
-                      items > 0 ? '$owner  ·  $items' : owner,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: ownerColor,
-                      ),
+              if (onDelete != null && selected)
+                Positioned(
+                  top: -2,
+                  right: -2,
+                  child: GestureDetector(
+                    onTap: onDelete,
+                    child: Icon(
+                      Icons.close,
+                      size: 15,
+                      color: titleColor.withValues(alpha: 0.7),
                     ),
                   ),
-                ],
-              ),
+                ),
             ],
           ),
         ),
@@ -395,7 +396,7 @@ class _AddTicket extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           width: 44,
-          height: 52,
+          height: 56,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),

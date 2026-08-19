@@ -11,11 +11,11 @@ function firstName(value: string | null | undefined) {
 }
 
 function clientTitle(cart: PosCartDto) {
-  const fromClient = firstName(cart.clientName);
+  const fromClient = cart.clientName?.trim() ?? "";
   if (fromClient) return fromClient;
   const label = cart.label.trim();
   if (label && !label.toLowerCase().startsWith("panier")) {
-    return firstName(label);
+    return label;
   }
   return "";
 }
@@ -119,7 +119,7 @@ export function PosCartSwitcher({
               key={cart.id}
               type="button"
               onClick={() => void handleSelect(cart)}
-              className={`min-w-[6.75rem] rounded-xl border px-3 py-2 text-left ${
+              className={`min-w-[8.75rem] max-w-[16.5rem] rounded-xl border px-3 py-2 text-left ${
                 selected
                   ? "border-slate-900 bg-slate-900 text-white"
                   : occupied
@@ -128,7 +128,7 @@ export function PosCartSwitcher({
               }`}
             >
               <span className="flex items-center justify-between gap-2">
-                <span className="truncate text-[13px] font-semibold">{title}</span>
+                <span className="text-[13px] font-semibold leading-snug">{title}</span>
                 {selected && !occupied ? (
                   <span
                     role="button"

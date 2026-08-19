@@ -243,7 +243,7 @@ class _WeekHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final dayFmt = DateFormat.E('fr_FR');
     return SizedBox(
-      height: 56,
+      height: 64,
       child: Row(
         children: [
           const SizedBox(width: _hourColumnWidth),

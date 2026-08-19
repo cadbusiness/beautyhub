@@ -32,15 +32,16 @@ class CatalogProductRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        clipBehavior: Clip.antiAlias,
+        color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          child: DecoratedBox(
+          borderRadius: BorderRadius.circular(12),
+          child: Ink(
             decoration: BoxDecoration(
+              color: inCart ? const Color(0xFFF7F7F7) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: inCart ? _black.withValues(alpha: 0.25) : _border,
+                color: inCart ? const Color(0xFFD4D4D4) : _border,
               ),
             ),
             child: Padding(

@@ -96,32 +96,21 @@ class _NextAppointmentHeroState extends State<NextAppointmentHero> {
                   : () => widget.onTapAppointment!(widget.appointments[i]),
             ),
           ],
-          const SizedBox(height: 4),
+          const SizedBox(height: 10),
           Row(
             children: [
-              TextButton(
-                onPressed: widget.onAgenda,
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white.withValues(alpha: 0.7),
-                  padding: const EdgeInsets.symmetric(horizontal: 0),
-                  minimumSize: const Size(0, 36),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: const Text('Agenda'),
+              _HeroCircleAction(
+                icon: Icons.calendar_today_outlined,
+                label: 'Agenda',
+                emphasized: false,
+                onTap: widget.onAgenda,
               ),
               const Spacer(),
-              TextButton(
-                onPressed: widget.onCheckout,
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 0),
-                  minimumSize: const Size(0, 36),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: const Text(
-                  'Encaisser',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
+              _HeroCircleAction(
+                icon: Icons.point_of_sale_outlined,
+                label: 'Encaisser',
+                emphasized: true,
+                onTap: widget.onCheckout,
               ),
             ],
           ),
@@ -194,6 +183,64 @@ class _HeroAppointmentRow extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: content,
+    );
+  }
+}
+
+class _HeroCircleAction extends StatelessWidget {
+  const _HeroCircleAction({
+    required this.icon,
+    required this.label,
+    required this.emphasized,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool emphasized;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: emphasized
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.14),
+                ),
+                child: Icon(
+                  icon,
+                  size: 16,
+                  color: emphasized ? const Color(0xFF0A0A0A) : Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: emphasized ? FontWeight.w700 : FontWeight.w600,
+                  color: emphasized
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -72,6 +72,10 @@ class CabinMark extends StatelessWidget {
       ),
       child: Text(
         short,
+        maxLines: 1,
+        overflow: TextOverflow.clip,
+        softWrap: false,
+        textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: short.length > 2 ? 9 : 11,
           fontWeight: FontWeight.w700,

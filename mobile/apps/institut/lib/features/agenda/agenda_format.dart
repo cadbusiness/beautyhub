@@ -37,7 +37,16 @@ String shortCabinLabel(String name) {
   if (trailingNum != null) return trailingNum.group(1)!;
   final words = trimmed.split(RegExp(r'\s+'));
   if (words.length > 1 && words.last.length <= 3) return words.last;
-  return trimmed;
+  if (words.length > 1) {
+    final letters = words
+        .where((w) => w.isNotEmpty)
+        .map((w) => w.substring(0, 1).toUpperCase())
+        .take(2)
+        .join();
+    if (letters.isNotEmpty) return letters;
+  }
+  if (trimmed.length <= 2) return trimmed;
+  return trimmed.substring(0, 2);
 }
 
 int cabinToneValue(String label) {

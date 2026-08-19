@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../agenda/agenda_format.dart';
+
 class CabinBadge extends StatelessWidget {
   const CabinBadge({
     super.key,
@@ -12,29 +14,11 @@ class CabinBadge extends StatelessWidget {
   final bool compact;
   final bool onDark;
 
-  static const _palette = [
-    Color(0xFF1E3A5F),
-    Color(0xFF3D5A3D),
-    Color(0xFF6B3E26),
-    Color(0xFF4A3F6B),
-    Color(0xFF1F4E5F),
-    Color(0xFF5C3D2E),
-  ];
-
-  Color get _tone {
-    var hash = 0;
-    for (final unit in label.codeUnits) {
-      hash = 0x1fffffff & (hash + unit);
-      hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-      hash ^= hash >> 6;
-    }
-    return _palette[hash.abs() % _palette.length];
-  }
-
   @override
   Widget build(BuildContext context) {
-    final tone = _tone;
-    final bg = onDark ? Colors.white.withValues(alpha: 0.14) : tone.withValues(alpha: 0.12);
+    final short = shortCabinLabel(label);
+    final tone = Color(cabinToneValue(label));
+    final bg = onDark ? Colors.white.withValues(alpha: 0.14) : tone.withValues(alpha: 0.10);
     final fg = onDark ? Colors.white : tone;
 
     return Container(
@@ -50,13 +34,49 @@ class CabinBadge extends StatelessWidget {
             : null,
       ),
       child: Text(
-        label,
+        short,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: compact ? 10 : 11,
           fontWeight: FontWeight.w600,
           color: fg,
+        ),
+      ),
+    );
+  }
+}
+
+class CabinMark extends StatelessWidget {
+  const CabinMark({
+    super.key,
+    required this.label,
+    this.size = 22,
+  });
+
+  final String label;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final short = shortCabinLabel(label);
+    final tone = Color(cabinToneValue(label));
+
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.10),
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        short,
+        style: TextStyle(
+          fontSize: short.length > 2 ? 9 : 11,
+          fontWeight: FontWeight.w700,
+          height: 1,
+          color: tone,
         ),
       ),
     );

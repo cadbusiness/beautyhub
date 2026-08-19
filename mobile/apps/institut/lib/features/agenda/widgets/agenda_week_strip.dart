@@ -28,87 +28,98 @@ class AgendaWeekStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dayFmt = DateFormat('E', 'fr_FR');
-    final today = DateTime.now();
-    final todayKey =
-        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
-    return SizedBox(
-      height: 78,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: weekDays.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final item = weekDays[index];
-          final date = _parseDate(item.date);
-          final selected = date.year == selectedDate.year &&
-              date.month == selectedDate.month &&
-              date.day == selectedDate.day;
-          final isToday = item.date == todayKey;
-          final label = dayFmt.format(date).replaceAll('.', '');
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+      child: Row(
+        children: [
+          for (final item in weekDays)
+            Expanded(
+              child: _DayCell(
+                date: _parseDate(item.date),
+                label: dayFmt.format(_parseDate(item.date)).replaceAll('.', ''),
+                selected: _sameDay(_parseDate(item.date), selectedDate),
+                hasAppointments: item.count > 0,
+                onTap: () => onSelect(_parseDate(item.date)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
-          return Material(
-            color: selected ? _black : Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            child: InkWell(
-              onTap: () => onSelect(date),
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                width: 52,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: selected
-                      ? null
-                      : Border.all(
-                          color: isToday ? _black : const Color(0xFFE8E8E8),
-                          width: isToday ? 1.5 : 1,
-                        ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      label.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.4,
-                        color: selected
-                            ? Colors.white.withValues(alpha: 0.7)
-                            : _muted,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${date.day}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: selected ? Colors.white : _black,
-                      ),
-                    ),
-                    if (item.count > 0) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? Colors.white
-                              : const Color(0xFF0A0A0A),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ],
-                  ],
+  bool _sameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+}
+
+class _DayCell extends StatelessWidget {
+  const _DayCell({
+    required this.date,
+    required this.label,
+    required this.selected,
+    required this.hasAppointments,
+    required this.onTap,
+  });
+
+  final DateTime date;
+  final String label;
+  final bool selected;
+  final bool hasAppointments;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(
+          children: [
+            Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+                color: selected ? AgendaWeekStrip._black : AgendaWeekStrip._muted,
+              ),
+            ),
+            const SizedBox(height: 6),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 32,
+              height: 32,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: selected ? AgendaWeekStrip._black : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '${date.day}',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? Colors.white : AgendaWeekStrip._black,
                 ),
               ),
             ),
-          );
-        },
+            const SizedBox(height: 4),
+            Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: hasAppointments
+                    ? (selected
+                        ? AgendaWeekStrip._black
+                        : const Color(0xFFB0B0B0))
+                    : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
 
+import '../../shared/cabin_badge.dart';
+
 class AgendaStaffFilter extends StatelessWidget {
   const AgendaStaffFilter({
     super.key,
@@ -13,43 +15,24 @@ class AgendaStaffFilter extends StatelessWidget {
   final String? selectedStaffId;
   final ValueChanged<String?> onChanged;
 
-  static const _black = Color(0xFF0A0A0A);
-  static const _muted = Color(0xFF737373);
-
-  Color? _parseColor(String? hex) {
-    if (hex == null || hex.isEmpty) return null;
-    final cleaned = hex.replaceFirst('#', '');
-    if (cleaned.length != 6) return null;
-    return Color(int.parse('FF$cleaned', radix: 16));
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (staff.isEmpty) return const SizedBox.shrink();
+    if (staff.length < 2) return const SizedBox.shrink();
 
-    return SizedBox(
-      height: 40,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        children: [
-          _Chip(
-            label: 'Toute l’équipe',
-            selected: selectedStaffId == null,
-            onTap: () => onChanged(null),
+    return _FilterRow(
+      children: [
+        _TextTab(
+          label: 'Équipe',
+          selected: selectedStaffId == null,
+          onTap: () => onChanged(null),
+        ),
+        for (final member in staff)
+          _TextTab(
+            label: member.name.split(' ').first,
+            selected: selectedStaffId == member.id,
+            onTap: () => onChanged(member.id),
           ),
-          const SizedBox(width: 8),
-          for (final member in staff) ...[
-            _Chip(
-              label: member.name,
-              selected: selectedStaffId == member.id,
-              dotColor: _parseColor(member.color),
-              onTap: () => onChanged(member.id),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ],
-      ),
+      ],
     );
   }
 }
@@ -70,25 +53,38 @@ class AgendaResourceFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     if (resources.length < 2) return const SizedBox.shrink();
 
-    return SizedBox(
-      height: 40,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        children: [
-          _Chip(
-            label: 'Toutes les cabines',
-            selected: selectedResourceId == null,
-            onTap: () => onChanged(null),
+    return _FilterRow(
+      children: [
+        _TextTab(
+          label: 'Toutes',
+          selected: selectedResourceId == null,
+          onTap: () => onChanged(null),
+        ),
+        for (final resource in resources)
+          _CabinTab(
+            label: resource.name,
+            selected: selectedResourceId == resource.id,
+            onTap: () => onChanged(resource.id),
           ),
-          const SizedBox(width: 8),
-          for (final resource in resources) ...[
-            _Chip(
-              label: resource.name,
-              selected: selectedResourceId == resource.id,
-              onTap: () => onChanged(resource.id),
-            ),
-            const SizedBox(width: 8),
+      ],
+    );
+  }
+}
+
+class _FilterRow extends StatelessWidget {
+  const _FilterRow({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const SizedBox(width: 4),
+            children[i],
           ],
         ],
       ),
@@ -96,53 +92,58 @@ class AgendaResourceFilter extends StatelessWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  const _Chip({
+class _TextTab extends StatelessWidget {
+  const _TextTab({
     required this.label,
     required this.selected,
     required this.onTap,
-    this.dotColor,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  final Color? dotColor;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AgendaStaffFilter._black : const Color(0xFFF3F3F3),
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (dotColor != null) ...[
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: dotColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? Colors.white : AgendaStaffFilter._muted,
-                ),
-              ),
-            ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? const Color(0xFF0A0A0A) : const Color(0xFF737373),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CabinTab extends StatelessWidget {
+  const _CabinTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Opacity(
+          opacity: selected ? 1 : 0.45,
+          child: CabinMark(label: label, size: 26),
         ),
       ),
     );

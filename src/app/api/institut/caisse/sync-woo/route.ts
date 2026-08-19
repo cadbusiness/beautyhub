@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { requireModule } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
+import { tryCreateServiceClient } from "@/lib/supabase/service";
 import { syncWooCatalogForTenant } from "@/lib/woocommerce/catalog-sync";
 
 export const runtime = "nodejs";
@@ -12,12 +13,9 @@ export async function POST() {
   const t = await getTranslations("institut.pos");
   try {
     const session = await requireModule("institut");
-    const supabase = await createClient();
-    const result = await syncWooCatalogForTenant(
-      session.tenant.id,
-      supabase,
-      supabase,
-    );
+    const userSupabase = await createClient();
+    const db = tryCreateServiceClient() ?? userSupabase;
+    const result = await syncWooCatalogForTenant(session.tenant.id, db, db);
     revalidatePath("/institut/caisse");
     revalidatePath("/institut/caisse/produits");
     return NextResponse.json({ ok: true, ...result });

@@ -22,8 +22,9 @@ if [[ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]]; then
 fi
 
 if [[ -z "${CONNECTIONS_ENCRYPTION_KEY:-}" ]]; then
-  CONNECTIONS_ENCRYPTION_KEY=$(openssl rand -base64 32)
-  echo "CONNECTIONS_ENCRYPTION_KEY generee pour Vercel."
+  echo "❌ CONNECTIONS_ENCRYPTION_KEY absente de .env.local."
+  echo "   Ne pas en générer une nouvelle : ça rendrait illisibles les credentials déjà chiffrés."
+  exit 1
 fi
 
 VERCEL_DOMAIN="${VERCEL_DOMAIN:-beautyhub-seven.vercel.app}"

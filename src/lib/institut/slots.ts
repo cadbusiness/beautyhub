@@ -54,6 +54,8 @@ export interface CalendarAppointmentRow {
     price_cents: number;
     duration_min: number;
   }[];
+  visit_id?: string | null;
+  series_id?: string | null;
 }
 
 function uniqueIds(values: (string | null | undefined)[]): string[] {
@@ -115,7 +117,7 @@ export async function fetchAppointmentsInRange(
   const { data, error } = await supabase
     .from("inst_appointments")
     .select(
-      "id, starts_at, ends_at, status, notes, price_cents, staff_id, resource_id, service_id, client_id",
+      "id, starts_at, ends_at, status, notes, price_cents, staff_id, resource_id, service_id, client_id, visit_id, series_id",
     )
     .eq("tenant_id", tenantId)
     .gte("starts_at", rangeStart.toISOString())
@@ -258,6 +260,8 @@ export function serializeCalendarAppointments(rows: CalendarAppointmentRow[]): C
       price_cents: e.price_cents,
       duration_min: e.duration_min,
     })),
+    visit_id: row.visit_id ?? null,
+    series_id: row.series_id ?? null,
   }));
 }
 

@@ -1,23 +1,42 @@
+import type { BookingExtraLine } from "@/lib/institut/service-extras";
+import {
+  createVisitAppointments,
+  parseAppointmentLinesJson,
+  parseRecurrenceFrequency,
+  type AppointmentLineInput,
+} from "@/lib/institut/appointment-booking";
+import {
+  processLoyaltyForCompletedAppointment,
+} from "@/lib/institut/loyalty";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
-import {
-  resolveBookingTotals,
-  syncAppointmentExtras,
-} from "@/lib/institut/appointment-extras";
-import { processSameDayRebookOnNewAppointment } from "@/lib/institut/loyalty-events";
-import { processLoyaltyForCompletedAppointment } from "@/lib/institut/loyalty";
-import { checkAppointmentConflict } from "@/lib/institut/slots";
-import { assertQuota, QuotaExceededError } from "@/lib/quota";
 
 type Db = SupabaseClient<Database>;
 
+function parseExtras(raw: unknown): BookingExtraLine[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      const row = item as { service_id?: string; serviceId?: string; quantity?: number };
+      return {
+        service_id: String(row.service_id ?? row.serviceId ?? ""),
+        quantity: Number(row.quantity ?? 0),
+      };
+    })
+    .filter((e) => e.service_id && e.quantity > 0);
+}
+
 export type MobileCreateAppointmentInput = {
-  serviceId: string;
+  serviceId?: string;
   startsAt: string;
   clientId?: string | null;
   staffId?: string | null;
   resourceId?: string | null;
   notes?: string | null;
+  extras?: unknown;
+  lines?: unknown;
+  recurrenceFrequency?: string | null;
+  recurrenceUntil?: string | null;
 };
 
 export type MobileUpdateAppointmentInput = {
@@ -29,103 +48,43 @@ export async function createMobileAppointment(
   supabase: Db,
   tenantId: string,
   input: MobileCreateAppointmentInput,
-): Promise<{ id: string } | { error: string; code?: string }> {
-  try {
-    await assertQuota(tenantId, "appointments_per_month");
-  } catch (e) {
-    if (e instanceof QuotaExceededError) {
-      return { error: e.message, code: "quota_exceeded" };
-    }
-    throw e;
+): Promise<{ id: string; ids: string[] } | { error: string; code?: string }> {
+  const defaultStaffId = input.staffId?.trim() || null;
+  const defaultResourceId = input.resourceId?.trim() || null;
+  let lines: AppointmentLineInput[] = [];
+
+  if (Array.isArray(input.lines) && input.lines.length > 0) {
+    lines = parseAppointmentLinesJson(JSON.stringify(input.lines));
   }
-
-  const { serviceId, startsAt: startsAtRaw } = input;
-  if (!serviceId || !startsAtRaw) {
-    return { error: "Prestation et horaire requis.", code: "invalid_input" };
+  if (!lines.length && input.serviceId) {
+    lines = [
+      {
+        serviceId: String(input.serviceId),
+        extras: parseExtras(input.extras),
+        staffId: defaultStaffId,
+        resourceId: defaultResourceId,
+      },
+    ];
   }
+  lines = lines.map((line) => ({
+    ...line,
+    staffId: line.staffId || defaultStaffId,
+    resourceId: line.resourceId || defaultResourceId,
+  }));
 
-  const { data: service } = await supabase
-    .from("inst_services")
-    .select("duration_min, price_cents, buffer_before_min, buffer_after_min")
-    .eq("id", serviceId)
-    .eq("tenant_id", tenantId)
-    .maybeSingle();
-  if (!service) {
-    return { error: "Prestation introuvable.", code: "service_not_found" };
-  }
-
-  const totals = await resolveBookingTotals(supabase, serviceId, []);
-  if ("error" in totals) {
-    const err = totals.error ?? "booking_error";
-    return {
-      error: err === "service_not_found" ? "Prestation introuvable." : err,
-      code: err === "service_not_found" ? "service_not_found" : "booking_error",
-    };
-  }
-
-  const startsAt = new Date(startsAtRaw);
-  if (Number.isNaN(startsAt.getTime())) {
-    return { error: "Horaire invalide.", code: "invalid_input" };
-  }
-
-  const endsAt = new Date(startsAt.getTime() + totals.durationMin! * 60_000);
-  const staffId = input.staffId?.trim() || null;
-  const resourceId = input.resourceId?.trim() || null;
-
-  const conflict = await checkAppointmentConflict(supabase, tenantId, {
-    staffId,
-    resourceId,
-    startsAt,
-    endsAt,
-    bufferBeforeMin: service.buffer_before_min ?? 0,
-    bufferAfterMin: service.buffer_after_min ?? 0,
+  const result = await createVisitAppointments(supabase, tenantId, {
+    clientId: input.clientId,
+    notes: input.notes,
+    startsAt: new Date(input.startsAt),
+    lines,
+    recurrenceFrequency: parseRecurrenceFrequency(input.recurrenceFrequency),
+    recurrenceUntil: input.recurrenceUntil?.trim() || null,
   });
-  if (conflict) {
-    return { error: "Ce créneau est déjà occupé.", code: `conflict_${conflict}` };
+
+  if (!result.ok) {
+    return { error: result.error, code: result.code };
   }
-
-  const { data: appt, error } = await supabase
-    .from("inst_appointments")
-    .insert({
-      tenant_id: tenantId,
-      client_id: input.clientId?.trim() || null,
-      service_id: serviceId,
-      staff_id: staffId,
-      resource_id: resourceId,
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt.toISOString(),
-      price_cents: totals.priceCents,
-      notes: input.notes?.trim() || null,
-    })
-    .select("id")
-    .single();
-
-  if (error || !appt) {
-    return { error: error?.message ?? "Création impossible.", code: "create_failed" };
-  }
-
-  const extraErr = await syncAppointmentExtras(
-    supabase,
-    tenantId,
-    appt.id,
-    serviceId,
-    [],
-  );
-  if (extraErr) {
-    return { error: extraErr, code: "extras_failed" };
-  }
-
-  const bookedClientId = input.clientId?.trim() || null;
-  if (bookedClientId) {
-    await processSameDayRebookOnNewAppointment(
-      supabase,
-      tenantId,
-      bookedClientId,
-      appt.id,
-    );
-  }
-
-  return { id: appt.id };
+  return { id: result.ids[0] ?? "", ids: result.ids };
 }
 
 export async function updateMobileAppointment(

@@ -31,7 +31,7 @@ export function AppointmentEditDialog({
       open={open && Boolean(appointment)}
       onClose={onClose}
       title={t("editTitle")}
-      size="lg"
+      size="xl"
     >
       {open && appointment ? (
         <AppointmentForm

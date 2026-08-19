@@ -263,25 +263,54 @@ class MobileApiClient {
   Future<String> createAppointment({
     required String accessToken,
     required String tenantId,
-    required String serviceId,
     required String startsAt,
+    String? serviceId,
     String? clientId,
     String? staffId,
     String? notes,
+    List<AppointmentLineInput>? lines,
+    List<BookingExtraLine>? extras,
+    String? recurrenceFrequency,
+    String? recurrenceUntil,
   }) async {
     final response = await _http.post(
       _uri('/api/mobile/institut/appointments'),
       headers: _headers(accessToken: accessToken, tenantId: tenantId),
       body: jsonEncode({
-        'serviceId': serviceId,
         'startsAt': startsAt,
+        if (serviceId != null && serviceId.isNotEmpty) 'serviceId': serviceId,
         if (clientId != null && clientId.isNotEmpty) 'clientId': clientId,
         if (staffId != null && staffId.isNotEmpty) 'staffId': staffId,
         if (notes != null && notes.isNotEmpty) 'notes': notes,
+        if (extras != null && extras.isNotEmpty)
+          'extras': extras.map((e) => e.toJson()).toList(),
+        if (lines != null && lines.isNotEmpty)
+          'lines': lines.map((e) => e.toJson()).toList(),
+        if (recurrenceFrequency != null && recurrenceFrequency.isNotEmpty)
+          'recurrenceFrequency': recurrenceFrequency,
+        if (recurrenceUntil != null && recurrenceUntil.isNotEmpty)
+          'recurrenceUntil': recurrenceUntil,
       }),
     );
     final body = await _decode(response);
     return body['id'] as String? ?? '';
+  }
+
+  Future<List<ServiceExtraConfig>> fetchServiceExtras({
+    required String accessToken,
+    required String tenantId,
+    required String serviceId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/service-extras', {'serviceId': serviceId}),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    final raw = body['extras'] as List? ?? const [];
+    return raw
+        .whereType<Map>()
+        .map((e) => ServiceExtraConfig.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
   }
 
   Future<void> updateAppointment({

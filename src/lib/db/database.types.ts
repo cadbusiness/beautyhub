@@ -486,6 +486,48 @@ export type Database = {
           },
         ]
       }
+      inst_appointment_series: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          frequency: string
+          id: string
+          tenant_id: string
+          until_date: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          frequency: string
+          id?: string
+          tenant_id: string
+          until_date: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          tenant_id?: string
+          until_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_appointment_series_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_appointment_series_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_appointments: {
         Row: {
           bookly_id: number | null
@@ -498,12 +540,14 @@ export type Database = {
           promo_discount_cents: number | null
           promo_id: string | null
           resource_id: string | null
+          series_id: string | null
           service_id: string | null
           staff_id: string | null
           starts_at: string
           status: string
           tenant_id: string
           updated_at: string
+          visit_id: string | null
         }
         Insert: {
           bookly_id?: number | null
@@ -516,12 +560,14 @@ export type Database = {
           promo_discount_cents?: number | null
           promo_id?: string | null
           resource_id?: string | null
+          series_id?: string | null
           service_id?: string | null
           staff_id?: string | null
           starts_at: string
           status?: string
           tenant_id: string
           updated_at?: string
+          visit_id?: string | null
         }
         Update: {
           bookly_id?: number | null
@@ -534,12 +580,14 @@ export type Database = {
           promo_discount_cents?: number | null
           promo_id?: string | null
           resource_id?: string | null
+          series_id?: string | null
           service_id?: string | null
           staff_id?: string | null
           starts_at?: string
           status?: string
           tenant_id?: string
           updated_at?: string
+          visit_id?: string | null
         }
         Relationships: [
           {
@@ -575,6 +623,13 @@ export type Database = {
             columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "inst_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_appointments_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "inst_appointment_series"
             referencedColumns: ["id"]
           },
           {

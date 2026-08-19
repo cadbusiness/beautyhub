@@ -27,6 +27,8 @@ export interface CalendarAppointment {
     price_cents: number;
     duration_min: number;
   }[];
+  visit_id?: string | null;
+  series_id?: string | null;
 }
 
 export interface CalendarColumn {

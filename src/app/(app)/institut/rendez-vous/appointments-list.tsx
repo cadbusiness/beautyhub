@@ -162,7 +162,7 @@ export function AppointmentsList({
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         title={t("dialogTitle")}
-        size="lg"
+        size="xl"
       >
         {dialogOpen ? (
           <AppointmentForm

@@ -285,7 +285,7 @@ export function CalendarShell({
         open={createOpen}
         onClose={closeCreateDialog}
         title={tCal("dialogTitle")}
-        size="lg"
+        size="xl"
       >
         {createOpen ? (
           <AppointmentForm

@@ -24,7 +24,12 @@ import {
   syncAppointmentExtras,
 } from "@/lib/institut/appointment-extras";
 import { processLoyaltyForCompletedAppointment } from "@/lib/institut/loyalty";
-import { processSameDayRebookOnNewAppointment } from "@/lib/institut/loyalty-events";
+import {
+  cancelSeriesFromAppointment,
+  createVisitAppointments,
+  parseAppointmentLinesJson,
+  parseRecurrenceFrequency,
+} from "@/lib/institut/appointment-booking";
 import { WEEKDAYS } from "./equipe/constants";
 
 export interface ActionResult {
@@ -431,84 +436,58 @@ export async function createAppointment(
 ): Promise<ActionResult> {
   const { actions, scheduling } = await appointmentMessages();
   const session = await requireModule("institut");
-  try {
-    await assertQuota(session.tenant.id, "appointments_per_month");
-  } catch (e) {
-    if (e instanceof QuotaExceededError) return { error: await translateQuotaError(e) };
-    throw e;
-  }
-
   const supabase = await createClient();
-  const serviceId = String(formData.get("service_id") ?? "");
   const startsAtRaw = String(formData.get("starts_at") ?? "");
-  if (!serviceId || !startsAtRaw) {
+  if (!startsAtRaw) {
     return { error: actions("serviceDateRequired") };
   }
 
-  const { data: service } = await supabase
-    .from("inst_services")
-    .select("duration_min, price_cents, buffer_before_min, buffer_after_min")
-    .eq("id", serviceId)
-    .maybeSingle();
-  if (!service) return { error: actions("serviceNotFound") };
-
-  const extras = parseExtrasJson(String(formData.get("extras_json") ?? ""));
-  const totals = await resolveBookingTotals(supabase, serviceId, extras);
-  if ("error" in totals) {
-    return {
-      error: totals.error === "service_not_found" ? actions("serviceNotFound") : totals.error,
-    };
+  const defaultStaffId = String(formData.get("staff_id") ?? "") || null;
+  const defaultResourceId = String(formData.get("resource_id") ?? "") || null;
+  let lines = parseAppointmentLinesJson(String(formData.get("lines_json") ?? ""));
+  if (!lines.length) {
+    const serviceId = String(formData.get("service_id") ?? "");
+    if (!serviceId) return { error: actions("serviceDateRequired") };
+    lines = [
+      {
+        serviceId,
+        extras: parseExtrasJson(String(formData.get("extras_json") ?? "")),
+        staffId: defaultStaffId,
+        resourceId: defaultResourceId,
+      },
+    ];
+  } else {
+    lines = lines.map((line) => ({
+      ...line,
+      staffId: line.staffId || defaultStaffId,
+      resourceId: line.resourceId || defaultResourceId,
+    }));
   }
 
-  const startsAt = new Date(startsAtRaw);
-  const endsAt = new Date(startsAt.getTime() + totals.durationMin! * 60_000);
-  const staffId = String(formData.get("staff_id") ?? "") || null;
-  const resourceId = String(formData.get("resource_id") ?? "") || null;
-
-  const conflict = await checkAppointmentConflict(supabase, session.tenant.id, {
-    staffId,
-    resourceId,
-    startsAt,
-    endsAt,
-    bufferBeforeMin: service.buffer_before_min ?? 0,
-    bufferAfterMin: service.buffer_after_min ?? 0,
+  const result = await createVisitAppointments(supabase, session.tenant.id, {
+    clientId: String(formData.get("client_id") ?? "") || null,
+    notes: String(formData.get("notes") ?? "").trim() || null,
+    startsAt: new Date(startsAtRaw),
+    lines,
+    recurrenceFrequency: parseRecurrenceFrequency(
+      String(formData.get("recurrence_frequency") ?? "none"),
+    ),
+    recurrenceUntil: String(formData.get("recurrence_until") ?? "") || null,
   });
-  if (conflict) return { error: scheduling(`conflict.${conflict}`) };
 
-  const { data: appt, error } = await supabase
-    .from("inst_appointments")
-    .insert({
-      tenant_id: session.tenant.id,
-      client_id: String(formData.get("client_id") ?? "") || null,
-      service_id: serviceId,
-      staff_id: staffId,
-      resource_id: resourceId,
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt.toISOString(),
-      price_cents: totals.priceCents,
-      notes: String(formData.get("notes") ?? "").trim() || null,
-    })
-    .select("id")
-    .single();
-  if (error) return { error: error.message };
-
-  const extraErr = await syncAppointmentExtras(
-    supabase,
-    session.tenant.id,
-    appt.id,
-    serviceId,
-    extras,
-  );
-  if (extraErr) return { error: extraErr };
-
-  const bookedClientId = String(formData.get("client_id") ?? "") || null;
-  if (bookedClientId) {
-    await processSameDayRebookOnNewAppointment(
-      supabase,
-      session.tenant.id,
-      bookedClientId,
-      appt.id,
-    );
+  if (!result.ok) {
+    if (result.code === "quota_exceeded") {
+      return {
+        error: await translateQuotaError(new QuotaExceededError(result.key, result.limit)),
+      };
+    }
+    if (result.code === "conflict") {
+      return { error: scheduling(`conflict.${result.conflict}`) };
+    }
+    if (result.code === "service_not_found") {
+      return { error: actions("serviceNotFound") };
+    }
+    return { error: result.error };
   }
 
   revalidatePath("/institut/rendez-vous");
@@ -625,14 +604,12 @@ export async function updateAppointment(
 }
 
 export async function cancelAppointment(formData: FormData): Promise<ActionResult> {
-  await requireModule("institut");
+  const session = await requireModule("institut");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
-  const { error } = await supabase
-    .from("inst_appointments")
-    .update({ status: "cancelled" })
-    .eq("id", id);
-  if (error) return { error: error.message };
+  const scope = String(formData.get("cancel_scope") ?? "one") === "future" ? "future" : "one";
+  const result = await cancelSeriesFromAppointment(supabase, session.tenant.id, id, scope);
+  if ("error" in result) return { error: result.error };
   revalidatePath("/institut/rendez-vous");
   return { ok: true };
 }

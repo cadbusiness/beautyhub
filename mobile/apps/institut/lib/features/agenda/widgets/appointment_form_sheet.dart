@@ -28,6 +28,14 @@ Future<void> showCreateAppointmentSheet(
   );
 }
 
+class _ServiceLine {
+  String? serviceId;
+  List<ServiceExtraConfig> catalog = const [];
+  Map<String, int> extraQty = {};
+  bool loadingExtras = false;
+  String? extrasError;
+}
+
 class _CreateAppointmentSheet extends ConsumerStatefulWidget {
   const _CreateAppointmentSheet({
     this.initialDate,
@@ -44,7 +52,7 @@ class _CreateAppointmentSheet extends ConsumerStatefulWidget {
 
 class _CreateAppointmentSheetState
     extends ConsumerState<_CreateAppointmentSheet> {
-  String? _serviceId;
+  final List<_ServiceLine> _lines = [_ServiceLine()];
   String? _clientId;
   String? _clientTitle;
   String? _clientSubtitle;
@@ -52,6 +60,8 @@ class _CreateAppointmentSheetState
   late DateTime _date;
   late TimeOfDay _time;
   final _notesController = TextEditingController();
+  String _recurrence = 'none';
+  DateTime? _until;
   bool _saving = false;
   String? _error;
 
@@ -73,6 +83,14 @@ class _CreateAppointmentSheetState
     super.dispose();
   }
 
+  List<PosCatalogItem> _catalogServices(PosContext pos) {
+    return pos.catalog
+        .where(
+          (item) => item.type == 'service' && item.visibility != 'extra_only',
+        )
+        .toList();
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -92,9 +110,68 @@ class _CreateAppointmentSheetState
     if (picked != null) setState(() => _time = picked);
   }
 
+  Future<void> _pickUntil() async {
+    final initial = _until ?? _date.add(const Duration(days: 90));
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: _date,
+      lastDate: DateTime.now().add(const Duration(days: 400)),
+      locale: const Locale('fr', 'FR'),
+    );
+    if (picked != null) setState(() => _until = picked);
+  }
+
+  Future<void> _loadExtras(_ServiceLine line) async {
+    final serviceId = line.serviceId;
+    if (serviceId == null || serviceId.isEmpty) {
+      setState(() {
+        line.catalog = const [];
+        line.extraQty = {};
+        line.loadingExtras = false;
+        line.extrasError = null;
+      });
+      return;
+    }
+    final token = ref.read(accessTokenProvider);
+    final tenantId = ref.read(selectedTenantIdProvider);
+    if (token == null || tenantId == null) return;
+
+    setState(() {
+      line.loadingExtras = true;
+      line.extrasError = null;
+    });
+    try {
+      final catalog = await ref.read(mobileApiProvider).fetchServiceExtras(
+            accessToken: token,
+            tenantId: tenantId,
+            serviceId: serviceId,
+          );
+      if (!mounted) return;
+      final qty = <String, int>{};
+      for (final extra in catalog) {
+        if (extra.minQty > 0) qty[extra.extraServiceId] = extra.minQty;
+      }
+      setState(() {
+        line.catalog = catalog;
+        line.extraQty = qty;
+        line.loadingExtras = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        line.catalog = const [];
+        line.extraQty = {};
+        line.loadingExtras = false;
+        line.extrasError = 'Impossible de charger les extras.';
+      });
+    }
+  }
+
   Future<void> _save() async {
-    if (_serviceId == null || _serviceId!.isEmpty) {
-      setState(() => _error = 'Choisissez une prestation.');
+    final filled = _lines.where((l) => l.serviceId != null && l.serviceId!.isNotEmpty).toList();
+    if (filled.isEmpty) {
+      setState(() => _error = 'Choisissez au moins une prestation.');
       return;
     }
 
@@ -116,14 +193,32 @@ class _CreateAppointmentSheetState
     });
 
     try {
+      final lines = filled
+          .map(
+            (line) => AppointmentLineInput(
+              serviceId: line.serviceId!,
+              extras: line.extraQty.entries
+                  .where((e) => e.value > 0)
+                  .map(
+                    (e) => BookingExtraLine(serviceId: e.key, quantity: e.value),
+                  )
+                  .toList(),
+              staffId: _staffId,
+            ),
+          )
+          .toList();
       await ref.read(mobileApiProvider).createAppointment(
             accessToken: token,
             tenantId: tenantId,
-            serviceId: _serviceId!,
             startsAt: startsAt.toUtc().toIso8601String(),
             clientId: _clientId,
             staffId: _staffId,
             notes: _notesController.text.trim(),
+            lines: lines,
+            recurrenceFrequency: _recurrence,
+            recurrenceUntil: _recurrence == 'none' || _until == null
+                ? null
+                : DateFormat('yyyy-MM-dd').format(_until!),
           );
       ref.invalidate(dayAgendaProvider);
       ref.invalidate(todayAgendaProvider);
@@ -151,21 +246,28 @@ class _CreateAppointmentSheetState
   }
 
   List<PickerItem> _staffToItems(List<PosOption> staff) {
-    return staff
-        .map((s) => PickerItem(id: s.id, title: s.label))
-        .toList();
+    return staff.map((s) => PickerItem(id: s.id, title: s.label)).toList();
   }
 
-  Future<void> _openServicePicker(List<PosCatalogItem> services) async {
+  Future<void> _openServicePicker(
+    List<PosCatalogItem> services,
+    _ServiceLine line,
+  ) async {
     final picked = await showSearchablePicker(
       context: context,
       title: 'Choisir une prestation',
       items: _servicesToItems(services),
-      selectedId: _serviceId,
+      selectedId: line.serviceId,
       searchHint: 'Rechercher une prestation…',
       emptyMessage: 'Aucune prestation trouvée.',
     );
-    if (picked != null) setState(() => _serviceId = picked.id);
+    if (picked == null) return;
+    setState(() {
+      line.serviceId = picked.id;
+      line.catalog = const [];
+      line.extraQty = {};
+    });
+    await _loadExtras(line);
   }
 
   Future<void> _openClientPicker() async {
@@ -220,6 +322,7 @@ class _CreateAppointmentSheetState
     final posAsync = ref.watch(posContextProvider);
     final dateFmt = DateFormat('EEEE d MMMM', 'fr_FR');
     final timeFmt = DateFormat.Hm();
+    final untilFmt = DateFormat('d MMMM y', 'fr_FR');
 
     return SafeArea(
       child: Padding(
@@ -236,23 +339,7 @@ class _CreateAppointmentSheetState
           ),
           error: (e, _) => Text('$e'),
           data: (pos) {
-            final services = pos.catalog
-                .where((item) => item.type == 'service')
-                .toList();
-
-            final selectedService = _serviceId == null
-                ? null
-                : services.firstWhere(
-                    (s) => s.id == _serviceId,
-                    orElse: () => PosCatalogItem(
-                      key: '',
-                      type: 'service',
-                      id: _serviceId!,
-                      name: '',
-                      priceCents: 0,
-                      category: 'service',
-                    ),
-                  );
+            final services = _catalogServices(pos);
             final selectedClient = _clientId == null
                 ? null
                 : pos.clients.firstWhere(
@@ -294,18 +381,6 @@ class _CreateAppointmentSheetState
                     ),
                   ),
                   const SizedBox(height: 20),
-                  SearchablePickerField(
-                    label: 'Prestation',
-                    value: selectedService?.name.isNotEmpty == true
-                        ? selectedService!.name
-                        : null,
-                    placeholder: 'Choisir une prestation',
-                    selectedSubtitle: selectedService?.durationMin != null
-                        ? '${selectedService!.durationMin} min'
-                        : null,
-                    onOpen: () => _openServicePicker(services),
-                  ),
-                  const SizedBox(height: 14),
                   SearchablePickerField(
                     label: 'Cliente',
                     value: _clientTitle ??
@@ -377,6 +452,68 @@ class _CreateAppointmentSheetState
                       ),
                     ],
                   ),
+                  const SizedBox(height: 18),
+                  for (var i = 0; i < _lines.length; i++) ...[
+                    _buildServiceLine(services, _lines[i], i),
+                    const SizedBox(height: 12),
+                  ],
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () => setState(() => _lines.add(_ServiceLine())),
+                      child: const Text('+ Ajouter une prestation'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const _FieldLabel('Récurrence'),
+                  const SizedBox(height: 8),
+                  InputDecorator(
+                    decoration: _inputDecoration(),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _recurrence,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(value: 'none', child: Text('Ne pas répéter')),
+                          DropdownMenuItem(value: 'weekly', child: Text('Toutes les semaines')),
+                          DropdownMenuItem(
+                            value: 'biweekly',
+                            child: Text('Toutes les 2 semaines'),
+                          ),
+                          DropdownMenuItem(value: 'monthly', child: Text('Tous les mois')),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _recurrence = value ?? 'none';
+                            if (_recurrence != 'none') {
+                              _until ??= _date.add(const Duration(days: 90));
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  if (_recurrence != 'none') ...[
+                    const SizedBox(height: 12),
+                    const _FieldLabel('Jusqu’au'),
+                    const SizedBox(height: 8),
+                    OutlinedButton(
+                      onPressed: _pickUntil,
+                      style: _outlineStyle(),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          untilFmt.format(_until ?? _date.add(const Duration(days: 90))),
+                          style: const TextStyle(color: _black),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Les occurrences reprennent les mêmes prestations et extras.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF737373)),
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   const _FieldLabel('Notes'),
                   const SizedBox(height: 8),
@@ -414,7 +551,11 @@ class _CreateAppointmentSheetState
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Créer le rendez-vous'),
+                          : Text(
+                              _recurrence != 'none' || _lines.length > 1
+                                  ? 'Créer les rendez-vous'
+                                  : 'Créer le rendez-vous',
+                            ),
                     ),
                   ),
                 ],
@@ -422,6 +563,106 @@ class _CreateAppointmentSheetState
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildServiceLine(
+    List<PosCatalogItem> services,
+    _ServiceLine line,
+    int index,
+  ) {
+    final selectedService = line.serviceId == null
+        ? null
+        : services.cast<PosCatalogItem?>().firstWhere(
+              (s) => s?.id == line.serviceId,
+              orElse: () => null,
+            );
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: _border),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Prestation ${index + 1}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _black,
+                  ),
+                ),
+              ),
+              if (_lines.length > 1)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => setState(() => _lines.removeAt(index)),
+                  icon: const Icon(Icons.close, size: 18),
+                ),
+            ],
+          ),
+          SearchablePickerField(
+            label: 'Prestation',
+            value: selectedService?.name.isNotEmpty == true
+                ? selectedService!.name
+                : null,
+            placeholder: 'Choisir une prestation',
+            selectedSubtitle: selectedService?.durationMin != null
+                ? '${selectedService!.durationMin} min'
+                : null,
+            onOpen: () => _openServicePicker(services, line),
+          ),
+          if (line.loadingExtras) ...[
+            const SizedBox(height: 10),
+            const Text(
+              'Chargement des extras…',
+              style: TextStyle(fontSize: 12, color: Color(0xFF737373)),
+            ),
+          ] else if (line.extrasError != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              line.extrasError!,
+              style: const TextStyle(fontSize: 12, color: Color(0xFFDC2626)),
+            ),
+          ] else if (line.serviceId != null && line.catalog.isEmpty) ...[
+            const SizedBox(height: 10),
+            const Text(
+              'Aucun extra pour cette prestation.',
+              style: TextStyle(fontSize: 12, color: Color(0xFFA3A3A3)),
+            ),
+          ] else if (line.catalog.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Text(
+              'Extras',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF404040),
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final extra in line.catalog)
+              _ExtraRow(
+                extra: extra,
+                quantity: line.extraQty[extra.extraServiceId] ?? 0,
+                onChanged: (qty) {
+                  setState(() {
+                    if (qty <= 0) {
+                      line.extraQty.remove(extra.extraServiceId);
+                    } else {
+                      line.extraQty[extra.extraServiceId] = qty;
+                    }
+                  });
+                },
+              ),
+          ],
+        ],
       ),
     );
   }
@@ -454,6 +695,64 @@ class _CreateAppointmentSheetState
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       side: const BorderSide(color: _border),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    );
+  }
+}
+
+class _ExtraRow extends StatelessWidget {
+  const _ExtraRow({
+    required this.extra,
+    required this.quantity,
+    required this.onChanged,
+  });
+
+  final ServiceExtraConfig extra;
+  final int quantity;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  extra.name,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF0A0A0A),
+                  ),
+                ),
+                Text(
+                  '${extra.durationMin} min · ${(extra.priceCents / 100).toStringAsFixed(2)} €',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF737373)),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: quantity <= extra.minQty
+                ? null
+                : () => onChanged(quantity - 1),
+            icon: const Icon(Icons.remove_circle_outline, size: 20),
+          ),
+          Text(
+            '$quantity',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          IconButton(
+            onPressed: quantity >= extra.maxQty
+                ? null
+                : () => onChanged(quantity + 1),
+            icon: const Icon(Icons.add_circle_outline, size: 20),
+          ),
+        ],
+      ),
     );
   }
 }

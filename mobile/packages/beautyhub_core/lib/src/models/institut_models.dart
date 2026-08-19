@@ -1385,3 +1385,83 @@ class InstPosFiscalSettings {
         ),
       );
 }
+
+class ServiceExtraConfig {
+  const ServiceExtraConfig({
+    required this.extraServiceId,
+    required this.name,
+    required this.durationMin,
+    required this.priceCents,
+    this.description,
+    this.imageUrl,
+    this.minQty = 0,
+    this.maxQty = 1,
+    this.sortOrder = 0,
+  });
+
+  final String extraServiceId;
+  final String name;
+  final String? description;
+  final int durationMin;
+  final int priceCents;
+  final String? imageUrl;
+  final int minQty;
+  final int maxQty;
+  final int sortOrder;
+
+  factory ServiceExtraConfig.fromJson(Map<String, dynamic> json) {
+    return ServiceExtraConfig(
+      extraServiceId:
+          json['extra_service_id'] as String? ?? json['extraServiceId'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String?,
+      durationMin: (json['duration_min'] as num?)?.toInt() ??
+          (json['durationMin'] as num?)?.toInt() ??
+          0,
+      priceCents: (json['price_cents'] as num?)?.toInt() ??
+          (json['priceCents'] as num?)?.toInt() ??
+          0,
+      imageUrl: json['image_url'] as String? ?? json['imageUrl'] as String?,
+      minQty: (json['min_qty'] as num?)?.toInt() ?? (json['minQty'] as num?)?.toInt() ?? 0,
+      maxQty: (json['max_qty'] as num?)?.toInt() ?? (json['maxQty'] as num?)?.toInt() ?? 1,
+      sortOrder:
+          (json['sort_order'] as num?)?.toInt() ?? (json['sortOrder'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class BookingExtraLine {
+  const BookingExtraLine({
+    required this.serviceId,
+    required this.quantity,
+  });
+
+  final String serviceId;
+  final int quantity;
+
+  Map<String, dynamic> toJson() => {
+        'service_id': serviceId,
+        'quantity': quantity,
+      };
+}
+
+class AppointmentLineInput {
+  const AppointmentLineInput({
+    required this.serviceId,
+    this.extras = const [],
+    this.staffId,
+    this.resourceId,
+  });
+
+  final String serviceId;
+  final List<BookingExtraLine> extras;
+  final String? staffId;
+  final String? resourceId;
+
+  Map<String, dynamic> toJson() => {
+        'serviceId': serviceId,
+        'extras': extras.map((e) => e.toJson()).toList(),
+        if (staffId != null && staffId!.isNotEmpty) 'staffId': staffId,
+        if (resourceId != null && resourceId!.isNotEmpty) 'resourceId': resourceId,
+      };
+}

@@ -74,3 +74,10 @@ export function parseExtrasJson(raw: string | null | undefined): BookingExtraLin
 export function extrasToJson(extras: BookingExtraLine[]): string {
   return JSON.stringify(extras.filter((e) => e.quantity > 0));
 }
+
+/** Extras obligatoires (min_qty > 0) à précocher à la sélection d'une prestation. */
+export function defaultExtrasFromCatalog(catalog: ServiceExtraConfig[]): BookingExtraLine[] {
+  return catalog
+    .filter((e) => e.min_qty > 0)
+    .map((e) => ({ service_id: e.extra_service_id, quantity: e.min_qty }));
+}

@@ -11,12 +11,14 @@ export function ExtrasPicker({
   basePriceCents,
   value,
   onChange,
+  compact = false,
 }: {
   catalog: ServiceExtraConfig[];
   baseDurationMin: number;
   basePriceCents: number;
   value: BookingExtraLine[];
   onChange: (next: BookingExtraLine[]) => void;
+  compact?: boolean;
 }) {
   const t = useTranslations("institut.extras");
 
@@ -46,9 +48,9 @@ export function ExtrasPicker({
         return (
           <div
             key={extra.extra_service_id}
-            className="flex gap-3 rounded-lg border border-slate-200 p-3"
+            className={`flex gap-3 rounded-lg border border-slate-200 ${compact ? "p-2" : "p-3"}`}
           >
-            {extra.image_url ? (
+            {compact ? null : extra.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={extra.image_url}

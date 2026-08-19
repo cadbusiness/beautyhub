@@ -1925,7 +1925,7 @@
       "syncWooPending": "Sincronización…",
       "syncWooDone": "{products} productos sincronizados ({shops} tienda(s))",
       "syncWooError": "Error de sincronización",
-      "syncWooNoShop": "BeautyHub conoce la tienda pero no pudo desbloquear las claves API. No hace falta desconectar: actualiza el enlace en Cuenta → WooCommerce (misma URL) o vuelve a lanzar Sync en un momento.",
+      "syncWooNoShop": "La tienda Woo está vinculada. Vuelve a lanzar Sync — no hace falta desconectar.",
       "wooNotConnected": "WooCommerce no está conectado: solo están disponibles productos y servicios internos."
     },
     "posTemplates": {

@@ -6,6 +6,7 @@
  *   node scripts/reencrypt-connection-credentials.mjs
  */
 import { createRequire } from "node:module";
+import { execSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -46,6 +47,32 @@ if (!url || !serviceKey) {
   process.exit(1);
 }
 
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+
+function legacyJwtAnon() {
+  const fromEnv = process.env.SUPABASE_ANON_KEY?.trim();
+  if (fromEnv && fromEnv !== anonKey) return fromEnv;
+  try {
+    const raw = execSync(
+      "supabase projects api-keys --project-ref cmlnlwqjnqplsfemrvsp -o json",
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    );
+    const keys = JSON.parse(raw);
+    const jwt = keys.find(
+      (item) =>
+        (item.name === "anon" || item.id === "anon") &&
+        typeof (item.api_key || item.key) === "string" &&
+        String(item.api_key || item.key).startsWith("eyJ"),
+    );
+    const value = jwt?.api_key || jwt?.key;
+    return typeof value === "string" && value !== anonKey ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+const jwtAnon = legacyJwtAnon();
+
 function keys() {
   const out = [];
   const raw = process.env.CONNECTIONS_ENCRYPTION_KEY?.trim();
@@ -54,6 +81,7 @@ function keys() {
     if (key.length === 32) out.push(key);
   }
   out.push(createHash("sha256").update(serviceKey).digest());
+  if (anonKey) out.push(createHash("sha256").update(anonKey).digest());
   return out;
 }
 
@@ -78,8 +106,7 @@ function decryptEnc(enc) {
   throw last;
 }
 
-function encryptEnc(plaintext) {
-  const key = createHash("sha256").update(serviceKey).digest();
+function encryptWith(plaintext, key) {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, iv);
   const ciphertext = Buffer.concat([
@@ -88,6 +115,20 @@ function encryptEnc(plaintext) {
   ]);
   const tag = cipher.getAuthTag();
   return Buffer.concat([iv, tag, ciphertext]).toString("base64");
+}
+
+function encryptEnc(plaintext) {
+  return encryptWith(plaintext, createHash("sha256").update(serviceKey).digest());
+}
+
+function encryptAnon(plaintext) {
+  if (!anonKey) return null;
+  return encryptWith(plaintext, createHash("sha256").update(anonKey).digest());
+}
+
+function encryptJwt(plaintext) {
+  if (!jwtAnon) return null;
+  return encryptWith(plaintext, createHash("sha256").update(jwtAnon).digest());
 }
 
 const supabase = createClient(url, serviceKey, {
@@ -114,13 +155,23 @@ for (const row of data ?? []) {
     const plaintext = decryptEnc(creds.enc);
     JSON.parse(plaintext);
     const nextEnc = encryptEnc(plaintext);
-    if (nextEnc === creds.enc) {
+    const nextAnon = encryptAnon(plaintext);
+    const nextJwt = encryptJwt(plaintext);
+    if (
+      nextEnc === creds.enc &&
+      nextAnon &&
+      creds.enc_anon === nextAnon &&
+      (!nextJwt || creds.enc_jwt === nextJwt)
+    ) {
       skipped += 1;
       continue;
     }
+    const nextCredentials = { enc: nextEnc };
+    if (nextAnon) nextCredentials.enc_anon = nextAnon;
+    if (nextJwt) nextCredentials.enc_jwt = nextJwt;
     const { error: updateError } = await supabase
       .from("connections")
-      .update({ credentials: { enc: nextEnc } })
+      .update({ credentials: nextCredentials })
       .eq("id", row.id);
     if (updateError) throw updateError;
     updated += 1;

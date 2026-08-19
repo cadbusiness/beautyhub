@@ -2097,7 +2097,7 @@
       "syncWoo": "Sync WooCommerce",
       "syncWooDone": "{products} synchronized products ({shops} store(s))",
       "syncWooError": "Sync Failed",
-      "syncWooNoShop": "BeautyHub knows the store but could not unlock the API keys. No need to disconnect: refresh the link in Account → WooCommerce (same URL), or run Sync again in a moment.",
+      "syncWooNoShop": "The Woo store is linked. Run Sync again — no need to disconnect.",
       "syncWooPending": "Synchronization…",
       "wooNotConnected": "WooCommerce not connected — only internal services and products are available."
     },

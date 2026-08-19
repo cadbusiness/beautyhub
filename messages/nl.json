@@ -1973,7 +1973,7 @@
       "syncWooPending": "Synchroniseren…",
       "syncWooDone": "{products} producten gesynchroniseerd ({shops} winkel(s))",
       "syncWooError": "Synchronisatie mislukt",
-      "syncWooNoShop": "BeautyHub kent de winkel maar kon de API-sleutels niet ontgrendelen. Je hoeft niet te ontkoppelen: vernieuw de link via Account → WooCommerce (zelfde URL) of start Sync zo opnieuw.",
+      "syncWooNoShop": "De Woo-winkel is gekoppeld. Start Sync opnieuw — je hoeft niet te ontkoppelen.",
       "emptyCatalog": "Begin met het toevoegen van behandelingen, interne producten of koppel WooCommerce in de instellingen.",
       "linkServices": "Behandelingen",
       "linkProducts": "Interne producten",

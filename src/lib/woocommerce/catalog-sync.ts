@@ -53,6 +53,7 @@ export async function syncWooCatalogForTenant(
       tenantId,
       hasEncKey: Boolean(process.env.CONNECTIONS_ENCRYPTION_KEY?.trim()),
       hasServiceRole: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()),
+      hasAnonKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()),
     });
     throw new Error("woo_no_shop");
   }

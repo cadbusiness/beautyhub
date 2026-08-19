@@ -10,10 +10,12 @@ import {
  *
  * Clés candidates (dans l'ordre) :
  * 1. CONNECTIONS_ENCRYPTION_KEY (base64, 32 octets) — historique
- * 2. SHA-256(SUPABASE_SERVICE_ROLE_KEY) — toujours dispo en prod Node
+ * 2. SHA-256(SUPABASE_SERVICE_ROLE_KEY)
+ * 3. SHA-256(NEXT_PUBLIC_SUPABASE_ANON_KEY) — toujours présent sur Vercel
  *
- * On chiffre avec la clé dérivée du service role dès qu'elle existe, pour que
- * Vercel puisse lire les blobs même si CONNECTIONS_ENCRYPTION_KEY n'y est pas.
+ * `enc` est chiffré avec service role / CONNECTIONS_ENCRYPTION_KEY.
+ * `enc_anon` est un second blob lisible dès que l'anon key Next est là,
+ * même si la service role manque en prod.
  */
 function addKey(out: Buffer[], seen: Set<string>, key: Buffer) {
   if (key.length !== 32) return;
@@ -36,6 +38,12 @@ function envFileKey(): Buffer | null {
   return key.length === 32 ? key : null;
 }
 
+function anonDerivedKey(): Buffer | null {
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  if (!anon) return null;
+  return createHash("sha256").update(anon).digest();
+}
+
 function candidateKeys(): Buffer[] {
   const out: Buffer[] = [];
   const seen = new Set<string>();
@@ -43,6 +51,8 @@ function candidateKeys(): Buffer[] {
   if (envKey) addKey(out, seen, envKey);
   const derived = serviceRoleKey();
   if (derived) addKey(out, seen, derived);
+  const anon = anonDerivedKey();
+  if (anon) addKey(out, seen, anon);
 
   // Anciennes dérivations vues en local / scripts.
   const rawEnc = process.env.CONNECTIONS_ENCRYPTION_KEY?.trim();
@@ -57,8 +67,10 @@ function encryptKey(): Buffer {
   if (derived) return derived;
   const envKey = envFileKey();
   if (envKey) return envKey;
+  const anon = anonDerivedKey();
+  if (anon) return anon;
   throw new Error(
-    "Aucune clé de chiffrement (CONNECTIONS_ENCRYPTION_KEY ou SUPABASE_SERVICE_ROLE_KEY).",
+    "Aucune clé de chiffrement (CONNECTIONS_ENCRYPTION_KEY, SUPABASE_SERVICE_ROLE_KEY ou NEXT_PUBLIC_SUPABASE_ANON_KEY).",
   );
 }
 
@@ -94,7 +106,7 @@ export function decryptSecret(payload: string): string {
   const keys = candidateKeys();
   if (keys.length === 0) {
     throw new Error(
-      "Aucune clé de chiffrement (CONNECTIONS_ENCRYPTION_KEY ou SUPABASE_SERVICE_ROLE_KEY).",
+      "Aucune clé de chiffrement (CONNECTIONS_ENCRYPTION_KEY, SUPABASE_SERVICE_ROLE_KEY ou NEXT_PUBLIC_SUPABASE_ANON_KEY).",
     );
   }
   let lastError: unknown;
@@ -110,16 +122,45 @@ export function decryptSecret(payload: string): string {
     : new Error("Impossible de déchiffrer le secret.");
 }
 
-/** Chiffre un objet de credentials en un seul blob. */
-export function encryptCredentials(creds: Record<string, unknown>): {
+export type EncryptedCredentials = {
   enc: string;
-} {
-  return { enc: encryptSecret(JSON.stringify(creds)) };
+  enc_anon?: string;
+  enc_jwt?: string;
+};
+
+/** Chiffre un objet : `enc` (service/env) + `enc_anon` (clé publique Next). */
+export function encryptCredentials(
+  creds: Record<string, unknown>,
+): EncryptedCredentials {
+  const json = JSON.stringify(creds);
+  const out: EncryptedCredentials = { enc: encryptSecret(json) };
+  const anon = anonDerivedKey();
+  if (anon) out.enc_anon = encryptWithKey(json, anon);
+  return out;
 }
 
 export function decryptCredentials<T = Record<string, unknown>>(stored: {
   enc?: string;
+  enc_anon?: string;
+  enc_jwt?: string;
+  [key: string]: unknown;
 }): T | null {
-  if (!stored?.enc) return null;
-  return JSON.parse(decryptSecret(stored.enc)) as T;
+  const blobs = Object.entries(stored ?? {})
+    .filter(
+      ([key, value]) =>
+        key.startsWith("enc") && typeof value === "string" && value.length > 0,
+    )
+    .map(([, value]) => value as string);
+  if (blobs.length === 0) return null;
+  let lastError: unknown;
+  for (const blob of blobs) {
+    try {
+      return JSON.parse(decryptSecret(blob)) as T;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Impossible de déchiffrer le secret.");
 }

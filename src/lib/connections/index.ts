@@ -54,7 +54,7 @@ export async function resolveConnection(
       let credentials: Record<string, unknown> | null = null;
       try {
         credentials = decryptCredentials(
-          (data.credentials as { enc?: string }) ?? {},
+          (data.credentials as { enc?: string; enc_anon?: string }) ?? {},
         );
       } catch {
         // Keep pages resilient if encryption key is missing/invalid

@@ -125,11 +125,11 @@ export function CheckoutPanel({
   const remainingCents = totals.total_cents - paymentsTotalCents;
   const isPartial = paymentsTotalCents > 0 && paymentsTotalCents < totals.total_cents;
   const isOverpaid = paymentsTotalCents > totals.total_cents;
-  const coveredByLoyalty = totals.total_cents === 0 && loyaltyCreditCents > 0;
+  const zeroDue = totals.total_cents === 0;
   const canSubmit =
     !disabled &&
     !isOverpaid &&
-    (coveredByLoyalty ||
+    (zeroDue ||
       (paymentsTotalCents > 0 && payments.every((p) => p.method && p.amountEuros)));
 
   const paymentsJson = JSON.stringify(

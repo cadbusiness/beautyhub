@@ -1971,9 +1971,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
             SizedBox(
               height: 48,
               child: FilledButton(
-                onPressed: checkingOut ||
-                        sessionBlocked ||
-                        (payable <= 0 && loyaltyDiscountCents <= 0)
+                onPressed: checkingOut || sessionBlocked
                     ? null
                     : () async {
                         final reason = _customReason

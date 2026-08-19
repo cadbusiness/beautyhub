@@ -353,9 +353,8 @@ export async function executePosCheckout(
   const { data: authUser } = await supabase.auth.getUser();
   const cashierUserId = authUser.user?.id ?? null;
 
-  const coveredByLoyalty =
-    (input.loyaltyCreditCents ?? 0) > 0 && totals.total_cents === 0;
-  if (totals.total_cents < 0 || (totals.total_cents === 0 && !coveredByLoyalty)) {
+  const zeroDue = totals.total_cents === 0;
+  if (totals.total_cents < 0) {
     throw new Error("invalid_amount");
   }
 
@@ -371,7 +370,7 @@ export async function executePosCheckout(
   }
 
   const rawPayments = input.payments.filter((p) => p.amount_cents > 0);
-  if (rawPayments.length === 0 && !coveredByLoyalty) throw new Error("no_payments");
+  if (rawPayments.length === 0 && !zeroDue) throw new Error("no_payments");
 
   const payments = await resolvePaymentReferences(supabase, tenantId, rawPayments);
 
@@ -391,7 +390,7 @@ export async function executePosCheckout(
 
   const amountPaid = payments.reduce((s, p) => s + p.amount_cents, 0);
   if (amountPaid < 0) throw new Error("invalid_amount");
-  if (!coveredByLoyalty && amountPaid <= 0) throw new Error("invalid_amount");
+  if (!zeroDue && amountPaid <= 0) throw new Error("invalid_amount");
   if (amountPaid > totals.total_cents) throw new Error("overpaid");
 
   const status: "paid" | "partial" =

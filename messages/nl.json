@@ -2943,6 +2943,11 @@
       "cart": {
         "title": "Winkelwagen",
         "add": "Nieuwe winkelwagen",
+        "freeCharge": "Vrij bedrag",
+        "freeChargeHint": "Reken een bedrag af zonder product of behandeling te kiezen.",
+        "freeChargeAmount": "Bedrag (€)",
+        "freeChargeLabel": "Omschrijving (optioneel)",
+        "freeChargeAdd": "Toevoegen",
         "abandon": "Verwijderen",
         "locked": "In gebruik op een andere tablet. Alleen-lezen.",
         "lockedBy": "In gebruik ({name}). Alleen-lezen.",

@@ -216,6 +216,9 @@ export async function resolvePosCartTotals(
   const settings = await getPosSettings(supabase, tenantId);
   const rawLines = await resolveCartLines(supabase, tenantId, cart);
   const lines = applyPriceOverrides(rawLines, input.priceOverrides);
+  if (lines.some((line) => line.key.startsWith("custom:") && line.unit_price_cents <= 0)) {
+    throw new Error("invalid_custom_amount");
+  }
 
   const baseTotals = computeCartTotals(lines, {
     priceDisplay: settings.price_display,

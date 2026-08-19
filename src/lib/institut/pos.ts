@@ -48,13 +48,77 @@ export interface ResolvedCartLine {
   woo_id: number | null;
 }
 
+export const CUSTOM_POS_DEFAULT_NAME = "Encaissement libre";
+
+export function isPosCartKey(key: string): boolean {
+  return (
+    key.startsWith("service:") ||
+    key.startsWith("product:") ||
+    key.startsWith("custom:")
+  );
+}
+
+export function isCustomPosKey(key: string): boolean {
+  return key.startsWith("custom:");
+}
+
+export function customPosLineName(key: string): string {
+  if (!isCustomPosKey(key)) return CUSTOM_POS_DEFAULT_NAME;
+  const rest = key.slice("custom:".length);
+  const sep = rest.indexOf(":");
+  if (sep < 0) return CUSTOM_POS_DEFAULT_NAME;
+  const raw = rest.slice(sep + 1);
+  if (!raw) return CUSTOM_POS_DEFAULT_NAME;
+  try {
+    return decodeURIComponent(raw).trim() || CUSTOM_POS_DEFAULT_NAME;
+  } catch {
+    return raw.trim() || CUSTOM_POS_DEFAULT_NAME;
+  }
+}
+
+export function createCustomPosKey(name?: string | null): string {
+  const label = (name?.trim() || CUSTOM_POS_DEFAULT_NAME).slice(0, 80);
+  const id =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
+  return `custom:${id}:${encodeURIComponent(label)}`;
+}
+
+export function customPosCatalogItem(
+  key: string,
+  priceCents = 0,
+): PosCatalogItem {
+  return {
+    key,
+    type: "service",
+    id: key,
+    name: customPosLineName(key),
+    price_cents: priceCents,
+    image_url: null,
+    color: null,
+    category: "service",
+  };
+}
+
+export function resolvePosCatalogItem(
+  key: string,
+  catalog: PosCatalogItem[],
+  priceCents = 0,
+): PosCatalogItem | null {
+  const found = catalog.find((item) => item.key === key);
+  if (found) return found;
+  if (!isCustomPosKey(key)) return null;
+  return customPosCatalogItem(key, priceCents);
+}
+
 /** Parse le panier JSON { "service:uuid": 1, "product:uuid": 2 } */
 export function parsePosCart(raw: string): Record<string, number> {
   const cart = JSON.parse(raw) as Record<string, number>;
   const out: Record<string, number> = {};
   for (const [key, qty] of Object.entries(cart)) {
     const q = Math.max(0, Math.floor(Number(qty) || 0));
-    if (q > 0 && (key.startsWith("service:") || key.startsWith("product:"))) {
+    if (q > 0 && isPosCartKey(key)) {
       out[key] = q;
     }
   }
@@ -79,7 +143,7 @@ export function parsePriceOverrides(
   if (!parsed || typeof parsed !== "object") return {};
   const out: Record<string, number> = {};
   for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
-    if (!key.startsWith("service:") && !key.startsWith("product:")) continue;
+    if (!isPosCartKey(key)) continue;
     const cents = Math.round(Number(value));
     if (!Number.isFinite(cents) || cents < 0) continue;
     out[key] = cents;
@@ -182,6 +246,17 @@ export async function resolveCartLines(
         product_id: p.id,
         service_id: null,
         woo_id: p.woo_id,
+      });
+    } else if (key.startsWith("custom:")) {
+      lines.push({
+        key,
+        type: "service",
+        name: customPosLineName(key),
+        quantity,
+        unit_price_cents: 0,
+        product_id: null,
+        service_id: null,
+        woo_id: null,
       });
     }
   }

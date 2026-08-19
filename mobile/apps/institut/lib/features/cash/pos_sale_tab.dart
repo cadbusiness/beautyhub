@@ -12,6 +12,7 @@ import '../shared/catalog_item_thumb.dart';
 import '../shared/money.dart';
 import 'catalog_item_detail_sheet.dart';
 import 'catalog_product_row.dart';
+import 'free_charge_sheet.dart';
 import 'internal_product_sheets.dart';
 import 'pos_cart_switcher.dart';
 import 'sale_ticket_pdf_screen.dart';
@@ -582,6 +583,11 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     }
   }
 
+  Future<void> _addFreeCharge(PosContext ctx) async {
+    final added = await showFreeChargeSheet(context, ref);
+    if (added && mounted) _openCartSheet(ctx);
+  }
+
   void _openCartSheet(PosContext ctx) {
     showModalBottomSheet<void>(
       context: context,
@@ -884,6 +890,10 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                     child: Row(
                       children: [
+                        _InlineActionChip(
+                          label: '+ Montant libre',
+                          onTap: () => _addFreeCharge(ctx),
+                        ),
                         _FacetChip(label: 'Toutes', value: 'all', selected: facet),
                         _FacetChip(
                           label: 'Plus vendus',
@@ -1655,6 +1665,11 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                 ref.read(posCategoryFilterProvider.notifier).state = 'service';
                 ref.read(posCatalogFacetProvider.notifier).state = 'all';
               },
+            ),
+            _CartAddLine(
+              icon: Icons.payments_outlined,
+              label: 'Encaissement libre',
+              onTap: () => showFreeChargeSheet(context, ref),
             ),
             const SizedBox(height: 4),
             const _CartRule(),

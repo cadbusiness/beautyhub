@@ -88,6 +88,60 @@ void clearPosCart(WidgetRef ref) {
   ref.read(posPriceOverridesProvider.notifier).clear();
 }
 
+const customPosDefaultName = 'Encaissement libre';
+
+bool isCustomPosKey(String key) => key.startsWith('custom:');
+
+String customPosLineName(String key) {
+  if (!isCustomPosKey(key)) return customPosDefaultName;
+  final rest = key.substring('custom:'.length);
+  final sep = rest.indexOf(':');
+  if (sep < 0) return customPosDefaultName;
+  final raw = rest.substring(sep + 1);
+  if (raw.isEmpty) return customPosDefaultName;
+  return Uri.decodeComponent(raw).trim().isEmpty
+      ? customPosDefaultName
+      : Uri.decodeComponent(raw).trim();
+}
+
+String createCustomPosKey([String? name]) {
+  final trimmed = name?.trim() ?? '';
+  final raw = trimmed.isEmpty ? customPosDefaultName : trimmed;
+  final label = raw.length > 80 ? raw.substring(0, 80) : raw;
+  final id = DateTime.now().microsecondsSinceEpoch.toRadixString(16);
+  return 'custom:$id:${Uri.encodeComponent(label)}';
+}
+
+PosCatalogItem customPosCatalogItem(String key, int priceCents) {
+  return PosCatalogItem(
+    key: key,
+    type: 'service',
+    id: key,
+    name: customPosLineName(key),
+    priceCents: priceCents,
+    category: 'custom',
+  );
+}
+
+List<PosCatalogItem> mergeCustomCatalogItems({
+  required List<PosCatalogItem> current,
+  required Map<String, int> lines,
+  required Map<String, int> overrides,
+}) {
+  final extras = [
+    for (final key in lines.keys)
+      if (isCustomPosKey(key)) customPosCatalogItem(key, overrides[key] ?? 0),
+  ];
+  final kept = current
+      .where((item) => !isCustomPosKey(item.key) || lines.containsKey(item.key))
+      .toList();
+  final existing = {for (final item in kept) item.key};
+  return [
+    ...kept,
+    ...extras.where((item) => !existing.contains(item.key)),
+  ];
+}
+
 Map<String, int> activePriceOverrides({
   required Map<String, int> cart,
   required Map<String, int> overrides,
@@ -96,7 +150,10 @@ Map<String, int> activePriceOverrides({
   final out = <String, int>{};
   for (final entry in overrides.entries) {
     if (!cart.containsKey(entry.key)) continue;
-    if (entry.value == catalogPriceCents(entry.key)) continue;
+    if (entry.value == catalogPriceCents(entry.key) &&
+        !isCustomPosKey(entry.key)) {
+      continue;
+    }
     if (entry.value < 0) continue;
     out[entry.key] = entry.value;
   }
@@ -295,6 +352,12 @@ class PosCartSessionNotifier extends StateNotifier<PosCartSessionState> {
     _hydrating = true;
     _ref.read(posCartProvider.notifier).replace(active.lines);
     _ref.read(posPriceOverridesProvider.notifier).replace(active.priceOverrides);
+    _ref.read(posInjectedCatalogProvider.notifier).state =
+        mergeCustomCatalogItems(
+      current: _ref.read(posInjectedCatalogProvider),
+      lines: active.lines,
+      overrides: active.priceOverrides,
+    );
     state = state.copyWith(
       carts: carts,
       activeCartId: active.id,
@@ -424,6 +487,7 @@ class PosCartSessionNotifier extends StateNotifier<PosCartSessionState> {
     _hydrating = true;
     _ref.read(posCartProvider.notifier).clear();
     _ref.read(posPriceOverridesProvider.notifier).clear();
+    _ref.read(posInjectedCatalogProvider.notifier).state = const [];
     _ref.read(posCartMetaProvider.notifier).state = const PosCartMeta();
     _hydrating = false;
     _ensured = false;

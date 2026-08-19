@@ -10,6 +10,8 @@ import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import {
   applyPriceOverrides,
+  createCustomPosKey,
+  resolvePosCatalogItem,
   type PosCatalogItem,
   type PosCategory,
   type PosServiceCategory,
@@ -134,6 +136,9 @@ export function PosTerminal({
     initial,
   );
   const [lastSale, setLastSale] = useState<ActionResult | null>(null);
+  const [freeChargeOpen, setFreeChargeOpen] = useState(false);
+  const [freeChargeAmount, setFreeChargeAmount] = useState("");
+  const [freeChargeLabel, setFreeChargeLabel] = useState("");
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const lastRecordedSale = useRef<string | null>(null);
@@ -218,7 +223,7 @@ export function PosTerminal({
     for (const [key, cents] of Object.entries(priceOverrides)) {
       if (!(key in cart)) continue;
       const base = catalogPrice.get(key);
-      if (base != null && cents === base) continue;
+      if (base != null && cents === base && !key.startsWith("custom:")) continue;
       out[key] = cents;
     }
     return out;
@@ -347,16 +352,18 @@ export function PosTerminal({
   const pageTo = Math.min(filtered.length, currentPage * pageSize);
 
   const cartLines = useMemo(() => {
-    const byKey = new Map(catalog.map((i) => [i.key, i]));
     return Object.entries(cart)
-      .map(([key, qty]) => ({ item: byKey.get(key), key, qty }))
+      .map(([key, qty]) => ({
+        item: resolvePosCatalogItem(key, catalog, priceOverrides[key] ?? 0),
+        key,
+        qty,
+      }))
       .filter((l) => l.item);
-  }, [cart, catalog]);
+  }, [cart, catalog, priceOverrides]);
 
   const resolvedForTotals = useMemo(() => {
-    const byKey = new Map(catalog.map((i) => [i.key, i]));
     const lines = Object.entries(cart).flatMap(([key, qty]) => {
-      const item = byKey.get(key);
+      const item = resolvePosCatalogItem(key, catalog, priceOverrides[key] ?? 0);
       if (!item) return [];
       return [
         {
@@ -372,7 +379,7 @@ export function PosTerminal({
       ];
     });
     return applyPriceOverrides(lines, activeOverrides);
-  }, [cart, catalog, activeOverrides]);
+  }, [cart, catalog, activeOverrides, priceOverrides]);
 
   const grossCents = useMemo(() => {
     if (resolvedForTotals.length === 0) return 0;
@@ -515,6 +522,18 @@ export function PosTerminal({
   function add(key: string) {
     setLastSale(null);
     setCart((c) => ({ ...c, [key]: (c[key] ?? 0) + 1 }));
+  }
+
+  function addFreeCharge() {
+    const cents = eurosToCents(freeChargeAmount);
+    if (cents == null || cents <= 0) return;
+    const key = createCustomPosKey(freeChargeLabel);
+    setLastSale(null);
+    setCart((c) => ({ ...c, [key]: 1 }));
+    setPriceOverrides((po) => ({ ...po, [key]: cents }));
+    setFreeChargeOpen(false);
+    setFreeChargeAmount("");
+    setFreeChargeLabel("");
   }
 
   function remove(key: string) {
@@ -954,16 +973,52 @@ export function PosTerminal({
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             {t("cart.title")}
           </h2>
-          {!cartEmpty ? (
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={clearCart}
-              className="text-xs text-slate-500 hover:text-slate-700"
+              onClick={() => setFreeChargeOpen((open) => !open)}
+              className="text-xs font-medium text-slate-700 hover:text-slate-900"
             >
-              {t("cart.clear")}
+              {t("cart.freeCharge")}
             </button>
-          ) : null}
+            {!cartEmpty ? (
+              <button
+                type="button"
+                onClick={clearCart}
+                className="text-xs text-slate-500 hover:text-slate-700"
+              >
+                {t("cart.clear")}
+              </button>
+            ) : null}
+          </div>
         </div>
+
+        {freeChargeOpen ? (
+          <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
+            <p className="text-xs font-medium text-slate-600">{t("cart.freeChargeHint")}</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input
+                inputMode="decimal"
+                placeholder={t("cart.freeChargeAmount")}
+                value={freeChargeAmount}
+                onChange={(e) => setFreeChargeAmount(e.target.value)}
+              />
+              <Input
+                placeholder={t("cart.freeChargeLabel")}
+                value={freeChargeLabel}
+                onChange={(e) => setFreeChargeLabel(e.target.value)}
+              />
+            </div>
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              disabled={!eurosToCents(freeChargeAmount)}
+              onClick={addFreeCharge}
+            >
+              {t("cart.freeChargeAdd")}
+            </Button>
+          </div>
+        ) : null}
 
         {cartLines.length === 0 ? (
           <p className="text-sm text-slate-500">{t("cart.empty")}</p>

@@ -3047,6 +3047,11 @@
     "terminal": {
       "cart": {
         "add": "Nueva cesta",
+        "freeCharge": "Importe libre",
+        "freeChargeHint": "Cobra un importe sin elegir un producto o un servicio.",
+        "freeChargeAmount": "Importe (€)",
+        "freeChargeLabel": "Etiqueta (opcional)",
+        "freeChargeAdd": "Añadir a la cesta",
         "abandon": "Descartar",
         "locked": "En uso en otra tableta. Solo lectura.",
         "lockedBy": "En uso ({name}). Solo lectura.",

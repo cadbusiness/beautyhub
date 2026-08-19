@@ -6,6 +6,7 @@ export type PosCartDto = {
   clientName: string | null;
   appointmentId: string | null;
   staffId: string | null;
+  staffName: string | null;
   lines: Record<string, number>;
   priceOverrides: Record<string, number>;
   discountKind: "percent" | "fixed" | null;

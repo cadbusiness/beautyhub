@@ -354,6 +354,7 @@ class PosCartSnapshot {
     this.clientName,
     this.appointmentId,
     this.staffId,
+    this.staffName,
     this.discountKind,
     this.discountValue,
     this.discountReason,
@@ -372,6 +373,7 @@ class PosCartSnapshot {
   final String? clientName;
   final String? appointmentId;
   final String? staffId;
+  final String? staffName;
   final Map<String, int> lines;
   final Map<String, int> priceOverrides;
   final String? discountKind;
@@ -396,6 +398,7 @@ class PosCartSnapshot {
       clientName: json['clientName'] as String?,
       appointmentId: json['appointmentId'] as String?,
       staffId: json['staffId'] as String?,
+      staffName: json['staffName'] as String?,
       lines: _intMap(json['lines']),
       priceOverrides: _intMap(json['priceOverrides']),
       discountKind: json['discountKind'] as String?,

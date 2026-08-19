@@ -183,6 +183,22 @@ export function usePosCarts(local: PosCartLocalState) {
   }, [ensure]);
 
   useEffect(() => {
+    const timer = window.setInterval(() => {
+      void (async () => {
+        try {
+          const list = await parseJson<{ carts: PosCartDto[] }>(
+            await fetch("/api/institut/pos-carts"),
+          );
+          setCarts(list.carts);
+        } catch {
+          /* keep current rail */
+        }
+      })();
+    }, 12_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     if (loading || !activeCartId || skipSave.current) {
       skipSave.current = false;
       return;

@@ -5,7 +5,7 @@ import { parsePosCart, parsePriceOverrides } from "./pos";
 type Db = SupabaseClient<Database>;
 type CartRow = Database["public"]["Tables"]["inst_pos_carts"]["Row"];
 
-export const POS_CART_LOCK_MS = 90_000;
+export const POS_CART_LOCK_MS = 180_000;
 export const POS_CART_MAX_OPEN = 8;
 
 export type PosCartStatus = "open" | "checked_out" | "abandoned";
@@ -27,6 +27,7 @@ export interface PosCartSnapshot {
   cartDiscountCents: number;
   notes: string | null;
   itemCount: number;
+  staffName: string | null;
   lockedBy: string | null;
   lockedByName: string | null;
   lockedAt: string | null;
@@ -102,6 +103,7 @@ function serializeCart(
   row: CartRow,
   extras: {
     clientName: string | null;
+    staffName: string | null;
     lockedByName: string | null;
     userId: string | null;
   },
@@ -125,6 +127,7 @@ function serializeCart(
     clientName: extras.clientName,
     appointmentId: row.appointment_id,
     staffId: row.staff_id,
+    staffName: extras.staffName,
     lines,
     priceOverrides: overridesFromJson(row.price_overrides),
     discountKind: kind,
@@ -144,6 +147,7 @@ function serializeCart(
 
 async function enrichCarts(
   supabase: Db,
+  tenantId: string,
   rows: CartRow[],
   userId: string | null,
 ): Promise<PosCartSnapshot[]> {
@@ -154,7 +158,7 @@ async function enrichCarts(
     ...new Set(rows.map((r) => r.locked_by).filter((id): id is string => !!id)),
   ];
 
-  const [clientsRes, profilesRes] = await Promise.all([
+  const [clientsRes, profilesRes, staffRes] = await Promise.all([
     clientIds.length
       ? supabase.from("clients").select("id, full_name").in("id", clientIds)
       : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
@@ -166,6 +170,11 @@ async function enrichCarts(
       : Promise.resolve({
           data: [] as { user_id: string; full_name: string | null }[],
         }),
+    supabase
+      .from("inst_staff")
+      .select("id, full_name, user_id")
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true),
   ]);
 
   const clientNames = new Map(
@@ -174,10 +183,19 @@ async function enrichCarts(
   const lockerNames = new Map(
     (profilesRes.data ?? []).map((p) => [p.user_id, p.full_name]),
   );
+  const staffNames = new Map(
+    (staffRes.data ?? []).map((s) => [s.id, s.full_name]),
+  );
+  for (const staff of staffRes.data ?? []) {
+    if (staff.user_id && !lockerNames.get(staff.user_id)) {
+      lockerNames.set(staff.user_id, staff.full_name);
+    }
+  }
 
   return rows.map((row) =>
     serializeCart(row, {
       clientName: row.client_id ? (clientNames.get(row.client_id) ?? null) : null,
+      staffName: row.staff_id ? (staffNames.get(row.staff_id) ?? null) : null,
       lockedByName: row.locked_by
         ? (lockerNames.get(row.locked_by) ?? null)
         : null,
@@ -198,7 +216,7 @@ export async function listOpenPosCarts(
     .eq("status", "open")
     .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return enrichCarts(supabase, data ?? [], userId);
+  return enrichCarts(supabase, tenantId, data ?? [], userId);
 }
 
 export async function getPosCart(
@@ -215,7 +233,7 @@ export async function getPosCart(
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new PosCartError("Panier introuvable.", "not_found");
-  const [snapshot] = await enrichCarts(supabase, [data], userId);
+  const [snapshot] = await enrichCarts(supabase, tenantId, [data], userId);
   return snapshot;
 }
 
@@ -270,7 +288,7 @@ export async function createPosCart(
     .select("*")
     .single();
   if (error || !data) throw new Error(error?.message ?? "create_cart_failed");
-  const [snapshot] = await enrichCarts(supabase, [data], userId);
+  const [snapshot] = await enrichCarts(supabase, tenantId, [data], userId);
   return snapshot;
 }
 
@@ -350,7 +368,7 @@ export async function updatePosCart(
     .select("*")
     .single();
   if (error || !data) throw new Error(error?.message ?? "update_cart_failed");
-  const [snapshot] = await enrichCarts(supabase, [data], userId);
+  const [snapshot] = await enrichCarts(supabase, tenantId, [data], userId);
   return snapshot;
 }
 
@@ -384,7 +402,7 @@ export async function claimPosCart(
     .select("*")
     .single();
   if (error || !data) throw new Error(error?.message ?? "claim_cart_failed");
-  const [snapshot] = await enrichCarts(supabase, [data], userId);
+  const [snapshot] = await enrichCarts(supabase, tenantId, [data], userId);
   return snapshot;
 }
 

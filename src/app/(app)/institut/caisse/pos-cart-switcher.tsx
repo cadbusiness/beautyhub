@@ -4,6 +4,22 @@ import { useTranslations } from "next-intl";
 import type { PosCartDto } from "@/lib/institut/pos-cart-types";
 import type { PosCartLocalState } from "./use-pos-carts";
 
+function firstName(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return "";
+  return trimmed.split(/\s+/)[0] ?? "";
+}
+
+function clientTitle(cart: PosCartDto) {
+  const fromClient = firstName(cart.clientName);
+  if (fromClient) return fromClient;
+  const label = cart.label.trim();
+  if (label && !label.toLowerCase().startsWith("panier")) {
+    return firstName(label);
+  }
+  return "";
+}
+
 export function PosCartSwitcher({
   carts,
   activeCartId,
@@ -22,17 +38,38 @@ export function PosCartSwitcher({
   const t = useTranslations("pos.terminal.cart");
   const active = carts.find((c) => c.id === activeCartId) ?? null;
 
+  function ownerLine(cart: PosCartDto) {
+    if (cart.lockedByOther) {
+      const who = firstName(cart.lockedByName);
+      return who ? t("onItNamed", { name: who }) : t("onItUnknown");
+    }
+    const staff = firstName(cart.staffName);
+    if (staff) return staff;
+    return t("free");
+  }
+
+  async function confirmTakeover(cart: PosCartDto) {
+    const who = firstName(cart.lockedByName);
+    const title = who ? t("takeoverTitle", { name: who }) : t("locked");
+    return window.confirm(`${title}\n${t("takeoverBody")}`);
+  }
+
   async function handleSelect(cart: PosCartDto) {
     if (cart.id === activeCartId) return;
+    if (cart.lockedByOther) {
+      const ok = await confirmTakeover(cart);
+      if (!ok) return;
+      const next = await onSelect(cart.id, true);
+      if (next) onApplied(next);
+      return;
+    }
     try {
       const next = await onSelect(cart.id);
       if (next) onApplied(next);
     } catch (e) {
       const code = (e as Error & { code?: string }).code;
       if (code === "locked") {
-        const ok = window.confirm(
-          `${e instanceof Error ? e.message : t("locked")}\n${t("takeover")}`,
-        );
+        const ok = await confirmTakeover(cart);
         if (!ok) return;
         const next = await onSelect(cart.id, true);
         if (next) onApplied(next);
@@ -58,9 +95,7 @@ export function PosCartSwitcher({
     } catch (e) {
       const code = (e as Error & { code?: string }).code;
       if (code === "locked") {
-        const ok = window.confirm(
-          `${e instanceof Error ? e.message : t("locked")}\n${t("takeover")}`,
-        );
+        const ok = await confirmTakeover(cart);
         if (!ok) return;
         const next = await onAbandon(cart.id, true);
         if (next) onApplied(next);
@@ -74,46 +109,64 @@ export function PosCartSwitcher({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
         {carts.map((cart) => {
           const selected = cart.id === activeCartId;
-          const label =
-            cart.itemCount > 0
-              ? `${cart.label} · ${cart.itemCount} art.`
-              : cart.label;
+          const occupied = cart.lockedByOther;
+          const title = clientTitle(cart) || t("noClient");
           return (
             <button
               key={cart.id}
               type="button"
               onClick={() => void handleSelect(cart)}
-              className={`inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs font-medium ${
+              className={`min-w-[6.75rem] rounded-xl border px-3 py-2 text-left ${
                 selected
                   ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  : occupied
+                    ? "border-amber-300 bg-amber-50 text-slate-900"
+                    : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
               }`}
             >
-              {cart.lockedByOther ? <span aria-hidden>🔒</span> : null}
-              <span>{label}</span>
-              {selected ? (
-                <span
-                  role="button"
-                  tabIndex={0}
-                  className="ml-0.5 text-[11px] opacity-80 hover:opacity-100"
-                  onClick={(ev) => {
-                    ev.stopPropagation();
-                    void handleAbandon(cart);
-                  }}
-                  onKeyDown={(ev) => {
-                    if (ev.key === "Enter" || ev.key === " ") {
+              <span className="flex items-center justify-between gap-2">
+                <span className="truncate text-[13px] font-semibold">{title}</span>
+                {selected && !occupied ? (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="text-[11px] opacity-80 hover:opacity-100"
+                    onClick={(ev) => {
                       ev.stopPropagation();
                       void handleAbandon(cart);
-                    }
-                  }}
-                  aria-label={t("abandon")}
-                >
-                  ×
+                    }}
+                    onKeyDown={(ev) => {
+                      if (ev.key === "Enter" || ev.key === " ") {
+                        ev.stopPropagation();
+                        void handleAbandon(cart);
+                      }
+                    }}
+                    aria-label={t("abandon")}
+                  >
+                    ×
+                  </span>
+                ) : null}
+              </span>
+              <span
+                className={`mt-0.5 flex items-center gap-1.5 text-[11px] font-medium ${
+                  selected
+                    ? "text-white/75"
+                    : occupied
+                      ? "text-amber-800"
+                      : "text-slate-500"
+                }`}
+              >
+                {occupied ? (
+                  <span className="size-1.5 rounded-full bg-amber-600" aria-hidden />
+                ) : null}
+                <span>
+                  {ownerLine(cart)}
+                  {cart.itemCount > 0 ? `  ·  ${cart.itemCount}` : ""}
                 </span>
-              ) : null}
+              </span>
             </button>
           );
         })}
@@ -121,7 +174,7 @@ export function PosCartSwitcher({
           <button
             type="button"
             onClick={() => void handleAdd()}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-sm font-medium text-slate-700 hover:border-slate-300"
+            className="flex h-[52px] w-11 items-center justify-center rounded-xl border border-slate-200 text-lg font-medium text-slate-700 hover:border-slate-300"
             aria-label={t("add")}
           >
             +
@@ -131,7 +184,7 @@ export function PosCartSwitcher({
       {active?.lockedByOther ? (
         <p className="text-xs font-medium text-amber-800">
           {active.lockedByName
-            ? t("lockedBy", { name: active.lockedByName })
+            ? t("lockedBy", { name: firstName(active.lockedByName) })
             : t("locked")}
         </p>
       ) : null}

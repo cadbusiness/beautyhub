@@ -336,6 +336,7 @@ class PosCartSessionNotifier extends StateNotifier<PosCartSessionState> {
 
   final Ref _ref;
   Timer? _debounce;
+  Timer? _presence;
   bool _hydrating = false;
   bool _ensured = false;
 
@@ -396,6 +397,7 @@ class PosCartSessionNotifier extends StateNotifier<PosCartSessionState> {
       );
       _ensured = true;
       _applySnapshot(result.carts, result.active);
+      _startPresence();
     } catch (e) {
       state = state.copyWith(loading: false, error: '$e');
     }
@@ -498,6 +500,27 @@ class PosCartSessionNotifier extends StateNotifier<PosCartSessionState> {
     }
   }
 
+  void _startPresence() {
+    _presence?.cancel();
+    _presence = Timer.periodic(const Duration(seconds: 12), (_) {
+      unawaited(refreshPresence());
+    });
+  }
+
+  Future<void> refreshPresence() async {
+    if (_hydrating) return;
+    final auth = _auth;
+    if (auth == null) return;
+    try {
+      final carts = await _api.listPosCarts(
+        accessToken: auth.token,
+        tenantId: auth.tenantId,
+      );
+      if (_hydrating) return;
+      state = state.copyWith(carts: carts);
+    } catch (_) {}
+  }
+
   Future<void> afterCheckout() async {
     _debounce?.cancel();
     _hydrating = true;
@@ -513,6 +536,7 @@ class PosCartSessionNotifier extends StateNotifier<PosCartSessionState> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _presence?.cancel();
     super.dispose();
   }
 }

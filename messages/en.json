@@ -3508,6 +3508,13 @@
         "settingsLink": "Checkout settings →",
         "staffAria": "Practitioner",
         "title": "Basket",
+        "add": "New cart",
+        "abandon": "Discard",
+        "locked": "In use on another tablet. Read-only.",
+        "lockedBy": "In use ({name}). Read-only.",
+        "takeover": "Take over anyway?",
+        "maxReached": "Maximum 8 open carts.",
+        "saveFailed": "Could not save the cart.",
         "total": "Total",
         "unitPriceAria": "Unit price"
       },

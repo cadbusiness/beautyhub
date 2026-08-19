@@ -30,6 +30,7 @@ import {
 } from "./loyalty-redeem";
 import { normalizePromoCode, redeemPromo, validatePromo } from "./promos-core";
 import { generateSaleDocuments, updateSaleDocumentStatuses } from "./sale-documents/generate";
+import { markPosCartCheckedOut } from "./pos-carts";
 
 type Db = SupabaseClient<Database>;
 
@@ -83,6 +84,8 @@ export interface PosCheckoutInput {
   priceOverrides?: Record<string, number> | null;
   /** Motif de remise manuelle — mémorisé dans la bibliothèque de l'institut. */
   discountReason?: string | null;
+  /** Panier partagé à clôturer après encaissement. */
+  posCartId?: string | null;
 }
 
 export interface PosCheckoutResult {
@@ -577,6 +580,14 @@ export async function executePosCheckout(
       await rememberDiscountReason(supabase, tenantId, input.discountReason);
     } catch {
       // Bibliothèque de motifs : ne pas bloquer la vente.
+    }
+  }
+
+  if (input.posCartId) {
+    try {
+      await markPosCartCheckedOut(supabase, tenantId, input.posCartId);
+    } catch {
+      // La vente est déjà enregistrée.
     }
   }
 

@@ -3054,6 +3054,13 @@
       },
       "cart": {
         "title": "Panier",
+        "add": "Nouveau panier",
+        "abandon": "Abandonner",
+        "locked": "En cours sur une autre tablette. Lecture seule.",
+        "lockedBy": "En cours ({name}). Lecture seule.",
+        "takeover": "Reprendre quand même ?",
+        "maxReached": "Maximum 8 paniers ouverts.",
+        "saveFailed": "Impossible d’enregistrer le panier.",
         "clear": "Vider",
         "empty": "Aucun article.",
         "total": "Total",

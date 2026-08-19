@@ -381,6 +381,7 @@ export async function checkoutPos(
       promoCode: String(formData.get("promo_code") ?? "") || null,
       priceOverrides,
       payments,
+      posCartId: String(formData.get("pos_cart_id") ?? "") || null,
     });
 
     revalidateCaisse();
@@ -415,6 +416,7 @@ export async function processPosCheckout(
     loyaltyCreditCents?: number | null;
     promoCode?: string | null;
     priceOverrides?: Record<string, number> | null;
+    posCartId?: string | null;
   },
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
@@ -450,6 +452,7 @@ export async function processPosCheckout(
       loyaltyCreditCents: options?.loyaltyCreditCents ?? null,
       promoCode: options?.promoCode ?? null,
       priceOverrides: options?.priceOverrides ?? null,
+      posCartId: options?.posCartId ?? null,
       payments: [
         {
           method: paymentMethod,

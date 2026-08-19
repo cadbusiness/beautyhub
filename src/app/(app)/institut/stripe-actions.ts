@@ -213,6 +213,7 @@ export async function finalizeStripeCheckout(
   promoCode: string | null = null,
   priceOverridesJson: string | null = null,
   loyaltyCreditCents = 0,
+  posCartId: string | null = null,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
@@ -259,5 +260,6 @@ export async function finalizeStripeCheckout(
     loyaltyCreditCents,
     promoCode,
     priceOverrides,
+    posCartId,
   });
 }

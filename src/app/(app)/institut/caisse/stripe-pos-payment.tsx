@@ -24,6 +24,7 @@ function PaymentForm({
   loyaltyCreditCents,
   promoCode,
   priceOverridesJson,
+  posCartId,
   totalCents,
   currency,
   onSuccess,
@@ -36,6 +37,7 @@ function PaymentForm({
   loyaltyCreditCents: number;
   promoCode: string;
   priceOverridesJson: string;
+  posCartId?: string | null;
   totalCents: number;
   currency: string;
   onSuccess: (message: string) => void;
@@ -79,6 +81,7 @@ function PaymentForm({
       promoCode || null,
       priceOverridesJson || null,
       loyaltyCreditCents,
+      posCartId ?? null,
     );
     if (result.error) {
       setError(result.error);
@@ -114,6 +117,7 @@ export function StripePosPayment({
   loyaltyCreditCents = 0,
   promoCode = "",
   priceOverridesJson = "",
+  posCartId = null,
   publishableKey,
   stripeAccountId,
   currency = "eur",
@@ -128,6 +132,7 @@ export function StripePosPayment({
   loyaltyCreditCents?: number;
   promoCode?: string;
   priceOverridesJson?: string;
+  posCartId?: string | null;
   publishableKey: string;
   stripeAccountId: string;
   currency?: string;
@@ -178,6 +183,7 @@ export function StripePosPayment({
           loyaltyCreditCents={loyaltyCreditCents}
           promoCode={promoCode}
           priceOverridesJson={priceOverridesJson}
+          posCartId={posCartId}
           totalCents={totalCents}
           currency={currency}
           onSuccess={onSuccess}

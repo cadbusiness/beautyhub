@@ -340,6 +340,90 @@ class PosClientLoyalty {
   }
 }
 
+class PosCartSnapshot {
+  const PosCartSnapshot({
+    required this.id,
+    required this.label,
+    required this.status,
+    required this.lines,
+    required this.priceOverrides,
+    required this.itemCount,
+    required this.lockedByOther,
+    required this.updatedAt,
+    this.clientId,
+    this.clientName,
+    this.appointmentId,
+    this.staffId,
+    this.discountKind,
+    this.discountValue,
+    this.discountReason,
+    this.cartDiscountCents = 0,
+    this.notes,
+    this.lockedBy,
+    this.lockedByName,
+    this.lockedAt,
+    this.createdBy,
+  });
+
+  final String id;
+  final String label;
+  final String status;
+  final String? clientId;
+  final String? clientName;
+  final String? appointmentId;
+  final String? staffId;
+  final Map<String, int> lines;
+  final Map<String, int> priceOverrides;
+  final String? discountKind;
+  final double? discountValue;
+  final String? discountReason;
+  final int cartDiscountCents;
+  final String? notes;
+  final int itemCount;
+  final String? lockedBy;
+  final String? lockedByName;
+  final String? lockedAt;
+  final bool lockedByOther;
+  final String? createdBy;
+  final String updatedAt;
+
+  factory PosCartSnapshot.fromJson(Map<String, dynamic> json) {
+    return PosCartSnapshot(
+      id: json['id'] as String? ?? '',
+      label: json['label'] as String? ?? 'Panier',
+      status: json['status'] as String? ?? 'open',
+      clientId: json['clientId'] as String?,
+      clientName: json['clientName'] as String?,
+      appointmentId: json['appointmentId'] as String?,
+      staffId: json['staffId'] as String?,
+      lines: _intMap(json['lines']),
+      priceOverrides: _intMap(json['priceOverrides']),
+      discountKind: json['discountKind'] as String?,
+      discountValue: (json['discountValue'] as num?)?.toDouble(),
+      discountReason: json['discountReason'] as String?,
+      cartDiscountCents: (json['cartDiscountCents'] as num?)?.toInt() ?? 0,
+      notes: json['notes'] as String?,
+      itemCount: (json['itemCount'] as num?)?.toInt() ?? 0,
+      lockedBy: json['lockedBy'] as String?,
+      lockedByName: json['lockedByName'] as String?,
+      lockedAt: json['lockedAt'] as String?,
+      lockedByOther: json['lockedByOther'] as bool? ?? false,
+      createdBy: json['createdBy'] as String?,
+      updatedAt: json['updatedAt'] as String? ?? '',
+    );
+  }
+}
+
+Map<String, int> _intMap(dynamic raw) {
+  if (raw is! Map) return const {};
+  final out = <String, int>{};
+  for (final entry in raw.entries) {
+    final qty = (entry.value as num?)?.toInt() ?? 0;
+    if (qty > 0) out['${entry.key}'] = qty;
+  }
+  return out;
+}
+
 class PosCheckoutResult {
   const PosCheckoutResult({
     required this.saleId,

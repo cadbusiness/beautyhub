@@ -45,6 +45,8 @@ import {
   type PosAppointmentOption,
 } from "@/lib/institut/pos-appointment";
 import { CheckoutPanel } from "./checkout-panel";
+import { PosCartSwitcher } from "./pos-cart-switcher";
+import { usePosCarts, type PosCartLocalState } from "./use-pos-carts";
 import { PosLoyaltyPicker } from "./pos-loyalty-picker";
 import { OpenSessionForm } from "./session/open-session-form";
 import { InternalProductForm } from "./produits/internal-product-form";
@@ -145,6 +147,7 @@ export function PosTerminal({
     ) {
       lastRecordedSale.current = checkoutState.saleId;
       setLastSale(checkoutState);
+      posCarts.pauseAutosave();
       setCart({});
       setPriceOverrides({});
       setPriceEdits({});
@@ -158,6 +161,9 @@ export function PosTerminal({
       setPromoDiscountCents(0);
       setPromoError(null);
       setAppointmentId("");
+      void posCarts.afterCheckout().then((next) => {
+        if (next) applyPosCartSnapshot(next);
+      });
     }
   }, [checkoutState]);
 
@@ -377,6 +383,19 @@ export function PosTerminal({
     }).gross_cents;
   }, [resolvedForTotals, settings]);
 
+  function applyPosCartSnapshot(next: PosCartLocalState) {
+    setCart(next.cart);
+    setPriceOverrides(next.priceOverrides);
+    setPriceEdits({});
+    setClientId(next.clientId);
+    setStaffId(next.staffId);
+    setAppointmentId(next.appointmentId);
+    setNotes(next.notes);
+    setCartDiscountKind(next.cartDiscountKind);
+    setCartDiscountValue(next.cartDiscountValue);
+    setCartDiscountReason(next.cartDiscountReason);
+  }
+
   const discountCents = useMemo(() => {
     if (promoCode) return 0;
     const n = Number.parseFloat(cartDiscountValue.replace(",", "."));
@@ -386,6 +405,38 @@ export function PosTerminal({
       grossCents,
     });
   }, [cartDiscountKind, cartDiscountValue, promoCode, grossCents]);
+
+  const posCarts = usePosCarts({
+    cart,
+    priceOverrides,
+    clientId,
+    staffId,
+    appointmentId,
+    notes,
+    cartDiscountKind,
+    cartDiscountValue,
+    cartDiscountReason,
+    cartDiscountCents: discountCents,
+  });
+  const bootstrappedCarts = useRef(false);
+
+  useEffect(() => {
+    if (bootstrappedCarts.current) return;
+    bootstrappedCarts.current = true;
+    const localHasItems = Object.values(cart).some((qty) => qty > 0);
+    void posCarts.ensure().then((remote) => {
+      if (!remote) return;
+      const remoteHasItems = Object.values(remote.cart).some((qty) => qty > 0);
+      if (localHasItems && remoteHasItems) {
+        void posCarts.createEmpty();
+        return;
+      }
+      if (localHasItems) return;
+      applyPosCartSnapshot(remote);
+    });
+    // Bootstrap unique au montage.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const subtotalForLoyalty = useMemo(() => {
     if (resolvedForTotals.length === 0) return 0;
@@ -545,6 +596,7 @@ export function PosTerminal({
   }
 
   function handleStripeSuccess(message: string) {
+    posCarts.pauseAutosave();
     setCart({});
     setPriceOverrides({});
     setPriceEdits({});
@@ -555,6 +607,9 @@ export function PosTerminal({
     setLoyaltyCreditCents(0);
     setLoyaltyPreviewCents(0);
     setNotes("");
+    void posCarts.afterCheckout().then((next) => {
+      if (next) applyPosCartSnapshot(next);
+    });
     void message;
   }
 
@@ -885,6 +940,15 @@ export function PosTerminal({
             <p className="mt-0.5 text-xs text-blue-800">{initialAppt.label}</p>
           </div>
         ) : null}
+
+        <PosCartSwitcher
+          carts={posCarts.carts}
+          activeCartId={posCarts.activeCartId}
+          onSelect={posCarts.switchTo}
+          onAdd={posCarts.createEmpty}
+          onAbandon={posCarts.abandon}
+          onApplied={applyPosCartSnapshot}
+        />
 
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
@@ -1218,6 +1282,7 @@ export function PosTerminal({
             loyaltyCreditCents={loyaltyCreditCents}
             promoCode={promoCode}
             priceOverridesJson={priceOverridesJson}
+            posCartId={posCarts.activeCartId}
             totals={totals}
             settings={settings}
             stripeEnabled={Boolean(stripeEnabled)}
@@ -1227,7 +1292,8 @@ export function PosTerminal({
               cartEmpty ||
               sessionPaused ||
               sessionPreviousDay ||
-              (requireSession && !sessionOpen)
+              (requireSession && !sessionOpen) ||
+              Boolean(posCarts.active?.lockedByOther)
             }
             checkoutAction={checkoutAction}
             checkoutPending={checkoutPending}

@@ -13,6 +13,7 @@ import '../shared/money.dart';
 import 'catalog_item_detail_sheet.dart';
 import 'catalog_product_row.dart';
 import 'internal_product_sheets.dart';
+import 'pos_cart_switcher.dart';
 import 'sale_ticket_pdf_screen.dart';
 
 class PosSaleTab extends ConsumerStatefulWidget {
@@ -25,6 +26,7 @@ class PosSaleTab extends ConsumerStatefulWidget {
 class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   PickerItem? _selectedClient;
   PickerItem? _selectedStaff;
+  String? _appointmentId;
   String _paymentMethod = 'cash';
   bool _openingDay = false;
   bool _openCartAfterPrefill = false;
@@ -35,13 +37,76 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(posCartSessionProvider.notifier).ensure();
+      if (!mounted) return;
       final pending = ref.read(pendingPosPrefillProvider);
-      if (pending != null) _applyPrefill(pending);
+      if (pending != null) await _applyPrefill(pending);
     });
   }
 
-  void _applyPrefill(PosAppointmentPrefill prefill) {
+  void _syncMeta({
+    String? discountKind,
+    double? discountValue,
+    String? discountReason,
+    int cartDiscountCents = 0,
+    String? notes,
+  }) {
+    ref.read(posCartMetaProvider.notifier).state = PosCartMeta(
+      clientId: _selectedClient?.id,
+      clientName: _selectedClient?.title,
+      staffId: _selectedStaff?.id,
+      appointmentId: _appointmentId,
+      discountKind: discountKind,
+      discountValue: discountValue,
+      discountReason: discountReason,
+      cartDiscountCents: cartDiscountCents,
+      notes: notes,
+    );
+  }
+
+  void _hydrateFromCart(PosCartSnapshot cart) {
+    final ctx = ref.read(posContextProvider).asData?.value;
+    _selectedClient = cart.clientId != null
+        ? PickerItem(
+            id: cart.clientId!,
+            title: cart.clientName ??
+                ctx?.clients
+                    .where((c) => c.id == cart.clientId)
+                    .firstOrNull
+                    ?.label ??
+                'Cliente',
+          )
+        : null;
+    _selectedStaff = cart.staffId != null
+        ? PickerItem(
+            id: cart.staffId!,
+            title: ctx?.staff
+                    .where((s) => s.id == cart.staffId)
+                    .firstOrNull
+                    ?.label ??
+                'Praticienne',
+          )
+        : null;
+    _appointmentId = cart.appointmentId;
+    _syncMeta(
+      discountKind: cart.discountKind,
+      discountValue: cart.discountValue,
+      discountReason: cart.discountReason,
+      cartDiscountCents: cart.cartDiscountCents,
+      notes: cart.notes,
+    );
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _applyPrefill(PosAppointmentPrefill prefill) async {
+    final session = ref.read(posCartSessionProvider);
+    if (ref.read(posCartProvider).isNotEmpty ||
+        (session.active?.itemCount ?? 0) > 0) {
+      try {
+        await ref.read(posCartSessionProvider.notifier).createEmpty();
+      } catch (_) {}
+    }
     final ctx = ref.read(posContextProvider).asData?.value;
     clearPosCart(ref);
     ref.read(posInjectedCatalogProvider.notifier).state = const [];
@@ -125,10 +190,13 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         title: prefill.staffName ?? 'Praticienne',
       );
     }
+    _appointmentId = prefill.appointmentId;
 
     ref.read(pendingPosPrefillProvider.notifier).state = null;
     _openCartAfterPrefill = serviceItem != null || prefill.extras.isNotEmpty;
+    _syncMeta();
     if (mounted) setState(() {});
+    await ref.read(posCartSessionProvider.notifier).flushSave();
   }
 
   List<PosCatalogItem> _filtered(
@@ -447,6 +515,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
 
     ref.read(posCheckoutBusyProvider.notifier).state = true;
     try {
+      await ref.read(posCartSessionProvider.notifier).flushSave();
       final result = await ref.read(mobileApiProvider).checkout(
             accessToken: token,
             tenantId: tenantId,
@@ -460,6 +529,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             loyaltyCreditCents:
                 loyaltyCreditCents > 0 ? loyaltyCreditCents : null,
             priceOverrides: overrides.isEmpty ? null : overrides,
+            posCartId: ref.read(posCartSessionProvider).activeCartId,
             payments: totalCents > 0
                 ? [
                     {'method': paymentMethod, 'amountCents': totalCents},
@@ -483,8 +553,11 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       final ticketTitle = result.ticketNumber != null
           ? 'Ticket n° ${result.ticketNumber}'
           : 'Ticket';
-      Future<void>.microtask(() {
-        clearPosCart(ref);
+      _selectedClient = null;
+      _selectedStaff = null;
+      _appointmentId = null;
+      Future<void>.microtask(() async {
+        await ref.read(posCartSessionProvider.notifier).afterCheckout();
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!ticketContext.mounted) return;
@@ -523,8 +596,16 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         selectedClient: _selectedClient,
         selectedStaff: _selectedStaff,
         paymentMethod: _paymentMethod,
-        onClientChanged: (item) => setState(() => _selectedClient = item),
-        onStaffChanged: (item) => setState(() => _selectedStaff = item),
+        onClientChanged: (item) {
+          setState(() => _selectedClient = item);
+          _syncMeta();
+          ref.read(posCartSessionProvider.notifier).scheduleSave();
+        },
+        onStaffChanged: (item) {
+          setState(() => _selectedStaff = item);
+          _syncMeta();
+          ref.read(posCartSessionProvider.notifier).scheduleSave();
+        },
         onPaymentChanged: (m) => setState(() => _paymentMethod = m),
         onCheckout: ({
           discountCents = 0,
@@ -558,6 +639,17 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
   Widget build(BuildContext context) {
     ref.listen<PosAppointmentPrefill?>(pendingPosPrefillProvider, (_, next) {
       if (next != null) _applyPrefill(next);
+    });
+    ref.listen<PosCartSessionState>(posCartSessionProvider, (prev, next) {
+      if (prev?.hydrateSeq == next.hydrateSeq) return;
+      final active = next.active;
+      if (active != null) _hydrateFromCart(active);
+    });
+    ref.listen<Map<String, int>>(posCartProvider, (_, _) {
+      ref.read(posCartSessionProvider.notifier).scheduleSave();
+    });
+    ref.listen<Map<String, int>>(posPriceOverridesProvider, (_, _) {
+      ref.read(posCartSessionProvider.notifier).scheduleSave();
     });
     final posAsync = ref.watch(posContextProvider);
     final filter = ref.watch(posCategoryFilterProvider);
@@ -767,6 +859,12 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                       ),
                     ),
                   ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+                    child: const PosCartSwitcher(),
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
@@ -1311,11 +1409,60 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
   @override
   void initState() {
     super.initState();
+    final active = ref.read(posCartSessionProvider).active;
+    if (active != null &&
+        active.discountValue != null &&
+        active.discountValue! > 0) {
+      _showDiscount = true;
+      _discountKind = active.discountKind ?? 'percent';
+      _discountValue.text = active.discountKind == 'fixed'
+          ? active.discountValue!.toStringAsFixed(2)
+          : '${active.discountValue! % 1 == 0 ? active.discountValue!.toInt() : active.discountValue}';
+      if (active.discountReason != null &&
+          active.discountReason!.isNotEmpty) {
+        _pickedReason = active.discountReason;
+      }
+    }
+    _discountValue.addListener(_persistDiscount);
+    _discountReason.addListener(_persistDiscount);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final id = _client?.id;
       if (id != null) _loadLoyalty(id);
     });
+  }
+
+  void _persistDiscount() {
+    if (!mounted) return;
+    final n = double.tryParse(_discountValue.text.replaceAll(',', '.'));
+    final reason = _customReason
+        ? _discountReason.text.trim()
+        : (_pickedReason ?? '').trim();
+    final current = ref.read(posCartMetaProvider);
+    ref.read(posCartMetaProvider.notifier).state = PosCartMeta(
+      clientId: current.clientId,
+      clientName: current.clientName,
+      staffId: current.staffId,
+      appointmentId: current.appointmentId,
+      discountKind: _showDiscount ? _discountKind : null,
+      discountValue: _showDiscount && n != null && n > 0 ? n : null,
+      discountReason: reason.isEmpty ? null : reason,
+      cartDiscountCents: current.cartDiscountCents,
+      notes: current.notes,
+    );
+    ref.read(posCartSessionProvider.notifier).scheduleSave();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CartSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedClient?.id != widget.selectedClient?.id) {
+      _client = widget.selectedClient;
+      _loadLoyalty(_client?.id);
+    }
+    if (oldWidget.selectedStaff?.id != widget.selectedStaff?.id) {
+      _staff = widget.selectedStaff;
+    }
   }
 
   @override
@@ -1388,6 +1535,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
         _customReason = false;
       }
     });
+    _persistDiscount();
   }
 
   @override
@@ -1483,6 +1631,8 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                 color: Color(0xFF0A0A0A),
               ),
             ),
+            const SizedBox(height: 10),
+            const PosCartSwitcher(),
             const SizedBox(height: 16),
             ...lines,
             const SizedBox(height: 8),
@@ -1782,7 +1932,6 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                         );
                         if (ok && context.mounted) {
                           Navigator.pop(context);
-                          clearPosCart(ref);
                         }
                       },
                 style: FilledButton.styleFrom(

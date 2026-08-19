@@ -787,6 +787,7 @@ class MobileApiClient {
     String? loyaltyRewardId,
     int? loyaltyCreditCents,
     Map<String, int>? priceOverrides,
+    String? posCartId,
   }) async {
     final response = await _http.post(
       _uri('/api/mobile/institut/checkout'),
@@ -807,10 +808,117 @@ class MobileApiClient {
           'loyaltyCreditCents': loyaltyCreditCents,
         if (priceOverrides != null && priceOverrides.isNotEmpty)
           'priceOverrides': priceOverrides,
+        if (posCartId != null && posCartId.isNotEmpty) 'posCartId': posCartId,
       }),
     );
     final body = await _decode(response);
     return PosCheckoutResult.fromJson(body);
+  }
+
+  List<PosCartSnapshot> _parsePosCarts(dynamic raw) {
+    return (raw as List? ?? const [])
+        .whereType<Map>()
+        .map((e) => PosCartSnapshot.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
+  }
+
+  Future<({List<PosCartSnapshot> carts, PosCartSnapshot active})>
+      ensurePosCarts({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/pos-carts', {'ensure': '1'}),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    final activeRaw = body['active'];
+    if (activeRaw is! Map) {
+      throw MobileApiException('Panier actif introuvable.');
+    }
+    return (
+      carts: _parsePosCarts(body['carts']),
+      active: PosCartSnapshot.fromJson(Map<String, dynamic>.from(activeRaw)),
+    );
+  }
+
+  Future<List<PosCartSnapshot>> listPosCarts({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/pos-carts'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return _parsePosCarts(body['carts']);
+  }
+
+  Future<PosCartSnapshot> createPosCart({
+    required String accessToken,
+    required String tenantId,
+    Map<String, dynamic>? payload,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/pos-carts'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode(payload ?? const <String, dynamic>{}),
+    );
+    final body = await _decode(response);
+    return PosCartSnapshot.fromJson(
+      Map<String, dynamic>.from(body['cart'] as Map),
+    );
+  }
+
+  Future<PosCartSnapshot> updatePosCart({
+    required String accessToken,
+    required String tenantId,
+    required String cartId,
+    required Map<String, dynamic> payload,
+    bool force = false,
+  }) async {
+    final response = await _http.patch(
+      _uri('/api/mobile/institut/pos-carts/$cartId'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({...payload, if (force) 'force': true}),
+    );
+    final body = await _decode(response);
+    return PosCartSnapshot.fromJson(
+      Map<String, dynamic>.from(body['cart'] as Map),
+    );
+  }
+
+  Future<PosCartSnapshot> claimPosCart({
+    required String accessToken,
+    required String tenantId,
+    required String cartId,
+    bool force = false,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/pos-carts/$cartId/claim'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({'force': force}),
+    );
+    final body = await _decode(response);
+    return PosCartSnapshot.fromJson(
+      Map<String, dynamic>.from(body['cart'] as Map),
+    );
+  }
+
+  Future<void> abandonPosCart({
+    required String accessToken,
+    required String tenantId,
+    required String cartId,
+    bool force = false,
+  }) async {
+    final response = await _http.delete(
+      _uri(
+        '/api/mobile/institut/pos-carts/$cartId',
+        {if (force) 'force': '1'},
+      ),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    await _decode(response);
   }
 
   Future<CreditNoteResult> createSaleCreditNote({

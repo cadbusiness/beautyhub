@@ -29,6 +29,7 @@ interface CheckoutPanelProps {
   loyaltyCreditCents?: number;
   promoCode?: string;
   priceOverridesJson?: string;
+  posCartId?: string | null;
   totals: {
     subtotal_cents: number;
     vat_cents: number;
@@ -73,6 +74,7 @@ export function CheckoutPanel({
   loyaltyCreditCents = 0,
   promoCode = "",
   priceOverridesJson = "",
+  posCartId = null,
   totals,
   settings,
   stripeEnabled,
@@ -310,6 +312,7 @@ export function CheckoutPanel({
         <input type="hidden" name="promo_code" value={promoCode} />
         <input type="hidden" name="price_overrides" value={priceOverridesJson} />
         <input type="hidden" name="payments" value={paymentsJson} />
+        <input type="hidden" name="pos_cart_id" value={posCartId ?? ""} />
         <Button
           type="submit"
           className="w-full"
@@ -340,6 +343,7 @@ export function CheckoutPanel({
           loyaltyCreditCents={loyaltyCreditCents}
           promoCode={promoCode}
           priceOverridesJson={priceOverridesJson}
+          posCartId={posCartId}
           publishableKey={stripePublishableKey}
           stripeAccountId={stripeAccountId}
           currency={settings.currency}

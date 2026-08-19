@@ -2942,6 +2942,13 @@
       "noSessionHint": "Kassa gesloten — openen voor contant follow-up",
       "cart": {
         "title": "Winkelwagen",
+        "add": "Nieuwe winkelwagen",
+        "abandon": "Verwijderen",
+        "locked": "In gebruik op een andere tablet. Alleen-lezen.",
+        "lockedBy": "In gebruik ({name}). Alleen-lezen.",
+        "takeover": "Toch overnemen?",
+        "maxReached": "Maximaal 8 open winkelwagens.",
+        "saveFailed": "Winkelwagen opslaan mislukt.",
         "clear": "Legen",
         "empty": "Geen artikelen.",
         "total": "Totaal",

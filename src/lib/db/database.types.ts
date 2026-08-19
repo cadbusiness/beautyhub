@@ -1591,6 +1591,101 @@ export type Database = {
           },
         ]
       }
+      inst_pos_carts: {
+        Row: {
+          appointment_id: string | null
+          cart_discount_cents: number
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          discount_kind: string | null
+          discount_reason: string | null
+          discount_value: number | null
+          id: string
+          label: string
+          lines: Json
+          locked_at: string | null
+          locked_by: string | null
+          notes: string | null
+          price_overrides: Json
+          staff_id: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          cart_discount_cents?: number
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_kind?: string | null
+          discount_reason?: string | null
+          discount_value?: number | null
+          id?: string
+          label?: string
+          lines?: Json
+          locked_at?: string | null
+          locked_by?: string | null
+          notes?: string | null
+          price_overrides?: Json
+          staff_id?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          cart_discount_cents?: number
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_kind?: string | null
+          discount_reason?: string | null
+          discount_value?: number | null
+          id?: string
+          label?: string
+          lines?: Json
+          locked_at?: string | null
+          locked_by?: string | null
+          notes?: string | null
+          price_overrides?: Json
+          staff_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inst_pos_carts_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "inst_appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_pos_carts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_pos_carts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "inst_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_pos_carts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inst_pos_settings: {
         Row: {
           country_code: string

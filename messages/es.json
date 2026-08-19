@@ -3046,6 +3046,13 @@
     },
     "terminal": {
       "cart": {
+        "add": "Nueva cesta",
+        "abandon": "Descartar",
+        "locked": "En uso en otra tableta. Solo lectura.",
+        "lockedBy": "En uso ({name}). Solo lectura.",
+        "takeover": "¿Retomar de todos modos?",
+        "maxReached": "Máximo 8 cestas abiertas.",
+        "saveFailed": "No se puede guardar la cesta.",
         "addToCheckout": "Agrega artículos para retirar dinero.",
         "appointmentAria": "Cita",
         "clear": "Vacío",

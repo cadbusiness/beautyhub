@@ -25,6 +25,7 @@ const bodySchema = z.object({
   loyaltyCreditCents: z.number().int().min(0).optional(),
   payments: z.array(paymentSchema).min(0),
   priceOverrides: z.record(z.string(), z.number().int().min(0)).optional(),
+  posCartId: z.string().uuid().nullable().optional(),
 });
 
 export async function POST(request: Request) {
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
       loyaltyCreditCents,
       payments,
       priceOverrides,
+      posCartId,
     } = parsed.data;
     const cartEntries = Object.entries(cart).filter(([, qty]) => qty > 0);
     if (cartEntries.length === 0) {
@@ -80,6 +82,7 @@ export async function POST(request: Request) {
         loyaltyCreditCents: loyaltyCreditCents ?? 0,
         payments: salePayments,
         priceOverrides: priceOverrides ?? null,
+        posCartId: posCartId ?? null,
       },
     );
 

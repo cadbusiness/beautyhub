@@ -1,0 +1,38 @@
+export type PosCartDto = {
+  id: string;
+  label: string;
+  status: "open" | "checked_out" | "abandoned";
+  clientId: string | null;
+  clientName: string | null;
+  appointmentId: string | null;
+  staffId: string | null;
+  lines: Record<string, number>;
+  priceOverrides: Record<string, number>;
+  discountKind: "percent" | "fixed" | null;
+  discountValue: number | null;
+  discountReason: string | null;
+  cartDiscountCents: number;
+  notes: string | null;
+  itemCount: number;
+  lockedBy: string | null;
+  lockedByName: string | null;
+  lockedAt: string | null;
+  lockedByOther: boolean;
+  createdBy: string | null;
+  updatedAt: string;
+};
+
+export type PosCartWritePayload = {
+  label?: string | null;
+  clientId?: string | null;
+  appointmentId?: string | null;
+  staffId?: string | null;
+  lines?: Record<string, number>;
+  priceOverrides?: Record<string, number>;
+  discountKind?: "percent" | "fixed" | null;
+  discountValue?: number | null;
+  discountReason?: string | null;
+  cartDiscountCents?: number;
+  notes?: string | null;
+  force?: boolean;
+};

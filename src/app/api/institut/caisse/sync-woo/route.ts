@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateServiceClient } from "@/lib/supabase/service";
 import { syncWooCatalogForTenant } from "@/lib/woocommerce/catalog-sync";
@@ -9,10 +9,10 @@ import { syncWooCatalogForTenant } from "@/lib/woocommerce/catalog-sync";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-export async function POST() {
+export async function POST(request: Request) {
   const t = await getTranslations("institut.pos");
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const userSupabase = await createClient();
     const db = tryCreateServiceClient() ?? userSupabase;
     const result = await syncWooCatalogForTenant(session.tenant.id, db, db);

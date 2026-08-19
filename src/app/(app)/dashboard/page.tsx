@@ -83,7 +83,10 @@ export default async function DashboardPage() {
     : null;
 
   const enabledModuleIds = tenant ? await getEnabledModuleIds(tenant.id) : [];
-  const nav = role ? getNavFor(enabledModuleIds, role) : [];
+  const shell = await getAppShellData();
+  const nav = role
+    ? getNavFor(enabledModuleIds, role, shell?.session.permissions)
+    : [];
   const navHrefs = new Set(nav.map((item) => item.href));
 
   const quickActions = QUICK_ACTION_KEYS.filter((action) =>
@@ -96,7 +99,6 @@ export default async function DashboardPage() {
       description: t(`quickActions.${action.descriptionKey}.description`),
     }));
 
-  const shell = await getAppShellData();
   const posSession = shell?.posSession ?? null;
 
   const hasInstitut = enabledModuleIds.includes("institut");

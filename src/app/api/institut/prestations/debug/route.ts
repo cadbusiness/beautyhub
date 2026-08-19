@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -18,7 +18,7 @@ function safeError(error: unknown): Record<string, unknown> {
   return { raw: String(error) };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const steps: Array<{ step: string; ok: boolean; info?: unknown; error?: unknown }> = [];
 
   try {
@@ -26,7 +26,7 @@ export async function GET() {
 
     let session;
     try {
-      session = await requireModule("institut");
+      session = await requireInstitutApi(request);
       steps.push({
         step: "requireModule",
         ok: true,

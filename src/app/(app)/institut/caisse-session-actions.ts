@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { requireInstitutSettingsModule } from "@/lib/auth/institut-settings";
 import {
   computeSessionSnapshot,
@@ -40,7 +40,7 @@ export async function openCashSession(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
 
   const existing = await getOpenCashSession(supabase, session.tenant.id);
@@ -66,7 +66,7 @@ export async function addCashMovement(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
 
   const cashSession = await getOpenCashSession(supabase, session.tenant.id);
@@ -97,7 +97,7 @@ export async function addCashMovement(
 
 export async function generateXReport(): Promise<ActionResult & { reportId?: string }> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
 
   const cashSession = await getOpenCashSession(supabase, session.tenant.id);
@@ -135,7 +135,7 @@ export async function generateXReport(): Promise<ActionResult & { reportId?: str
 
 export async function pauseCashSession(): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
   try {
     await pauseOpenCashSession(supabase, session.tenant.id);
@@ -150,7 +150,7 @@ export async function pauseCashSession(): Promise<ActionResult> {
 
 export async function resumeCashSession(): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
   try {
     await resumePausedCashSession(supabase, session.tenant.id);
@@ -168,7 +168,7 @@ export async function closeCashSession(
   formData: FormData,
 ): Promise<ActionResult & { reportId?: string }> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
 
   const countedCash = parseEurosCents(formData.get("counted_cash"));
@@ -201,7 +201,7 @@ export async function issueGiftCardAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
 
   const amount = parseEurosCents(formData.get("amount"));
@@ -237,7 +237,7 @@ export async function issueVoucherAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
 
   const amount = parseEurosCents(formData.get("amount"));
@@ -289,7 +289,7 @@ export async function createCreditNoteAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
 
   const saleId = String(formData.get("sale_id") ?? "");
@@ -335,7 +335,7 @@ export async function payBalanceAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
 
   const saleId = String(formData.get("sale_id") ?? "");
@@ -371,7 +371,7 @@ export async function voidVoucherAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
   const voucherId = String(formData.get("voucher_id") ?? "");
   if (!voucherId) return { error: t("missingFields") };

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { getWooClientForTenant } from "@/lib/woocommerce";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ wooId: string }> },
 ) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const { wooId: raw } = await context.params;
     const wooId = Number.parseInt(raw, 10);
     if (!Number.isFinite(wooId) || wooId <= 0) {

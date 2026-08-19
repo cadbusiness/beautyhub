@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import {
   DEFAULT_VOUCHER_LAYOUT,
   normalizeVoucherLayout,
@@ -9,7 +9,7 @@ import {
 
 export async function POST(request: Request) {
   try {
-    await requireModule("institut");
+    await requireInstitutApi(request);
     const body = (await request.json()) as {
       title?: string;
       subtitle?: string;

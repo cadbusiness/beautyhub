@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { loadSaleDocumentPayload } from "@/lib/institut/sale-documents/load";
 import {
@@ -11,11 +11,11 @@ import {
 export const runtime = "nodejs";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const session = await requireModule("institut");
+  const session = await requireInstitutApi(request);
   const supabase = await createClient();
 
   const payload = await loadSaleDocumentPayload(

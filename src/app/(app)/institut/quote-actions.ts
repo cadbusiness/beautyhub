@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   computeDocumentTotals,
@@ -43,7 +43,7 @@ export async function createQuoteForClient(
   formData: FormData,
 ): Promise<QuoteActionResult> {
   const t = await getTranslations("institut.quotes.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("clients", "write");
   const clientId = String(formData.get("client_id") ?? "");
   if (!clientId) return { error: t("clientRequired") };
 
@@ -105,7 +105,7 @@ export async function createQuoteForClient(
 
 export async function sendQuote(formData: FormData): Promise<void> {
   const t = await getTranslations("institut.quotes.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("clients", "write");
   const quoteId = String(formData.get("quote_id") ?? "");
   const clientId = String(formData.get("client_id") ?? "");
   if (!quoteId) return;
@@ -127,7 +127,7 @@ export async function sendQuote(formData: FormData): Promise<void> {
 }
 
 export async function cancelQuote(formData: FormData): Promise<void> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("clients", "write");
   const quoteId = String(formData.get("quote_id") ?? "");
   const clientId = String(formData.get("client_id") ?? "");
 

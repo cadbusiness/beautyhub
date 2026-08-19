@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   getAccessibleTenants,
   getCurrentUser,
+  getMemberships,
   getRoleForTenant,
   isPlatformAdmin,
 } from "@/lib/auth/session";
@@ -12,6 +13,11 @@ import { getPosSessionSummary } from "@/lib/institut/pos-session";
 import { createClient } from "@/lib/supabase/server";
 import type { TeamRole } from "@/modules/types";
 import type { TenantContext } from "@/lib/tenant/context";
+import {
+  WILDCARD_PERMISSIONS,
+  type InstitutPermissions,
+} from "@/lib/institut/permissions";
+import { parsePermissionsJson } from "@/lib/institut/team-access";
 
 export interface TeamSession {
   userId: string;
@@ -19,6 +25,8 @@ export interface TeamSession {
   tenant: TenantContext;
   role: TeamRole;
   enabledModuleIds: string[];
+  tenantRoleId: string | null;
+  permissions: InstitutPermissions;
 }
 
 /** Session equipe + tenant, dedupliquee sur une requete (layout + pages). */
@@ -39,12 +47,36 @@ export const getTeamSession = cache(async (): Promise<TeamSession | null> => {
     : await getRoleForTenant(tenant.id);
   if (!role) return null;
 
+  const memberships = await getMemberships();
+  const membership = memberships.find((m) => m.tenant_id === tenant.id);
+  const tenantRoleId = membership?.tenant_role_id ?? null;
+  let permissions: InstitutPermissions = {};
+
+  if (
+    role === "platform_admin" ||
+    role === "brand_owner" ||
+    role === "tenant_owner"
+  ) {
+    permissions = WILDCARD_PERMISSIONS;
+  } else if (tenantRoleId) {
+    const supabase = await createClient();
+    const { data: tenantRole } = await supabase
+      .from("tenant_roles")
+      .select("permissions")
+      .eq("id", tenantRoleId)
+      .eq("tenant_id", tenant.id)
+      .maybeSingle();
+    permissions = parsePermissionsJson(tenantRole?.permissions);
+  }
+
   return {
     userId: user.id,
     email: user.email ?? null,
     tenant,
     role,
     enabledModuleIds,
+    tenantRoleId,
+    permissions,
   };
 });
 

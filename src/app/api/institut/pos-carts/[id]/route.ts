@@ -1,4 +1,4 @@
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   abandonPosCart,
@@ -16,7 +16,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const { id } = await params;
     const cart = await getPosCart(supabase, session.tenant.id, id, session.userId);
@@ -31,7 +31,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const { id } = await params;
     const raw = await request.json().catch(() => ({}));
@@ -61,7 +61,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const { id } = await params;
     const url = new URL(request.url);

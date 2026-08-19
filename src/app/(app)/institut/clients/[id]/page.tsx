@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { fetchClientOverview } from "@/lib/institut/clients";
 import { loadClientLoyaltyCard } from "@/lib/institut/client-loyalty";
 import { canManageInstitutSettings } from "@/lib/auth/institut-settings";
+import { hasInstitutPermission } from "@/lib/institut/permissions";
 import { isAnonymizedClientEmail } from "@/lib/compliance/anonymize";
 import { getWooCredentialsForTenant } from "@/lib/woocommerce";
 import { ClientDetail } from "./client-detail";
@@ -14,7 +15,7 @@ export default async function ClientDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("clients", "read");
   const supabase = await createClient();
   let overview = await fetchClientOverview(supabase, session.tenant.id, id);
   const loyalty = await loadClientLoyaltyCard(supabase, session.tenant.id, id);
@@ -64,7 +65,10 @@ export default async function ClientDetailPage({
   return (
     <ClientDetail
       overview={overview}
-      canAnonymize={canManageInstitutSettings(session.role, session.enabledModuleIds)}
+      canAnonymize={
+        canManageInstitutSettings(session.role, session.enabledModuleIds) ||
+        hasInstitutPermission(session, "clients.delete", "write")
+      }
       isAnonymized={isAnonymizedClientEmail(overview.client.email)}
       referrerOptions={referrerOptions}
       wooShopUrl={wooShopUrl}

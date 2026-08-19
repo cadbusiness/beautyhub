@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { fetchClientAppointments } from "@/lib/institut/clients";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const payload = await fetchClientAppointments(supabase, session.tenant.id, id);
     return NextResponse.json(payload);

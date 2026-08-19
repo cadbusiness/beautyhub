@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import { formatPrice } from "@/lib/utils";
@@ -13,7 +13,7 @@ export default async function VoucherDocumentPage({
   const { id } = await params;
   const t = await getTranslations("pos.vouchers");
   const format = await getFormatter();
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "read");
   const supabase = await createClient();
 
   const [{ data: voucher }, { data: events }, settings] = await Promise.all([

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { getTenantPublicBaseUrl } from "@/lib/tenant/public-site";
 import type { Json } from "@/lib/db/database.types";
@@ -135,7 +135,7 @@ async function uploadSiteMediaFile(
 export async function uploadSiteBlockMedia(
   formData: FormData,
 ): Promise<{ error?: string; url?: string; kind?: SiteMediaKind }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const t = await getTranslations("institut.marketing.website.actions");
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
@@ -147,7 +147,7 @@ export async function uploadSiteBlockMedia(
 export async function uploadSiteGalleryImage(
   formData: FormData,
 ): Promise<{ error?: string; url?: string }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const t = await getTranslations("institut.marketing.website.actions");
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
@@ -163,7 +163,7 @@ export async function uploadSiteGalleryImage(
 export async function uploadSiteLogo(
   formData: FormData,
 ): Promise<{ error?: string; url?: string }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const t = await getTranslations("institut.marketing.website.actions");
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
@@ -182,7 +182,7 @@ export async function loadSitePagesAdmin(): Promise<{
   customDomain: string | null;
   homePageId: string | null;
 }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   await ensureDefaultSitePages(session.tenant.id, session.tenant.name);
   await ensureSiteSettings(supabase, session.tenant.id);
@@ -213,7 +213,7 @@ export async function loadSitePagesAdmin(): Promise<{
 }
 
 export async function loadSiteSettingsAdmin(): Promise<SiteSettingsRow> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   await ensureDefaultSitePages(session.tenant.id, session.tenant.name);
   return ensureSiteSettings(supabase, session.tenant.id);
@@ -223,7 +223,7 @@ export async function saveSiteTheme(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const primaryColor = String(formData.get("primary_color") ?? "#0f172a").trim();
   const displayName = String(formData.get("display_name") ?? "").trim() || null;
@@ -255,7 +255,7 @@ export async function applyPageLayout(
   layoutId: string,
   resetContent: boolean,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const t = await getTranslations("institut.marketing.website.actions");
   const supabase = await createClient();
 
@@ -296,7 +296,7 @@ export async function toggleSitePagePublished(
   pageId: string,
   published: boolean,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -315,7 +315,7 @@ export async function toggleSitePageNav(
   pageId: string,
   showInNav: boolean,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const t = await getTranslations("institut.marketing.website.actions");
   const supabase = await createClient();
 
@@ -341,7 +341,7 @@ export async function toggleSitePageNav(
 }
 
 export async function loadSitePageForBuilder(pageId: string): Promise<SitePageRow | null> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const { data } = await supabase
     .from("inst_site_pages")
@@ -353,7 +353,7 @@ export async function loadSitePageForBuilder(pageId: string): Promise<SitePageRo
 }
 
 export async function createSitePage(pageType: SitePageType): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const t = await getTranslations("institut.marketing.website.actions");
   const supabase = await createClient();
   const def = SITE_PAGE_TYPES.find((p) => p.type === pageType);
@@ -397,7 +397,7 @@ export async function saveSitePageBuilder(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const t = await getTranslations("institut.marketing.website.actions");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
@@ -440,7 +440,7 @@ export async function saveSitePageBuilder(
 }
 
 export async function deleteSitePage(pageId: string): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const t = await getTranslations("institut.marketing.website.actions");
   const supabase = await createClient();
 

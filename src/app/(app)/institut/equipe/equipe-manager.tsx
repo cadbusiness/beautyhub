@@ -19,6 +19,8 @@ import type {
   TeamMember,
   TenantRole,
 } from "@/lib/institut/team-access";
+import type { TeamCapabilities } from "@/lib/institut/permissions";
+import type { TeamAuditLogRow } from "@/lib/institut/team-audit";
 import { StaffForm } from "./staff-form";
 import { StaffInviteDialog } from "./staff-invite-dialog";
 import { StaffArchiveDialog } from "./staff-archive-dialog";
@@ -28,8 +30,9 @@ import { ResourceForm } from "./resource-form";
 import { SchedulesPanel } from "./schedules-panel";
 import { ScheduleAssignmentsPanel } from "./schedule-assignments";
 import { TimeOffPanel } from "./time-off-panel";
+import { TeamAuditPanel } from "./team-audit-panel";
 
-type Tab = "personnel" | "acces" | "roles" | "cabines" | "horaires";
+type Tab = "personnel" | "acces" | "roles" | "journal" | "cabines" | "horaires";
 type HorairesTab = "grilles" | "assignations" | "absences";
 type PersonnelView = "active" | "archived";
 
@@ -75,6 +78,8 @@ export function EquipeManager({
   schedules,
   timeOffs,
   canHardDeleteByStaffId,
+  capabilities,
+  auditLogs,
 }: {
   staff: StaffRow[];
   roles: TenantRole[];
@@ -84,6 +89,8 @@ export function EquipeManager({
   schedules: ScheduleRow[];
   timeOffs: TimeOffRow[];
   canHardDeleteByStaffId: Record<string, boolean>;
+  capabilities: TeamCapabilities;
+  auditLogs: TeamAuditLogRow[];
 }) {
   const t = useTranslations("institut.team");
   const tCommon = useTranslations("common");
@@ -150,6 +157,9 @@ export function EquipeManager({
             },
             { id: "acces", label: t("tabs.acces"), count: pendingCount || undefined },
             { id: "roles", label: t("tabs.roles"), count: roles.length },
+            ...(capabilities.canReadAudit
+              ? [{ id: "journal" as const, label: t("tabs.journal") }]
+              : []),
             { id: "cabines", label: t("tabs.cabines"), count: resources.length },
             { id: "horaires", label: t("tabs.horaires") },
           ]}
@@ -162,15 +172,29 @@ export function EquipeManager({
             <ListToolbar
               action={
                 !isArchivedView ? (
-                  <Button
-                    onClick={() => {
-                      setEditingStaff(null);
-                      setStaffDialogOpen(true);
-                    }}
-                    className="h-9 w-full sm:w-auto"
-                  >
-                    + {t("personnel.add")}
-                  </Button>
+                  <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                    {capabilities.canManageRoles ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-9 w-full sm:w-auto"
+                        onClick={() => setTab("roles")}
+                      >
+                        {t("personnel.manageRoles")}
+                      </Button>
+                    ) : null}
+                    {capabilities.canWriteTeam ? (
+                      <Button
+                        onClick={() => {
+                          setEditingStaff(null);
+                          setStaffDialogOpen(true);
+                        }}
+                        className="h-9 w-full sm:w-auto"
+                      >
+                        + {t("personnel.add")}
+                      </Button>
+                    ) : null}
+                  </div>
                 ) : null
               }
             >
@@ -308,28 +332,32 @@ export function EquipeManager({
                           >
                             <div className="flex justify-end">
                               <RowActionsMenu label={t("personnel.actionsMenuLabel")}>
-                                {archived ? (
+                                    {archived ? (
                                   <>
-                                    <RowActionsMenuItem
-                                      icon={<RotateCcw className="h-3.5 w-3.5" />}
-                                      onSelect={() => runRestore(s.id)}
-                                      disabled={rowPending}
-                                    >
-                                      {t("personnel.restore")}
-                                    </RowActionsMenuItem>
-                                    <RowActionsMenuItem
-                                      icon={<Trash2 className="h-3.5 w-3.5" />}
-                                      tone="danger"
-                                      onSelect={() => runHardDelete(s.id)}
-                                      disabled={!canHard || rowPending}
-                                      title={
-                                        canHard
-                                          ? t("personnel.hardDelete")
-                                          : t("personnel.hardDeleteBlockedTooltip")
-                                      }
-                                    >
-                                      {t("personnel.hardDelete")}
-                                    </RowActionsMenuItem>
+                                    {capabilities.canManageAccess ? (
+                                      <RowActionsMenuItem
+                                        icon={<RotateCcw className="h-3.5 w-3.5" />}
+                                        onSelect={() => runRestore(s.id)}
+                                        disabled={rowPending}
+                                      >
+                                        {t("personnel.restore")}
+                                      </RowActionsMenuItem>
+                                    ) : null}
+                                    {capabilities.canManageAccess ? (
+                                      <RowActionsMenuItem
+                                        icon={<Trash2 className="h-3.5 w-3.5" />}
+                                        tone="danger"
+                                        onSelect={() => runHardDelete(s.id)}
+                                        disabled={!canHard || rowPending}
+                                        title={
+                                          canHard
+                                            ? t("personnel.hardDelete")
+                                            : t("personnel.hardDeleteBlockedTooltip")
+                                        }
+                                      >
+                                        {t("personnel.hardDelete")}
+                                      </RowActionsMenuItem>
+                                    ) : null}
                                   </>
                                 ) : (
                                   <>
@@ -342,7 +370,7 @@ export function EquipeManager({
                                     >
                                       {t("personnel.edit")}
                                     </RowActionsMenuItem>
-                                    {s.access_status !== "active" ? (
+                                    {s.access_status !== "active" && capabilities.canManageAccess ? (
                                       <RowActionsMenuItem
                                         icon={<MailPlus className="h-3.5 w-3.5" />}
                                         onSelect={() => setInviteStaff(s)}
@@ -350,13 +378,15 @@ export function EquipeManager({
                                         {t("personnel.invite")}
                                       </RowActionsMenuItem>
                                     ) : null}
-                                    <RowActionsMenuItem
-                                      icon={<Archive className="h-3.5 w-3.5" />}
-                                      tone="danger"
-                                      onSelect={() => setArchiveStaff(s)}
-                                    >
-                                      {t("personnel.archive")}
-                                    </RowActionsMenuItem>
+                                    {capabilities.canManageAccess ? (
+                                      <RowActionsMenuItem
+                                        icon={<Archive className="h-3.5 w-3.5" />}
+                                        tone="danger"
+                                        onSelect={() => setArchiveStaff(s)}
+                                      >
+                                        {t("personnel.archive")}
+                                      </RowActionsMenuItem>
+                                    ) : null}
                                   </>
                                 )}
                               </RowActionsMenu>
@@ -382,21 +412,33 @@ export function EquipeManager({
         ) : null}
 
         {tab === "acces" ? (
-          <TeamAccessPanel members={members} invitations={invitations} />
+          <TeamAccessPanel
+            members={members}
+            invitations={invitations}
+            canManageAccess={capabilities.canManageAccess}
+          />
         ) : null}
 
-        {tab === "roles" ? <TeamRolesPanel roles={roles} /> : null}
+        {tab === "roles" ? (
+          <TeamRolesPanel roles={roles} canManage={capabilities.canManageRoles} />
+        ) : null}
+
+        {tab === "journal" && capabilities.canReadAudit ? (
+          <TeamAuditPanel logs={auditLogs} />
+        ) : null}
 
         {tab === "cabines" ? (
           <>
             <ListToolbar
               action={
-                <Button
-                  onClick={() => setResourceDialogOpen(true)}
-                  className="h-9 w-full sm:w-auto"
-                >
-                  + {t("cabines.add")}
-                </Button>
+                capabilities.canWriteTeam ? (
+                  <Button
+                    onClick={() => setResourceDialogOpen(true)}
+                    className="h-9 w-full sm:w-auto"
+                  >
+                    + {t("cabines.add")}
+                  </Button>
+                ) : null
               }
             >
               <span className="text-sm text-slate-500">{t("cabines.subtitle")}</span>
@@ -424,12 +466,14 @@ export function EquipeManager({
                           {r.kind === "event" ? t("cabines.kinds.event") : t("cabines.kinds.cabin")}
                         </td>
                         <td className={`text-right ${dataTableCell}`}>
-                          <form action={deleteResource}>
-                            <input type="hidden" name="id" value={r.id} />
-                            <Button variant="ghost" type="submit" className="h-8 text-red-600">
-                              {t("cabines.delete")}
-                            </Button>
-                          </form>
+                          {capabilities.canWriteTeam ? (
+                            <form action={deleteResource}>
+                              <input type="hidden" name="id" value={r.id} />
+                              <Button variant="ghost" type="submit" className="h-8 text-red-600">
+                                {t("cabines.delete")}
+                              </Button>
+                            </form>
+                          ) : null}
                         </td>
                       </tr>
                     ))}
@@ -494,6 +538,7 @@ export function EquipeManager({
           <StaffForm
             staff={editingStaff}
             roles={roles}
+            canManageAccess={capabilities.canManageAccess}
             onSuccess={() => {
               setStaffDialogOpen(false);
               setEditingStaff(null);

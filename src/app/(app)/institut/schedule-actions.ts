@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { weekdayMessageKey } from "@/lib/i18n/nav";
 import { parseBlocksJson } from "@/lib/institut/schedules";
@@ -16,7 +16,7 @@ export async function createSchedule(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const supabase = await createClient();
   const name = String(formData.get("name") ?? "").trim();
   const isDefault = formData.get("is_default") === "1";
@@ -54,7 +54,7 @@ export async function createSchedule(
 }
 
 export async function deleteSchedule(formData: FormData): Promise<void> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
 
@@ -77,7 +77,7 @@ export async function saveScheduleBlocks(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const tWeekdays = await getTranslations("weekdays");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const supabase = await createClient();
   const scheduleId = String(formData.get("schedule_id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
@@ -137,7 +137,7 @@ export async function assignStaffSchedule(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const supabase = await createClient();
   const staffId = String(formData.get("staff_id") ?? "");
   const scheduleId = String(formData.get("schedule_id") ?? "") || null;
@@ -167,7 +167,7 @@ export async function assignResourceSchedule(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const supabase = await createClient();
   const resourceId = String(formData.get("resource_id") ?? "");
   const scheduleId = String(formData.get("schedule_id") ?? "") || null;
@@ -198,7 +198,7 @@ export async function createTimeOff(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const supabase = await createClient();
   const scope = String(formData.get("scope") ?? "tenant");
   const startsAt = String(formData.get("starts_at") ?? "");
@@ -231,7 +231,7 @@ export async function createTimeOff(
 }
 
 export async function deleteTimeOff(formData: FormData): Promise<void> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const supabase = await createClient();
   await supabase
     .from("inst_time_off")

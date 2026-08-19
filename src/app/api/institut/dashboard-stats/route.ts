@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { getTenantConnectionStatus } from "@/lib/connections";
 import { getAnalyticsSettings } from "@/lib/institut/analytics-settings";
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const channel = parseSalesChannel(params.get("channel"));
 
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const locale = await getLocale();
     const [analyticsSettings, woo] = await Promise.all([

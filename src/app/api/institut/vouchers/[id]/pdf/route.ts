@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import {
@@ -11,12 +11,12 @@ import {
 } from "@/lib/institut/voucher-pdf";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const service = createServiceClient();
 

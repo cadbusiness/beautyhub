@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { PublicSiteView } from "@/components/site/public-site-view";
 import { loadPublicServices } from "@/app/(public)/reserver/actions";
 import { loadSitePageForBuilder } from "@/app/(app)/institut/marketing/page-web/site-actions";
@@ -12,7 +12,7 @@ export default async function SitePagePreviewPage({
 }: {
   params: Promise<{ pageId: string }>;
 }) {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "read");
   const t = await getTranslations("institut.marketing.website.previewPanel");
   const { pageId } = await params;
   const page = await loadSitePageForBuilder(pageId);

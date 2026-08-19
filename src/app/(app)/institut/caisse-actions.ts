@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/db/database.types";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { requireInstitutSettingsModule } from "@/lib/auth/institut-settings";
 import {
   executePosCheckout,
@@ -157,7 +157,7 @@ export async function createInternalProduct(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: t("nameRequired") };
 
@@ -186,7 +186,7 @@ export async function updateInternalProduct(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const id = String(formData.get("id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   if (!id || !name) return { error: t("nameRequired") };
@@ -212,7 +212,7 @@ export async function updateInternalProduct(
 }
 
 export async function deleteInternalProduct(formData: FormData): Promise<void> {
-  await requireModule("institut");
+  await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
   await supabase
     .from("inst_products")
@@ -227,7 +227,7 @@ export async function createInternalProductCategory(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: t("nameRequired") };
   const sortOrder = Number.parseInt(String(formData.get("sort_order") ?? "0"), 10) || 0;
@@ -246,7 +246,7 @@ export async function updateInternalProductCategory(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const id = String(formData.get("id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   if (!id || !name) return { error: t("nameRequired") };
@@ -262,7 +262,7 @@ export async function updateInternalProductCategory(
 }
 
 export async function deleteInternalProductCategory(formData: FormData): Promise<void> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
   await deleteProductCategory(
     supabase,
@@ -346,7 +346,7 @@ export async function checkoutPos(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
 
   const cartJson = String(formData.get("cart") ?? "{}");
@@ -420,7 +420,7 @@ export async function processPosCheckout(
   },
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
 
   const settings = await getPosSettings(supabase, session.tenant.id);
@@ -497,7 +497,7 @@ export async function previewPosTotals(
   total_cents: number;
   cart_discount_cents: number;
 } | null> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "write");
   const supabase = await createClient();
   try {
     const cart = parsePosCart(cartJson);

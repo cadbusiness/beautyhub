@@ -7,6 +7,7 @@ import {
   requireInstitutSettingsModule,
 } from "@/lib/auth/institut-settings";
 import { requireModule } from "@/lib/auth/guards";
+import { hasInstitutPermission } from "@/lib/institut/permissions";
 import { getCurrentUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEvent } from "@/lib/compliance/audit";
@@ -57,7 +58,8 @@ export async function anonymizeClientAction(
 ): Promise<ComplianceActionResult> {
   const t = await getTranslations("compliance.actions");
   const session = await requireModule("institut");
-  if (!canManageInstitutSettings(session.role, session.enabledModuleIds)) {
+  if (!canManageInstitutSettings(session.role, session.enabledModuleIds)
+    && !hasInstitutPermission(session, "clients.delete", "write")) {
     return { error: t("forbidden") };
   }
   const user = await getCurrentUser();

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   runBooklyAppointmentsImport,
@@ -13,7 +13,7 @@ export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
 
     let body: { rows?: unknown; upcomingOnly?: boolean };

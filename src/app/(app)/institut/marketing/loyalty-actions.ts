@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { resolveConnection } from "@/lib/connections";
 import { createClient } from "@/lib/supabase/server";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
@@ -49,7 +49,7 @@ export async function loadLoyaltyPageData(selectedProgramId?: string): Promise<{
   services: { id: string; name: string }[];
   selectedProgramId: string;
 }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
@@ -118,7 +118,7 @@ export async function saveLoyaltyProgramSettings(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const t = await getTranslations("institut.marketing.loyalty.actions");
   try {
@@ -148,7 +148,7 @@ export async function setLoyaltyProgramActive(
   programId: string,
   isActive: boolean,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   try {
     await setLoyaltyProgramActiveRecord(
@@ -169,7 +169,7 @@ export async function saveLoyaltyEarnRule(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const t = await getTranslations("institut.marketing.loyalty.actions");
   const sourceType = String(formData.get("source_type") ?? "") as LoyaltySourceType;
@@ -199,7 +199,7 @@ export async function saveLoyaltyEarnRule(
 }
 
 export async function deleteLoyaltyEarnRule(ruleId: string): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   try {
     await deleteLoyaltyEarnRuleRecord(supabase, session.tenant.id, ruleId);
@@ -214,7 +214,7 @@ export async function saveLoyaltyReward(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const t = await getTranslations("institut.marketing.loyalty.actions");
   const rewardType = String(formData.get("reward_type") ?? "") as LoyaltyRewardType;
@@ -242,7 +242,7 @@ export async function saveLoyaltyReward(
 }
 
 export async function deleteLoyaltyReward(rewardId: string): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   try {
     await deleteLoyaltyRewardRecord(supabase, session.tenant.id, rewardId);
@@ -254,7 +254,7 @@ export async function deleteLoyaltyReward(rewardId: string): Promise<ActionResul
 }
 
 export async function applyLoyaltyStarterPack(programId?: string): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const t = await getTranslations("institut.marketing.loyalty.actions");
   try {
@@ -271,7 +271,7 @@ export async function createLoyaltyProgram(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const t = await getTranslations("institut.marketing.loyalty.actions");
   try {
@@ -289,7 +289,7 @@ export async function createLoyaltyProgram(
 }
 
 export async function duplicateLoyaltyProgram(formData: FormData): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const t = await getTranslations("institut.marketing.loyalty.actions");
   try {
@@ -311,7 +311,7 @@ export async function assignLoyaltyProgramToClient(
   clientId: string,
   programId: string | null,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const t = await getTranslations("institut.clients.detail.loyalty");
   try {

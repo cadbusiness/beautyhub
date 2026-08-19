@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
 import { ListPanel } from "@/components/ui/list-panel";
@@ -12,7 +12,7 @@ function TabLinksFallback() {
 }
 
 export default async function ReservationPubliquePage() {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "read");
   const supabase = await createClient();
   const [{ flows, publicBaseUrl }, servicesRes] = await Promise.all([
     loadBookingFlowsAdmin(),

@@ -3,6 +3,13 @@ import type { Database } from "@/lib/db/database.types";
 import { requireSupabaseEnv } from "@/lib/supabase/env";
 import type { TeamRole } from "@/modules/types";
 import { MOBILE_HEADERS } from "@/lib/mobile/types";
+import {
+  hasInstitutPermission,
+  inferInstitutPermissionFromPath,
+  WILDCARD_PERMISSIONS,
+  type InstitutPermissions,
+} from "@/lib/institut/permissions";
+import { parsePermissionsJson } from "@/lib/institut/team-access";
 
 export type MobileDb = SupabaseClient<Database>;
 
@@ -11,6 +18,7 @@ export interface MobileMembership {
   role: TeamRole;
   brand_id: string | null;
   tenant_id: string | null;
+  tenant_role_id: string | null;
 }
 
 export interface MobileTenantOption {
@@ -30,6 +38,8 @@ export interface MobileTenantSession extends MobileAuthContext {
   tenant: { id: string; name: string; slug: string; brandId: string };
   role: TeamRole;
   enabledModuleIds: string[];
+  tenantRoleId: string | null;
+  permissions: InstitutPermissions;
 }
 
 export class MobileAuthError extends Error {
@@ -89,7 +99,7 @@ async function loadMemberships(
 ): Promise<MobileMembership[]> {
   const { data, error } = await supabase
     .from("memberships")
-    .select("id, role, brand_id, tenant_id")
+    .select("id, role, brand_id, tenant_id, tenant_role_id")
     .eq("user_id", userId);
   if (error || !data) return [];
   return data as MobileMembership[];
@@ -227,7 +237,28 @@ export async function requireMobileTenantSession(
     throw new MobileAuthError("Module not enabled", 403, "module_disabled");
   }
 
-  return {
+  const memberships = await loadMemberships(auth.supabase, auth.user.id);
+  const membership = memberships.find((m) => m.tenant_id === tenantId);
+  const tenantRoleId = membership?.tenant_role_id ?? null;
+  let permissions: InstitutPermissions = {};
+
+  if (
+    match.role === "platform_admin" ||
+    match.role === "brand_owner" ||
+    match.role === "tenant_owner"
+  ) {
+    permissions = WILDCARD_PERMISSIONS;
+  } else if (tenantRoleId) {
+    const { data: tenantRole } = await auth.supabase
+      .from("tenant_roles")
+      .select("permissions")
+      .eq("id", tenantRoleId)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    permissions = parsePermissionsJson(tenantRole?.permissions);
+  }
+
+  const session: MobileTenantSession = {
     ...auth,
     tenant: {
       id: tenantRow.id,
@@ -237,7 +268,21 @@ export async function requireMobileTenantSession(
     },
     role: match.role,
     enabledModuleIds,
+    tenantRoleId,
+    permissions,
   };
+
+  if (options?.moduleId === "institut") {
+    const inferred = inferInstitutPermissionFromPath(
+      new URL(request.url).pathname,
+      request.method,
+    );
+    if (inferred && !hasInstitutPermission(session, inferred.key, inferred.level)) {
+      throw new MobileAuthError("Permission denied", 403, "forbidden");
+    }
+  }
+
+  return session;
 }
 
 export function mobileErrorResponse(error: unknown): Response {

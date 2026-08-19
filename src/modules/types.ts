@@ -20,6 +20,8 @@ export interface ModuleNavItem {
   exact?: boolean;
   /** Roles autorises a voir/utiliser l'entree (vide = tous les roles equipe). */
   roles?: TeamRole[];
+  /** Droit institut (prend le pas sur `roles` si fourni). */
+  permission?: { key: string; level?: "read" | "write" };
 }
 
 /**

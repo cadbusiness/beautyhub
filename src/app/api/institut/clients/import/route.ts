@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
 import { translateQuotaError } from "@/lib/i18n/quota";
@@ -65,7 +65,7 @@ function normalizeRow(input: unknown): RovercashImportRow | null {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
 
     let body: BatchBody;

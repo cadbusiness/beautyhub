@@ -2407,6 +2407,7 @@
         "accessNone": "No invitado",
         "accessPending": "Invitación pendiente",
         "add": "Agregar personal",
+        "manageRoles": "Configurar roles",
         "actionsMenuLabel": "Acciones del miembro",
         "archivedBadge": "Archivado",
         "archive": "Archivar",
@@ -2457,14 +2458,21 @@
           "fullNamePlaceholder": "Sofía Martín",
           "role": "Rol",
           "accessSection": "Acceso a la app",
-          "inviteHint": "Crea una invitación para dar acceso al espacio del instituto.",
+          "inviteHint": "O crea una invitación para que el miembro elija su contraseña.",
           "openInviteDialog": "Invitación detallada",
           "resendInvite": "Reenviar invitación",
           "resending": "Reenviando…",
           "linkCopied": "Enlace copiado",
+          "activateHint": "Activa la cuenta tú mismo y comunica la contraseña. Solo se muestra una vez.",
+          "activateAccount": "Activar la cuenta",
+          "activateSubmitting": "Activando…",
+          "generatePassword": "Generar",
+          "passwordLabel": "Contraseña",
+          "passwordPlaceholder": "Dejar vacío para generar",
+          "savePassword": "Guardar contraseña",
           "resetPassword": "Regenerar contraseña",
-          "resetPasswordSubmitting": "Generando…",
-          "resetPasswordHint": "Genera una contraseña temporal para comunicar al miembro. El envío por email llegará pronto.",
+          "resetPasswordSubmitting": "Guardando…",
+          "resetPasswordHint": "Define una contraseña o genera una. Se muestra una sola vez y nunca se guarda en claro.",
           "tempPasswordLabel": "Contraseña temporal (copiar ahora)",
           "copyPassword": "Copiar",
           "avatar": {
@@ -2499,7 +2507,15 @@
         "fullAccess": "Acceso completo",
         "name": "Nombre del rol",
         "permissions": "Permisos",
-        "read": "Lectura",
+        "read": "Ver",
+        "write": "Modificar",
+        "sensitiveActions": "Acciones sensibles",
+        "actions": {
+          "clientsDelete": "Eliminar / anonimizar clientes",
+          "teamManageAccess": "Invitar, activar y gestionar contraseñas",
+          "teamManageRoles": "Crear y editar roles",
+          "auditRead": "Ver el registro de actividad"
+        },
         "roleDescription": "Descripción",
         "sections": {
           "appointments": "Citas",
@@ -2513,8 +2529,36 @@
         "submitCreate": "Crear el rol",
         "submitEdit": "Guardar",
         "submitting": "Guardando…",
-        "systemBadge": "Sistema",
-        "write": "Escritura"
+        "systemBadge": "Sistema"
+      },
+      "journal": {
+        "searchPlaceholder": "Buscar en el registro…",
+        "allActions": "Todas las acciones",
+        "empty": "Ninguna actividad registrada.",
+        "footer": "{count, plural, one {# evento} other {# eventos}}",
+        "columns": {
+          "when": "Cuándo",
+          "who": "Quién",
+          "action": "Acción",
+          "target": "Objetivo"
+        },
+        "actions": {
+          "staff_created": "Personal creado",
+          "staff_updated": "Personal modificado",
+          "staff_archived": "Personal archivado",
+          "staff_restored": "Personal restaurado",
+          "staff_deleted": "Personal eliminado",
+          "staff_activated": "Cuenta activada",
+          "staff_password_reset": "Contraseña definida",
+          "staff_invited": "Invitación creada",
+          "invitation_resent": "Invitación reenviada",
+          "invitation_revoked": "Invitación anulada",
+          "role_created": "Rol creado",
+          "role_updated": "Rol modificado",
+          "role_deleted": "Rol eliminado",
+          "client_anonymized": "Cliente anonimizado",
+          "client_data_export": "Exportación de datos del cliente"
+        }
       },
       "schedules": {
         "addBlock": "Playa",
@@ -2544,6 +2588,7 @@
         "acces": "Acceso e invitaciones",
         "cabines": "Cabañas",
         "horaires": "Horarios",
+        "journal": "Registro",
         "personnel": "Personal",
         "roles": "Roles"
       }

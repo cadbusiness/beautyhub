@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   CLIENTS_LIST_PAGE_SIZE,
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
   const filter = parseFilter(params.get("filter"));
 
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const result = await fetchClientsListPage(supabase, session.tenant.id, {
       page: Number.isFinite(page) ? page : 1,

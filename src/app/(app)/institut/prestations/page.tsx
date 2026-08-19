@@ -1,4 +1,4 @@
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { ServicesManager } from "./services-manager";
 import type { ServiceRow } from "./service-dialog";
@@ -9,7 +9,7 @@ async function loadPrestationsData(): Promise<{
   categories: ServiceCategoryRow[];
 }> {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutAccess("services", "read");
     const supabase = await createClient();
 
     const [servicesRes, categoriesRes] = await Promise.all([

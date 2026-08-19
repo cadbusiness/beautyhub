@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
 
     const [{ count }, { data: sub }] = await Promise.all([

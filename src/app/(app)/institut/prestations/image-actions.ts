@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
 const BUCKET = "service-images";
@@ -27,7 +27,7 @@ export async function uploadServiceImage(
   serviceId: string,
   formData: FormData,
 ): Promise<{ error?: string; url?: string }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("services", "write");
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { error: "Fichier requis." };
@@ -72,7 +72,7 @@ export async function uploadServiceImage(
 }
 
 export async function removeServiceImage(serviceId: string): Promise<{ error?: string; ok?: boolean }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("services", "write");
   const supabase = await createClient();
 
   const { data: service } = await supabase

@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser, isPlatformAdmin } from "@/lib/auth/session";
 import { requireTeamSession, type TeamSession } from "@/lib/auth/team-session";
+import {
+  hasInstitutPermission,
+  inferInstitutPermissionFromPath,
+  type InstitutPermissionKey,
+  type PermissionLevelKind,
+} from "@/lib/institut/permissions";
 
 export type { TeamSession as TenantSession };
 
@@ -18,6 +24,30 @@ export async function requireModule(moduleId: string): Promise<TeamSession> {
   return session;
 }
 
+/** Garde module + droit institut (pages / server actions). */
+export async function requireInstitutAccess(
+  section: InstitutPermissionKey,
+  level: PermissionLevelKind = "read",
+): Promise<TeamSession> {
+  const session = await requireModule("institut");
+  if (!hasInstitutPermission(session, section, level)) {
+    redirect("/dashboard");
+  }
+  return session;
+}
+
+/** Garde API institut : infère la section depuis l'URL. */
+export async function requireInstitutApi(request: Request): Promise<TeamSession> {
+  const session = await requireModule("institut");
+  const inferred = inferInstitutPermissionFromPath(
+    new URL(request.url).pathname,
+    request.method,
+  );
+  if (inferred && !hasInstitutPermission(session, inferred.key, inferred.level)) {
+    redirect("/dashboard");
+  }
+  return session;
+}
 export interface PlatformSession {
   userId: string;
   email: string | null;

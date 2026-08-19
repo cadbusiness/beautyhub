@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import type { ServiceExtraConfig } from "@/lib/institut/service-extras";
 import {
@@ -14,7 +14,7 @@ import { loadServiceExtrasCatalog, loadServiceExtraLinks as loadServiceExtraLink
 export type { ServiceExtraLinkInput };
 
 export async function loadInstServiceExtras(serviceId: string): Promise<ServiceExtraConfig[]> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("services", "write");
   const supabase = await createClient();
   return loadServiceExtrasCatalog(supabase, session.tenant.id, serviceId);
 }
@@ -22,7 +22,7 @@ export async function loadInstServiceExtras(serviceId: string): Promise<ServiceE
 export async function loadServiceExtraLinks(
   serviceId: string,
 ): Promise<ServiceExtraLinkInput[]> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("services", "write");
   const supabase = await createClient();
   return loadServiceExtraLinksQuery(supabase, session.tenant.id, serviceId);
 }
@@ -32,7 +32,7 @@ export async function saveServiceExtras(
   links: ServiceExtraLinkInput[],
   extrasStepPosition: "before_time" | "after_time",
 ): Promise<{ error?: string; ok?: boolean }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("services", "write");
   const supabase = await createClient();
 
   const err = await persistServiceExtras(

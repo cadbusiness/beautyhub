@@ -1,6 +1,6 @@
 import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { isPreviousCalendarDay, toDateTimeLocalValue } from "@/lib/date";
 import { getPosSettings } from "@/lib/institut/pos-settings";
@@ -19,7 +19,7 @@ import { PauseResumeButton } from "./pause-resume-button";
 export default async function CaisseSessionPage() {
   const t = await getTranslations("pos.session");
   const format = await getFormatter();
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "read");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 

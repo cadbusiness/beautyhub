@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import { formatPrice } from "@/lib/utils";
@@ -17,7 +17,7 @@ export default async function SoldePage({
   const { id } = await params;
   const t = await getTranslations("pos.balance");
   const tHistory = await getTranslations("pos.history");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "read");
   const supabase = await createClient();
 
   const [{ data: sale }, settings] = await Promise.all([

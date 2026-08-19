@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { todayDateString } from "@/lib/date";
 import { fetchAppointmentsInRange, serializeCalendarAppointments } from "@/lib/institut/slots";
@@ -18,7 +18,7 @@ export default async function RendezVousPage({
 }: {
   searchParams: Promise<{ view?: string }>;
 }) {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "read");
   const params = await searchParams;
   const view = params.view === "liste" ? "liste" : "calendrier";
   const tenantId = session.tenant.id;

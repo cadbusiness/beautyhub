@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { provisionStaffAccount } from "@/lib/institut/team-provision";
 
 export interface InviteResult {
   error?: string;
@@ -46,57 +47,24 @@ export async function acceptTeamInvitation(
     return { error: t("invalidCredentials") };
   }
 
-  const { data: existingUsers } = await db.auth.admin.listUsers();
-  const existing = existingUsers.users.find((u) => u.email?.toLowerCase() === email);
-
-  let userId: string;
-  if (existing) {
-    userId = existing.id;
-  } else {
-    const { data: created, error: createErr } = await db.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name: fullName },
-    });
-    if (createErr || !created.user) {
-      return { error: createErr?.message ?? t("accountCreateError") };
-    }
-    userId = created.user.id;
-  }
-
-  await db.from("team_profiles").upsert({
-    user_id: userId,
-    full_name: fullName,
+  const result = await provisionStaffAccount(db, {
+    tenantId: invitation.tenant_id,
+    email,
+    password,
+    fullName,
+    staffId: invitation.staff_id,
+    tenantRoleId: invitation.tenant_role_id,
+    membershipRole:
+      invitation.membership_role === "tenant_owner" || invitation.membership_role === "coach"
+        ? invitation.membership_role
+        : "staff",
+    updatePassword: false,
+    invitationId: invitation.id,
   });
 
-  const { data: existingMembership } = await db
-    .from("memberships")
-    .select("id")
-    .eq("tenant_id", invitation.tenant_id)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (!existingMembership) {
-    await db.from("memberships").insert({
-      tenant_id: invitation.tenant_id,
-      user_id: userId,
-      role: invitation.membership_role,
-      tenant_role_id: invitation.tenant_role_id,
-    });
+  if (!result.ok) {
+    return { error: result.error === "account_create_failed" ? t("accountCreateError") : result.error };
   }
-
-  if (invitation.staff_id) {
-    await db
-      .from("inst_staff")
-      .update({ user_id: userId })
-      .eq("id", invitation.staff_id);
-  }
-
-  await db
-    .from("team_invitations")
-    .update({ status: "accepted", accepted_at: new Date().toISOString() })
-    .eq("id", invitation.id);
 
   redirect("/login?joined=1");
 }

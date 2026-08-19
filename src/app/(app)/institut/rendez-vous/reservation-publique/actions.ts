@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { getTenantPublicBaseUrl } from "@/lib/tenant/public-site";
 import {
@@ -40,7 +40,7 @@ export async function loadBookingFlowsAdmin(): Promise<{
   flows: BookingFlowRow[];
   publicBaseUrl: string;
 }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "write");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("inst_booking_flows")
@@ -60,7 +60,7 @@ export async function loadBookingFlowsAdmin(): Promise<{
 }
 
 export async function saveBookingFlow(formData: FormData): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "write");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
@@ -110,7 +110,7 @@ export async function saveBookingFlow(formData: FormData): Promise<ActionResult>
 }
 
 export async function deleteBookingFlow(formData: FormData): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "write");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return { error: "id_required" };
@@ -136,7 +136,7 @@ export async function deleteBookingFlow(formData: FormData): Promise<ActionResul
 }
 
 export async function setDefaultBookingFlow(formData: FormData): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "write");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return { error: "id_required" };

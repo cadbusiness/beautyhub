@@ -10,6 +10,7 @@ import { getAppShellData } from "@/lib/auth/team-session";
 import { ensureDefaultTenant } from "@/lib/tenant/ensure";
 import { navMessageKey } from "@/lib/i18n/nav";
 import { getAiActionsFor, getNavGroupsFor } from "@/modules";
+import { hasInstitutPermission } from "@/lib/institut/permissions";
 import { AppHeader } from "@/components/app-shell/app-header";
 import { AppFooter } from "@/components/app-shell/app-footer";
 import { AppSidebar } from "@/components/app-shell/app-sidebar";
@@ -32,7 +33,11 @@ export default async function AppLayout({
   const t = await getTranslations("shell");
   const tNav = await getTranslations("nav");
   const posIsPreviousDay = Boolean(posSession?.is_previous_day);
-  const navGroups = getNavGroupsFor(session.enabledModuleIds, session.role).map(
+  const navGroups = getNavGroupsFor(
+    session.enabledModuleIds,
+    session.role,
+    session.permissions,
+  ).map(
     (group) => ({
       ...group,
       items: group.items.map((item) => {
@@ -43,14 +48,17 @@ export default async function AppLayout({
     }),
   );
   const institutEnabled = session.enabledModuleIds.includes("institut");
-  const posCaisseHref = institutEnabled ? "/institut/caisse" : undefined;
-  const posSessionState = institutEnabled
-    ? posSession
-      ? posIsPreviousDay
-        ? "stale"
-        : "open"
-      : "closed"
-    : undefined;
+  const canSeePos = hasInstitutPermission(session, "pos", "read");
+  const posCaisseHref =
+    institutEnabled && canSeePos ? "/institut/caisse" : undefined;
+  const posSessionState =
+    institutEnabled && canSeePos
+      ? posSession
+        ? posIsPreviousDay
+          ? "stale"
+          : "open"
+        : "closed"
+      : undefined;
   const profile = await getTeamProfile();
   const displayName = profileDisplayName(profile, user.email ?? null);
   const initial = profileInitial(displayName);

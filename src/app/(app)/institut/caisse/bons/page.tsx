@@ -1,10 +1,10 @@
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import { VouchersManager, type UnifiedVoucherRow } from "./vouchers-manager";
 
 export default async function CaisseBonsPage() {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "read");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 

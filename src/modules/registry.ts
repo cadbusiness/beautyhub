@@ -1,4 +1,8 @@
 import type { AIAction, ModuleId, ModuleManifest, ModuleNavItem, TeamRole } from "./types";
+import {
+  hasInstitutPermission,
+  type InstitutPermissions,
+} from "@/lib/institut/permissions";
 
 const ROLE_RANK: Record<TeamRole, number> = {
   staff: 1,
@@ -61,23 +65,39 @@ export type NavGroup = {
 };
 
 /** Entrees de navigation pour les modules actives, filtrees par role. */
-export function getNavFor(enabledModuleIds: ModuleId[], role: TeamRole) {
-  return getNavGroupsFor(enabledModuleIds, role).flatMap((g) => g.items);
+export function getNavFor(
+  enabledModuleIds: ModuleId[],
+  role: TeamRole,
+  permissions?: InstitutPermissions,
+) {
+  return getNavGroupsFor(enabledModuleIds, role, permissions).flatMap((g) => g.items);
 }
 
 /** Navigation groupee par module (sidebar). */
 export function getNavGroupsFor(
   enabledModuleIds: ModuleId[],
   role: TeamRole,
+  permissions?: InstitutPermissions,
 ): NavGroup[] {
   const enabled = new Set(enabledModuleIds);
+  const holder = { role, permissions: permissions ?? {} };
   return getAllModules()
     .filter((m) => enabled.has(m.id))
     .map((m) => ({
       moduleId: m.id,
       moduleName: m.name,
       items: (m.nav ?? [])
-        .filter((item) => !item.roles || item.roles.includes(role))
+        .filter((item) => {
+          if (item.permission) {
+            return hasInstitutPermission(
+              holder,
+              item.permission.key,
+              item.permission.level ?? "read",
+            );
+          }
+          if (item.roles) return item.roles.includes(role);
+          return true;
+        })
         .map((item) => ({ ...item, moduleId: m.id })),
     }))
     .filter((g) => g.items.length > 0);

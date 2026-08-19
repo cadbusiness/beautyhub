@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { fetchExistingBooklyCatalog } from "@/lib/institut/service-import/bookly-csv";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const existing = await fetchExistingBooklyCatalog(supabase, session.tenant.id);
     return NextResponse.json({

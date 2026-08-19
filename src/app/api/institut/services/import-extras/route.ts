@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   fetchExistingExtrasCatalog,
@@ -42,9 +42,9 @@ function toRow(input: unknown): BooklyExtraCsvRow | null {
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const existing = await fetchExistingExtrasCatalog(supabase, session.tenant.id);
     return NextResponse.json(existing);
@@ -66,7 +66,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
 
     let body: { rows?: unknown };

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { loadServiceExtrasCatalog } from "@/lib/institut/service-extras-load";
 
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const catalog = await loadServiceExtrasCatalog(supabase, session.tenant.id, serviceId);
     return NextResponse.json(catalog);

@@ -26,6 +26,7 @@ import {
   type InstitutPermissions,
   type TenantRole,
 } from "@/lib/institut/team-access";
+import { INSTITUT_PERMISSION_ACTIONS } from "@/lib/institut/permissions";
 
 const initial: ActionResult = {};
 
@@ -69,6 +70,19 @@ function PermissionCheckboxes({
             {t("write")}
           </label>
         </div>
+      ))}
+      <p className="pt-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+        {t("sensitiveActions")}
+      </p>
+      {INSTITUT_PERMISSION_ACTIONS.map((action) => (
+        <label key={action.key} className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name={`perm_action_${action.key.replaceAll(".", "_")}`}
+            defaultChecked={Boolean(permissions?.[action.key]?.write || permissions?.[action.key]?.read)}
+          />
+          {t(`actions.${action.labelKey}`)}
+        </label>
       ))}
     </div>
   );
@@ -130,7 +144,13 @@ function RoleForm({
   );
 }
 
-export function TeamRolesPanel({ roles }: { roles: TenantRole[] }) {
+export function TeamRolesPanel({
+  roles,
+  canManage = false,
+}: {
+  roles: TenantRole[];
+  canManage?: boolean;
+}) {
   const t = useTranslations("institut.team.roles");
   const tCommon = useTranslations("common");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -150,9 +170,11 @@ export function TeamRolesPanel({ roles }: { roles: TenantRole[] }) {
     <>
       <ListToolbar
         action={
-          <Button onClick={openCreate} className="h-9 shrink-0">
-            + {t("create")}
-          </Button>
+          canManage ? (
+            <Button onClick={openCreate} className="h-9 shrink-0">
+              + {t("create")}
+            </Button>
+          ) : null
         }
       >
         <p className="text-sm text-slate-600">{t("description")}</p>
@@ -184,14 +206,16 @@ export function TeamRolesPanel({ roles }: { roles: TenantRole[] }) {
                   </td>
                   <td className={`text-right ${dataTableCell}`}>
                     <RowActions className="justify-end">
-                      <RowActionButton
-                        type="button"
-                        onClick={() => openEdit(role)}
-                        icon={<Pencil className="h-3.5 w-3.5" />}
-                      >
-                        {t("edit")}
-                      </RowActionButton>
-                      {!role.is_system ? (
+                      {canManage ? (
+                        <RowActionButton
+                          type="button"
+                          onClick={() => openEdit(role)}
+                          icon={<Pencil className="h-3.5 w-3.5" />}
+                        >
+                          {t("edit")}
+                        </RowActionButton>
+                      ) : null}
+                      {canManage && !role.is_system ? (
                         <form action={deleteTenantRole}>
                           <input type="hidden" name="role_id" value={role.id} />
                           <RowActionButton

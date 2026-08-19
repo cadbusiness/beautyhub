@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   DataTable,
@@ -29,7 +29,7 @@ export default async function CaisseVentesPage({
   const t = await getTranslations("pos.sales");
   const tCommon = await getTranslations("common");
   const format = await getFormatter();
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "read");
   const supabase = await createClient();
   const params = await searchParams;
   const period = parseHistoryPeriod(params.period);

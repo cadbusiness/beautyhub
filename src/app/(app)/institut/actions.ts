@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/db/database.types";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess, requireModule } from "@/lib/auth/guards";
+import { hasInstitutPermission } from "@/lib/institut/permissions";
+import { logInstitutAudit } from "@/lib/institut/team-audit";
+import {
+  generateTempPassword,
+  provisionStaffAccount,
+} from "@/lib/institut/team-provision";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
 import { translateQuotaError } from "@/lib/i18n/quota";
 import { weekdayMessageKey } from "@/lib/i18n/nav";
@@ -106,7 +112,7 @@ export async function createServiceCategory(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("services", "write");
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: t("nameRequired") };
 
@@ -128,7 +134,7 @@ export async function updateServiceCategory(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  await requireModule("institut");
+  await requireInstitutAccess("services", "write");
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   if (!id || !name) return { error: t("nameRequired") };
@@ -146,7 +152,7 @@ export async function updateServiceCategory(
 }
 
 export async function deleteServiceCategory(formData: FormData): Promise<void> {
-  await requireModule("institut");
+  await requireInstitutAccess("services", "write");
   const supabase = await createClient();
   await supabase
     .from("inst_service_categories")
@@ -160,7 +166,7 @@ export async function createService(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("services", "write");
   const parsed = await parseServiceForm(formData);
   if ("error" in parsed) return { error: parsed.error };
 
@@ -221,7 +227,7 @@ export async function updateService(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  await requireModule("institut");
+  await requireInstitutAccess("services", "write");
   const id = String(formData.get("id") ?? "");
   if (!id) return { error: t("serviceNotFound") };
 
@@ -238,7 +244,7 @@ export async function updateService(
 
 export async function deleteService(formData: FormData): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  await requireModule("institut");
+  await requireInstitutAccess("services", "write");
   const id = String(formData.get("id") ?? "");
   if (!id) return { error: t("serviceNotFound") };
 
@@ -263,7 +269,7 @@ export async function createClientRecord(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("clients", "write");
   try {
     await assertQuota(session.tenant.id, "clients");
   } catch (e) {
@@ -326,7 +332,7 @@ export async function regenerateClientPinAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("clients", "write");
   const clientId = String(formData.get("client_id") ?? "").trim();
   if (!clientId) return { error: t("missingFields") };
 
@@ -348,7 +354,7 @@ export async function updateClientRecord(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("clients", "write");
   const clientId = String(formData.get("client_id") ?? "").trim();
   if (!clientId) return { error: t("missingFields") };
 
@@ -435,7 +441,7 @@ export async function createAppointment(
   formData: FormData,
 ): Promise<ActionResult> {
   const { actions, scheduling } = await appointmentMessages();
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "write");
   const supabase = await createClient();
   const startsAtRaw = String(formData.get("starts_at") ?? "");
   if (!startsAtRaw) {
@@ -499,7 +505,7 @@ export async function updateAppointment(
   formData: FormData,
 ): Promise<ActionResult> {
   const { actions, scheduling } = await appointmentMessages();
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "write");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
   const serviceId = String(formData.get("service_id") ?? "");
@@ -604,7 +610,7 @@ export async function updateAppointment(
 }
 
 export async function cancelAppointment(formData: FormData): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "write");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
   const scope = String(formData.get("cancel_scope") ?? "one") === "future" ? "future" : "one";
@@ -615,7 +621,7 @@ export async function cancelAppointment(formData: FormData): Promise<ActionResul
 }
 
 export async function updateAppointmentDetails(formData: FormData): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "write");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
   const newStatus = String(formData.get("status"));
@@ -651,7 +657,7 @@ export async function updateAppointmentDetails(formData: FormData): Promise<Acti
 
 export async function moveAppointment(formData: FormData): Promise<ActionResult> {
   const { scheduling } = await appointmentMessages();
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("appointments", "write");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "");
   const startsAt = new Date(String(formData.get("starts_at")));
@@ -711,7 +717,7 @@ export async function getCalendarAppointments(
   rangeEnd: string,
 ): Promise<CalendarAppointmentsResult> {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutAccess("appointments", "read");
     const supabase = await createClient();
     const appointments = await fetchAppointmentsInRange(
       supabase,
@@ -734,7 +740,7 @@ function isNextNavigationError(error: unknown): boolean {
 }
 
 export async function setAppointmentStatus(formData: FormData): Promise<void> {
-  await requireModule("institut");
+  await requireInstitutAccess("appointments", "write");
   const supabase = await createClient();
   await supabase
     .from("inst_appointments")
@@ -751,6 +757,9 @@ export async function createStaffMember(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
+  if (!hasInstitutPermission(session, "team", "write")) {
+    return { error: t("forbidden") };
+  }
   try {
     await assertQuota(session.tenant.id, "staff");
   } catch (e) {
@@ -773,6 +782,12 @@ export async function createStaffMember(
     .select("id")
     .single();
   if (error) return { error: error.message };
+  await logInstitutAudit(supabase, session, {
+    action: "staff.created",
+    resourceType: "staff",
+    resourceId: data.id,
+    metadata: { full_name: fullName },
+  });
   revalidatePath("/institut/equipe");
   revalidatePath("/institut/rendez-vous");
   return { ok: true, staffId: data.id };
@@ -784,6 +799,9 @@ export async function updateStaffMember(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
+  if (!hasInstitutPermission(session, "team", "write")) {
+    return { error: t("forbidden") };
+  }
   const id = String(formData.get("id") ?? "").trim();
   const fullName = String(formData.get("full_name") ?? "").trim();
   if (!id || !fullName) return { error: t("missingFields") };
@@ -812,8 +830,15 @@ export async function updateStaffMember(
   if (error) return { error: error.message };
 
   if (tenantRoleId) {
+    let membershipClient = supabase;
+    try {
+      const { createServiceClient } = await import("@/lib/supabase/service");
+      membershipClient = createServiceClient();
+    } catch {
+      membershipClient = supabase;
+    }
     if (staff.user_id) {
-      await supabase
+      await membershipClient
         .from("memberships")
         .update({ tenant_role_id: tenantRoleId })
         .eq("tenant_id", session.tenant.id)
@@ -849,15 +874,15 @@ export async function updateStaffMember(
     }
   }
 
+  await logInstitutAudit(supabase, session, {
+    action: tenantRoleId ? "staff.updated" : "staff.updated",
+    resourceType: "staff",
+    resourceId: id,
+    metadata: { full_name: fullName, tenant_role_id: tenantRoleId },
+  });
   revalidatePath("/institut/equipe");
   revalidatePath("/institut/rendez-vous");
   return { ok: true };
-}
-
-function generateTempPassword(length = 12): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(length));
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
 }
 
 export async function resetStaffPassword(
@@ -866,7 +891,7 @@ export async function resetStaffPassword(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
-  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+  if (!hasInstitutPermission(session, "team.manage_access", "write")) {
     return { error: t("teamInviteForbidden") };
   }
 
@@ -876,7 +901,7 @@ export async function resetStaffPassword(
   const supabase = await createClient();
   const { data: staff } = await supabase
     .from("inst_staff")
-    .select("id, user_id")
+    .select("id, user_id, full_name")
     .eq("tenant_id", session.tenant.id)
     .eq("id", staffId)
     .maybeSingle();
@@ -890,11 +915,88 @@ export async function resetStaffPassword(
     return { error: t("serverConfigIncomplete") };
   }
 
-  const temporaryPassword = generateTempPassword();
+  const chosen = String(formData.get("password") ?? "");
+  const temporaryPassword =
+    chosen.length >= 8 ? chosen : generateTempPassword();
+  if (chosen && chosen.length < 8) return { error: t("passwordMinLength") };
+
   const { error } = await service.auth.admin.updateUserById(staff.user_id, {
     password: temporaryPassword,
   });
   if (error) return { error: error.message };
+
+  await logInstitutAudit(supabase, session, {
+    action: "staff.password_reset",
+    resourceType: "staff",
+    resourceId: staffId,
+    metadata: { full_name: staff.full_name },
+  });
+
+  revalidatePath("/institut/equipe");
+  return { ok: true, temporaryPassword };
+}
+
+export async function activateStaffAccount(
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  const t = await getTranslations("institut.actions");
+  const session = await requireModule("institut");
+  if (!hasInstitutPermission(session, "team.manage_access", "write")) {
+    return { error: t("teamInviteForbidden") };
+  }
+
+  const staffId = String(formData.get("staff_id") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const tenantRoleId = String(formData.get("tenant_role_id") ?? "").trim() || null;
+  const chosen = String(formData.get("password") ?? "");
+  if (!staffId) return { error: t("missingFields") };
+  if (!email) return { error: t("staffEmailRequired") };
+  if (chosen && chosen.length < 8) return { error: t("passwordMinLength") };
+
+  const supabase = await createClient();
+  const { data: staff } = await supabase
+    .from("inst_staff")
+    .select("id, full_name, user_id")
+    .eq("tenant_id", session.tenant.id)
+    .eq("id", staffId)
+    .maybeSingle();
+  if (!staff) return { error: t("staffNotFound") };
+  if (staff.user_id) return { error: t("accountAlreadyExists") };
+
+  let service;
+  try {
+    const { createServiceClient } = await import("@/lib/supabase/service");
+    service = createServiceClient();
+  } catch {
+    return { error: t("serverConfigIncomplete") };
+  }
+
+  const temporaryPassword = chosen.length >= 8 ? chosen : generateTempPassword();
+  const result = await provisionStaffAccount(service, {
+    tenantId: session.tenant.id,
+    email,
+    password: temporaryPassword,
+    fullName: staff.full_name,
+    staffId,
+    tenantRoleId,
+    updatePassword: true,
+  });
+  if (!result.ok) {
+    return {
+      error:
+        result.error === "account_create_failed"
+          ? t("accountCreateError")
+          : result.error,
+    };
+  }
+
+  await logInstitutAudit(supabase, session, {
+    action: "staff.activated",
+    resourceType: "staff",
+    resourceId: staffId,
+    metadata: { email, full_name: staff.full_name },
+  });
 
   revalidatePath("/institut/equipe");
   return { ok: true, temporaryPassword };
@@ -906,7 +1008,7 @@ export async function inviteTeamMember(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
-  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+  if (!hasInstitutPermission(session, "team.manage_access", "write")) {
     return { error: t("teamInviteForbidden") };
   }
 
@@ -942,12 +1044,19 @@ export async function inviteTeamMember(
   });
   if (error) return { error: error.message };
 
+  await logInstitutAudit(supabase, session, {
+    action: "staff.invited",
+    resourceType: "invitation",
+    metadata: { email, staff_id: staffId },
+  });
+
   revalidatePath("/institut/equipe");
   return { ok: true };
 }
 
 export async function resendTeamInvitation(formData: FormData): Promise<void> {
   const session = await requireModule("institut");
+  if (!hasInstitutPermission(session, "team.manage_access", "write")) return;
   const id = String(formData.get("invitation_id") ?? "").trim();
   if (!id) return;
 
@@ -962,17 +1071,29 @@ export async function resendTeamInvitation(formData: FormData): Promise<void> {
     })
     .eq("tenant_id", session.tenant.id)
     .eq("id", id);
+  await logInstitutAudit(supabase, session, {
+    action: "invitation.resent",
+    resourceType: "invitation",
+    resourceId: id,
+  });
   revalidatePath("/institut/equipe");
 }
 
 export async function revokeTeamInvitation(formData: FormData): Promise<void> {
   const session = await requireModule("institut");
+  if (!hasInstitutPermission(session, "team.manage_access", "write")) return;
   const supabase = await createClient();
+  const invitationId = String(formData.get("invitation_id"));
   await supabase
     .from("team_invitations")
     .update({ status: "revoked" })
     .eq("tenant_id", session.tenant.id)
-    .eq("id", String(formData.get("invitation_id")));
+    .eq("id", invitationId);
+  await logInstitutAudit(supabase, session, {
+    action: "invitation.revoked",
+    resourceType: "invitation",
+    resourceId: invitationId,
+  });
   revalidatePath("/institut/equipe");
 }
 
@@ -982,7 +1103,7 @@ export async function createTenantRole(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
-  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+  if (!hasInstitutPermission(session, "team.manage_roles", "write")) {
     return { error: t("teamRoleForbidden") };
   }
 
@@ -1002,6 +1123,11 @@ export async function createTenantRole(
   if (error) {
     return { error: error.code === "23505" ? t("teamRoleSlugTaken") : error.message };
   }
+  await logInstitutAudit(supabase, session, {
+    action: "role.created",
+    resourceType: "role",
+    metadata: { name },
+  });
   revalidatePath("/institut/equipe");
   return { ok: true };
 }
@@ -1012,7 +1138,7 @@ export async function updateTenantRole(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
-  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+  if (!hasInstitutPermission(session, "team.manage_roles", "write")) {
     return { error: t("teamRoleForbidden") };
   }
 
@@ -1042,19 +1168,32 @@ export async function updateTenantRole(
     .eq("tenant_id", session.tenant.id)
     .eq("id", id);
   if (error) return { error: error.message };
+  await logInstitutAudit(supabase, session, {
+    action: "role.updated",
+    resourceType: "role",
+    resourceId: id,
+    metadata: { name },
+  });
   revalidatePath("/institut/equipe");
   return { ok: true };
 }
 
 export async function deleteTenantRole(formData: FormData): Promise<void> {
   const session = await requireModule("institut");
+  if (!hasInstitutPermission(session, "team.manage_roles", "write")) return;
   const supabase = await createClient();
+  const roleId = String(formData.get("role_id"));
   await supabase
     .from("tenant_roles")
     .delete()
     .eq("tenant_id", session.tenant.id)
-    .eq("id", String(formData.get("role_id")))
+    .eq("id", roleId)
     .eq("is_system", false);
+  await logInstitutAudit(supabase, session, {
+    action: "role.deleted",
+    resourceType: "role",
+    resourceId: roleId,
+  });
   revalidatePath("/institut/equipe");
 }
 
@@ -1064,7 +1203,7 @@ export async function archiveStaffMember(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
-  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+  if (!hasInstitutPermission(session, "team.manage_access", "write")) {
     return { error: t("teamInviteForbidden") };
   }
 
@@ -1108,11 +1247,20 @@ export async function archiveStaffMember(
 
   if (revokeAccess) {
     if (staff.user_id) {
-      await supabase
-        .from("memberships")
-        .delete()
-        .eq("tenant_id", session.tenant.id)
-        .eq("user_id", staff.user_id);
+      try {
+        const { createServiceClient } = await import("@/lib/supabase/service");
+        await createServiceClient()
+          .from("memberships")
+          .delete()
+          .eq("tenant_id", session.tenant.id)
+          .eq("user_id", staff.user_id);
+      } catch {
+        await supabase
+          .from("memberships")
+          .delete()
+          .eq("tenant_id", session.tenant.id)
+          .eq("user_id", staff.user_id);
+      }
     }
     await supabase
       .from("team_invitations")
@@ -1129,6 +1277,13 @@ export async function archiveStaffMember(
     .eq("id", id);
   if (error) return { error: error.message };
 
+  await logInstitutAudit(supabase, session, {
+    action: "staff.archived",
+    resourceType: "staff",
+    resourceId: id,
+    metadata: { revoke_access: revokeAccess, reassign_to: reassignTo },
+  });
+
   revalidatePath("/institut/equipe");
   revalidatePath("/institut/rendez-vous");
   revalidatePath("/institut/caisse");
@@ -1141,7 +1296,7 @@ export async function restoreStaffMember(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
-  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+  if (!hasInstitutPermission(session, "team.manage_access", "write")) {
     return { error: t("teamInviteForbidden") };
   }
 
@@ -1163,6 +1318,12 @@ export async function restoreStaffMember(
     .eq("id", id);
   if (error) return { error: error.message };
 
+  await logInstitutAudit(supabase, session, {
+    action: "staff.restored",
+    resourceType: "staff",
+    resourceId: id,
+  });
+
   revalidatePath("/institut/equipe");
   revalidatePath("/institut/rendez-vous");
   revalidatePath("/institut/caisse");
@@ -1175,7 +1336,7 @@ export async function deleteStaffMember(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const session = await requireModule("institut");
-  if (session.role !== "tenant_owner" && session.role !== "platform_admin") {
+  if (!hasInstitutPermission(session, "team.manage_access", "write")) {
     return { error: t("teamInviteForbidden") };
   }
 
@@ -1218,6 +1379,12 @@ export async function deleteStaffMember(
     .eq("id", id);
   if (error) return { error: error.message };
 
+  await logInstitutAudit(supabase, session, {
+    action: "staff.deleted",
+    resourceType: "staff",
+    resourceId: id,
+  });
+
   revalidatePath("/institut/equipe");
   revalidatePath("/institut/rendez-vous");
   revalidatePath("/institut/caisse");
@@ -1231,7 +1398,7 @@ export async function createResource(
   formData: FormData,
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: t("nameRequired") };
   const kind = String(formData.get("kind") ?? "cabin") === "event" ? "event" : "cabin";
@@ -1248,7 +1415,7 @@ export async function createResource(
 }
 
 export async function deleteResource(formData: FormData): Promise<void> {
-  await requireModule("institut");
+  await requireInstitutAccess("team", "write");
   const supabase = await createClient();
   await supabase.from("inst_resources").delete().eq("id", String(formData.get("id")));
   revalidatePath("/institut/equipe");
@@ -1262,7 +1429,7 @@ export async function saveWorkingHours(
 ): Promise<ActionResult> {
   const t = await getTranslations("institut.actions");
   const tWeekdays = await getTranslations("weekdays");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 

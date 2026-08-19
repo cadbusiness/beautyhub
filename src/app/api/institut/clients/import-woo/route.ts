@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { assertQuota, QuotaExceededError } from "@/lib/quota";
 import { translateQuotaError } from "@/lib/i18n/quota";
@@ -53,9 +53,9 @@ function customerAsDedupInput(customer: WooCustomer, tenantId: string) {
  * un `warning`. L'UI peut ainsi proposer un « Continuer sans compter » et lancer
  * les POST de pagination sans dépendre du total connu.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     // Utilise le client user-authenticated (RLS via `connections_access`)
     // pour éviter de dépendre de SUPABASE_SERVICE_ROLE_KEY côté import.
     const supabase = await createClient();
@@ -101,7 +101,7 @@ export async function GET() {
  * hasMore, created, matched, errors, quotaBlocked }`.
  */
 export async function POST(request: Request) {
-  const session = await requireModule("institut");
+  const session = await requireInstitutApi(request);
   const supabase = await createClient();
   const creds = await getWooCredentialsForTenant(session.tenant.id, supabase);
   if (!creds) {

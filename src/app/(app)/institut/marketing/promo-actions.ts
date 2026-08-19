@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { PromoAdminError, deletePromoRecord, savePromoRecord } from "@/lib/institut/promos-admin";
 
@@ -58,7 +58,7 @@ export async function savePromo(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const t = await getTranslations("institut.marketing.promos.actions");
 
@@ -102,7 +102,7 @@ export async function savePromo(
 }
 
 export async function deletePromo(formData: FormData): Promise<void> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return;

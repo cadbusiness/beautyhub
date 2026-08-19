@@ -23,9 +23,11 @@ function inviteUrl(token: string): string {
 export function TeamAccessPanel({
   members,
   invitations,
+  canManageAccess = false,
 }: {
   members: TeamMember[];
   invitations: TeamInvitation[];
+  canManageAccess?: boolean;
 }) {
   const t = useTranslations("institut.team.access");
   const tCommon = useTranslations("common");
@@ -100,6 +102,7 @@ export function TeamAccessPanel({
                     {formatDateTime(inv.expires_at)}
                   </td>
                   <td className={`text-right ${dataTableCellCompact}`}>
+                    {canManageAccess ? (
                     <RowActions>
                       <RowActionButton
                         type="button"
@@ -121,6 +124,7 @@ export function TeamAccessPanel({
                         </RowActionButton>
                       </form>
                     </RowActions>
+                    ) : null}
                   </td>
                 </tr>
               ))}

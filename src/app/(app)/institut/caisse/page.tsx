@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { canManageInstitutSettings } from "@/lib/auth/institut-settings";
 import { createClient } from "@/lib/supabase/server";
 import { getTenantConnectionStatus } from "@/lib/connections";
@@ -26,7 +26,7 @@ export default async function CaissePage({
 }) {
   const t = await getTranslations("institut.pos");
   const { appointment: initialAppointmentId } = await searchParams;
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "read");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 

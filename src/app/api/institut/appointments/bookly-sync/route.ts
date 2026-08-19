@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import {
   disableBooklySync,
   enableBooklySync,
@@ -10,9 +10,9 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const status = await getBooklySyncStatus(session.tenant.id);
     return NextResponse.json(status);
   } catch (error) {
@@ -32,7 +32,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     let body: { action?: string } = {};
     try {
       body = (await request.json()) as { action?: string };

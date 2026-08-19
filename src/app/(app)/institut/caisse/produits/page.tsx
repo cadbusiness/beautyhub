@@ -1,11 +1,11 @@
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import { listProductCategories } from "@/lib/institut/internal-products";
 import { ProductsManager } from "./products-manager";
 
 export default async function CaisseProduitsPage() {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "read");
   const supabase = await createClient();
   const [{ data: products }, settings, categories] = await Promise.all([
     supabase

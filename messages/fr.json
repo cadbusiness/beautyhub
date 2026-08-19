@@ -1796,11 +1796,13 @@
         "personnel": "Personnel",
         "acces": "Accès & invitations",
         "roles": "Rôles",
+        "journal": "Journal",
         "cabines": "Cabines",
         "horaires": "Horaires"
       },
       "personnel": {
         "add": "Ajouter du personnel",
+        "manageRoles": "Régler les rôles",
         "searchPlaceholder": "Recherche personnel…",
         "empty": "Aucun membre du personnel.",
         "emptyArchived": "Aucun membre archivé.",
@@ -1857,14 +1859,21 @@
           "colorOptional": "Couleur (optionnel)",
           "role": "Rôle",
           "accessSection": "Accès application",
-          "inviteHint": "Créez une invitation pour donner accès à l’espace institut.",
+          "inviteHint": "Ou créez une invitation pour que le membre choisisse son mot de passe.",
           "openInviteDialog": "Invitation détaillée",
           "resendInvite": "Renvoyer l’invitation",
           "resending": "Renvoi…",
           "linkCopied": "Lien copié",
+          "activateHint": "Activez le compte vous-même et communiquez le mot de passe. Il n’est affiché qu’une fois.",
+          "activateAccount": "Activer le compte",
+          "activateSubmitting": "Activation…",
+          "generatePassword": "Générer",
+          "passwordLabel": "Mot de passe",
+          "passwordPlaceholder": "Laisser vide pour générer",
+          "savePassword": "Enregistrer le mot de passe",
           "resetPassword": "Régénérer le mot de passe",
-          "resetPasswordSubmitting": "Génération…",
-          "resetPasswordHint": "Génère un mot de passe temporaire à communiquer au membre. L’envoi par email arrive bientôt.",
+          "resetPasswordSubmitting": "Enregistrement…",
+          "resetPasswordHint": "Définissez un mot de passe ou générez-en un. Il s’affiche une seule fois, il n’est jamais stocké en clair.",
           "tempPasswordLabel": "Mot de passe temporaire (à copier maintenant)",
           "copyPassword": "Copier",
           "avatar": {
@@ -1925,8 +1934,15 @@
         },
         "permissions": "Permissions",
         "fullAccess": "Accès complet",
-        "read": "Lecture",
-        "write": "Écriture",
+        "read": "Voir",
+        "write": "Modifier",
+        "sensitiveActions": "Actions sensibles",
+        "actions": {
+          "clientsDelete": "Supprimer / anonymiser des clients",
+          "teamManageAccess": "Inviter, activer et gérer les mots de passe",
+          "teamManageRoles": "Créer et modifier les rôles",
+          "auditRead": "Voir le journal d’activité"
+        },
         "submitCreate": "Créer le rôle",
         "submitEdit": "Enregistrer",
         "submitting": "Enregistrement…",
@@ -1938,6 +1954,35 @@
           "team": "Équipe",
           "pos": "Caisse",
           "marketing": "Marketing"
+        }
+      },
+      "journal": {
+        "searchPlaceholder": "Recherche dans le journal…",
+        "allActions": "Toutes les actions",
+        "empty": "Aucune activité enregistrée.",
+        "footer": "{count, plural, one {# événement} other {# événements}}",
+        "columns": {
+          "when": "Quand",
+          "who": "Qui",
+          "action": "Action",
+          "target": "Cible"
+        },
+        "actions": {
+          "staff_created": "Personnel créé",
+          "staff_updated": "Personnel modifié",
+          "staff_archived": "Personnel archivé",
+          "staff_restored": "Personnel restauré",
+          "staff_deleted": "Personnel supprimé",
+          "staff_activated": "Compte activé",
+          "staff_password_reset": "Mot de passe défini",
+          "staff_invited": "Invitation créée",
+          "invitation_resent": "Invitation renouvelée",
+          "invitation_revoked": "Invitation annulée",
+          "role_created": "Rôle créé",
+          "role_updated": "Rôle modifié",
+          "role_deleted": "Rôle supprimé",
+          "client_anonymized": "Client anonymisé",
+          "client_data_export": "Export données client"
         }
       },
       "cabines": {

@@ -1,4 +1,4 @@
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   createPosCart,
@@ -13,7 +13,7 @@ import {
 
 export async function GET(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const url = new URL(request.url);
     const ensure = url.searchParams.get("ensure") === "1";
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const raw = await request.json().catch(() => ({}));
     const parsed = posCartWriteSchema.safeParse(raw);

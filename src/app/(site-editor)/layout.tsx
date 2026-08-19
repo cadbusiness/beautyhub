@@ -1,4 +1,4 @@
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 
 /** Builder / aperçu site web : auth requise, sans shell back-office. */
 export default async function SiteEditorLayout({
@@ -6,6 +6,6 @@ export default async function SiteEditorLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireModule("institut");
+  await requireInstitutAccess("marketing", "read");
   return <div className="min-h-dvh bg-white">{children}</div>;
 }

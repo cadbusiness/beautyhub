@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { loadSaleDocumentPayload } from "@/lib/institut/sale-documents/load";
 import { SaleDocumentView } from "@/components/institut/sale-documents/sale-document-view";
@@ -12,7 +12,7 @@ export default async function SaleDocumentPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "read");
   const locale = await getLocale();
   const t = await getTranslations("pos.documents");
   const supabase = await createClient();

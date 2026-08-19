@@ -1,8 +1,8 @@
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
-export async function GET() {
-  const session = await requireModule("institut");
+export async function GET(request: Request) {
+  const session = await requireInstitutApi(request);
   const supabase = await createClient();
   const { data } = await supabase
     .from("inst_loyalty_programs")

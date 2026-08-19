@@ -2580,6 +2580,7 @@
         "accessNone": "Uninvited",
         "accessPending": "Pending invitation",
         "add": "Add staff",
+        "manageRoles": "Set up roles",
         "actionsMenuLabel": "Member actions",
         "archivedBadge": "Archived",
         "archive": "Archive",
@@ -2638,13 +2639,20 @@
           "emailPlaceholder": "sophie@institut.fr",
           "fullName": "Full name",
           "fullNamePlaceholder": "Sophie Martin",
-          "inviteHint": "Create an invitation to give access to the institute space.",
+          "inviteHint": "Or create an invitation so the member can choose their own password.",
           "linkCopied": "Link copied",
           "openInviteDialog": "Detailed invitation",
+          "activateHint": "Activate the account yourself and share the password. It is shown only once.",
+          "activateAccount": "Activate account",
+          "activateSubmitting": "Activating…",
+          "generatePassword": "Generate",
+          "passwordLabel": "Password",
+          "passwordPlaceholder": "Leave empty to generate",
+          "savePassword": "Save password",
           "resendInvite": "Resend the invitation",
           "resending": "Referral…",
           "resetPassword": "Regenerate password",
-          "resetPasswordHint": "Generates a temporary password to communicate to the member. ",
+          "resetPasswordHint": "Set a password or generate one. It is shown once and never stored in plaintext.",
           "resetPasswordSubmitting": "Generation…",
           "role": "Role",
           "submit": "Add",
@@ -2672,7 +2680,15 @@
         "fullAccess": "Full access",
         "name": "Role name",
         "permissions": "Permissions",
-        "read": "Reading",
+        "read": "View",
+        "write": "Edit",
+        "sensitiveActions": "Sensitive actions",
+        "actions": {
+          "clientsDelete": "Delete / anonymize clients",
+          "teamManageAccess": "Invite, activate and manage passwords",
+          "teamManageRoles": "Create and edit roles",
+          "auditRead": "View the activity log"
+        },
         "roleDescription": "Description",
         "sections": {
           "appointments": "Appointment",
@@ -2686,8 +2702,36 @@
         "submitCreate": "Create the role",
         "submitEdit": "Save",
         "submitting": "Registration…",
-        "systemBadge": "System",
-        "write": "Writing"
+        "systemBadge": "System"
+      },
+      "journal": {
+        "searchPlaceholder": "Search the log…",
+        "allActions": "All actions",
+        "empty": "No activity recorded.",
+        "footer": "{count, plural, one {# event} other {# events}}",
+        "columns": {
+          "when": "When",
+          "who": "Who",
+          "action": "Action",
+          "target": "Target"
+        },
+        "actions": {
+          "staff_created": "Staff created",
+          "staff_updated": "Staff updated",
+          "staff_archived": "Staff archived",
+          "staff_restored": "Staff restored",
+          "staff_deleted": "Staff deleted",
+          "staff_activated": "Account activated",
+          "staff_password_reset": "Password set",
+          "staff_invited": "Invitation created",
+          "invitation_resent": "Invitation resent",
+          "invitation_revoked": "Invitation revoked",
+          "role_created": "Role created",
+          "role_updated": "Role updated",
+          "role_deleted": "Role deleted",
+          "client_anonymized": "Client anonymized",
+          "client_data_export": "Client data export"
+        }
       },
       "schedules": {
         "addBlock": "Beach",
@@ -2717,6 +2761,7 @@
         "acces": "Access & invitations",
         "cabines": "Cabins",
         "horaires": "Schedules",
+        "journal": "Activity log",
         "personnel": "Staff",
         "roles": "Roles"
       }

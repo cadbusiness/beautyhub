@@ -1,5 +1,5 @@
 import { getFormatter, getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { ListPanelFooter } from "@/components/ui/list-panel";
 import { historyPeriodBoundsUtc, parseHistoryPeriod } from "@/lib/date";
@@ -23,7 +23,7 @@ export default async function CaisseHistoriquePage({
 }) {
   const t = await getTranslations("pos.history");
   const format = await getFormatter();
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("pos", "read");
   const supabase = await createClient();
   const params = await searchParams;
   const period = parseHistoryPeriod(params.period);

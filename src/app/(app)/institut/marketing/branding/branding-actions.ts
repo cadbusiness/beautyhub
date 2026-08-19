@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   saveTenantBranding,
@@ -28,7 +28,7 @@ export async function saveInstitutBranding(
   _prev: BrandingActionResult,
   formData: FormData,
 ): Promise<BrandingActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const supabase = await createClient();
   const displayName = String(formData.get("display_name") ?? "").trim() || null;
   const primaryColor = String(formData.get("primary_color") ?? "#0f172a").trim();
@@ -49,7 +49,7 @@ export async function saveInstitutBranding(
 export async function uploadInstitutLogo(
   formData: FormData,
 ): Promise<BrandingActionResult> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "write");
   const t = await getTranslations("account.branding");
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {

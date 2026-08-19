@@ -7,6 +7,7 @@ export interface Membership {
   role: TeamRole;
   brand_id: string | null;
   tenant_id: string | null;
+  tenant_role_id: string | null;
 }
 
 /** Utilisateur equipe courant (Supabase Auth) ou null. */
@@ -25,7 +26,7 @@ export const getMemberships = cache(async (): Promise<Membership[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("memberships")
-    .select("id, role, brand_id, tenant_id")
+    .select("id, role, brand_id, tenant_id, tenant_role_id")
     .eq("user_id", user.id);
   if (error) return [];
   return (data ?? []) as Membership[];

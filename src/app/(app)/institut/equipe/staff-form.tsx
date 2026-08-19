@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
+  activateStaffAccount,
   createStaffMember,
   inviteTeamMember,
   resendTeamInvitation,
@@ -24,6 +25,7 @@ type StaffFormProps = {
   roles?: TenantRole[];
   onSuccess?: () => void;
   onInviteRequest?: () => void;
+  canManageAccess?: boolean;
 };
 
 function inviteUrl(token: string): string {
@@ -33,7 +35,43 @@ function inviteUrl(token: string): string {
   return `/invite/${token}`;
 }
 
-export function StaffForm({ staff, roles = [], onSuccess, onInviteRequest }: StaffFormProps) {
+function generateClientPassword(length = 12): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+}
+
+function PasswordReveal({
+  password,
+  label,
+  copyLabel,
+}: {
+  password: string;
+  label: string;
+  copyLabel: string;
+}) {
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+      <p className="font-medium">{label}</p>
+      <p className="mt-1 font-mono tracking-wide">{password}</p>
+      <button
+        type="button"
+        className="mt-1 text-xs underline-offset-2 hover:underline"
+        onClick={() => void navigator.clipboard.writeText(password)}
+      >
+        {copyLabel}
+      </button>
+    </div>
+  );
+}
+
+export function StaffForm({
+  staff,
+  roles = [],
+  onSuccess,
+  onInviteRequest,
+  canManageAccess = false,
+}: StaffFormProps) {
   const t = useTranslations("institut.team.personnel.form");
   const tAccess = useTranslations("institut.team.access");
   const tPersonnel = useTranslations("institut.team.personnel");
@@ -42,11 +80,16 @@ export function StaffForm({ staff, roles = [], onSuccess, onInviteRequest }: Sta
   const actionFn = isEdit ? updateStaffMember : createStaffMember;
   const [state, action, pending] = useActionState(actionFn, initial);
   const [resetState, resetAction, resetPending] = useActionState(resetStaffPassword, initial);
+  const [activateState, activateAction, activatePending] = useActionState(
+    activateStaffAccount,
+    initial,
+  );
   const [inviteState, inviteAction, invitePending] = useActionState(inviteTeamMember, initial);
   const [resendPending, startResend] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const [pendingAvatar, setPendingAvatar] = useState<File | null>(null);
   const [copied, setCopied] = useState(false);
+  const [passwordValue, setPasswordValue] = useState("");
 
   const assignableRoles = roles.filter((r) => r.slug !== "owner");
 
@@ -77,6 +120,10 @@ export function StaffForm({ staff, roles = [], onSuccess, onInviteRequest }: Sta
   useEffect(() => {
     if (resetState.ok) router.refresh();
   }, [resetState.ok, router]);
+
+  useEffect(() => {
+    if (activateState.ok) router.refresh();
+  }, [activateState.ok, router]);
 
   return (
     <div className="space-y-6">
@@ -174,7 +221,75 @@ export function StaffForm({ staff, roles = [], onSuccess, onInviteRequest }: Sta
             ) : null}
           </p>
 
-          {staff.access_status === "none" ? (
+          {canManageAccess && staff.access_status !== "active" ? (
+            <form action={activateAction} className="space-y-3">
+              <input type="hidden" name="staff_id" value={staff.id} />
+              <p className="text-xs text-slate-500">{t("activateHint")}</p>
+              <Field label={tAccess("email")} htmlFor="activate_email">
+                <Input
+                  id="activate_email"
+                  name="email"
+                  type="email"
+                  required
+                  defaultValue={staff.email ?? ""}
+                  placeholder={tAccess("emailPlaceholder")}
+                />
+              </Field>
+              {assignableRoles.length > 0 ? (
+                <Field label={tAccess("role")} htmlFor="activate_role">
+                  <select
+                    id="activate_role"
+                    name="tenant_role_id"
+                    className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
+                    defaultValue={staff.tenant_role_id ?? assignableRoles[0]?.id ?? ""}
+                  >
+                    {assignableRoles.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              ) : null}
+              <Field label={t("passwordLabel")} htmlFor="activate_password">
+                <div className="flex gap-2">
+                  <Input
+                    id="activate_password"
+                    name="password"
+                    type="text"
+                    autoComplete="new-password"
+                    value={passwordValue}
+                    onChange={(e) => setPasswordValue(e.target.value)}
+                    placeholder={t("passwordPlaceholder")}
+                    minLength={8}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 shrink-0"
+                    onClick={() => setPasswordValue(generateClientPassword())}
+                  >
+                    {t("generatePassword")}
+                  </Button>
+                </div>
+              </Field>
+              {activateState.error ? (
+                <p className="text-sm text-red-600">{activateState.error}</p>
+              ) : null}
+              {activateState.temporaryPassword ? (
+                <PasswordReveal
+                  password={activateState.temporaryPassword}
+                  label={t("tempPasswordLabel")}
+                  copyLabel={t("copyPassword")}
+                />
+              ) : null}
+              <Button type="submit" className="h-9" disabled={activatePending}>
+                {activatePending ? t("activateSubmitting") : t("activateAccount")}
+              </Button>
+            </form>
+          ) : null}
+
+          {canManageAccess && staff.access_status === "none" ? (
             <div className="space-y-3">
               <p className="text-xs text-slate-500">{t("inviteHint")}</p>
               <form action={inviteAction} className="space-y-3">
@@ -227,7 +342,7 @@ export function StaffForm({ staff, roles = [], onSuccess, onInviteRequest }: Sta
             </div>
           ) : null}
 
-          {staff.access_status === "pending" && staff.invitation_id ? (
+          {canManageAccess && staff.access_status === "pending" && staff.invitation_id ? (
             <div className="flex flex-wrap gap-2">
               {staff.invitation_token ? (
                 <Button
@@ -263,30 +378,44 @@ export function StaffForm({ staff, roles = [], onSuccess, onInviteRequest }: Sta
             </div>
           ) : null}
 
-          {staff.access_status === "active" ? (
+          {canManageAccess && staff.access_status === "active" ? (
             <form action={resetAction} className="space-y-3">
               <input type="hidden" name="staff_id" value={staff.id} />
               <p className="text-xs text-slate-500">{t("resetPasswordHint")}</p>
+              <Field label={t("passwordLabel")} htmlFor="reset_password">
+                <div className="flex gap-2">
+                  <Input
+                    id="reset_password"
+                    name="password"
+                    type="text"
+                    autoComplete="new-password"
+                    value={passwordValue}
+                    onChange={(e) => setPasswordValue(e.target.value)}
+                    placeholder={t("passwordPlaceholder")}
+                    minLength={8}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 shrink-0"
+                    onClick={() => setPasswordValue(generateClientPassword())}
+                  >
+                    {t("generatePassword")}
+                  </Button>
+                </div>
+              </Field>
               <Button type="submit" variant="outline" className="h-9" disabled={resetPending}>
-                {resetPending ? t("resetPasswordSubmitting") : t("resetPassword")}
+                {resetPending ? t("resetPasswordSubmitting") : t("savePassword")}
               </Button>
               {resetState.error ? (
                 <p className="text-sm text-red-600">{resetState.error}</p>
               ) : null}
               {resetState.temporaryPassword ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                  <p className="font-medium">{t("tempPasswordLabel")}</p>
-                  <p className="mt-1 font-mono tracking-wide">{resetState.temporaryPassword}</p>
-                  <button
-                    type="button"
-                    className="mt-1 text-xs underline-offset-2 hover:underline"
-                    onClick={() =>
-                      void navigator.clipboard.writeText(resetState.temporaryPassword!)
-                    }
-                  >
-                    {t("copyPassword")}
-                  </button>
-                </div>
+                <PasswordReveal
+                  password={resetState.temporaryPassword}
+                  label={t("tempPasswordLabel")}
+                  copyLabel={t("copyPassword")}
+                />
               ) : null}
             </form>
           ) : null}

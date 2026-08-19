@@ -1,11 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import {
+  INSTITUT_PERMISSION_ACTIONS,
+  type InstitutPermissions,
+} from "@/lib/institut/permissions";
 
 type Db = SupabaseClient<Database>;
 
-export type PermissionLevel = { read?: boolean; write?: boolean };
-
-export type InstitutPermissions = Record<string, PermissionLevel>;
+export type { InstitutPermissions, PermissionLevel } from "@/lib/institut/permissions";
 
 export const INSTITUT_PERMISSION_SECTIONS = [
   { key: "dashboard", labelKey: "dashboard" },
@@ -82,6 +84,12 @@ export function permissionsFromForm(formData: FormData): InstitutPermissions {
     const write = formData.get(`perm_${section.key}_write`) === "on";
     if (read || write) {
       perms[section.key] = { read, write };
+    }
+  }
+  for (const action of INSTITUT_PERMISSION_ACTIONS) {
+    const formKey = `perm_action_${action.key.replaceAll(".", "_")}`;
+    if (formData.get(formKey) === "on") {
+      perms[action.key] = { read: true, write: true };
     }
   }
   if (formData.get("perm_wildcard") === "on") {

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
 const BUCKET = "staff-images";
@@ -27,7 +27,7 @@ export async function uploadStaffAvatar(
   staffId: string,
   formData: FormData,
 ): Promise<{ error?: string; url?: string }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { error: "Fichier requis." };
@@ -82,7 +82,7 @@ export async function uploadStaffAvatar(
 export async function removeStaffAvatar(
   staffId: string,
 ): Promise<{ error?: string; ok?: boolean }> {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "write");
   const supabase = await createClient();
 
   const { data: staff } = await supabase

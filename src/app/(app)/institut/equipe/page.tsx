@@ -1,4 +1,4 @@
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import {
   fetchStaffWithAccess,
@@ -6,16 +6,18 @@ import {
   fetchTeamMembers,
   fetchTenantRoles,
 } from "@/lib/institut/team-access";
+import { institutCapabilities } from "@/lib/institut/permissions";
+import { fetchTeamAuditLogs } from "@/lib/institut/team-audit";
 import { EquipeManager } from "./equipe-manager";
 
 export default async function EquipePage() {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("team", "read");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 
   const pastCutoff = new Date(Date.now() - 90 * 86_400_000).toISOString();
 
-  const [staff, roles, members, invitations, resourcesRes, schedulesRes, timeOffRes] =
+  const [staff, roles, members, invitations, resourcesRes, schedulesRes, timeOffRes, auditLogs] =
     await Promise.all([
       fetchStaffWithAccess(supabase, tenantId),
       fetchTenantRoles(supabase, tenantId),
@@ -42,6 +44,7 @@ export default async function EquipePage() {
         .eq("tenant_id", tenantId)
         .gte("ends_at", pastCutoff)
         .order("starts_at"),
+      fetchTeamAuditLogs(supabase, tenantId),
     ]);
 
   const schedules = (schedulesRes.data ?? []).map((s) => ({
@@ -96,6 +99,8 @@ export default async function EquipePage() {
       schedules={schedules}
       timeOffs={timeOffRes.data ?? []}
       canHardDeleteByStaffId={canHardDeleteByStaffId}
+      capabilities={institutCapabilities(session)}
+      auditLogs={auditLogs}
     />
   );
 }

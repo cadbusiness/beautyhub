@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { loadSitePageForBuilder } from "@/app/(app)/institut/marketing/page-web/site-actions";
 import { SitePageBuilder } from "@/app/(app)/institut/marketing/page-web/site-page-builder";
@@ -39,7 +39,7 @@ export default async function SitePageBuilderPage({
 }: {
   params: Promise<{ pageId: string }>;
 }) {
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("marketing", "read");
   const { pageId } = await params;
   const supabase = await createClient();
   const tNav = await getTranslations("public.site.nav");

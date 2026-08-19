@@ -1727,11 +1727,13 @@
         "personnel": "Personeel",
         "acces": "Toegang & uitnodigingen",
         "roles": "Rollen",
+        "journal": "Logboek",
         "cabines": "Cabines",
         "horaires": "Openingstijden"
       },
       "personnel": {
         "add": "Personeel toevoegen",
+        "manageRoles": "Rollen instellen",
         "searchPlaceholder": "Zoek personeel…",
         "empty": "Geen personeelsleden.",
         "emptyArchived": "Geen gearchiveerde leden.",
@@ -1788,14 +1790,21 @@
           "colorOptional": "Kleur (optioneel)",
           "role": "Rol",
           "accessSection": "App-toegang",
-          "inviteHint": "Maak een uitnodiging om toegang tot de instituutsruimte te geven.",
+          "inviteHint": "Of maak een uitnodiging zodat het lid zelf een wachtwoord kiest.",
           "openInviteDialog": "Gedetailleerde uitnodiging",
           "resendInvite": "Uitnodiging opnieuw versturen",
           "resending": "Versturen…",
           "linkCopied": "Link gekopieerd",
+          "activateHint": "Activeer het account zelf en geef het wachtwoord door. Het wordt maar één keer getoond.",
+          "activateAccount": "Account activeren",
+          "activateSubmitting": "Activeren…",
+          "generatePassword": "Genereren",
+          "passwordLabel": "Wachtwoord",
+          "passwordPlaceholder": "Leeg laten om te genereren",
+          "savePassword": "Wachtwoord opslaan",
           "resetPassword": "Wachtwoord opnieuw genereren",
-          "resetPasswordSubmitting": "Genereren…",
-          "resetPasswordHint": "Genereert een tijdelijk wachtwoord om door te geven. E-mailverzending volgt binnenkort.",
+          "resetPasswordSubmitting": "Opslaan…",
+          "resetPasswordHint": "Kies een wachtwoord of genereer er een. Het wordt één keer getoond en nooit in klare tekst bewaard.",
           "tempPasswordLabel": "Tijdelijk wachtwoord (nu kopiëren)",
           "copyPassword": "Kopiëren",
           "avatar": {
@@ -1856,8 +1865,15 @@
         },
         "permissions": "Rechten",
         "fullAccess": "Volledige toegang",
-        "read": "Lezen",
-        "write": "Schrijven",
+        "read": "Bekijken",
+        "write": "Bewerken",
+        "sensitiveActions": "Gevoelige acties",
+        "actions": {
+          "clientsDelete": "Klanten verwijderen / anonimiseren",
+          "teamManageAccess": "Uitnodigen, activeren en wachtwoorden beheren",
+          "teamManageRoles": "Rollen aanmaken en bewerken",
+          "auditRead": "Activiteitenlogboek bekijken"
+        },
         "submitCreate": "Rol aanmaken",
         "submitEdit": "Opslaan",
         "submitting": "Opslaan…",
@@ -1869,6 +1885,35 @@
           "team": "Team",
           "pos": "Kassa",
           "marketing": "Marketing"
+        }
+      },
+      "journal": {
+        "searchPlaceholder": "Zoek in het logboek…",
+        "allActions": "Alle acties",
+        "empty": "Geen activiteit geregistreerd.",
+        "footer": "{count, plural, one {# gebeurtenis} other {# gebeurtenissen}}",
+        "columns": {
+          "when": "Wanneer",
+          "who": "Wie",
+          "action": "Actie",
+          "target": "Doel"
+        },
+        "actions": {
+          "staff_created": "Personeel aangemaakt",
+          "staff_updated": "Personeel gewijzigd",
+          "staff_archived": "Personeel gearchiveerd",
+          "staff_restored": "Personeel hersteld",
+          "staff_deleted": "Personeel verwijderd",
+          "staff_activated": "Account geactiveerd",
+          "staff_password_reset": "Wachtwoord ingesteld",
+          "staff_invited": "Uitnodiging aangemaakt",
+          "invitation_resent": "Uitnodiging vernieuwd",
+          "invitation_revoked": "Uitnodiging ingetrokken",
+          "role_created": "Rol aangemaakt",
+          "role_updated": "Rol gewijzigd",
+          "role_deleted": "Rol verwijderd",
+          "client_anonymized": "Klant geanonimiseerd",
+          "client_data_export": "Klantdata geëxporteerd"
         }
       },
       "cabines": {

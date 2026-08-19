@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { ListPanel } from "@/components/ui/list-panel";
 
 export default async function InstitutHome() {
   const t = await getTranslations("institut.overview");
-  const session = await requireModule("institut");
+  const session = await requireInstitutAccess("dashboard", "read");
   const supabase = await createClient();
   const tenantId = session.tenant.id;
 

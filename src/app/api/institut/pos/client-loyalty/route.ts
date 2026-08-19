@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { loadPosClientLoyalty } from "@/lib/institut/pos-client-loyalty";
 
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const snapshot = await loadPosClientLoyalty(supabase, session.tenant.id, clientId);
     return NextResponse.json(snapshot ?? { active: false, balance: 0, rewards: [] });

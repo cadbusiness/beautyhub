@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutAccess } from "@/lib/auth/guards";
 import { MarketingToolCard } from "./marketing-tool-card";
 
 const TOOL_KEYS = [
@@ -19,7 +19,7 @@ const TOOL_HREFS: Partial<Record<(typeof TOOL_KEYS)[number], string>> = {
 
 export default async function MarketingOverviewPage() {
   const t = await getTranslations("institut.marketing.overview");
-  await requireModule("institut");
+  await requireInstitutAccess("marketing", "read");
 
   return (
     <div className="space-y-6 px-4 py-4 lg:px-6">

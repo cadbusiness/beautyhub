@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireModule } from "@/lib/auth/guards";
+import { requireInstitutApi } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { validatePromo } from "@/lib/institut/promos-core";
 
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const session = await requireModule("institut");
+    const session = await requireInstitutApi(request);
     const supabase = await createClient();
     const result = await validatePromo(supabase, session.tenant.id, {
       code,

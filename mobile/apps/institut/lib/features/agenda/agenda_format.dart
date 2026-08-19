@@ -9,6 +9,19 @@ String stripDurationFromService(String name) {
   return name.replaceFirst(_trailingDuration, '').trim();
 }
 
+String liveCountdownLabel(DateTime startsAt, {DateTime? now}) {
+  final diff = startsAt.difference(now ?? DateTime.now());
+  if (diff.inSeconds <= 0) return 'Maintenant';
+  final hours = diff.inHours;
+  final minutes = diff.inMinutes.remainder(60);
+  final seconds = diff.inSeconds.remainder(60);
+  if (hours >= 1) {
+    return minutes > 0 ? 'Dans $hours h $minutes min' : 'Dans $hours h';
+  }
+  if (minutes >= 1) return 'Dans $minutes min $seconds s';
+  return 'Dans $seconds s';
+}
+
 String appointmentServiceLine(DayAppointment appointment) {
   final name = stripDurationFromService(appointment.serviceName);
   final duration = appointment.durationLabel;

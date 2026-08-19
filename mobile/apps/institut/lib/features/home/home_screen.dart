@@ -106,7 +106,7 @@ class HomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               sliver: SliverToBoxAdapter(
                 child: dayAsync.when(
-                  loading: () => const _LoadingBlock(height: 220),
+                  loading: () => const _LoadingBlock(height: 96),
                   error: (e, _) => _ErrorBlock(message: '$e'),
                   data: (day) {
                     final nextGroup = nextParallelAppointments(

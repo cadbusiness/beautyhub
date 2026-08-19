@@ -17,16 +17,27 @@ interface WebhookBody {
   payload: Record<string, unknown>;
 }
 
+function asWooId(value: unknown): number | null {
+  const id = Number(value);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
 function asWooProduct(payload: Record<string, unknown>): WooProduct | null {
-  const id = payload.id;
+  const id = Number(payload.id);
   const name = payload.name;
   const price = payload.price;
-  if (typeof id !== "number" || typeof name !== "string") return null;
+  if (!Number.isFinite(id) || id <= 0 || typeof name !== "string") return null;
   return {
     id,
     name,
     sku: typeof payload.sku === "string" ? payload.sku : "",
-    price: typeof price === "string" ? price : "0",
+    price: typeof price === "string" || typeof price === "number" ? String(price) : "0",
+    type: typeof payload.type === "string" ? payload.type : undefined,
+    variations: Array.isArray(payload.variations)
+      ? payload.variations
+          .map((v) => Number(v))
+          .filter((v) => Number.isFinite(v) && v > 0)
+      : undefined,
     stock_quantity:
       typeof payload.stock_quantity === "number"
         ? payload.stock_quantity
@@ -125,11 +136,42 @@ export async function POST(
           connection.connectionId,
           product,
         );
+        const isVariable =
+          product.type === "variable" || (product.variations?.length ?? 0) > 0;
+        if (isVariable) {
+          const { getWooConnectionForTenant, upsertWooVariations } = await import(
+            "@/lib/woocommerce"
+          );
+          const shop = await getWooConnectionForTenant(
+            connection.tenantId,
+            connection.shopUrl,
+            supabase,
+          );
+          if (shop) {
+            try {
+              const variations = await shop.client.listAllProductVariations(product.id);
+              if (variations.length > 0) {
+                await upsertWooVariations(
+                  supabase,
+                  connection.tenantId,
+                  connection.connectionId,
+                  product,
+                  variations,
+                );
+              }
+            } catch (err) {
+              console.error("[woo-webhook] variations fetch failed", {
+                productId: product.id,
+                message: (err as Error).message,
+              });
+            }
+          }
+        }
         break;
       }
       case "product.stock_updated": {
-        const wooId = payload.id;
-        if (typeof wooId !== "number") {
+        const wooId = asWooId(payload.id);
+        if (!wooId) {
           return NextResponse.json({ error: "invalid_product" }, { status: 400 });
         }
         const stock =
@@ -148,8 +190,8 @@ export async function POST(
         break;
       }
       case "product.deleted": {
-        const wooId = payload.id;
-        if (typeof wooId !== "number") {
+        const wooId = asWooId(payload.id);
+        if (!wooId) {
           return NextResponse.json({ error: "invalid_product" }, { status: 400 });
         }
         await deactivateWooProduct(

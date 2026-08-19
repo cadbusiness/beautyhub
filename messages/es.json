@@ -1922,6 +1922,10 @@
       "linkSettings": "Ajustes",
       "settingsButton": "Configuración de caja registradora",
       "syncWoo": "Sincronizar WooCommerce",
+      "syncWooPending": "Sincronización…",
+      "syncWooDone": "{products} productos sincronizados ({shops} tienda(s))",
+      "syncWooError": "Error de sincronización",
+      "syncWooNoShop": "La tienda WooCommerce está conectada pero BeautyHub no pudo leer sus credenciales. Vuelve a conectarla en Cuenta → WooCommerce y lanza la sync.",
       "wooNotConnected": "WooCommerce no está conectado: solo están disponibles productos y servicios internos."
     },
     "posTemplates": {

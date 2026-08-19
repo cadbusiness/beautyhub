@@ -1,11 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveConnection } from "@/lib/connections";
-import { decryptCredentials } from "@/lib/connections/crypto";
 import type { Database } from "@/lib/db/database.types";
 import { tryCreateServiceClient } from "@/lib/supabase/service";
-import { WooClient, type WooCredentials } from "./client";
+import { WooClient } from "./client";
+import { parseStoredWooCredentials } from "./credentials";
 
 export const WOO_PROVIDER = "woocommerce";
+export { parseStoredWooCredentials } from "./credentials";
 
 /**
  * Construit un client WooCommerce pour un tenant en resolvant sa connexion
@@ -25,14 +26,9 @@ export async function getWooClientForTenant(
   const conn = await resolveConnection(tenantId, WOO_PROVIDER);
   if (!conn || conn.status !== "connected" || !conn.credentials) return null;
 
-  const creds = conn.credentials as Partial<WooCredentials>;
-  if (!creds.url || !creds.consumerKey || !creds.consumerSecret) return null;
-
-  return new WooClient({
-    url: creds.url,
-    consumerKey: creds.consumerKey,
-    consumerSecret: creds.consumerSecret,
-  });
+  const creds = parseStoredWooCredentials(conn.credentials);
+  if (!creds) return null;
+  return new WooClient(creds);
 }
 
 export async function getWooConnectionForTenant(
@@ -60,28 +56,23 @@ export async function getWooConnectionForTenant(
   const { data } = await query.maybeSingle();
   if (!data?.credentials || !data.id) return null;
 
-  const creds = decryptCredentials(
-    (data.credentials as { enc?: string }) ?? {},
-  ) as Partial<WooCredentials>;
-  if (!creds.url || !creds.consumerKey || !creds.consumerSecret) return null;
+  const creds = parseStoredWooCredentials(data.credentials);
+  if (!creds) return null;
 
   return {
     connectionId: data.id,
     shopUrl: typeof data.external_id === "string" ? data.external_id : creds.url,
-    client: new WooClient({
-      url: creds.url,
-      consumerKey: creds.consumerKey,
-      consumerSecret: creds.consumerSecret,
-    }),
+    client: new WooClient(creds),
   };
 }
 
 export async function listWooConnectionsForTenant(
   tenantId: string,
+  supabaseOverride?: SupabaseClient<Database>,
 ): Promise<Array<{ connectionId: string; shopUrl: string; client: WooClient }>> {
-  const supabase = tryCreateServiceClient();
+  const supabase = supabaseOverride ?? tryCreateServiceClient();
   if (!supabase) return [];
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("connections")
     .select("id, credentials, external_id")
     .eq("scope_type", "tenant")
@@ -90,23 +81,24 @@ export async function listWooConnectionsForTenant(
     .eq("status", "connected")
     .order("updated_at", { ascending: false });
 
+  if (error) {
+    console.error("[woo] list connections failed", error.message);
+    return [];
+  }
   if (!data || data.length === 0) return [];
 
   const out: Array<{ connectionId: string; shopUrl: string; client: WooClient }> = [];
   for (const row of data) {
     if (!row.credentials || !row.id) continue;
-    const creds = decryptCredentials(
-      (row.credentials as { enc?: string }) ?? {},
-    ) as Partial<WooCredentials>;
-    if (!creds.url || !creds.consumerKey || !creds.consumerSecret) continue;
+    const creds = parseStoredWooCredentials(row.credentials);
+    if (!creds) {
+      console.error("[woo] skip connection, credentials unreadable", row.id);
+      continue;
+    }
     out.push({
       connectionId: row.id,
       shopUrl: typeof row.external_id === "string" ? row.external_id : creds.url,
-      client: new WooClient({
-        url: creds.url,
-        consumerKey: creds.consumerKey,
-        consumerSecret: creds.consumerSecret,
-      }),
+      client: new WooClient(creds),
     });
   }
   return out;

@@ -12,9 +12,13 @@ class BeautyHub_Webhooks
 {
     public static function init(): void
     {
-        add_action('woocommerce_update_product', [self::class, 'on_product_save'], 20, 1);
-        add_action('woocommerce_new_product', [self::class, 'on_product_save'], 20, 1);
+        add_action('woocommerce_update_product', [self::class, 'queue_product'], 20, 1);
+        add_action('woocommerce_new_product', [self::class, 'queue_product'], 20, 1);
+        add_action('save_post_product', [self::class, 'on_save_post_product'], 30, 1);
+        add_action('woocommerce_new_product_variation', [self::class, 'queue_variation'], 20, 1);
+        add_action('woocommerce_update_product_variation', [self::class, 'queue_variation'], 20, 1);
         add_action('woocommerce_product_set_stock', [self::class, 'on_stock_change'], 20, 1);
+        add_action('woocommerce_variation_set_stock', [self::class, 'on_stock_change'], 20, 1);
         add_action('before_delete_post', [self::class, 'on_product_delete'], 20, 1);
         add_action('woocommerce_order_status_completed', [self::class, 'on_order_completed'], 20, 1);
 
@@ -24,7 +28,116 @@ class BeautyHub_Webhooks
         add_action('profile_update', [self::class, 'on_profile_updated'], 20, 2);
         add_action('user_register', [self::class, 'on_user_register'], 20, 1);
         add_action('delete_user', [self::class, 'on_user_delete'], 20, 1);
+
+        add_action('beautyhub_push_product', [self::class, 'push_product'], 10, 2);
+        add_filter('cron_schedules', [self::class, 'cron_schedules']);
+        add_action('init', [self::class, 'ensure_cron']);
+        add_action('beautyhub_catalog_sync', [self::class, 'run_catalog_sync']);
     }
+
+    /**
+     * @param array<string, array{interval:int, display:string}> $schedules
+     * @return array<string, array{interval:int, display:string}>
+     */
+    public static function cron_schedules(array $schedules): array
+    {
+        $schedules['beautyhub_fifteen_minutes'] = [
+            'interval' => 15 * MINUTE_IN_SECONDS,
+            'display' => 'Every 15 minutes',
+        ];
+        return $schedules;
+    }
+
+    public static function ensure_cron(): void
+    {
+        if (!self::endpoint()) {
+            return;
+        }
+        if (!wp_next_scheduled('beautyhub_catalog_sync')) {
+            wp_schedule_event(time() + 120, 'beautyhub_fifteen_minutes', 'beautyhub_catalog_sync');
+        }
+    }
+
+    public static function queue_product($product_id): void
+    {
+        $id = (int) $product_id;
+        if ($id <= 0) {
+            return;
+        }
+        $args = [$id, 'product.updated'];
+        if (!wp_next_scheduled('beautyhub_push_product', $args)) {
+            wp_schedule_single_event(time() + 8, 'beautyhub_push_product', $args);
+        }
+    }
+
+    public static function queue_variation($variation_id): void
+    {
+        $variation = wc_get_product((int) $variation_id);
+        if (!$variation || !$variation->is_type('variation')) {
+            return;
+        }
+        $parent_id = (int) $variation->get_parent_id();
+        if ($parent_id > 0) {
+            self::queue_product($parent_id);
+        }
+    }
+
+    public static function on_save_post_product($post_id): void
+    {
+        if (wp_is_post_revision($post_id) || (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)) {
+            return;
+        }
+        self::queue_product($post_id);
+    }
+
+    public static function push_product($product_id, $event = 'product.updated'): void
+    {
+        $product = wc_get_product((int) $product_id);
+        if (!$product) {
+            return;
+        }
+        if ($product->is_type('variation')) {
+            self::queue_variation($product->get_id());
+            return;
+        }
+        self::send(is_string($event) && $event !== '' ? $event : 'product.updated', self::product_payload($product));
+    }
+
+    public static function run_catalog_sync(): void
+    {
+        if (!self::endpoint() || !function_exists('wc_get_products')) {
+            return;
+        }
+
+        $since = (string) get_option('beautyhub_catalog_synced_at', '');
+        $since_ts = $since !== '' ? strtotime($since) : (time() - 14 * DAY_IN_SECONDS);
+        if ($since_ts === false) {
+            $since_ts = time() - 14 * DAY_IN_SECONDS;
+        }
+
+        $ids = wc_get_products([
+            'limit' => 100,
+            'status' => ['publish', 'private'],
+            'orderby' => 'modified',
+            'order' => 'DESC',
+            'return' => 'ids',
+        ]);
+
+        foreach ($ids as $id) {
+            $product = wc_get_product((int) $id);
+            if (!$product) {
+                continue;
+            }
+            $modified = $product->get_date_modified();
+            if ($modified && $modified->getTimestamp() < $since_ts) {
+                continue;
+            }
+            self::send('product.updated', self::product_payload($product));
+        }
+
+        update_option('beautyhub_catalog_synced_at', gmdate('c'));
+    }
+
 
     private static function endpoint(): ?string
     {
@@ -59,8 +172,8 @@ class BeautyHub_Webhooks
             ? 'sha256=' . hash_hmac('sha256', $body, $secret)
             : '';
 
-        wp_remote_post($endpoint, [
-            'timeout' => 15,
+        $response = wp_remote_post($endpoint, [
+            'timeout' => 20,
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-BeautyHub-Signature' => $signature,
@@ -68,6 +181,17 @@ class BeautyHub_Webhooks
             ],
             'body' => $body,
         ]);
+        if (is_wp_error($response)) {
+            error_log('BeautyHub webhook failed: ' . $response->get_error_message());
+            update_option('beautyhub_last_webhook_error', $response->get_error_message());
+            return;
+        }
+        $code = (int) wp_remote_retrieve_response_code($response);
+        if ($code >= 400) {
+            $msg = 'HTTP ' . $code . ' ' . wp_remote_retrieve_body($response);
+            error_log('BeautyHub webhook failed: ' . $msg);
+            update_option('beautyhub_last_webhook_error', substr($msg, 0, 500));
+        }
     }
 
     private static function product_payload(WC_Product $product): array
@@ -120,6 +244,8 @@ class BeautyHub_Webhooks
                 ? $product->get_stock_quantity()
                 : null,
             'status' => $product->get_status() === 'publish' ? 'publish' : $product->get_status(),
+            'type' => $product->get_type(),
+            'variations' => $product->is_type('variable') ? $product->get_children() : [],
             'images' => $images,
             'categories' => $categories,
             'meta_data' => $meta_data,
@@ -128,11 +254,7 @@ class BeautyHub_Webhooks
 
     public static function on_product_save(int $product_id): void
     {
-        $product = wc_get_product($product_id);
-        if (!$product) {
-            return;
-        }
-        self::send('product.updated', self::product_payload($product));
+        self::queue_product($product_id);
     }
 
     public static function on_stock_change(WC_Product $product): void

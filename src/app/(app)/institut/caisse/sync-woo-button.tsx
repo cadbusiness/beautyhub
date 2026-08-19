@@ -24,7 +24,7 @@ export function SyncWooButton() {
           })}
         </span>
       ) : null}
-      {state.error ? <span className="text-xs text-red-600">{t("syncWooError")}</span> : null}
+      {state.error ? <span className="text-xs text-red-600">{state.error}</span> : null}
     </form>
   );
 }

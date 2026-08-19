@@ -185,7 +185,13 @@ export class WooClient {
 
   async listProducts(page = 1, perPage = 50): Promise<WooProduct[]> {
     return this.request<WooProduct[]>("/products", {
-      query: { page, per_page: perPage, status: "publish" },
+      query: {
+        page,
+        per_page: perPage,
+        status: "publish,private",
+        orderby: "modified",
+        order: "desc",
+      },
     });
   }
 

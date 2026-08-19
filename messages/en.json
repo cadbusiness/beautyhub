@@ -2097,6 +2097,7 @@
       "syncWoo": "Sync WooCommerce",
       "syncWooDone": "{products} synchronized products ({shops} store(s))",
       "syncWooError": "Sync Failed",
+      "syncWooNoShop": "The WooCommerce store is connected but BeautyHub could not read its credentials. Reconnect it in Account → WooCommerce, then run sync again.",
       "syncWooPending": "Synchronization…",
       "wooNotConnected": "WooCommerce not connected — only internal services and products are available."
     },

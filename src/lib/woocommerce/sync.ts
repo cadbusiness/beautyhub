@@ -2,8 +2,8 @@ import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 import { createServiceClient, tryCreateServiceClient } from "@/lib/supabase/service";
-import { decryptCredentials } from "@/lib/connections/crypto";
 import { WOO_PROVIDER } from "@/lib/woocommerce";
+import { parseStoredWooCredentials } from "@/lib/woocommerce/credentials";
 import { WooClient, type WooProduct, type WooProductCategory, type WooProductVariation } from "@/lib/woocommerce/client";
 import { collectWooCategoryNames } from "@/lib/woocommerce/product-labels";
 
@@ -660,11 +660,8 @@ export async function getWooCredentialsForTenant(
 
   if (!data?.credentials) return null;
 
-  const creds = decryptCredentials(
-    (data.credentials as { enc?: string }) ?? {},
-  ) as Partial<{ url: string; consumerKey: string; consumerSecret: string }>;
-
-  if (!creds.url || !creds.consumerKey || !creds.consumerSecret) return null;
+  const creds = parseStoredWooCredentials(data.credentials);
+  if (!creds) return null;
 
   return {
     url: creds.url,

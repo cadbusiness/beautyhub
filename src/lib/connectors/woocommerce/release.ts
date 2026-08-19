@@ -39,6 +39,11 @@ export function getWooConnectorRelease(): ConnectorReleaseInfo {
     changelog: `
       <h4>${version}</h4>
       <ul>
+        <li>Push automatique du catalogue (à l’enregistrement + rattrapage toutes les 15 min)</li>
+        <li>Variations et produits privés inclus dans la sync</li>
+      </ul>
+      <h4>1.6.0</h4>
+      <ul>
         <li>Page Mon compte « Cartes cadeaux » + templates PDF par produit/variation</li>
         <li>Sync meta gift card vers BeautyHub + sélection template Woo</li>
         <li>QR code sur PDF + éditeur de positions drag-and-drop</li>

@@ -2042,6 +2042,7 @@
       "syncWooPending": "Synchronisation…",
       "syncWooDone": "{products} produits synchronisés ({shops} boutique(s))",
       "syncWooError": "Échec de la synchronisation",
+      "syncWooNoShop": "La boutique WooCommerce est connectée mais BeautyHub n’a pas pu lire ses identifiants. Reconnectez-la dans Compte → WooCommerce, puis relancez la sync.",
       "emptyCatalog": "Commence par ajouter des prestations, des produits internes ou connecter WooCommerce dans les paramètres.",
       "linkServices": "Prestations",
       "linkProducts": "Produits internes",

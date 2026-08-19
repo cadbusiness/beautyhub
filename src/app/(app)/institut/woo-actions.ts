@@ -172,10 +172,15 @@ export async function syncWooProducts(): Promise<void> {
 async function syncWooProductsForTenant(
   tenantId: string,
 ): Promise<{ syncedCount: number; shopsCount: number }> {
-  const connections = await listWooConnectionsForTenant(tenantId);
-  if (connections.length === 0) return { syncedCount: 0, shopsCount: 0 };
-
   const supabase = await createClient();
+  let connections = await listWooConnectionsForTenant(tenantId);
+  if (connections.length === 0) {
+    connections = await listWooConnectionsForTenant(tenantId, supabase);
+  }
+  if (connections.length === 0) {
+    throw new Error("woo_no_shop");
+  }
+
   let syncedCount = 0;
 
   for (const connection of connections) {
@@ -194,9 +199,10 @@ async function syncWooProductsForTenant(
         mapWooProductToRow(tenantId, connection.connectionId, p, tree),
       );
 
-      await supabase
+      const { error } = await supabase
         .from("inst_products")
         .upsert(rows, { onConflict: "tenant_id,connection_id,woo_id" });
+      if (error) throw new Error(error.message);
       syncedCount += rows.length;
 
       // Pour chaque produit `variable`, on materialise ses variations comme
@@ -257,6 +263,7 @@ export async function syncWooProductsAction(
   _prev: SyncWooResult,
 ): Promise<SyncWooResult> {
   void _prev;
+  const t = await getTranslations("institut.pos");
   try {
     const session = await requireModule("institut");
     const result = await syncWooProductsForTenant(session.tenant.id);
@@ -264,6 +271,10 @@ export async function syncWooProductsAction(
     revalidatePath("/institut/caisse/produits");
     return { ok: true, ...result };
   } catch (e) {
-    return { error: (e as Error).message };
+    const message = (e as Error).message;
+    if (message === "woo_no_shop") {
+      return { error: t("syncWooNoShop") };
+    }
+    return { error: message || t("syncWooError") };
   }
 }

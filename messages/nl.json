@@ -1970,6 +1970,10 @@
     },
     "pos": {
       "syncWoo": "WooCommerce synchroniseren",
+      "syncWooPending": "Synchroniseren…",
+      "syncWooDone": "{products} producten gesynchroniseerd ({shops} winkel(s))",
+      "syncWooError": "Synchronisatie mislukt",
+      "syncWooNoShop": "De WooCommerce-winkel is gekoppeld, maar BeautyHub kon de inloggegevens niet lezen. Koppel de winkel opnieuw via Account → WooCommerce en start de sync.",
       "emptyCatalog": "Begin met het toevoegen van behandelingen, interne producten of koppel WooCommerce in de instellingen.",
       "linkServices": "Behandelingen",
       "linkProducts": "Interne producten",

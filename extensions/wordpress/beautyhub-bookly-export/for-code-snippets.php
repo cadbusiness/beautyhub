@@ -2,7 +2,7 @@
 /**
  * Plugin Name: BeautyHub - Export Bookly (services, extras & RDV)
  * Description: Exporte et synchronise les rendez-vous Bookly vers BeautyHub (migration).
- * Version: 1.4.1
+ * Version: 1.5.0
  * Author: BeautyHub
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -24,13 +24,17 @@ final class BeautyHub_Bookly_Export {
 	const OPTION_SYNC_FINGERPRINT  = 'beautyhub_bookly_sync_fp';
 	const OPTION_SYNC_SUMMARY      = 'beautyhub_bookly_sync_summary';
 	const OPTION_SYNC_HISTORY      = 'beautyhub_bookly_sync_history';
+	const OPTION_HISTORY_CURSOR    = 'beautyhub_bookly_hist_cursor';
+	const OPTION_HISTORY_SENT      = 'beautyhub_bookly_hist_sent';
 	const OPTION_CRON_VERSION      = 'beautyhub_bookly_cron_ver';
 	const CRON_HOOK                = 'bh_bookly_cron_sync';
 	const PUSH_HOOK                = 'bh_bookly_push_sync';
-	const CRON_VERSION             = '1.4.1';
+	const CRON_VERSION             = '1.5.0';
 	const MIN_SYNC_INTERVAL        = 60;
-	const MAX_SYNCS_PER_HOUR       = 20;
+	const MAX_SYNCS_PER_HOUR       = 60;
 	const HISTORY_MAX              = 8;
+	const CHUNK_SIZE               = 60;
+	const HISTORY_BATCH            = 240;
 
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'register_menu' ) );
@@ -361,7 +365,7 @@ final class BeautyHub_Bookly_Export {
 	/**
 	 * Une ligne BeautyHub = un customer_appointment Bookly (1 client par creneau).
 	 */
-	private static function collect_appointments( $upcoming_only = false ) {
+	private static function collect_appointments( $upcoming_only = false, $args = array() ) {
 		global $wpdb;
 
 		$appt_table = self::find_table( array( 'bookly_appointments' ) );
@@ -449,11 +453,28 @@ final class BeautyHub_Bookly_Export {
 		}
 
 		$sql = 'SELECT ' . implode( ', ', $select ) . " {$join}";
-		if ( $upcoming_only && $has( $appt_cols, 'start_date' ) ) {
-			$cutoff = date( 'Y-m-d 00:00:00', strtotime( current_time( 'mysql' ) ) - DAY_IN_SECONDS );
-			$sql   .= $wpdb->prepare( ' WHERE a.start_date >= %s', $cutoff );
+		$history_only = ! empty( $args['history_only'] );
+		$after_id     = isset( $args['after_id'] ) ? (int) $args['after_id'] : 0;
+		$limit        = isset( $args['limit'] ) ? (int) $args['limit'] : 0;
+		if ( $has( $appt_cols, 'start_date' ) && ( $upcoming_only || $history_only ) ) {
+			$cutoff  = self::upcoming_cutoff();
+			$wheres  = array();
+			if ( $upcoming_only ) {
+				$wheres[] = $wpdb->prepare( 'a.start_date >= %s', $cutoff );
+			} elseif ( $history_only ) {
+				$wheres[] = $wpdb->prepare( 'a.start_date < %s', $cutoff );
+				if ( $after_id > 0 ) {
+					$wheres[] = $wpdb->prepare( 'ca.id > %d', $after_id );
+				}
+			}
+			if ( $wheres ) {
+				$sql .= ' WHERE ' . implode( ' AND ', $wheres );
+			}
 		}
-		$sql .= ' ORDER BY a.start_date ASC, ca.id ASC';
+		$sql .= $history_only ? ' ORDER BY ca.id ASC' : ' ORDER BY a.start_date ASC, ca.id ASC';
+		if ( $limit > 0 ) {
+			$sql .= $wpdb->prepare( ' LIMIT %d', $limit );
+		}
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		$rows = $wpdb->get_results( $sql, ARRAY_A );
 
@@ -964,7 +985,7 @@ final class BeautyHub_Bookly_Export {
 
 		echo '<div class="notice notice-info" style="padding:12px 16px;max-width:820px;">';
 		echo '<h2 style="margin:0 0 8px;">Synchro continue vers BeautyHub</h2>';
-		echo '<p>Pendant la transition, Bookly reste la source de verite. Les creations, modifications et annulations sont envoyees vers BeautyHub apres un court delai. Un rattrapage tourne toutes les 15 minutes : si rien n\'a change, la base WordPress n\'est pas relue en entier.</p>';
+		echo '<p>Pendant la transition, Bookly reste la source de verite. Les rendez-vous a venir sont envoyes en continu. L\'historique (RDV passes) est rattrape par lots pour remplir les fiches clientes, sans faire timeout la synchro.</p>';
 		echo '<form method="post">';
 		wp_nonce_field( self::NONCE );
 		echo '<p><label for="bh_sync_url"><strong>URL de synchro</strong> (copiée depuis BeautyHub → Rendez-vous → Importer Bookly)</label><br />';
@@ -998,6 +1019,12 @@ final class BeautyHub_Bookly_Export {
 
 	private static function render_sync_dashboard( $summary, $history ) {
 		$upcoming = self::count_upcoming_appointments();
+		$past     = self::count_history_appointments();
+		$hist_sent = (int) get_option( self::OPTION_HISTORY_SENT, 0 );
+		$hist_done = 'done' === (string) get_option( self::OPTION_HISTORY_CURSOR, '0' );
+		if ( $hist_done ) {
+			$hist_sent = $past;
+		}
 
 		$incoming   = isset( $summary['incoming'] ) ? (int) $summary['incoming'] : null;
 		$created    = isset( $summary['created'] ) ? (int) $summary['created'] : 0;
@@ -1021,6 +1048,8 @@ final class BeautyHub_Bookly_Export {
 
 		echo '<div style="display:flex;flex-wrap:wrap;gap:16px 32px;margin:8px 0 4px;">';
 		self::stat_block( 'RDV Bookly a venir', number_format_i18n( $upcoming ) );
+		self::stat_block( 'Historique Bookly', number_format_i18n( $past ) );
+		self::stat_block( 'Historique envoye', $hist_done ? number_format_i18n( $hist_sent ) . ' (termine)' : number_format_i18n( $hist_sent ) . ' / ' . number_format_i18n( $past ) );
 		self::stat_block( 'Dernier envoi', $incoming === null ? '—' : number_format_i18n( $incoming ) . ' RDV' );
 		self::stat_block( 'Crees dans BeautyHub', number_format_i18n( $created ) );
 		self::stat_block( 'Mis a jour', number_format_i18n( $updated ) );
@@ -1028,16 +1057,26 @@ final class BeautyHub_Bookly_Export {
 		self::stat_block( 'Cabines creees', number_format_i18n( $resources ) );
 		echo '</div>';
 
-		if ( $incoming !== null && $upcoming > 0 ) {
+		$total_scope = $upcoming + $past;
+		$sent_scope  = ( $incoming !== null ? $incoming : 0 );
+		if ( ! $hist_done && $past > 0 ) {
+			$pct = max( 0, min( 100, (int) round( ( $hist_sent / max( 1, $past ) ) * 100 ) ) );
+			echo '<div style="margin:8px 0 4px;max-width:640px;">';
+			echo '<div style="height:8px;border-radius:4px;background:#f0f0f1;overflow:hidden;">';
+			echo '<div style="height:100%;width:' . (int) $pct . '%;background:#2271b1;transition:width .3s;"></div>';
+			echo '</div>';
+			echo '<p style="margin:4px 0 0;font-size:12px;color:#50575e;">Rattrapage historique : ' . esc_html( number_format_i18n( $hist_sent ) . ' / ' . number_format_i18n( $past ) . ' RDV passes (' . $pct . '%)' ) . '. Cliquez « Synchroniser maintenant » ou laissez le cron continuer.</p>';
+			echo '</div>';
+		} elseif ( $incoming !== null && $upcoming > 0 ) {
 			$pct = max( 0, min( 100, (int) round( ( $incoming / max( 1, $upcoming ) ) * 100 ) ) );
 			echo '<div style="margin:8px 0 4px;max-width:640px;">';
 			echo '<div style="height:8px;border-radius:4px;background:#f0f0f1;overflow:hidden;">';
 			echo '<div style="height:100%;width:' . (int) $pct . '%;background:#2271b1;transition:width .3s;"></div>';
 			echo '</div>';
-			echo '<p style="margin:4px 0 0;font-size:12px;color:#50575e;">' . esc_html( number_format_i18n( $incoming ) . ' / ' . number_format_i18n( $upcoming ) . ' rendez-vous envoyes (' . $pct . '%)' ) . '</p>';
+			echo '<p style="margin:4px 0 0;font-size:12px;color:#50575e;">' . esc_html( number_format_i18n( $incoming ) . ' / ' . number_format_i18n( $upcoming ) . ' rendez-vous a venir envoyes (' . $pct . '%)' ) . '</p>';
 			echo '</div>';
-		} elseif ( $incoming !== null && $incoming === 0 ) {
-			echo '<p style="margin:4px 0 0;font-size:12px;color:#50575e;">Aucun rendez-vous a venir dans Bookly. La synchro continue s\'occupera automatiquement des nouveaux.</p>';
+		} elseif ( $incoming !== null && $incoming === 0 && $total_scope === 0 ) {
+			echo '<p style="margin:4px 0 0;font-size:12px;color:#50575e;">Aucun rendez-vous dans Bookly. La synchro s\'occupera automatiquement des nouveaux.</p>';
 		}
 
 		if ( ! empty( $summary['at'] ) ) {
@@ -1117,7 +1156,11 @@ final class BeautyHub_Bookly_Export {
 		return wp_date( 'd/m/Y H:i:s', $ts );
 	}
 
-	private static function count_upcoming_appointments() {
+	private static function upcoming_cutoff() {
+		return date( 'Y-m-d 00:00:00', strtotime( current_time( 'mysql' ) ) - DAY_IN_SECONDS );
+	}
+
+	private static function count_appointments( $before_cutoff ) {
 		global $wpdb;
 		$appt_table = self::find_table( array( 'bookly_appointments' ) );
 		$ca_table   = self::find_table( array( 'bookly_customer_appointments' ) );
@@ -1128,13 +1171,21 @@ final class BeautyHub_Bookly_Export {
 		if ( ! in_array( 'start_date', $appt_cols, true ) ) {
 			return (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$ca_table}`" ); // phpcs:ignore
 		}
-		$cutoff = date( 'Y-m-d 00:00:00', strtotime( current_time( 'mysql' ) ) - DAY_IN_SECONDS );
+		$op = $before_cutoff ? '<' : '>=';
 		return (int) $wpdb->get_var( // phpcs:ignore
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM `{$ca_table}` ca INNER JOIN `{$appt_table}` a ON a.id = ca.appointment_id WHERE a.start_date >= %s",
-				$cutoff
+				"SELECT COUNT(*) FROM `{$ca_table}` ca INNER JOIN `{$appt_table}` a ON a.id = ca.appointment_id WHERE a.start_date {$op} %s",
+				self::upcoming_cutoff()
 			)
 		);
+	}
+
+	private static function count_upcoming_appointments() {
+		return self::count_appointments( false );
+	}
+
+	private static function count_history_appointments() {
+		return self::count_appointments( true );
 	}
 
 	private static function extras_catalog( $extras_table ) {
@@ -1180,7 +1231,7 @@ final class BeautyHub_Bookly_Export {
 		if ( ! $has( $appt_cols, 'start_date' ) ) {
 			return '';
 		}
-		$cutoff = date( 'Y-m-d 00:00:00', strtotime( current_time( 'mysql' ) ) - DAY_IN_SECONDS );
+		$cutoff = self::upcoming_cutoff();
 		$status = $has( $ca_cols, 'status' ) ? 'ca.status' : "''";
 		$end    = $has( $appt_cols, 'end_date' ) ? 'a.end_date' : 'a.start_date';
 		$staff  = $has( $appt_cols, 'staff_id' ) ? 'a.staff_id' : '0';
@@ -1226,9 +1277,14 @@ final class BeautyHub_Bookly_Export {
 		if ( get_transient( 'bh_bookly_sync_lock' ) ) {
 			return;
 		}
-		set_transient( 'bh_bookly_sync_lock', 1, 5 * MINUTE_IN_SECONDS );
+		set_transient( 'bh_bookly_sync_lock', 1, 10 * MINUTE_IN_SECONDS );
 
-		if ( ! $force ) {
+		$hist_cursor = (string) get_option( self::OPTION_HISTORY_CURSOR, '0' );
+		$hist_done   = ( 'done' === $hist_cursor );
+		$fp          = self::upcoming_fingerprint();
+		$fp_changed  = ( $fp && $fp !== (string) get_option( self::OPTION_SYNC_FINGERPRINT, '' ) );
+
+		if ( ! $force && $hist_done ) {
 			$last_ts = (int) get_transient( 'bh_bookly_sync_last_ts' );
 			if ( $last_ts && ( time() - $last_ts ) < self::MIN_SYNC_INTERVAL ) {
 				if ( ! wp_next_scheduled( self::PUSH_HOOK ) ) {
@@ -1242,20 +1298,49 @@ final class BeautyHub_Bookly_Export {
 				delete_transient( 'bh_bookly_sync_lock' );
 				return;
 			}
-			$fp = self::upcoming_fingerprint();
-			if ( $fp && $fp === (string) get_option( self::OPTION_SYNC_FINGERPRINT, '' ) ) {
+			if ( ! $fp_changed ) {
 				delete_transient( 'bh_bookly_sync_lock' );
 				return;
 			}
 		}
 
-		$appointments = self::collect_appointments( true );
-		$keep_ids     = array();
-		foreach ( $appointments as $a ) {
-			$keep_ids[] = (int) $a['bookly_ca_id'];
+		$appointments   = array();
+		$keep_ids       = array();
+		$send_upcoming  = false;
+		$sent_history_n = 0;
+		$next_cursor    = $hist_cursor;
+
+		if ( ! $hist_done ) {
+			$after = (int) $hist_cursor;
+			$hist  = self::collect_appointments(
+				false,
+				array(
+					'history_only' => true,
+					'after_id'     => $after,
+					'limit'        => self::HISTORY_BATCH,
+				)
+			);
+			$appointments   = $hist;
+			$sent_history_n = count( $hist );
+			if ( $sent_history_n < self::HISTORY_BATCH ) {
+				$next_cursor = 'done';
+			} elseif ( $sent_history_n > 0 ) {
+				$last_row    = $hist[ $sent_history_n - 1 ];
+				$next_cursor = (string) (int) $last_row['bookly_ca_id'];
+			}
 		}
 
-		$chunks    = array_chunk( $appointments, 60 );
+		$just_finished_history = ( ! $hist_done && 'done' === $next_cursor );
+		$send_upcoming         = ( 0 === $sent_history_n ) && ( $force || $fp_changed || $hist_done || $just_finished_history );
+		if ( $send_upcoming ) {
+			$upcoming = self::collect_appointments( true );
+			foreach ( $upcoming as $a ) {
+				$keep_ids[]     = (int) $a['bookly_ca_id'];
+				$appointments[] = $a;
+			}
+		}
+
+		$chunks    = array_chunk( $appointments, self::CHUNK_SIZE );
 		$last_err  = '';
 		$sent_last = false;
 		if ( empty( $chunks ) ) {
@@ -1278,10 +1363,11 @@ final class BeautyHub_Bookly_Export {
 		);
 		foreach ( $chunks as $i => $chunk ) {
 			$is_last = ( $i === $total - 1 );
+			$do_full = $is_last && $send_upcoming && ! empty( $keep_ids );
 			$payload = array(
-				'mode'     => $is_last ? 'full' : 'upsert',
+				'mode'     => $do_full ? 'full' : 'upsert',
 				'rows'     => $chunk,
-				'keep_ids' => $is_last ? $keep_ids : array(),
+				'keep_ids' => $do_full ? $keep_ids : array(),
 			);
 			$attempt = 0;
 			$res     = null;
@@ -1370,13 +1456,26 @@ final class BeautyHub_Bookly_Export {
 			update_option( self::OPTION_SYNC_ERROR, $last_err );
 		} else {
 			update_option( self::OPTION_SYNC_ERROR, '' );
+			if ( $sent_history_n > 0 || ( ! $hist_done && 'done' === $next_cursor ) ) {
+				update_option( self::OPTION_HISTORY_CURSOR, $next_cursor );
+				if ( $sent_history_n > 0 ) {
+					update_option( self::OPTION_HISTORY_SENT, (int) get_option( self::OPTION_HISTORY_SENT, 0 ) + $sent_history_n );
+				}
+			}
 			if ( $sent_last ) {
 				update_option( self::OPTION_SYNC_LAST, wp_date( 'd/m/Y H:i:s' ) );
-				update_option( self::OPTION_SYNC_FINGERPRINT, self::upcoming_fingerprint() );
+				if ( $send_upcoming ) {
+					update_option( self::OPTION_SYNC_FINGERPRINT, $fp );
+				}
 				set_transient( 'bh_bookly_sync_last_ts', time(), HOUR_IN_SECONDS );
 				$bucket       = self::hour_bucket();
 				$bucket['n']  = (int) $bucket['n'] + 1;
 				set_transient( 'bh_bookly_sync_hour', $bucket, HOUR_IN_SECONDS + 60 );
+			}
+			if ( 'done' !== $next_cursor || ( $sent_history_n > 0 && 'done' === $next_cursor ) ) {
+				if ( ! wp_next_scheduled( self::PUSH_HOOK ) ) {
+					wp_schedule_single_event( time() + 8, self::PUSH_HOOK );
+				}
 			}
 		}
 		delete_transient( 'bh_bookly_sync_lock' );

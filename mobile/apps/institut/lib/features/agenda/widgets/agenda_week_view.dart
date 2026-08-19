@@ -411,29 +411,36 @@ class _WeekBlock extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: Opacity(
             opacity: cancelled ? 0.55 : 1,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.28),
-                  border: Border(left: BorderSide(color: accent, width: 2.5)),
-                ),
-                alignment: Alignment.topLeft,
-                padding: const EdgeInsets.fromLTRB(3, 2, 2, 0),
-                child: Text(
-                  DateFormat.Hm().format(appointment.startsAt.toLocal()),
-                  maxLines: 1,
-                  overflow: TextOverflow.clip,
-                  softWrap: false,
-                  style: const TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    height: 1,
-                    color: Color(0xFF0A0A0A),
+            child: LayoutBuilder(builder: (context, constraints) {
+              final narrow = constraints.maxWidth < 34;
+              final local = appointment.startsAt.toLocal();
+              final label = narrow
+                  ? local.hour.toString().padLeft(2, '0')
+                  : DateFormat.Hm().format(local);
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.28),
+                    border: Border(left: BorderSide(color: accent, width: 2.5)),
+                  ),
+                  alignment: Alignment.topLeft,
+                  padding: EdgeInsets.fromLTRB(narrow ? 2 : 3, 2, 2, 0),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.clip,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: narrow ? 8.5 : 9.5,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                      color: const Color(0xFF0A0A0A),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            }),
           ),
         ),
       ),

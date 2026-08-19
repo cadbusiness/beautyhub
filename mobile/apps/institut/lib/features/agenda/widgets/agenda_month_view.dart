@@ -1,10 +1,14 @@
+import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../state/session_providers.dart';
+import '../agenda_colors.dart';
 
-/// Vue mois : grille 7 × 6, tap sur un jour → sélectionne + bascule en vue jour.
+/// Vue mois : grille 7 × 6 qui remplit l'espace, chaque case montre le numéro
+/// du jour et des points colorés (un par praticien) + total si > 3 RDV.
+/// Tap sur un jour → sélectionne + bascule en vue jour.
 class AgendaMonthView extends ConsumerWidget {
   const AgendaMonthView({
     super.key,
@@ -52,68 +56,60 @@ class AgendaMonthView extends ConsumerWidget {
         ),
       ),
       data: (range) {
-        final counts = <String, int>{};
+        final byDay = <String, List<DayAppointment>>{};
         for (final appt in range.appointments) {
           if (appt.isCancelled) continue;
           final key = _key(appt.startsAt);
-          counts[key] = (counts[key] ?? 0) + 1;
+          byDay.putIfAbsent(key, () => []).add(appt);
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _WeekdaysRow(),
             const Divider(height: 1, color: _line),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final cellWidth = constraints.maxWidth / 7;
-                final cellHeight = cellWidth * 0.95;
-                return SizedBox(
-                  height: cellHeight * 6,
-                  child: Column(
-                    children: [
-                      for (var row = 0; row < 6; row++)
-                        SizedBox(
-                          height: cellHeight,
-                          child: Row(
-                            children: [
-                              for (var col = 0; col < 7; col++)
-                                Expanded(
-                                  child: _MonthCell(
-                                    day: cells[row * 7 + col],
-                                    monthAnchor: anchor,
-                                    isSelected: _sameDay(
-                                      cells[row * 7 + col],
-                                      selected,
-                                    ),
-                                    isToday: _sameDay(
-                                      cells[row * 7 + col],
-                                      today,
-                                    ),
-                                    count: counts[_keyFromDate(
-                                          cells[row * 7 + col],
-                                        )] ??
-                                        0,
-                                    onTap: () {
-                                      ref
-                                          .read(
-                                            selectedAgendaDateProvider.notifier,
-                                          )
-                                          .state = cells[row * 7 + col];
-                                      ref
-                                          .read(
-                                            agendaViewModeProvider.notifier,
-                                          )
-                                          .state = AgendaViewMode.day;
-                                    },
-                                  ),
+            Expanded(
+              child: Column(
+                children: [
+                  for (var row = 0; row < 6; row++)
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var col = 0; col < 7; col++)
+                            Expanded(
+                              child: _MonthCell(
+                                day: cells[row * 7 + col],
+                                monthAnchor: anchor,
+                                isSelected: _sameDay(
+                                  cells[row * 7 + col],
+                                  selected,
                                 ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              },
+                                isToday: _sameDay(
+                                  cells[row * 7 + col],
+                                  today,
+                                ),
+                                appointments:
+                                    byDay[_keyFromDate(cells[row * 7 + col])] ??
+                                        const [],
+                                onTap: () {
+                                  ref
+                                      .read(
+                                        selectedAgendaDateProvider.notifier,
+                                      )
+                                      .state = cells[row * 7 + col];
+                                  ref
+                                      .read(
+                                        agendaViewModeProvider.notifier,
+                                      )
+                                      .state = AgendaViewMode.day;
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
           ],
         );
@@ -144,13 +140,13 @@ class _WeekdaysRow extends StatelessWidget {
         for (var i = 0; i < 7; i++)
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
                 fmt.format(monday.add(Duration(days: i))).toUpperCase(),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
                   letterSpacing: 0.4,
                   color: Color(0xFF737373),
                 ),
@@ -168,7 +164,7 @@ class _MonthCell extends StatelessWidget {
     required this.monthAnchor,
     required this.isSelected,
     required this.isToday,
-    required this.count,
+    required this.appointments,
     required this.onTap,
   });
 
@@ -176,7 +172,7 @@ class _MonthCell extends StatelessWidget {
   final DateTime monthAnchor;
   final bool isSelected;
   final bool isToday;
-  final int count;
+  final List<DayAppointment> appointments;
   final VoidCallback onTap;
 
   static const _muted = Color(0xFF9CA3AF);
@@ -188,65 +184,129 @@ class _MonthCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final inMonth = day.month == monthAnchor.month;
     final textColor = inMonth ? _black : _muted;
+    final count = appointments.length;
+
+    // Une pastille de couleur par praticien distinct, max 4.
+    final seenStaff = <String>{};
+    final staffColors = <Color>[];
+    for (final appt in appointments) {
+      final key = appt.staffId ?? 'no-staff';
+      if (seenStaff.contains(key)) continue;
+      seenStaff.add(key);
+      staffColors.add(agendaAccentColor(appt));
+      if (staffColors.length >= 4) break;
+    }
+
     return InkWell(
       onTap: onTap,
       child: Container(
-        decoration: const BoxDecoration(
-          border: Border(
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFFF5F3FF)
+              : isToday && inMonth
+                  ? const Color(0xFFFAF5FF)
+                  : Colors.transparent,
+          border: const Border(
             right: BorderSide(color: _line, width: 0.5),
             bottom: BorderSide(color: _line, width: 0.5),
           ),
         ),
-        padding: const EdgeInsets.fromLTRB(6, 6, 6, 6),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 26,
-                height: 26,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? _black
-                      : isToday
-                          ? _accent
-                          : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  '${day.day}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isToday || isSelected
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                    color: (isSelected || isToday) ? Colors.white : textColor,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            if (count > 0)
-              Center(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEDE9FE),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: _accent,
+        child: ClipRect(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Center(
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? _black
+                          : isToday
+                              ? _accent
+                              : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '${day.day}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isToday || isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: (isSelected || isToday)
+                            ? Colors.white
+                            : textColor,
+                      ),
                     ),
                   ),
                 ),
               ),
-          ],
+              const SizedBox(height: 2),
+              Expanded(
+                child: staffColors.isEmpty
+                    ? const SizedBox.shrink()
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          // Barres colorées empilées (une par praticien).
+                          // Compact et visuel — le nombre exact est en bas
+                          // en petit chiffre.
+                          final barCount = staffColors.length;
+                          final maxBars = 3;
+                          final shown =
+                              staffColors.take(maxBars).toList(growable: false);
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (final c in shown)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      3, 0, 3, 1.5),
+                                  child: Container(
+                                    height: 3,
+                                    decoration: BoxDecoration(
+                                      color: c,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                              if (barCount > maxBars)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      3, 0, 3, 1.5),
+                                  child: Container(
+                                    height: 3,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF9CA3AF),
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                              const Spacer(),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 3),
+                                child: Text(
+                                  '$count',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF737373),
+                                    height: 1,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

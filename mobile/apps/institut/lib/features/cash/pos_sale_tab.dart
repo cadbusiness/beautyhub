@@ -1485,6 +1485,27 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
             ),
             const SizedBox(height: 16),
             ...lines,
+            const SizedBox(height: 8),
+            _CartAddLine(
+              icon: Icons.add_shopping_cart_outlined,
+              label: 'Ajouter un produit',
+              onTap: () {
+                Navigator.pop(context);
+                final hasWoo = ctx.catalog.any((i) => i.category == 'woocommerce');
+                ref.read(posCategoryFilterProvider.notifier).state =
+                    hasWoo ? 'woocommerce' : 'internal';
+                ref.read(posCatalogFacetProvider.notifier).state = 'all';
+              },
+            ),
+            _CartAddLine(
+              icon: Icons.spa_outlined,
+              label: 'Ajouter une prestation',
+              onTap: () {
+                Navigator.pop(context);
+                ref.read(posCategoryFilterProvider.notifier).state = 'service';
+                ref.read(posCatalogFacetProvider.notifier).state = 'all';
+              },
+            ),
             const SizedBox(height: 4),
             const _CartRule(),
             InkWell(
@@ -2108,6 +2129,48 @@ class _CartQtyChip extends StatelessWidget {
             constraints: const BoxConstraints(minWidth: 32, minHeight: 36),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CartAddLine extends StatelessWidget {
+  const _CartAddLine({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: const Color(0xFF0A0A0A)),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0A0A0A),
+              ),
+            ),
+            const Spacer(),
+            const Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: Color(0xFFA3A3A3),
+            ),
+          ],
+        ),
       ),
     );
   }

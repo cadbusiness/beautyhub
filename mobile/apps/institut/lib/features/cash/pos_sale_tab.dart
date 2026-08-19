@@ -35,6 +35,10 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
 
   static const _black = Color(0xFF0A0A0A);
   static const _muted = Color(0xFF737373);
+  static const _tabletBreakpoint = 600.0;
+
+  bool get _tablet =>
+      MediaQuery.sizeOf(context).shortestSide >= _tabletBreakpoint;
 
   @override
   void initState() {
@@ -636,50 +640,56 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     if (mounted) _openCartSheet(ctx);
   }
 
+  _CartSheet _cartPanel(PosContext ctx, {required bool embedded}) {
+    return _CartSheet(
+      ctx: ctx,
+      embedded: embedded,
+      selectedClient: _selectedClient,
+      selectedStaff: _selectedStaff,
+      paymentMethod: _paymentMethod,
+      onClientChanged: (item) {
+        setState(() => _selectedClient = item);
+        _syncMeta();
+        ref.read(posCartSessionProvider.notifier).scheduleSave();
+      },
+      onStaffChanged: (item) {
+        setState(() => _selectedStaff = item);
+        _syncMeta();
+        ref.read(posCartSessionProvider.notifier).scheduleSave();
+      },
+      onPaymentChanged: (m) => setState(() => _paymentMethod = m),
+      onCheckout: ({
+        discountCents = 0,
+        loyaltyDiscountCents = 0,
+        notes,
+        discountReason,
+        loyaltyRewardId,
+        loyaltyCreditCents = 0,
+        staffId,
+        paymentMethod = 'cash',
+      }) =>
+          _checkout(
+            ctx,
+            discountCents: discountCents,
+            loyaltyDiscountCents: loyaltyDiscountCents,
+            notes: notes,
+            discountReason: discountReason,
+            loyaltyRewardId: loyaltyRewardId,
+            loyaltyCreditCents: loyaltyCreditCents,
+            staffId: staffId,
+            paymentMethod: paymentMethod,
+          ),
+      sessionBlocked: ctx.sessionPaused ||
+          ctx.sessionIsPreviousDay ||
+          (ctx.requireOpenSession && !ctx.sessionOpen),
+    );
+  }
+
   void _openCartSheet(PosContext ctx) {
+    if (_tablet) return;
     showAppSheet<void>(
       context: context,
-      builder: (context) => _CartSheet(
-        ctx: ctx,
-        selectedClient: _selectedClient,
-        selectedStaff: _selectedStaff,
-        paymentMethod: _paymentMethod,
-        onClientChanged: (item) {
-          setState(() => _selectedClient = item);
-          _syncMeta();
-          ref.read(posCartSessionProvider.notifier).scheduleSave();
-        },
-        onStaffChanged: (item) {
-          setState(() => _selectedStaff = item);
-          _syncMeta();
-          ref.read(posCartSessionProvider.notifier).scheduleSave();
-        },
-        onPaymentChanged: (m) => setState(() => _paymentMethod = m),
-        onCheckout: ({
-          discountCents = 0,
-          loyaltyDiscountCents = 0,
-          notes,
-          discountReason,
-          loyaltyRewardId,
-          loyaltyCreditCents = 0,
-          staffId,
-          paymentMethod = 'cash',
-        }) =>
-            _checkout(
-              ctx,
-              discountCents: discountCents,
-              loyaltyDiscountCents: loyaltyDiscountCents,
-              notes: notes,
-              discountReason: discountReason,
-              loyaltyRewardId: loyaltyRewardId,
-              loyaltyCreditCents: loyaltyCreditCents,
-              staffId: staffId,
-              paymentMethod: paymentMethod,
-            ),
-        sessionBlocked: ctx.sessionPaused ||
-            ctx.sessionIsPreviousDay ||
-            (ctx.requireOpenSession && !ctx.sessionOpen),
-      ),
+      builder: (context) => _cartPanel(ctx, embedded: false),
     );
   }
 
@@ -740,7 +750,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             facet.startsWith('product:') && facet != 'product:none'
                 ? facet.substring('product:'.length)
                 : null;
-        return Stack(
+        final catalog = Stack(
           children: [
             CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -907,12 +917,13 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                       ),
                     ),
                   ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
-                    child: const PosCartSwitcher(),
+                if (!_tablet)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(16, 10, 16, 2),
+                      child: PosCartSwitcher(),
+                    ),
                   ),
-                ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
@@ -1086,7 +1097,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                    padding: EdgeInsets.fromLTRB(16, 0, 16, _tablet ? 24 : 96),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
@@ -1113,7 +1124,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                   ),
               ],
             ),
-            if (cartCount > 0)
+            if (cartCount > 0 && !_tablet)
               Positioned(
                 left: 16,
                 right: 16,
@@ -1162,6 +1173,25 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                   ),
                 ),
               ),
+          ],
+        );
+        if (!_tablet) return catalog;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: catalog),
+            DecoratedBox(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  left: BorderSide(color: Color(0xFFE8E8E8)),
+                ),
+              ),
+              child: SizedBox(
+                width: 400,
+                child: _cartPanel(ctx, embedded: true),
+              ),
+            ),
           ],
         );
       },
@@ -1418,9 +1448,11 @@ class _CartSheet extends ConsumerStatefulWidget {
     required this.onPaymentChanged,
     required this.onCheckout,
     this.sessionBlocked = false,
+    this.embedded = false,
   });
 
   final PosContext ctx;
+  final bool embedded;
   final PickerItem? selectedClient;
   final PickerItem? selectedStaff;
   final String paymentMethod;
@@ -1654,29 +1686,32 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
     final eligibleRewards =
         _loyalty?.rewards.where((r) => r.eligible).toList() ?? const [];
 
+    final embedded = widget.embedded;
     return Padding(
       padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 12,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        left: embedded ? 16 : 20,
+        right: embedded ? 16 : 20,
+        top: embedded ? 14 : 12,
+        bottom: MediaQuery.of(context).viewInsets.bottom + (embedded ? 16 : 20),
       ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE5E5E5),
-                  borderRadius: BorderRadius.circular(2),
+            if (!embedded) ...[
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE5E5E5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
             const Text(
               'Panier',
               style: TextStyle(
@@ -1694,7 +1729,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
               icon: Icons.add_shopping_cart_outlined,
               label: 'Ajouter un produit',
               onTap: () {
-                Navigator.pop(context);
+                if (!embedded && context.mounted) Navigator.pop(context);
                 final hasWoo = ctx.catalog.any((i) => i.category == 'woocommerce');
                 ref.read(posCategoryFilterProvider.notifier).state =
                     hasWoo ? 'woocommerce' : 'internal';
@@ -1705,7 +1740,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
               icon: Icons.spa_outlined,
               label: 'Ajouter une prestation',
               onTap: () {
-                Navigator.pop(context);
+                if (!embedded && context.mounted) Navigator.pop(context);
                 ref.read(posCategoryFilterProvider.notifier).state = 'service';
                 ref.read(posCatalogFacetProvider.notifier).state = 'all';
               },
@@ -1987,7 +2022,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                           staffId: _staff?.id,
                           paymentMethod: _paymentMethod,
                         );
-                        if (ok && context.mounted) {
+                        if (ok && context.mounted && !embedded) {
                           Navigator.pop(context);
                         }
                       },

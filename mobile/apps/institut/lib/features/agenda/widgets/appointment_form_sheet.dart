@@ -17,13 +17,22 @@ Future<void> showCreateAppointmentSheet(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (ctx) => _CreateAppointmentSheet(
-      initialDate: initialDate,
-      initialTime: initialTime,
+    builder: (ctx) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(ctx).height * 0.92,
+        ),
+        child: _CreateAppointmentSheet(
+          initialDate: initialDate,
+          initialTime: initialTime,
+        ),
+      ),
     ),
   );
 }
@@ -324,15 +333,9 @@ class _CreateAppointmentSheetState
     final timeFmt = DateFormat.Hm();
     final untilFmt = DateFormat('d MMMM y', 'fr_FR');
 
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 12,
-          bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
-        ),
-        child: posAsync.when(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+      child: posAsync.when(
           loading: () => const SizedBox(
             height: 280,
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
@@ -371,16 +374,28 @@ class _CreateAppointmentSheetState
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Nouveau rendez-vous',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: _black,
-                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Nouveau rendez-vous',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: _black,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _saving ? null : () => Navigator.pop(context),
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(Icons.close_rounded, size: 22),
+                        color: const Color(0xFF737373),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   SearchablePickerField(
                     label: 'Cliente',
                     value: _clientTitle ??
@@ -563,8 +578,7 @@ class _CreateAppointmentSheetState
             );
           },
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildServiceLine(

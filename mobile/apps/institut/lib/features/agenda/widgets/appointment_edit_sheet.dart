@@ -13,11 +13,20 @@ Future<bool> showEditAppointmentSheet(
   final updated = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => _EditAppointmentSheet(appointment: appointment),
+    builder: (ctx) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(ctx).height * 0.92,
+        ),
+        child: _EditAppointmentSheet(appointment: appointment),
+      ),
+    ),
   );
   return updated == true;
 }
@@ -384,15 +393,9 @@ class _EditAppointmentSheetState extends ConsumerState<_EditAppointmentSheet> {
     final dateFmt = DateFormat('EEEE d MMMM', 'fr_FR');
     final timeFmt = DateFormat.Hm();
 
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          12,
-          24,
-          24 + MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: posAsync.when(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+      child: posAsync.when(
           loading: () => const SizedBox(
             height: 280,
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
@@ -419,16 +422,28 @@ class _EditAppointmentSheetState extends ConsumerState<_EditAppointmentSheet> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Modifier le rendez-vous',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: _black,
-                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Modifier le rendez-vous',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: _black,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _saving ? null : () => Navigator.pop(context),
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(Icons.close_rounded, size: 22),
+                        color: const Color(0xFF737373),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
@@ -591,8 +606,7 @@ class _EditAppointmentSheetState extends ConsumerState<_EditAppointmentSheet> {
             );
           },
         ),
-      ),
-    );
+      );
   }
 }
 

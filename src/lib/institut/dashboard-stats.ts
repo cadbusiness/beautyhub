@@ -64,8 +64,20 @@ export type DashboardPeriodStats = {
 export type DashboardSnapshot = {
   today: DashboardTodaySummary;
   analytics: DashboardPeriodStats;
+  byStaff: DashboardStaffStat[];
   salesChannel: SalesChannelFilter;
   wooSalesAvailable: boolean;
+};
+
+export type DashboardStaffStat = {
+  staffId: string | null;
+  fullName: string;
+  color: string | null;
+  revenueCents: number;
+  salesCount: number;
+  serviceCount: number;
+  appointmentsTotal: number;
+  appointmentsCompleted: number;
 };
 
 type DateRange = { start: Date; end: Date };
@@ -309,7 +321,7 @@ async function fetchSalesInRange(
 
   let query = supabase
     .from("inst_sales")
-    .select("total_cents, created_at, source_channel")
+    .select("id, total_cents, created_at, source_channel, staff_id")
     .eq("tenant_id", tenantId)
     .neq("sale_kind", "refund")
     .gte("created_at", range.start.toISOString())
@@ -334,7 +346,7 @@ async function fetchAppointmentsInRange(
 ) {
   const { data } = await supabase
     .from("inst_appointments")
-    .select("status, starts_at")
+    .select("status, starts_at, staff_id")
     .eq("tenant_id", tenantId)
     .gte("starts_at", range.start.toISOString())
     .lte("starts_at", range.end.toISOString());
@@ -473,6 +485,158 @@ function buildTodaySummary(
   };
 }
 
+type SaleRow = {
+  id: string;
+  total_cents: number;
+  created_at: string;
+  staff_id: string | null;
+};
+
+type AppointmentRow = {
+  status: string;
+  starts_at: string;
+  staff_id: string | null;
+};
+
+type ItemRow = {
+  sale_id: string;
+  staff_id: string | null;
+  item_type: string;
+  quantity: number;
+  line_total_cents: number;
+};
+
+async function fetchSaleItemsForSales(
+  supabase: Db,
+  tenantId: string,
+  saleIds: string[],
+): Promise<ItemRow[]> {
+  if (saleIds.length === 0) return [];
+  const rows: ItemRow[] = [];
+  const chunkSize = 200;
+  for (let i = 0; i < saleIds.length; i += chunkSize) {
+    const chunk = saleIds.slice(i, i + chunkSize);
+    const { data } = await supabase
+      .from("inst_sale_items")
+      .select("sale_id, staff_id, item_type, quantity, line_total_cents")
+      .eq("tenant_id", tenantId)
+      .in("sale_id", chunk);
+    rows.push(...((data ?? []) as ItemRow[]));
+  }
+  return rows;
+}
+
+async function buildStaffBreakdown(
+  supabase: Db,
+  tenantId: string,
+  sales: SaleRow[],
+  appointments: AppointmentRow[],
+): Promise<DashboardStaffStat[]> {
+  const items = await fetchSaleItemsForSales(
+    supabase,
+    tenantId,
+    sales.map((s) => s.id),
+  );
+  const saleById = new Map(sales.map((s) => [s.id, s]));
+
+  type Acc = {
+    revenueCents: number;
+    saleIds: Set<string>;
+    serviceCount: number;
+    appointmentsTotal: number;
+    appointmentsCompleted: number;
+  };
+  const byStaff = new Map<string | null, Acc>();
+
+  function acc(staffId: string | null): Acc {
+    let row = byStaff.get(staffId);
+    if (!row) {
+      row = {
+        revenueCents: 0,
+        saleIds: new Set(),
+        serviceCount: 0,
+        appointmentsTotal: 0,
+        appointmentsCompleted: 0,
+      };
+      byStaff.set(staffId, row);
+    }
+    return row;
+  }
+
+  const itemsBySale = new Map<string, ItemRow[]>();
+  for (const item of items) {
+    const list = itemsBySale.get(item.sale_id) ?? [];
+    list.push(item);
+    itemsBySale.set(item.sale_id, list);
+  }
+
+  for (const sale of sales) {
+    const saleItems = itemsBySale.get(sale.id) ?? [];
+    if (saleItems.length === 0) {
+      const row = acc(sale.staff_id);
+      row.revenueCents += sale.total_cents;
+      row.saleIds.add(sale.id);
+      continue;
+    }
+    for (const item of saleItems) {
+      const staffId = item.staff_id ?? saleById.get(item.sale_id)?.staff_id ?? null;
+      const row = acc(staffId);
+      row.revenueCents += item.line_total_cents;
+      row.saleIds.add(sale.id);
+      if (item.item_type === "service") {
+        row.serviceCount += Math.max(1, item.quantity);
+      }
+    }
+  }
+
+  for (const appt of appointments) {
+    const row = acc(appt.staff_id);
+    row.appointmentsTotal += 1;
+    if (appt.status === "completed") row.appointmentsCompleted += 1;
+  }
+
+  const staffIds = [...byStaff.keys()].filter((id): id is string => Boolean(id));
+  const { data: staffRows } = staffIds.length
+    ? await supabase
+        .from("inst_staff")
+        .select("id, full_name, color")
+        .eq("tenant_id", tenantId)
+        .in("id", staffIds)
+    : { data: [] as Array<{ id: string; full_name: string; color: string | null }> };
+  const staffMeta = new Map(
+    (staffRows ?? []).map((s) => [s.id, { fullName: s.full_name, color: s.color }]),
+  );
+
+  const stats: DashboardStaffStat[] = [];
+  for (const [staffId, row] of byStaff) {
+    if (
+      row.revenueCents === 0 &&
+      row.saleIds.size === 0 &&
+      row.appointmentsTotal === 0
+    ) {
+      continue;
+    }
+    const meta = staffId ? staffMeta.get(staffId) : null;
+    stats.push({
+      staffId,
+      fullName: meta?.fullName ?? (staffId ? "Praticien" : "Non attribué"),
+      color: meta?.color ?? null,
+      revenueCents: row.revenueCents,
+      salesCount: row.saleIds.size,
+      serviceCount: row.serviceCount,
+      appointmentsTotal: row.appointmentsTotal,
+      appointmentsCompleted: row.appointmentsCompleted,
+    });
+  }
+
+  stats.sort((a, b) => {
+    if (a.staffId === null) return 1;
+    if (b.staffId === null) return -1;
+    return b.revenueCents - a.revenueCents;
+  });
+  return stats;
+}
+
 export async function fetchDashboardSnapshot(
   supabase: Db,
   tenantId: string,
@@ -517,6 +681,13 @@ export async function fetchDashboardSnapshot(
     fetchNewClientsInRange(supabase, tenantId, periodRange),
   ]);
 
+  const byStaff = await buildStaffBreakdown(
+    supabase,
+    tenantId,
+    periodSales,
+    periodAppointments,
+  );
+
   return {
     today: buildTodaySummary(
       todaySales,
@@ -535,6 +706,7 @@ export async function fetchDashboardSnapshot(
       previousPeriodAppointments,
       locale,
     ),
+    byStaff,
     salesChannel: channel,
     wooSalesAvailable: includeWooSales && wooConnected,
   };

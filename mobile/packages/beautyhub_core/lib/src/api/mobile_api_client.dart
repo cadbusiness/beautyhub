@@ -707,8 +707,8 @@ class MobileApiClient {
     return _requirePdfBytes(response, 'PDF indisponible');
   }
 
-  /// Membres de l'équipe (staff institut).
-  Future<List<InstStaffMember>> fetchInstitutTeam({
+  /// Équipe institut (personnel, rôles, droits).
+  Future<InstTeamSnapshot> fetchInstitutTeam({
     required String accessToken,
     required String tenantId,
   }) async {
@@ -717,10 +717,139 @@ class MobileApiClient {
       headers: _headers(accessToken: accessToken, tenantId: tenantId),
     );
     final body = await _decode(response);
-    final list = body['items'] as List? ?? const [];
-    return list
+    return InstTeamSnapshot.fromJson(body);
+  }
+
+  Future<String> createInstitutStaff({
+    required String accessToken,
+    required String tenantId,
+    required String fullName,
+    String? email,
+    String? color,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/team'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'fullName': fullName,
+        if (email != null && email.isNotEmpty) 'email': email,
+        if (color != null && color.isNotEmpty) 'color': color,
+      }),
+    );
+    final body = await _decode(response);
+    return body['staffId'] as String? ?? '';
+  }
+
+  Future<void> updateInstitutStaff({
+    required String accessToken,
+    required String tenantId,
+    required String staffId,
+    required String fullName,
+    String? email,
+    String? color,
+    String? tenantRoleId,
+  }) async {
+    final response = await _http.patch(
+      _uri('/api/mobile/institut/team/$staffId'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'fullName': fullName,
+        'email': email,
+        'color': color,
+        'tenantRoleId': tenantRoleId,
+      }),
+    );
+    await _decode(response);
+  }
+
+  Future<String> activateInstitutStaff({
+    required String accessToken,
+    required String tenantId,
+    required String staffId,
+    required String email,
+    String? tenantRoleId,
+    String? password,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/team/$staffId/activate'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'email': email,
+        if (tenantRoleId != null && tenantRoleId.isNotEmpty)
+          'tenantRoleId': tenantRoleId,
+        if (password != null && password.isNotEmpty) 'password': password,
+      }),
+    );
+    final body = await _decode(response);
+    return body['temporaryPassword'] as String? ?? '';
+  }
+
+  Future<String> resetInstitutStaffPassword({
+    required String accessToken,
+    required String tenantId,
+    required String staffId,
+    String? password,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/team/$staffId/password'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        if (password != null && password.isNotEmpty) 'password': password,
+      }),
+    );
+    final body = await _decode(response);
+    return body['temporaryPassword'] as String? ?? '';
+  }
+
+  Future<void> inviteInstitutStaff({
+    required String accessToken,
+    required String tenantId,
+    required String staffId,
+    required String email,
+    String? tenantRoleId,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/team/$staffId/invite'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'email': email,
+        if (tenantRoleId != null && tenantRoleId.isNotEmpty)
+          'tenantRoleId': tenantRoleId,
+      }),
+    );
+    await _decode(response);
+  }
+
+  Future<void> archiveInstitutStaff({
+    required String accessToken,
+    required String tenantId,
+    required String staffId,
+    bool revokeAccess = false,
+    bool restore = false,
+  }) async {
+    final response = await _http.post(
+      _uri('/api/mobile/institut/team/$staffId/archive'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+      body: jsonEncode({
+        'revokeAccess': revokeAccess,
+        'restore': restore,
+      }),
+    );
+    await _decode(response);
+  }
+
+  Future<List<InstTeamAuditRow>> fetchInstitutTeamAudit({
+    required String accessToken,
+    required String tenantId,
+  }) async {
+    final response = await _http.get(
+      _uri('/api/mobile/institut/team/audit'),
+      headers: _headers(accessToken: accessToken, tenantId: tenantId),
+    );
+    final body = await _decode(response);
+    return (body['items'] as List? ?? const [])
         .whereType<Map>()
-        .map((e) => InstStaffMember.fromJson(Map<String, dynamic>.from(e)))
+        .map((e) => InstTeamAuditRow.fromJson(Map<String, dynamic>.from(e)))
         .toList(growable: false);
   }
 
@@ -785,6 +914,7 @@ class MobileApiClient {
     required List<Map<String, dynamic>> payments,
     String? clientId,
     String? staffId,
+    Map<String, String>? lineStaffIds,
     String? notes,
     int? cartDiscountCents,
     String? discountReason,
@@ -801,6 +931,8 @@ class MobileApiClient {
         'payments': payments,
         if (clientId != null) 'clientId': clientId,
         if (staffId != null) 'staffId': staffId,
+        if (lineStaffIds != null && lineStaffIds.isNotEmpty)
+          'lineStaffIds': lineStaffIds,
         if (notes != null && notes.isNotEmpty) 'notes': notes,
         if (cartDiscountCents != null && cartDiscountCents > 0)
           'cartDiscountCents': cartDiscountCents,

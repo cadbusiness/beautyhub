@@ -62,6 +62,7 @@ export async function GET(request: Request) {
       },
       salesChannel: snapshot.salesChannel,
       wooSalesAvailable: snapshot.wooSalesAvailable,
+      byStaff: snapshot.byStaff,
     });
   } catch (error) {
     return mobileErrorResponse(error);

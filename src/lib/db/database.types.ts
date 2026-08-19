@@ -1603,6 +1603,7 @@ export type Database = {
           discount_value: number | null
           id: string
           label: string
+          line_staff: Json
           lines: Json
           locked_at: string | null
           locked_by: string | null
@@ -1624,6 +1625,7 @@ export type Database = {
           discount_value?: number | null
           id?: string
           label?: string
+          line_staff?: Json
           lines?: Json
           locked_at?: string | null
           locked_by?: string | null
@@ -1645,6 +1647,7 @@ export type Database = {
           discount_value?: number | null
           id?: string
           label?: string
+          line_staff?: Json
           lines?: Json
           locked_at?: string | null
           locked_by?: string | null
@@ -2222,6 +2225,7 @@ export type Database = {
           quantity: number
           sale_id: string
           service_id: string | null
+          staff_id: string | null
           tenant_id: string
           unit_price_cents: number
           vat_rate_bps: number
@@ -2239,6 +2243,7 @@ export type Database = {
           quantity?: number
           sale_id: string
           service_id?: string | null
+          staff_id?: string | null
           tenant_id: string
           unit_price_cents?: number
           vat_rate_bps?: number
@@ -2256,6 +2261,7 @@ export type Database = {
           quantity?: number
           sale_id?: string
           service_id?: string | null
+          staff_id?: string | null
           tenant_id?: string
           unit_price_cents?: number
           vat_rate_bps?: number
@@ -2287,6 +2293,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "inst_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inst_sale_items_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "inst_staff"
             referencedColumns: ["id"]
           },
           {
@@ -2378,6 +2391,7 @@ export type Database = {
           amount_paid_cents: number
           appointment_id: string | null
           cash_session_id: string | null
+          cashier_user_id: string | null
           client_id: string | null
           created_at: string
           currency: string
@@ -2404,6 +2418,7 @@ export type Database = {
           amount_paid_cents?: number
           appointment_id?: string | null
           cash_session_id?: string | null
+          cashier_user_id?: string | null
           client_id?: string | null
           created_at?: string
           currency?: string
@@ -2430,6 +2445,7 @@ export type Database = {
           amount_paid_cents?: number
           appointment_id?: string | null
           cash_session_id?: string | null
+          cashier_user_id?: string | null
           client_id?: string | null
           created_at?: string
           currency?: string

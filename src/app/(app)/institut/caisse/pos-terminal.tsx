@@ -83,6 +83,7 @@ export function PosTerminal({
   stripeEnabled,
   stripePublishableKey,
   stripeAccountId,
+  operatorStaffId = "",
 }: {
   catalog: PosCatalogItem[];
   serviceCategories?: PosServiceCategory[];
@@ -100,6 +101,7 @@ export function PosTerminal({
   stripeEnabled?: boolean;
   stripePublishableKey?: string;
   stripeAccountId?: string;
+  operatorStaffId?: string;
 }) {
   const t = useTranslations("pos.terminal");
   const locale = useLocale();
@@ -116,7 +118,15 @@ export function PosTerminal({
   const [query, setQuery] = useState("");
   const [facet, setFacet] = useState(POS_FACET_ALL);
   const [clientId, setClientId] = useState(() => initialPrefill?.clientId ?? "");
-  const [staffId, setStaffId] = useState(() => initialPrefill?.staffId ?? "");
+  const [staffId, setStaffId] = useState(
+    () => initialPrefill?.staffId || operatorStaffId || "",
+  );
+  const [lineStaff, setLineStaff] = useState<Record<string, string>>(() => {
+    if (!initialPrefill?.staffId) return {};
+    return Object.fromEntries(
+      Object.keys(initialPrefill.cart).map((key) => [key, initialPrefill.staffId]),
+    );
+  });
   const [appointmentId, setAppointmentId] = useState(() => initialPrefill?.appointmentId ?? "");
   const [loyaltyRewardId, setLoyaltyRewardId] = useState("");
   const [loyaltyCreditCents, setLoyaltyCreditCents] = useState(0);
@@ -160,6 +170,7 @@ export function PosTerminal({
       setCart({});
       setPriceOverrides({});
       setPriceEdits({});
+      setLineStaff({});
       setCartDiscountValue("");
       setCartDiscountReason("");
       setLoyaltyRewardId("");
@@ -187,6 +198,13 @@ export function PosTerminal({
       setPriceOverrides({});
       setPriceEdits({});
       setLastSale(null);
+      if (appt.staffId) {
+        setLineStaff(
+          Object.fromEntries(
+            Object.keys(appt.prefillCart).map((key) => [key, appt.staffId!]),
+          ),
+        );
+      }
     }
     setLoyaltyRewardId("");
     setLoyaltyCreditCents(0);
@@ -400,6 +418,7 @@ export function PosTerminal({
     setPriceEdits({});
     setClientId(next.clientId);
     setStaffId(next.staffId);
+    setLineStaff(next.lineStaff);
     setAppointmentId(next.appointmentId);
     setNotes(next.notes);
     setCartDiscountKind(next.cartDiscountKind);
@@ -422,6 +441,7 @@ export function PosTerminal({
     priceOverrides,
     clientId,
     staffId,
+    lineStaff,
     appointmentId,
     notes,
     cartDiscountKind,
@@ -546,6 +566,12 @@ export function PosTerminal({
       const q = (next[key] ?? 0) - 1;
       if (q <= 0) {
         delete next[key];
+        setLineStaff((ls) => {
+          if (!(key in ls)) return ls;
+          const nextLs = { ...ls };
+          delete nextLs[key];
+          return nextLs;
+        });
         setPriceOverrides((po) => {
           if (!(key in po)) return po;
           const nextPo = { ...po };
@@ -567,6 +593,7 @@ export function PosTerminal({
 
   function clearCart() {
     setCart({});
+    setLineStaff({});
     setPriceOverrides({});
     setPriceEdits({});
     setCartDiscountValue("");
@@ -1157,6 +1184,29 @@ export function PosTerminal({
                     >
                       {t("cart.lineDiscount")}
                     </button>
+                    {item.type === "service" ? (
+                      <Select
+                        value={lineStaff[key] ?? ""}
+                        onChange={(e) => {
+                          const next = e.target.value;
+                          setLineStaff((ls) => {
+                            const copy = { ...ls };
+                            if (!next) delete copy[key];
+                            else copy[key] = next;
+                            return copy;
+                          });
+                        }}
+                        className="h-7 w-auto max-w-[11rem] text-[11px]"
+                        aria-label={t("cart.lineStaff")}
+                      >
+                        <option value="">{t("cart.lineStaffInherit")}</option>
+                        {staff.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.label}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : null}
                   </div>
                   {lineDiscountKey === key ? (
                     <div className="flex flex-wrap items-center gap-2">
@@ -1328,6 +1378,13 @@ export function PosTerminal({
             </option>
           ))}
         </Select>
+        {cartLines.some(
+          (l) =>
+            l.item?.type === "service" &&
+            !(lineStaff[l.key] || staffId),
+        ) ? (
+          <p className="text-xs text-amber-800">{t("cart.staffRequiredHint")}</p>
+        ) : null}
 
         <Select
           value={appointmentId}
@@ -1391,6 +1448,7 @@ export function PosTerminal({
             cartJson={cartJson}
             clientId={clientId}
             staffId={staffId}
+            lineStaffJson={JSON.stringify(lineStaff)}
             appointmentId={appointmentId}
             notes={[
               notes.trim(),
@@ -1417,7 +1475,11 @@ export function PosTerminal({
               sessionPaused ||
               sessionPreviousDay ||
               (requireSession && !sessionOpen) ||
-              Boolean(posCarts.active?.lockedByOther)
+              Boolean(posCarts.active?.lockedByOther) ||
+              cartLines.some(
+                (l) =>
+                  l.item?.type === "service" && !(lineStaff[l.key] || staffId),
+              )
             }
             checkoutAction={checkoutAction}
             checkoutPending={checkoutPending}

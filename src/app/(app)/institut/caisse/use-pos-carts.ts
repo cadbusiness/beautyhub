@@ -8,6 +8,7 @@ export type PosCartLocalState = {
   priceOverrides: Record<string, number>;
   clientId: string;
   staffId: string;
+  lineStaff: Record<string, string>;
   appointmentId: string;
   notes: string;
   cartDiscountKind: "percent" | "fixed";
@@ -34,6 +35,7 @@ export function applyPosCartToLocal(cart: PosCartDto): PosCartLocalState {
     priceOverrides: cart.priceOverrides ?? {},
     clientId: cart.clientId ?? "",
     staffId: cart.staffId ?? "",
+    lineStaff: cart.lineStaff ?? {},
     appointmentId: cart.appointmentId ?? "",
     notes: cart.notes ?? "",
     cartDiscountKind: cart.discountKind === "fixed" ? "fixed" : "percent",
@@ -67,6 +69,7 @@ export function usePosCarts(local: PosCartLocalState) {
       priceOverrides: cur.priceOverrides,
       clientId: cur.clientId || null,
       staffId: cur.staffId || null,
+      lineStaff: cur.lineStaff,
       appointmentId: cur.appointmentId || null,
       notes: cur.notes || null,
       discountKind: cur.cartDiscountKind,
@@ -213,6 +216,7 @@ export function usePosCarts(local: PosCartLocalState) {
     local.priceOverrides,
     local.clientId,
     local.staffId,
+    local.lineStaff,
     local.appointmentId,
     local.notes,
     local.cartDiscountKind,

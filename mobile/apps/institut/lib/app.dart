@@ -16,6 +16,7 @@ import 'features/loyalty/loyalty_screen.dart';
 import 'features/more/more_screen.dart';
 import 'features/promos/promos_screen.dart';
 import 'features/shell/institut_shell.dart';
+import 'features/team/team_audit_screen.dart';
 import 'features/team/team_screen.dart';
 import 'features/tenant/tenant_picker_screen.dart';
 import 'state/session_providers.dart';
@@ -156,6 +157,12 @@ class _InstitutRouterAppState extends ConsumerState<_InstitutRouterApp> {
                     GoRoute(
                       path: 'team',
                       builder: (_, _) => const TeamScreen(),
+                      routes: [
+                        GoRoute(
+                          path: 'journal',
+                          builder: (_, _) => const TeamAuditScreen(),
+                        ),
+                      ],
                     ),
                     GoRoute(
                       path: 'institut',

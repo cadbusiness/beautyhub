@@ -428,6 +428,10 @@ class InstStaffMember {
     required this.isActive,
     required this.hasSchedule,
     required this.hasAccount,
+    this.accessStatus = 'none',
+    this.tenantRoleId,
+    this.tenantRoleName,
+    this.invitationId,
   });
 
   final String id;
@@ -438,6 +442,10 @@ class InstStaffMember {
   final bool isActive;
   final bool hasSchedule;
   final bool hasAccount;
+  final String accessStatus;
+  final String? tenantRoleId;
+  final String? tenantRoleName;
+  final String? invitationId;
 
   factory InstStaffMember.fromJson(Map<String, dynamic> json) {
     return InstStaffMember(
@@ -449,7 +457,166 @@ class InstStaffMember {
       isActive: json['isActive'] as bool? ?? true,
       hasSchedule: json['hasSchedule'] as bool? ?? false,
       hasAccount: json['hasAccount'] as bool? ?? false,
+      accessStatus: json['accessStatus'] as String? ??
+          (json['hasAccount'] == true ? 'active' : 'none'),
+      tenantRoleId: json['tenantRoleId'] as String?,
+      tenantRoleName: json['tenantRoleName'] as String?,
+      invitationId: json['invitationId'] as String?,
     );
+  }
+
+  String get accessLabel {
+    switch (accessStatus) {
+      case 'active':
+        return 'Compte actif';
+      case 'pending':
+        return 'Invitation en attente';
+      default:
+        return 'Non invité';
+    }
+  }
+}
+
+class InstTenantRole {
+  const InstTenantRole({
+    required this.id,
+    required this.name,
+    required this.slug,
+    this.description,
+    this.isSystem = false,
+  });
+
+  final String id;
+  final String name;
+  final String slug;
+  final String? description;
+  final bool isSystem;
+
+  factory InstTenantRole.fromJson(Map<String, dynamic> json) {
+    return InstTenantRole(
+      id: json['id'] as String,
+      name: json['name'] as String? ?? '',
+      slug: json['slug'] as String? ?? '',
+      description: json['description'] as String?,
+      isSystem: json['isSystem'] as bool? ?? false,
+    );
+  }
+}
+
+class InstTeamCapabilities {
+  const InstTeamCapabilities({
+    this.canWriteTeam = false,
+    this.canManageAccess = false,
+    this.canManageRoles = false,
+    this.canReadAudit = false,
+  });
+
+  final bool canWriteTeam;
+  final bool canManageAccess;
+  final bool canManageRoles;
+  final bool canReadAudit;
+
+  factory InstTeamCapabilities.fromJson(Map<String, dynamic> json) {
+    return InstTeamCapabilities(
+      canWriteTeam: json['canWriteTeam'] as bool? ?? false,
+      canManageAccess: json['canManageAccess'] as bool? ?? false,
+      canManageRoles: json['canManageRoles'] as bool? ?? false,
+      canReadAudit: json['canReadAudit'] as bool? ?? false,
+    );
+  }
+}
+
+class InstTeamSnapshot {
+  const InstTeamSnapshot({
+    required this.items,
+    required this.roles,
+    required this.capabilities,
+  });
+
+  final List<InstStaffMember> items;
+  final List<InstTenantRole> roles;
+  final InstTeamCapabilities capabilities;
+
+  factory InstTeamSnapshot.fromJson(Map<String, dynamic> json) {
+    return InstTeamSnapshot(
+      items: (json['items'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => InstStaffMember.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+      roles: (json['roles'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => InstTenantRole.fromJson(Map<String, dynamic>.from(e)))
+          .toList(growable: false),
+      capabilities: InstTeamCapabilities.fromJson(
+        Map<String, dynamic>.from(json['capabilities'] as Map? ?? const {}),
+      ),
+    );
+  }
+}
+
+class InstTeamAuditRow {
+  const InstTeamAuditRow({
+    required this.id,
+    required this.createdAt,
+    required this.action,
+    this.actorEmail,
+    this.resourceType,
+    this.targetName,
+  });
+
+  final String id;
+  final DateTime createdAt;
+  final String action;
+  final String? actorEmail;
+  final String? resourceType;
+  final String? targetName;
+
+  factory InstTeamAuditRow.fromJson(Map<String, dynamic> json) {
+    final meta = json['metadata'] as Map? ?? const {};
+    final name = meta['full_name'] ?? meta['name'] ?? meta['email'];
+    return InstTeamAuditRow(
+      id: json['id'] as String? ?? '',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '')
+              ?.toLocal() ??
+          DateTime.now(),
+      action: json['action'] as String? ?? '',
+      actorEmail: json['actorEmail'] as String?,
+      resourceType: json['resourceType'] as String?,
+      targetName: name is String && name.trim().isNotEmpty ? name : null,
+    );
+  }
+
+  String get actionLabel {
+    switch (action) {
+      case 'staff.created':
+        return 'Création';
+      case 'staff.updated':
+        return 'Modification';
+      case 'staff.archived':
+        return 'Archivage';
+      case 'staff.restored':
+        return 'Restauration';
+      case 'staff.deleted':
+        return 'Suppression';
+      case 'staff.activated':
+        return 'Compte activé';
+      case 'staff.password_reset':
+        return 'Mot de passe';
+      case 'staff.invited':
+        return 'Invitation';
+      case 'invitation.resent':
+        return 'Invitation renvoyée';
+      case 'invitation.revoked':
+        return 'Invitation annulée';
+      case 'role.created':
+        return 'Rôle créé';
+      case 'role.updated':
+        return 'Rôle modifié';
+      case 'role.deleted':
+        return 'Rôle supprimé';
+      default:
+        return action;
+    }
   }
 }
 

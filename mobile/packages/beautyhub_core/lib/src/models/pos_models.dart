@@ -201,6 +201,7 @@ class PosContext {
     this.sessionOpenedAt,
     this.sessionIsPreviousDay = false,
     this.sessionPaused = false,
+    this.currentStaffId,
   });
 
   final List<PosCatalogItem> catalog;
@@ -215,6 +216,7 @@ class PosContext {
   final DateTime? sessionOpenedAt;
   final bool sessionIsPreviousDay;
   final bool sessionPaused;
+  final String? currentStaffId;
 
   factory PosContext.fromJson(Map<String, dynamic> json) {
     final catalog = (json['catalog'] as List? ?? const [])
@@ -257,6 +259,7 @@ class PosContext {
           : null,
       sessionIsPreviousDay: json['sessionIsPreviousDay'] as bool? ?? false,
       sessionPaused: json['sessionPaused'] as bool? ?? false,
+      currentStaffId: json['currentStaffId'] as String?,
     );
   }
 }
@@ -364,6 +367,7 @@ class PosCartSnapshot {
     this.lockedByName,
     this.lockedAt,
     this.createdBy,
+    this.lineStaff = const {},
   });
 
   final String id;
@@ -388,6 +392,7 @@ class PosCartSnapshot {
   final bool lockedByOther;
   final String? createdBy;
   final String updatedAt;
+  final Map<String, String> lineStaff;
 
   factory PosCartSnapshot.fromJson(Map<String, dynamic> json) {
     return PosCartSnapshot(
@@ -413,8 +418,21 @@ class PosCartSnapshot {
       lockedByOther: json['lockedByOther'] as bool? ?? false,
       createdBy: json['createdBy'] as String?,
       updatedAt: json['updatedAt'] as String? ?? '',
+      lineStaff: _stringMap(json['lineStaff']),
     );
   }
+}
+
+Map<String, String> _stringMap(dynamic raw) {
+  if (raw is! Map) return const {};
+  final out = <String, String>{};
+  for (final entry in raw.entries) {
+    final value = entry.value;
+    if (value is String && value.isNotEmpty) {
+      out[entry.key.toString()] = value;
+    }
+  }
+  return out;
 }
 
 Map<String, int> _intMap(dynamic raw) {

@@ -21,6 +21,7 @@ interface CheckoutPanelProps {
   cartJson: string;
   clientId: string;
   staffId: string;
+  lineStaffJson?: string;
   appointmentId: string;
   notes: string;
   discountReason?: string;
@@ -66,6 +67,7 @@ export function CheckoutPanel({
   cartJson,
   clientId,
   staffId,
+  lineStaffJson = "{}",
   appointmentId,
   notes,
   discountReason = "",
@@ -303,6 +305,7 @@ export function CheckoutPanel({
         <input type="hidden" name="cart" value={cartJson} />
         <input type="hidden" name="client_id" value={clientId} />
         <input type="hidden" name="staff_id" value={staffId} />
+        <input type="hidden" name="line_staff" value={lineStaffJson} />
         <input type="hidden" name="appointment_id" value={appointmentId} />
         <input type="hidden" name="notes" value={notes} />
         <input type="hidden" name="discount_reason" value={discountReason} />

@@ -1,9 +1,11 @@
 import 'package:beautyhub_core/beautyhub_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../state/session_providers.dart';
 import '../../widgets/screen_scaffold.dart';
+import 'team_member_sheet.dart';
 
 class TeamScreen extends ConsumerWidget {
   const TeamScreen({super.key});
@@ -20,35 +22,56 @@ class TeamScreen extends ConsumerWidget {
       backgroundColor: _bg,
       appBar: const InstitutTopBar(
         title: 'Équipe',
-        subtitle: 'Praticiennes de l’institut',
+        subtitle: 'Personnel, comptes et rôles',
       ),
+      floatingActionButton: teamAsync.asData?.value.capabilities.canWriteTeam == true
+          ? FloatingActionButton(
+              onPressed: () => _createStaff(context, ref),
+              backgroundColor: _black,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(institutTeamProvider);
+          ref.invalidate(dashboardProvider);
           await ref.read(institutTeamProvider.future);
         },
         child: teamAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => _Error(message: e.toString()),
-          data: (members) {
+          data: (snapshot) {
+            final members = snapshot.items;
             if (members.isEmpty) {
               return const _Empty();
             }
             final active = members.where((m) => m.isActive).toList();
             final archived = members.where((m) => !m.isActive).toList();
+            final caps = snapshot.capabilities;
 
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.only(
                 top: 8,
-                bottom: MediaQuery.viewPaddingOf(context).bottom + 24,
+                bottom: MediaQuery.viewPaddingOf(context).bottom + 88,
               ),
               children: [
+                if (caps.canReadAudit)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.go('/app/more/team/journal'),
+                      icon: const Icon(Icons.history, size: 18),
+                      label: const Text('Journal des actions'),
+                    ),
+                  ),
                 if (active.isNotEmpty)
                   _Section(
                     title: 'Actives',
-                    subtitle: '${active.length} praticienne${active.length > 1 ? "s" : ""}',
+                    subtitle:
+                        '${active.length} praticienne${active.length > 1 ? "s" : ""}',
                     members: active,
+                    onTap: (m) => showTeamMemberSheet(context, member: m),
                   ),
                 if (archived.isNotEmpty) ...[
                   const SizedBox(height: 24),
@@ -57,27 +80,63 @@ class TeamScreen extends ConsumerWidget {
                     subtitle: '${archived.length} non actives',
                     members: archived,
                     faded: true,
+                    onTap: (m) => showTeamMemberSheet(context, member: m),
                   ),
                 ],
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    'Ajouter, retirer ou modifier un membre depuis le web.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _muted,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
               ],
             );
           },
         ),
       ),
     );
+  }
+
+  Future<void> _createStaff(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Nouveau membre'),
+        content: TextField(
+          controller: controller,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(hintText: 'Nom complet'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Créer'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.isEmpty) return;
+    final token = ref.read(accessTokenProvider);
+    final tenantId = ref.read(selectedTenantIdProvider);
+    if (token == null || tenantId == null) return;
+    try {
+      await ref.read(mobileApiProvider).createInstitutStaff(
+            accessToken: token,
+            tenantId: tenantId,
+            fullName: name,
+          );
+      ref.invalidate(institutTeamProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Membre ajouté.')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
   }
 }
 
@@ -87,12 +146,14 @@ class _Section extends StatelessWidget {
     required this.subtitle,
     required this.members,
     this.faded = false,
+    required this.onTap,
   });
 
   final String title;
   final String subtitle;
   final List<InstStaffMember> members;
   final bool faded;
+  final ValueChanged<InstStaffMember> onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +193,11 @@ class _Section extends StatelessWidget {
           child: Column(
             children: [
               for (var i = 0; i < members.length; i++) ...[
-                _MemberRow(member: members[i], faded: faded),
+                _MemberRow(
+                  member: members[i],
+                  faded: faded,
+                  onTap: () => onTap(members[i]),
+                ),
                 if (i < members.length - 1)
                   const Divider(
                     height: 1,
@@ -150,9 +215,14 @@ class _Section extends StatelessWidget {
 }
 
 class _MemberRow extends StatelessWidget {
-  const _MemberRow({required this.member, this.faded = false});
+  const _MemberRow({
+    required this.member,
+    this.faded = false,
+    required this.onTap,
+  });
   final InstStaffMember member;
   final bool faded;
+  final VoidCallback onTap;
 
   Color _color() {
     final hex = member.color;
@@ -179,7 +249,9 @@ class _MemberRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _color();
-    return Padding(
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
       child: Row(
         children: [
@@ -256,13 +328,21 @@ class _MemberRow extends StatelessWidget {
                   spacing: 4,
                   runSpacing: 4,
                   children: [
-                    if (member.hasAccount)
-                      const InstitutChip(
-                        label: 'Compte',
-                        icon: Icons.person_outline,
-                        color: Color(0xFF1E40AF),
-                        background: Color(0xFFDBE7FE),
+                    if (member.tenantRoleName != null)
+                      InstitutChip(
+                        label: member.tenantRoleName!,
+                        color: const Color(0xFF1E3A8A),
+                        background: const Color(0xFFDBEAFE),
                       ),
+                    InstitutChip(
+                      label: member.accessLabel,
+                      color: member.accessStatus == 'active'
+                          ? const Color(0xFF1E40AF)
+                          : const Color(0xFF92400E),
+                      background: member.accessStatus == 'active'
+                          ? const Color(0xFFDBE7FE)
+                          : const Color(0xFFFEF3C7),
+                    ),
                     if (member.hasSchedule)
                       const InstitutChip(
                         label: 'Planning',
@@ -281,6 +361,7 @@ class _MemberRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

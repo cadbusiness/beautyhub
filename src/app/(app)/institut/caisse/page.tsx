@@ -58,7 +58,7 @@ export default async function CaissePage({
     getPosSettings(supabase, tenantId),
     supabase
       .from("inst_staff")
-      .select("id, full_name")
+      .select("id, full_name, user_id")
       .eq("tenant_id", tenantId)
       .eq("is_active", true)
       .order("full_name"),
@@ -118,6 +118,8 @@ export default async function CaissePage({
     id: s.id,
     label: s.full_name,
   }));
+  const operatorStaffId =
+    (staffRes.data ?? []).find((s) => s.user_id === session.userId)?.id ?? "";
   const appointmentRows = [...(apptsRes.data ?? [])];
   if (
     linkedApptRes.data &&
@@ -200,6 +202,7 @@ export default async function CaissePage({
             stripeEnabled={stripeEnabled}
             stripePublishableKey={stripePublishableKey}
             stripeAccountId={stripeAccount?.accountId}
+            operatorStaffId={operatorStaffId}
           />
         </>
       )}

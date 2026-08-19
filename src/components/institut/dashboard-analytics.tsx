@@ -201,7 +201,7 @@ export function DashboardAnalytics({
     [loadStats, period],
   );
 
-  const { today, analytics } = snapshot;
+  const { today, analytics, byStaff = [] } = snapshot;
   const scheduledInPeriod =
     analytics.appointmentsTotal -
     analytics.appointmentsCancelled -
@@ -370,6 +370,59 @@ export function DashboardAnalytics({
           {analytics.appointmentsTotal === 0 ? (
             <p className="mt-2 text-sm text-slate-400">{t("emptyAppointments")}</p>
           ) : null}
+        </div>
+
+        <div className="mt-6">
+          <h4 className="mb-2 text-sm font-medium text-slate-900">{t("byStaff")}</h4>
+          {byStaff.length === 0 ? (
+            <p className="text-sm text-slate-400">{t("emptyStaff")}</p>
+          ) : (
+            <div className="overflow-hidden border border-slate-200 bg-white">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-2 font-medium lg:px-5">{t("byStaff")}</th>
+                    <th className="px-3 py-2 text-right font-medium">{t("staffRevenue")}</th>
+                    <th className="hidden px-3 py-2 text-right font-medium sm:table-cell">
+                      {t("staffSales")}
+                    </th>
+                    <th className="hidden px-3 py-2 text-right font-medium sm:table-cell">
+                      {t("staffServices")}
+                    </th>
+                    <th className="px-4 py-2 text-right font-medium lg:px-5">
+                      {t("staffAppointments")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {byStaff.map((row) => (
+                    <tr
+                      key={row.staffId ?? "unassigned"}
+                      className="border-b border-slate-100 last:border-0"
+                    >
+                      <td className="px-4 py-2.5 lg:px-5">
+                        <span className="font-medium text-slate-900">
+                          {row.staffId ? row.fullName : t("unattributed")}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums text-slate-900">
+                        {formatPrice(row.revenueCents, "eur", locale)}
+                      </td>
+                      <td className="hidden px-3 py-2.5 text-right tabular-nums text-slate-600 sm:table-cell">
+                        {row.salesCount}
+                      </td>
+                      <td className="hidden px-3 py-2.5 text-right tabular-nums text-slate-600 sm:table-cell">
+                        {row.serviceCount}
+                      </td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-600 lg:px-5">
+                        {row.appointmentsCompleted}/{row.appointmentsTotal}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -80,7 +80,8 @@ async function translateCartLineError(error: unknown): Promise<string> {
 async function translateCheckoutError(error: unknown): Promise<string> {
   const t = await getTranslations("institut.actions");
   const code = (error as Error).message;
-  if (code === "invalid_cart") return t("invalidCart");
+    if (code === "staff_required_for_service") return t("staffRequiredForService");
+    if (code === "invalid_cart") return t("invalidCart");
   if (code === "empty_cart") return t("emptyCart");
   if (code === "invalid_amount") return t("invalidAmount");
   if (code === "no_payments") return t("noPayments");
@@ -361,12 +362,27 @@ export async function checkoutPos(
   const priceOverrides = parsePriceOverrides(
     String(formData.get("price_overrides") ?? ""),
   );
+  let lineStaffIds: Record<string, string> = {};
+  try {
+    const raw = String(formData.get("line_staff") ?? "{}");
+    const parsed = JSON.parse(raw || "{}") as unknown;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      lineStaffIds = Object.fromEntries(
+        Object.entries(parsed as Record<string, unknown>).filter(
+          (entry): entry is [string, string] => typeof entry[1] === "string",
+        ),
+      );
+    }
+  } catch {
+    lineStaffIds = {};
+  }
 
   try {
     const result = await executePosCheckout(supabase, session.tenant.id, {
       cartJson,
       clientId: String(formData.get("client_id") ?? "") || null,
       staffId: String(formData.get("staff_id") ?? "") || null,
+      lineStaffIds,
       appointmentId: String(formData.get("appointment_id") ?? "") || null,
       notes: String(formData.get("notes") ?? "").trim() || undefined,
       discountReason: String(formData.get("discount_reason") ?? "").trim() || null,

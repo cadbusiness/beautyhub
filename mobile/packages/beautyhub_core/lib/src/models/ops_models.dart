@@ -487,6 +487,7 @@ class MobileDashboard {
     required this.series,
     this.salesChannel = 'all',
     this.wooSalesAvailable = false,
+    this.byStaff = const [],
   });
 
   final DashboardTodaySummary today;
@@ -504,6 +505,7 @@ class MobileDashboard {
   final List<DashboardSeriesPoint> series;
   final String salesChannel;
   final bool wooSalesAvailable;
+  final List<DashboardStaffStat> byStaff;
 
   factory MobileDashboard.fromJson(Map<String, dynamic> json) {
     final block = json['analytics'] as Map? ?? json['week'] as Map? ?? const {};
@@ -529,6 +531,45 @@ class MobileDashboard {
           .toList(),
       salesChannel: json['salesChannel'] as String? ?? 'all',
       wooSalesAvailable: json['wooSalesAvailable'] as bool? ?? false,
+      byStaff: (json['byStaff'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => DashboardStaffStat.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
+    );
+  }
+}
+
+class DashboardStaffStat {
+  const DashboardStaffStat({
+    this.staffId,
+    required this.fullName,
+    this.color,
+    required this.revenueCents,
+    required this.salesCount,
+    required this.serviceCount,
+    required this.appointmentsTotal,
+    required this.appointmentsCompleted,
+  });
+
+  final String? staffId;
+  final String fullName;
+  final String? color;
+  final int revenueCents;
+  final int salesCount;
+  final int serviceCount;
+  final int appointmentsTotal;
+  final int appointmentsCompleted;
+
+  factory DashboardStaffStat.fromJson(Map<String, dynamic> json) {
+    return DashboardStaffStat(
+      staffId: json['staffId'] as String?,
+      fullName: json['fullName'] as String? ?? '',
+      color: json['color'] as String?,
+      revenueCents: (json['revenueCents'] as num?)?.toInt() ?? 0,
+      salesCount: (json['salesCount'] as num?)?.toInt() ?? 0,
+      serviceCount: (json['serviceCount'] as num?)?.toInt() ?? 0,
+      appointmentsTotal: (json['appointmentsTotal'] as num?)?.toInt() ?? 0,
+      appointmentsCompleted: (json['appointmentsCompleted'] as num?)?.toInt() ?? 0,
     );
   }
 }

@@ -269,6 +269,7 @@ class PosCartMeta {
     this.clientName,
     this.staffId,
     this.appointmentId,
+    this.lineStaff = const {},
     this.discountKind,
     this.discountValue,
     this.discountReason,
@@ -280,6 +281,7 @@ class PosCartMeta {
   final String? clientName;
   final String? staffId;
   final String? appointmentId;
+  final Map<String, String> lineStaff;
   final String? discountKind;
   final double? discountValue;
   final String? discountReason;
@@ -357,6 +359,7 @@ class PosCartSessionNotifier extends StateNotifier<PosCartSessionState> {
       'clientId': meta.clientId,
       'staffId': meta.staffId,
       'appointmentId': meta.appointmentId,
+      'lineStaff': meta.lineStaff,
       if (meta.discountKind != null) 'discountKind': meta.discountKind,
       'discountValue': meta.discountValue,
       'discountReason': meta.discountReason,

@@ -18,6 +18,7 @@ const bodySchema = z.object({
   cart: z.record(z.string(), z.number().int().min(0)),
   clientId: z.string().uuid().nullable().optional(),
   staffId: z.string().uuid().nullable().optional(),
+  lineStaffIds: z.record(z.string(), z.string().uuid()).optional(),
   notes: z.string().max(2000).optional(),
   cartDiscountCents: z.number().int().min(0).optional(),
   discountReason: z.string().max(80).optional(),
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
       cart,
       clientId,
       staffId,
+      lineStaffIds,
       notes,
       cartDiscountCents,
       discountReason,
@@ -75,6 +77,7 @@ export async function POST(request: Request) {
         cartJson,
         clientId: clientId ?? null,
         staffId: staffId ?? null,
+        lineStaffIds: lineStaffIds ?? null,
         notes,
         cartDiscountCents: cartDiscountCents ?? 0,
         discountReason: discountReason ?? null,
@@ -115,6 +118,7 @@ export async function POST(request: Request) {
       );
     }
     if (
+      message === "staff_required_for_service" ||
       message === "empty_cart" ||
       message === "invalid_cart" ||
       message === "no_open_session" ||

@@ -12,7 +12,11 @@ export async function GET(request: Request) {
     const session = await requireMobileTenantSession(request, {
       moduleId: "institut",
     });
-    const ctx = await loadMobilePosContext(session.supabase, session.tenant.id);
+    const ctx = await loadMobilePosContext(
+      session.supabase,
+      session.tenant.id,
+      session.user.id,
+    );
     return Response.json(serializeMobilePosContext(ctx));
   } catch (error) {
     return mobileErrorResponse(error);

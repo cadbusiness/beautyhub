@@ -26,6 +26,7 @@ export interface MobilePosContext {
   settings: PosSettings;
   clients: MobilePosClientOption[];
   staff: MobilePosStaffOption[];
+  currentStaffId: string | null;
   sessionOpen: boolean;
   sessionPaused: boolean;
   sessionOpenedAt: string | null;
@@ -51,6 +52,7 @@ type MobilePosContextLoaded = MobilePosContext & {
 export async function loadMobilePosContext(
   supabase: Db,
   tenantId: string,
+  userId?: string | null,
 ): Promise<MobilePosContextLoaded> {
   const [servicesRes, productsRes, clientsRes, staffRes, posSettings, cashSession, wooRes, categoriesRes, productCategories, soldQtyByKey] =
     await Promise.all([
@@ -78,7 +80,7 @@ export async function loadMobilePosContext(
         .limit(200),
       supabase
         .from("inst_staff")
-        .select("id, full_name")
+        .select("id, full_name, user_id")
         .eq("tenant_id", tenantId)
         .eq("is_active", true)
         .order("full_name"),
@@ -128,6 +130,9 @@ export async function loadMobilePosContext(
     settings: posSettings,
     clients,
     staff,
+    currentStaffId:
+      (staffRes.data ?? []).find((s) => userId && s.user_id === userId)?.id ??
+      null,
     sessionOpen: Boolean(cashSession),
     sessionPaused: cashSession?.status === "paused",
     sessionOpenedAt: cashSession?.opened_at ?? null,
@@ -160,6 +165,7 @@ export function serializeMobilePosContext(ctx: MobilePosContextLoaded) {
     },
     clients: ctx.clients,
     staff: ctx.staff,
+    currentStaffId: ctx.currentStaffId,
     sessionOpen: ctx.sessionOpen,
     sessionPaused: ctx.sessionPaused,
     sessionOpenedAt: ctx.sessionOpenedAt,

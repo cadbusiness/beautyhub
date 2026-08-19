@@ -31,6 +31,12 @@ import {
 import { normalizePromoCode, redeemPromo, validatePromo } from "./promos-core";
 import { generateSaleDocuments, updateSaleDocumentStatuses } from "./sale-documents/generate";
 import { markPosCartCheckedOut } from "./pos-carts";
+import {
+  assertServiceStaffAssigned,
+  parseLineStaff,
+  primaryStaffId,
+  resolveLineStaffId,
+} from "./pos-attribution";
 
 type Db = SupabaseClient<Database>;
 
@@ -66,6 +72,8 @@ export interface PosCheckoutInput {
   payments: SalePaymentInput[];
   stripePaymentIntentId?: string;
   staffId?: string | null;
+  /** Praticien par ligne de panier (`service:{id}` → `inst_staff.id`). */
+  lineStaffIds?: Record<string, string> | null;
   appointmentId?: string | null;
   cashSessionId?: string | null;
   parentSaleId?: string | null;
@@ -337,6 +345,14 @@ export async function executePosCheckout(
     priceOverrides: input.priceOverrides,
   });
 
+  const lineStaff = parseLineStaff(input.lineStaffIds);
+  const cartStaffId = input.staffId ?? null;
+  assertServiceStaffAssigned(totals.lines, lineStaff, cartStaffId);
+  const saleStaffId = primaryStaffId(totals.lines, lineStaff, cartStaffId);
+
+  const { data: authUser } = await supabase.auth.getUser();
+  const cashierUserId = authUser.user?.id ?? null;
+
   const coveredByLoyalty =
     (input.loyaltyCreditCents ?? 0) > 0 && totals.total_cents === 0;
   if (totals.total_cents < 0 || (totals.total_cents === 0 && !coveredByLoyalty)) {
@@ -410,7 +426,8 @@ export async function executePosCheckout(
     .insert({
       tenant_id: tenantId,
       client_id: input.clientId,
-      staff_id: input.staffId ?? null,
+      staff_id: saleStaffId,
+      cashier_user_id: cashierUserId,
       appointment_id: input.appointmentId ?? null,
       cash_session_id: sessionId,
       parent_sale_id: input.parentSaleId ?? null,
@@ -443,6 +460,7 @@ export async function executePosCheckout(
       item_type: l.type,
       product_id: l.product_id,
       service_id: l.service_id,
+      staff_id: resolveLineStaffId(l.key, lineStaff, cartStaffId),
       name: l.name,
       quantity: l.quantity,
       unit_price_cents: l.unit_price_cents,

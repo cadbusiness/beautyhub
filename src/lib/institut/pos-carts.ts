@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/lib/db/database.types";
 import { parsePosCart, parsePriceOverrides } from "./pos";
+import { parseLineStaff, pruneLineStaff } from "./pos-attribution";
 
 type Db = SupabaseClient<Database>;
 type CartRow = Database["public"]["Tables"]["inst_pos_carts"]["Row"];
@@ -20,6 +21,7 @@ export interface PosCartSnapshot {
   appointmentId: string | null;
   staffId: string | null;
   lines: Record<string, number>;
+  lineStaff: Record<string, string>;
   priceOverrides: Record<string, number>;
   discountKind: PosCartDiscountKind | null;
   discountValue: number | null;
@@ -42,6 +44,7 @@ export interface PosCartWriteInput {
   appointmentId?: string | null;
   staffId?: string | null;
   lines?: Record<string, number>;
+  lineStaff?: Record<string, string>;
   priceOverrides?: Record<string, number>;
   discountKind?: PosCartDiscountKind | null;
   discountValue?: number | null;
@@ -129,6 +132,7 @@ function serializeCart(
     staffId: row.staff_id,
     staffName: extras.staffName,
     lines,
+    lineStaff: pruneLineStaff(parseLineStaff(row.line_staff), Object.keys(lines)),
     priceOverrides: overridesFromJson(row.price_overrides),
     discountKind: kind,
     discountValue: row.discount_value,
@@ -275,6 +279,7 @@ export async function createPosCart(
       appointment_id: input.appointmentId ?? null,
       staff_id: input.staffId ?? null,
       lines: lines as Json,
+      line_staff: pruneLineStaff(input.lineStaff ?? {}, Object.keys(lines)) as Json,
       price_overrides: (input.priceOverrides ?? {}) as Json,
       discount_kind: input.discountKind ?? null,
       discount_value: input.discountValue ?? null,
@@ -340,6 +345,10 @@ export async function updatePosCart(
         : input.appointmentId,
     staff_id: input.staffId === undefined ? current.staffId : input.staffId,
     lines: lines as Json,
+    line_staff: pruneLineStaff(
+      input.lineStaff ?? current.lineStaff,
+      Object.keys(lines),
+    ) as Json,
     price_overrides: (input.priceOverrides ?? current.priceOverrides) as Json,
     discount_kind:
       input.discountKind === undefined ? current.discountKind : input.discountKind,

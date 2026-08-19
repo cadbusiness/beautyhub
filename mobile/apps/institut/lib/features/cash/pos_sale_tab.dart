@@ -53,12 +53,15 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     String? discountReason,
     int cartDiscountCents = 0,
     String? notes,
+    Map<String, String>? lineStaff,
   }) {
+    final current = ref.read(posCartMetaProvider);
     ref.read(posCartMetaProvider.notifier).state = PosCartMeta(
       clientId: _selectedClient?.id,
       clientName: _selectedClient?.title,
       staffId: _selectedStaff?.id,
       appointmentId: _appointmentId,
+      lineStaff: lineStaff ?? current.lineStaff,
       discountKind: discountKind,
       discountValue: discountValue,
       discountReason: discountReason,
@@ -91,12 +94,19 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
           )
         : null;
     _appointmentId = cart.appointmentId;
+    if (_selectedStaff == null && ctx?.currentStaffId != null) {
+      final match = ctx!.staff.where((s) => s.id == ctx.currentStaffId).firstOrNull;
+      if (match != null) {
+        _selectedStaff = PickerItem(id: match.id, title: match.label);
+      }
+    }
     _syncMeta(
       discountKind: cart.discountKind,
       discountValue: cart.discountValue,
       discountReason: cart.discountReason,
       cartDiscountCents: cart.cartDiscountCents,
       notes: cart.notes,
+      lineStaff: cart.lineStaff,
     );
     if (mounted) setState(() {});
   }
@@ -196,7 +206,13 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
 
     ref.read(pendingPosPrefillProvider.notifier).state = null;
     _openCartAfterPrefill = serviceItem != null || prefill.extras.isNotEmpty;
-    _syncMeta();
+    final lineStaff = <String, String>{};
+    if (prefill.staffId != null && prefill.staffId!.isNotEmpty) {
+      for (final key in ref.read(posCartProvider).keys) {
+        lineStaff[key] = prefill.staffId!;
+      }
+    }
+    _syncMeta(lineStaff: lineStaff);
     if (mounted) setState(() {});
     await ref.read(posCartSessionProvider.notifier).flushSave();
   }
@@ -503,6 +519,34 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
       return false;
     }
 
+    final hasService = cart.keys.any((key) {
+      final item = ctx.catalog.where((i) => i.key == key).firstOrNull;
+      if (item != null) return item.type == 'service';
+      return key.startsWith('service:') || key.startsWith('custom:');
+    });
+    final lineStaff = ref.read(posCartMetaProvider).lineStaff;
+    final missingStaff = hasService &&
+        (staffId == null || staffId.isEmpty) &&
+        cart.keys.any((key) {
+          final item = ctx.catalog.where((i) => i.key == key).firstOrNull;
+          final isService = item?.type == 'service' ||
+              key.startsWith('service:') ||
+              key.startsWith('custom:');
+          return isService && (lineStaff[key] == null || lineStaff[key]!.isEmpty);
+        });
+    if (missingStaff) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Choisissez une praticienne — obligatoire dès qu’il y a une prestation.',
+            ),
+          ),
+        );
+      }
+      return false;
+    }
+
     final overrides = activePriceOverrides(
       cart: cart,
       overrides: ref.read(posPriceOverridesProvider),
@@ -524,6 +568,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             cart: cart,
             clientId: _selectedClient?.id,
             staffId: staffId,
+            lineStaffIds: ref.read(posCartMetaProvider).lineStaff,
             notes: notes,
             cartDiscountCents: discountCents > 0 ? discountCents : null,
             discountReason: discountReason,
@@ -1451,6 +1496,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
       clientName: current.clientName,
       staffId: current.staffId,
       appointmentId: current.appointmentId,
+      lineStaff: current.lineStaff,
       discountKind: _showDiscount ? _discountKind : null,
       discountValue: _showDiscount && n != null && n > 0 ? n : null,
       discountReason: reason.isEmpty ? null : reason,
@@ -1578,6 +1624,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
           lineTotalCents: lineTotal,
           overridden: overrides.containsKey(entry.key) &&
               overrides[entry.key] != item.priceCents,
+          staff: ctx.staff,
         ),
       );
     }
@@ -1809,9 +1856,9 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
             ),
             const SizedBox(height: 12),
             SearchablePickerField(
-              label: 'Praticienne (optionnel)',
+              label: 'Praticienne',
               value: _staff?.title,
-              placeholder: 'Aucune praticienne',
+              placeholder: 'Requis pour une prestation',
               onOpen: () async {
                 final picked = await showSearchablePicker(
                   context: context,
@@ -2007,6 +2054,7 @@ class _CartLineRow extends ConsumerStatefulWidget {
     required this.unitCents,
     required this.lineTotalCents,
     required this.overridden,
+    required this.staff,
   });
 
   final PosCatalogItem item;
@@ -2014,6 +2062,7 @@ class _CartLineRow extends ConsumerStatefulWidget {
   final int unitCents;
   final int lineTotalCents;
   final bool overridden;
+  final List<PosOption> staff;
 
   @override
   ConsumerState<_CartLineRow> createState() => _CartLineRowState();
@@ -2265,6 +2314,36 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
               ),
             ],
           ),
+          if (item.type == 'service') ...[
+            const SizedBox(height: 6),
+            _LineStaffChip(
+              staff: widget.staff,
+              selectedId: ref.watch(posCartMetaProvider).lineStaff[item.key],
+              ticketStaffId: ref.watch(posCartMetaProvider).staffId,
+              onChanged: (id) {
+                final current = ref.read(posCartMetaProvider);
+                final next = Map<String, String>.from(current.lineStaff);
+                if (id == null || id.isEmpty) {
+                  next.remove(item.key);
+                } else {
+                  next[item.key] = id;
+                }
+                ref.read(posCartMetaProvider.notifier).state = PosCartMeta(
+                  clientId: current.clientId,
+                  clientName: current.clientName,
+                  staffId: current.staffId,
+                  appointmentId: current.appointmentId,
+                  lineStaff: next,
+                  discountKind: current.discountKind,
+                  discountValue: current.discountValue,
+                  discountReason: current.discountReason,
+                  cartDiscountCents: current.cartDiscountCents,
+                  notes: current.notes,
+                );
+                ref.read(posCartSessionProvider.notifier).scheduleSave();
+              },
+            ),
+          ],
           const SizedBox(height: 6),
           Row(
             children: [
@@ -2649,6 +2728,60 @@ class _CreditAmountFieldState extends State<_CreditAmountField> {
             child: const Text('Aucun'),
           ),
       ],
+    );
+  }
+}
+
+class _LineStaffChip extends StatelessWidget {
+  const _LineStaffChip({
+    required this.staff,
+    required this.onChanged,
+    this.selectedId,
+    this.ticketStaffId,
+  });
+
+  final List<PosOption> staff;
+  final String? selectedId;
+  final String? ticketStaffId;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolved = selectedId ?? ticketStaffId;
+    final label = staff.where((s) => s.id == resolved).firstOrNull?.label ??
+        'Comme le ticket';
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: InkWell(
+        onTap: () async {
+          final picked = await showSearchablePicker(
+            context: context,
+            title: 'Praticienne de la ligne',
+            items: staff.map((s) => PickerItem(id: s.id, title: s.label)).toList(),
+            selectedId: resolved,
+            searchHint: 'Rechercher…',
+            nullOption: const PickerItem(
+              id: '__inherit__',
+              title: 'Comme le ticket',
+            ),
+            emptyMessage: 'Aucune praticienne.',
+          );
+          if (picked == null) return;
+          onChanged(picked.id == '__inherit__' ? null : picked.id);
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text(
+            'Praticienne · $label',
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF525252),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

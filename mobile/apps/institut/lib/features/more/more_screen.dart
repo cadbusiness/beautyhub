@@ -213,7 +213,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   _MenuRow(
                     leading: _IconTile(icon: Icons.groups_2_outlined),
                     title: 'Équipe',
-                    subtitle: 'Praticiennes de l’institut',
+                    subtitle: 'Personnel, comptes, rôles et journal',
                     onTap: () => context.go('/app/more/team'),
                   ),
                   _MenuRow(

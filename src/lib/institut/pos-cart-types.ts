@@ -8,6 +8,7 @@ export type PosCartDto = {
   staffId: string | null;
   staffName: string | null;
   lines: Record<string, number>;
+  lineStaff: Record<string, string>;
   priceOverrides: Record<string, number>;
   discountKind: "percent" | "fixed" | null;
   discountValue: number | null;
@@ -29,6 +30,7 @@ export type PosCartWritePayload = {
   appointmentId?: string | null;
   staffId?: string | null;
   lines?: Record<string, number>;
+  lineStaff?: Record<string, string>;
   priceOverrides?: Record<string, number>;
   discountKind?: "percent" | "fixed" | null;
   discountValue?: number | null;

@@ -239,7 +239,7 @@ final posContextProvider = FutureProvider.autoDispose<PosContext>((ref) async {
 });
 
 final institutTeamProvider =
-    FutureProvider.autoDispose<List<InstStaffMember>>((ref) async {
+    FutureProvider.autoDispose<InstTeamSnapshot>((ref) async {
   final token = ref.watch(accessTokenProvider);
   final tenantId = ref.watch(selectedTenantIdProvider);
   if (token == null || tenantId == null) {

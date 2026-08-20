@@ -46,7 +46,7 @@ export default async function CaissePage({
       .order("name"),
     supabase
       .from("inst_products")
-      .select("id, name, price_cents, image_url, source, sku, status, woo_id, woo_categories, category_id")
+      .select("id, name, price_cents, image_url, source, sku, barcode, status, woo_id, woo_categories, category_id")
       .eq("tenant_id", tenantId)
       .in("status", ["active", "publish"])
       .order("name"),

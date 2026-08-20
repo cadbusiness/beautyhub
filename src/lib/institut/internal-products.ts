@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
+import { looksLikeBarcode, normalizeScanCode } from "@/lib/institut/pos-scan";
+
+function barcodeFromSku(sku: string | null | undefined): string | null {
+  const code = normalizeScanCode(sku);
+  return looksLikeBarcode(code) ? code : null;
+}
 
 type Db = SupabaseClient<Database>;
 
@@ -91,6 +97,7 @@ export async function createInternalProductRecord(
       tenant_id: tenantId,
       name: input.name,
       sku: input.sku ?? null,
+      barcode: barcodeFromSku(input.sku),
       price_cents: input.priceCents,
       stock_quantity: input.stockQuantity ?? null,
       category_id: categoryId,
@@ -119,6 +126,7 @@ export async function updateInternalProductRecord(
     .update({
       name: input.name,
       sku: input.sku ?? null,
+      barcode: barcodeFromSku(input.sku),
       price_cents: input.priceCents,
       stock_quantity: input.stockQuantity ?? null,
       category_id: categoryId,

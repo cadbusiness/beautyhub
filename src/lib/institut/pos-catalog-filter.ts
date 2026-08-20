@@ -183,6 +183,7 @@ export function itemMatchesQuery(item: PosCatalogItem, query: string): boolean {
   if (!q) return true;
   if (item.name.toLowerCase().includes(q)) return true;
   if (item.sku?.toLowerCase().includes(q)) return true;
+  if (item.barcode?.toLowerCase().includes(q)) return true;
   if (item.service_category_name?.toLowerCase().includes(q)) return true;
   if (item.product_category_name?.toLowerCase().includes(q)) return true;
   if (item.woo_categories?.some((name) => name.toLowerCase().includes(q))) return true;

@@ -6,6 +6,7 @@ import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { parseStoredWooCredentials } from "@/lib/woocommerce/credentials";
 import { WooClient, type WooProduct, type WooProductCategory, type WooProductVariation } from "@/lib/woocommerce/client";
 import { collectWooCategoryNames } from "@/lib/woocommerce/product-labels";
+import { extractWooBarcode } from "@/lib/institut/pos-scan";
 
 type Db = SupabaseClient<Database>;
 
@@ -171,7 +172,8 @@ export function mapWooProductToRow(
     parent_woo_id: null,
     variation_attributes: {} as Record<string, string>,
     name: product.name,
-    sku: product.sku || null,
+    sku: product.sku?.trim() || extractWooBarcode(product) || null,
+    barcode: extractWooBarcode(product),
     price_cents: priceToCents(product.price),
     stock_quantity: product.stock_quantity,
     image_url: product.images?.[0]?.src ?? null,
@@ -245,7 +247,8 @@ export function mapWooVariationToRow(
     parent_woo_id: parent.id,
     variation_attributes: attributes,
     name: finalName,
-    sku: variation.sku?.trim() || parent.sku?.trim() || null,
+    sku: variation.sku?.trim() || parent.sku?.trim() || extractWooBarcode(variation) || extractWooBarcode(parent) || null,
+    barcode: extractWooBarcode(variation) ?? extractWooBarcode(parent),
     price_cents: priceToCents(variation.price ?? parent.price ?? "0"),
     stock_quantity:
       typeof variation.stock_quantity === "number"

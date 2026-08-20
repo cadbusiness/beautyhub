@@ -67,7 +67,7 @@ export async function loadMobilePosContext(
       supabase
         .from("inst_products")
         .select(
-          "id, name, price_cents, image_url, source, sku, status, woo_id, woo_categories, stock_quantity, category_id",
+          "id, name, price_cents, image_url, source, sku, barcode, status, woo_id, woo_categories, stock_quantity, category_id",
         )
         .eq("tenant_id", tenantId)
         .in("status", ["active", "publish"])
@@ -197,6 +197,7 @@ function serializeCatalogItem(
     category: item.category,
     durationMin: item.duration_min ?? null,
     sku: item.sku ?? null,
+    barcode: item.barcode ?? null,
     wooCategories: item.woo_categories ?? [],
     wooBrands: item.woo_brands ?? [],
     wooSoins: item.woo_soins ?? [],

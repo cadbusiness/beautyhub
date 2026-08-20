@@ -10,6 +10,7 @@ class PosCatalogItem {
     this.color,
     this.durationMin,
     this.sku,
+    this.barcode,
     this.wooCategories = const [],
     this.wooBrands = const [],
     this.wooSoins = const [],
@@ -35,6 +36,7 @@ class PosCatalogItem {
   final String? color;
   final int? durationMin;
   final String? sku;
+  final String? barcode;
   final List<String> wooCategories;
   final List<String> wooBrands;
   final List<String> wooSoins;
@@ -61,6 +63,7 @@ class PosCatalogItem {
       color: json['color'] as String?,
       durationMin: json['durationMin'] as int?,
       sku: json['sku'] as String?,
+      barcode: json['barcode'] as String?,
       wooCategories: (json['wooCategories'] as List? ?? const [])
           .map((e) => e.toString())
           .toList(),

@@ -18,6 +18,11 @@ import {
   type PosServiceCategory,
 } from "@/lib/institut/pos";
 import {
+  findCatalogItemByScanCode,
+  looksLikeScanCode,
+  normalizeScanCode,
+} from "@/lib/institut/pos-scan";
+import {
   POS_FACET_ALL,
   POS_FACET_BESTSELLERS,
   POS_FACET_INTERNAL_UNCATEGORIZED,
@@ -154,6 +159,8 @@ export function PosTerminal({
   const [freeChargeAmount, setFreeChargeAmount] = useState("");
   const [freeChargeLabel, setFreeChargeLabel] = useState("");
   const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [pendingScanSku, setPendingScanSku] = useState("");
+  const [scanNotice, setScanNotice] = useState<string | null>(null);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const lastRecordedSale = useRef<string | null>(null);
   const router = useRouter();
@@ -548,6 +555,82 @@ export function PosTerminal({
     setCart((c) => ({ ...c, [key]: (c[key] ?? 0) + 1 }));
   }
 
+  function applyScanCode(raw: string): boolean {
+    const code = normalizeScanCode(raw);
+    if (!code) return false;
+    const match = findCatalogItemByScanCode(catalog, code);
+    if (match) {
+      add(match.key);
+      setQuery("");
+      setPage(1);
+      setScanNotice(t("scanAdded", { name: match.name }));
+      setPendingScanSku("");
+      return true;
+    }
+    if (looksLikeScanCode(code)) {
+      setQuery(code);
+      setPage(1);
+      setPendingScanSku(code);
+      setScanNotice(t("scanUnknown", { code }));
+    }
+    return false;
+  }
+
+  function openCreateFromScan(sku?: string) {
+    setPendingScanSku(sku ? normalizeScanCode(sku) : "");
+    setProductDialogOpen(true);
+  }
+
+  const applyScanRef = useRef(applyScanCode);
+  applyScanRef.current = applyScanCode;
+
+  useEffect(() => {
+    if (!scanNotice) return;
+    const timer = window.setTimeout(() => setScanNotice(null), 3500);
+    return () => window.clearTimeout(timer);
+  }, [scanNotice]);
+
+  useEffect(() => {
+    let buffer = "";
+    let lastAt = 0;
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName;
+      const isSearch = target?.dataset.posScan === "true";
+      const typingElsewhere =
+        !isSearch &&
+        (tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          tag === "SELECT" ||
+          Boolean(target?.isContentEditable));
+      if (typingElsewhere) return;
+
+      if (event.key === "Enter") {
+        if (buffer.length >= 4) {
+          event.preventDefault();
+          const code = buffer;
+          buffer = "";
+          applyScanRef.current(code);
+          return;
+        }
+        if (isSearch) {
+          event.preventDefault();
+          applyScanRef.current((target as HTMLInputElement).value);
+        }
+        return;
+      }
+      if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+      }
+      const now = Date.now();
+      if (now - lastAt > 80) buffer = "";
+      lastAt = now;
+      buffer += event.key;
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   function addFreeCharge() {
     const cents = eurosToCents(freeChargeAmount);
     if (cents == null || cents <= 0) return;
@@ -717,9 +800,16 @@ export function PosTerminal({
               className="pl-9"
               placeholder={t("searchArticles")}
               value={query}
+              data-pos-scan="true"
               onChange={(e) => {
                 setQuery(e.target.value);
                 setPage(1);
+                setPendingScanSku("");
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                applyScanCode(e.currentTarget.value);
               }}
               aria-label={t("searchAria")}
             />
@@ -841,6 +931,21 @@ export function PosTerminal({
           </div>
         ) : null}
 
+        {scanNotice ? (
+          <p className="text-sm text-slate-600">
+            {scanNotice}{" "}
+            {pendingScanSku && !findCatalogItemByScanCode(catalog, pendingScanSku) ? (
+              <button
+                type="button"
+                className="font-medium text-slate-900 underline"
+                onClick={() => openCreateFromScan(pendingScanSku)}
+              >
+                {t("scanCreate")}
+              </button>
+            ) : null}
+          </p>
+        ) : null}
+
         {filtered.length === 0 ? (
           <Card>
             <p className="text-sm text-slate-500">
@@ -854,6 +959,17 @@ export function PosTerminal({
                       ? t("emptyServices")
                       : t("emptyCategory")}
             </p>
+            {query.trim() && looksLikeScanCode(query) ? (
+              <div className="mt-3">
+                <Button
+                  type="button"
+                  className="h-8"
+                  onClick={() => openCreateFromScan(query)}
+                >
+                  {t("scanCreate")}
+                </Button>
+              </div>
+            ) : null}
             {tab === "internal" && !query.trim() ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button
@@ -1507,8 +1623,11 @@ export function PosTerminal({
         <InternalProductForm
           categories={productCategories}
           defaultCategoryId={selectedProductCategoryId || null}
+          defaultSku={pendingScanSku}
           onSuccess={() => {
             setProductDialogOpen(false);
+            setPendingScanSku("");
+            setQuery("");
             router.refresh();
           }}
         />

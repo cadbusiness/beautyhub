@@ -208,6 +208,9 @@ final posCatalogFacetProvider = StateProvider<String>((ref) => 'all');
 
 final posCatalogQueryProvider = StateProvider<String>((ref) => '');
 
+/// Incrémenté quand le scanner (ou Entrée) valide le champ recherche.
+final posCatalogScanNonceProvider = StateProvider<int>((ref) => 0);
+
 class PosAppointmentPrefill {
   const PosAppointmentPrefill({
     required this.appointmentId,

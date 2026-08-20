@@ -3309,7 +3309,8 @@
         "priceEur": "Price (EUR)",
         "save": "Save",
         "saving": "Saving…",
-        "skuOptional": "Optional",
+        "skuLabel": "SKU / barcode",
+        "skuOptional": "Scan the label or enter the reference",
         "stockOptional": "Optional",
         "submit": "Add product",
         "submitting": "Addition…"
@@ -3637,7 +3638,10 @@
         "showing": "{from}-{to} on {total} articles"
       },
       "searchAria": "To research",
-      "searchArticles": "Search for an article…",
+      "searchArticles": "Search or scan an item…",
+      "scanAdded": "{name} added to the cart",
+      "scanUnknown": "Code “{code}” is unknown — this product is not in the catalog yet.",
+      "scanCreate": "Create this product",
       "sessionRequired": "Open the register to record this sale.",
       "sessionClosedTitle": "Checkout is not open",
       "sessionClosedBody": "Open the day so you don’t forget. The cash float is optional.",

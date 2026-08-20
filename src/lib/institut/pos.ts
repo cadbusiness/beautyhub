@@ -18,6 +18,7 @@ export interface PosCatalogItem {
   category: "service" | "woocommerce" | "internal";
   duration_min?: number;
   sku?: string | null;
+  barcode?: string | null;
   woo_categories?: string[];
   woo_brands?: string[];
   woo_soins?: Array<"Visage" | "Corps" | "Cheveux" | "autres">;
@@ -345,6 +346,7 @@ export function buildCatalog(
     image_url: string | null;
     source?: string;
     sku: string | null;
+    barcode?: string | null;
     color?: string | null;
     woo_id?: number | null;
     woo_categories?: string[] | null;
@@ -403,6 +405,7 @@ export function buildCatalog(
       color: p.color ?? null,
       category: isWoo ? "woocommerce" : "internal",
       sku: p.sku,
+      barcode: p.barcode ?? null,
       woo_categories: p.woo_categories ?? [],
       woo_brands: classified.brands,
       woo_soins: classified.soins,

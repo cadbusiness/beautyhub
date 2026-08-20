@@ -25,11 +25,13 @@ export function InternalProductForm({
   categories,
   product,
   defaultCategoryId,
+  defaultSku,
   onSuccess,
 }: {
   categories: Array<{ id: string; name: string }>;
   product?: InternalProductFormValues | null;
   defaultCategoryId?: string | null;
+  defaultSku?: string;
   onSuccess?: () => void;
 }) {
   const t = useTranslations("pos.products.form");
@@ -98,11 +100,11 @@ export function InternalProductForm({
           />
         </Field>
       </div>
-      <Field label={tCommon("sku")} htmlFor="sku">
+      <Field label={t("skuLabel")} htmlFor="sku">
         <Input
           id="sku"
           name="sku"
-          defaultValue={product?.sku ?? ""}
+          defaultValue={product?.sku ?? defaultSku ?? ""}
           placeholder={t("skuOptional")}
         />
       </Field>

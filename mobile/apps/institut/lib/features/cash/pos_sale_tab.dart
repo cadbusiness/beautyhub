@@ -334,11 +334,49 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     );
   }
 
+  String _normalizeScan(String raw) => raw.trim().replaceAll(RegExp(r'\s+'), '');
+
+  bool _looksLikeScanCode(String raw) {
+    final code = _normalizeScan(raw);
+    if (code.length < 4 || code.length > 64) return false;
+    if (RegExp(r'^[0-9]{6,14}$').hasMatch(code)) return true;
+    return RegExp(r'^[A-Za-z0-9._\-/]+$').hasMatch(code) &&
+        RegExp(r'\d').hasMatch(code) &&
+        code.length >= 6;
+  }
+
+  PosCatalogItem? _findByScanCode(PosContext ctx, String raw) {
+    final code = _normalizeScan(raw).toLowerCase();
+    if (code.isEmpty) return null;
+    for (final item in ctx.catalog) {
+      final sku = item.sku?.trim().toLowerCase();
+      final barcode = item.barcode?.trim().toLowerCase();
+      if (sku == code || barcode == code) return item;
+    }
+    return null;
+  }
+
+  void _applyScanCode(PosContext ctx, String raw) {
+    final match = _findByScanCode(ctx, raw);
+    if (match != null) {
+      ref.read(posCartProvider.notifier).add(match.key);
+      ref.read(posCatalogQueryProvider.notifier).state = '';
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${match.name} ajouté au panier')),
+      );
+      return;
+    }
+    if (!_looksLikeScanCode(raw)) return;
+    ref.read(posCatalogQueryProvider.notifier).state = _normalizeScan(raw);
+  }
+
   bool _matchesQuery(PosCatalogItem item, String query) {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return true;
     if (item.name.toLowerCase().contains(q)) return true;
     if (item.sku?.toLowerCase().contains(q) ?? false) return true;
+    if (item.barcode?.toLowerCase().contains(q) ?? false) return true;
     if (item.serviceCategoryName?.toLowerCase().contains(q) ?? false) {
       return true;
     }
@@ -695,6 +733,12 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(posCatalogScanNonceProvider, (prev, next) {
+      if (prev == next) return;
+      final ctx = ref.read(posContextProvider).asData?.value;
+      if (ctx == null) return;
+      _applyScanCode(ctx, ref.read(posCatalogQueryProvider));
+    });
     ref.listen<PosAppointmentPrefill?>(pendingPosPrefillProvider, (_, next) {
       if (next != null) _applyPrefill(next);
     });
@@ -959,6 +1003,9 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                               ref,
                               categories: ctx.productCategories,
                               defaultCategoryId: selectedProductCategoryId,
+                              defaultSku: _looksLikeScanCode(queryTrimmed)
+                                  ? _normalizeScan(queryTrimmed)
+                                  : null,
                             ),
                           ),
                           _InlineActionChip(
@@ -1077,18 +1124,43 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24),
-                        child: Text(
-                          queryTrimmed.isNotEmpty
-                              ? 'Aucun article pour « $queryTrimmed ».'
-                              : facet == 'bestsellers'
-                                  ? 'Pas encore assez de ventes pour classer les articles.'
-                                  : filter == 'internal'
-                                      ? 'Aucun produit interne. Créez une catégorie, puis un produit.'
-                                      : filter == 'service'
-                                          ? 'Aucune prestation visible. Ajoutez-les dans Prestations sur le site.'
-                                          : 'Aucun article dans cette catégorie.',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: _muted),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              queryTrimmed.isNotEmpty
+                                  ? (_looksLikeScanCode(queryTrimmed)
+                                      ? 'Code « ${_normalizeScan(queryTrimmed)} » inconnu — créez le produit interne pour pouvoir le scanner.'
+                                      : 'Aucun article pour « $queryTrimmed ».')
+                                  : facet == 'bestsellers'
+                                      ? 'Pas encore assez de ventes pour classer les articles.'
+                                      : filter == 'internal'
+                                          ? 'Aucun produit interne. Créez une catégorie, puis un produit.'
+                                          : filter == 'service'
+                                              ? 'Aucune prestation visible. Ajoutez-les dans Prestations sur le site.'
+                                              : 'Aucun article dans cette catégorie.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: _muted),
+                            ),
+                            if (queryTrimmed.isNotEmpty &&
+                                _looksLikeScanCode(queryTrimmed)) ...[
+                              const SizedBox(height: 16),
+                              FilledButton(
+                                onPressed: () => showCreateInternalProductSheet(
+                                  context,
+                                  ref,
+                                  categories: ctx.productCategories,
+                                  defaultCategoryId: selectedProductCategoryId,
+                                  defaultSku: _normalizeScan(queryTrimmed),
+                                ),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: _black,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: const Text('Créer ce produit'),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ),

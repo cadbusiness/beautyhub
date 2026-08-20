@@ -33,6 +33,11 @@ class _CashScreenHeaderState extends ConsumerState<CashScreenHeader> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<String>(posCatalogQueryProvider, (prev, next) {
+      if (next.isEmpty && _searchController.text.isNotEmpty) {
+        _searchController.clear();
+      }
+    });
     final onSaleTab = widget.selectedIndex == 1;
     return Material(
       color: Colors.white,
@@ -84,9 +89,14 @@ class _CashScreenHeaderState extends ConsumerState<CashScreenHeader> {
             if (onSaleTab)
               _PinnedCatalogSearch(
                 controller: _searchController,
+                autofocus: true,
                 onChanged: (value) {
                   ref.read(posCatalogQueryProvider.notifier).state = value;
                   setState(() {});
+                },
+                onSubmitted: (_) {
+                  ref.read(posCatalogScanNonceProvider.notifier).state =
+                      ref.read(posCatalogScanNonceProvider) + 1;
                 },
               ),
           ],
@@ -100,10 +110,14 @@ class _PinnedCatalogSearch extends StatelessWidget {
   const _PinnedCatalogSearch({
     required this.controller,
     required this.onChanged,
+    required this.onSubmitted,
+    this.autofocus = false,
   });
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+  final ValueChanged<String> onSubmitted;
+  final bool autofocus;
 
   static const _fill = Color(0xFFF5F5F5);
   static const _muted = Color(0xFF737373);
@@ -120,10 +134,12 @@ class _PinnedCatalogSearch extends StatelessWidget {
       ),
       child: TextField(
         controller: controller,
+        autofocus: autofocus,
         onChanged: onChanged,
+        onSubmitted: onSubmitted,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          hintText: 'Rechercher un article…',
+          hintText: 'Rechercher ou scanner un article…',
           hintStyle: const TextStyle(color: _muted, fontSize: 14),
           prefixIcon: const Icon(
             Icons.search_rounded,

@@ -1855,6 +1855,7 @@ export type Database = {
           woo_categories: string[]
           woo_id: number | null
           category_id: string | null
+          barcode: string | null
         }
         Insert: {
           connection_id?: string | null
@@ -1879,6 +1880,7 @@ export type Database = {
           woo_categories?: string[]
           woo_id?: number | null
           category_id?: string | null
+          barcode?: string | null
         }
         Update: {
           connection_id?: string | null
@@ -1903,6 +1905,7 @@ export type Database = {
           woo_categories?: string[]
           woo_id?: number | null
           category_id?: string | null
+          barcode?: string | null
         }
         Relationships: [
           {

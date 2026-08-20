@@ -15,12 +15,14 @@ Future<void> showCreateInternalProductSheet(
   WidgetRef ref, {
   required List<PosOption> categories,
   String? defaultCategoryId,
+  String? defaultSku,
 }) async {
   final created = await showAppSheet<bool>(
     context: context,
     builder: (context) => _InternalProductSheet(
       categories: categories,
       defaultCategoryId: defaultCategoryId,
+      defaultSku: defaultSku,
     ),
   );
   if (created == true) {
@@ -155,10 +157,12 @@ class _InternalProductSheet extends ConsumerStatefulWidget {
   const _InternalProductSheet({
     required this.categories,
     this.defaultCategoryId,
+    this.defaultSku,
   });
 
   final List<PosOption> categories;
   final String? defaultCategoryId;
+  final String? defaultSku;
 
   @override
   ConsumerState<_InternalProductSheet> createState() =>
@@ -170,7 +174,7 @@ class _InternalProductSheetState extends ConsumerState<_InternalProductSheet> {
   final _name = TextEditingController();
   final _price = TextEditingController();
   final _stock = TextEditingController();
-  final _sku = TextEditingController();
+  late final _sku = TextEditingController(text: widget.defaultSku ?? '');
   late String? _categoryId = widget.defaultCategoryId;
   bool _saving = false;
   String? _error;
@@ -328,13 +332,15 @@ class _InternalProductSheetState extends ConsumerState<_InternalProductSheet> {
                 ],
               ),
               const SizedBox(height: 14),
-              const _FieldLabel('SKU'),
+              const _FieldLabel('SKU / code-barres'),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _sku,
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _submit(),
-                decoration: _fieldDecoration(hint: 'Référence interne, facultatif'),
+                decoration: _fieldDecoration(
+                  hint: 'Scannez l’étiquette ou saisissez la référence',
+                ),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 12),

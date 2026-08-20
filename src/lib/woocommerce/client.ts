@@ -8,6 +8,8 @@ export interface WooProduct {
   id: number;
   name: string;
   sku: string;
+  /** GTIN / EAN / UPC (WooCommerce 9+). */
+  global_unique_id?: string | null;
   price: string;
   stock_quantity: number | null;
   status: string;
@@ -34,6 +36,7 @@ export interface WooProductVariation {
   id: number;
   name?: string;
   sku?: string;
+  global_unique_id?: string | null;
   price?: string;
   stock_quantity?: number | null;
   status?: string;

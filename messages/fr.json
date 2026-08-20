@@ -3082,6 +3082,7 @@
       "scanAdded": "{name} ajouté au panier",
       "scanUnknown": "Code « {code} » inconnu — le produit n’est pas encore dans le catalogue.",
       "scanCreate": "Créer ce produit",
+      "scanHint": "Scanner Bluetooth : l’appairer dans Réglages, puis scanner ici. L’app ne détecte pas le scanner — il agit comme un clavier.",
       "emptyCategory": "Aucun article dans cette catégorie. Ajoute des prestations, synchronise WooCommerce ou crée des produits internes.",
       "emptyInternal": "Aucun produit interne. Crée une catégorie, puis un produit, pour les vendre à la caisse.",
       "emptyServices": "Aucune prestation visible. Ajoute-les dans Prestations.",

@@ -3219,6 +3219,7 @@
       "scanAdded": "{name} añadido al carrito",
       "scanUnknown": "Código « {code} » desconocido: este producto aún no está en el catálogo.",
       "scanCreate": "Crear este producto",
+      "scanHint": "Escáner Bluetooth: emparéjalo en Ajustes y escanea aquí. La app no detecta el escáner: actúa como un teclado.",
       "sessionRequired": "Abra el registro para registrar esta venta.",
       "sessionClosedTitle": "La caja no está abierta",
       "sessionClosedBody": "Abra el día para no olvidarlo. El fondo de caja es opcional.",

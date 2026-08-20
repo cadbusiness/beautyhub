@@ -132,51 +132,61 @@ class _PinnedCatalogSearch extends StatelessWidget {
         color: Colors.white,
         border: Border(bottom: BorderSide(color: _border)),
       ),
-      child: TextField(
-        controller: controller,
-        autofocus: autofocus,
-        onChanged: onChanged,
-        onSubmitted: onSubmitted,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          hintText: 'Rechercher ou scanner un article…',
-          hintStyle: const TextStyle(color: _muted, fontSize: 14),
-          prefixIcon: const Icon(
-            Icons.search_rounded,
-            size: 20,
-            color: _muted,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: controller,
+            autofocus: autofocus,
+            onChanged: onChanged,
+            onSubmitted: onSubmitted,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: 'Rechercher ou scanner un article…',
+              hintStyle: const TextStyle(color: _muted, fontSize: 14),
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                size: 20,
+                color: _muted,
+              ),
+              suffixIcon: controller.text.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        controller.clear();
+                        onChanged('');
+                      },
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                      color: _muted,
+                      splashRadius: 18,
+                    )
+                  : null,
+              filled: true,
+              fillColor: _fill,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: _black, width: 1.2),
+              ),
+            ),
           ),
-          suffixIcon: controller.text.isNotEmpty
-              ? IconButton(
-                  onPressed: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                  icon: const Icon(Icons.close_rounded, size: 18),
-                  color: _muted,
-                  splashRadius: 18,
-                )
-              : null,
-          filled: true,
-          fillColor: _fill,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
+          const SizedBox(height: 6),
+          const Text(
+            'Scanner Bluetooth : l’appairer dans Réglages, puis scanner ici. L’app ne détecte pas le scanner — il agit comme un clavier.',
+            style: TextStyle(fontSize: 11, color: _muted, height: 1.35),
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: _black, width: 1.2),
-          ),
-        ),
+        ],
       ),
     );
   }

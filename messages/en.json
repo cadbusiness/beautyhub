@@ -3642,6 +3642,7 @@
       "scanAdded": "{name} added to the cart",
       "scanUnknown": "Code “{code}” is unknown — this product is not in the catalog yet.",
       "scanCreate": "Create this product",
+      "scanHint": "Bluetooth scanner: pair it in Settings, then scan here. The app does not detect the scanner — it acts like a keyboard.",
       "sessionRequired": "Open the register to record this sale.",
       "sessionClosedTitle": "Checkout is not open",
       "sessionClosedBody": "Open the day so you don’t forget. The cash float is optional.",

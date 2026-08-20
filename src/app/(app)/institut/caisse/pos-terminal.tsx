@@ -825,6 +825,7 @@ export function PosTerminal({
             ariaLabel={t("filters.categoryAria")}
           />
         </div>
+        <p className="text-xs text-slate-500">{t("scanHint")}</p>
 
         {wooGroup === "soins" && wooNav.soins.length > 0 ? (
           <div className="flex flex-wrap items-center gap-1.5">

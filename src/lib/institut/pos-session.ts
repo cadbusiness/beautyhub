@@ -40,6 +40,64 @@ export async function getOpenCashSession(supabase: Db, tenantId: string) {
   return data;
 }
 
+type OpenCashSessionRow = NonNullable<
+  Awaited<ReturnType<typeof getOpenCashSession>>
+>;
+
+const AUTO_DAY_CLOSE_NOTE = "Clôture automatique — nouvelle journée";
+
+export async function openCashSessionRecord(
+  supabase: Db,
+  tenantId: string,
+  openingFloatCents: number,
+): Promise<OpenCashSessionRow> {
+  const { data, error } = await supabase
+    .from("inst_cash_sessions")
+    .insert({
+      tenant_id: tenantId,
+      opening_float_cents: Math.max(0, Math.round(openingFloatCents)),
+      status: "open",
+    })
+    .select("*")
+    .single();
+  if (data) return data;
+  const concurrent = await getOpenCashSession(supabase, tenantId);
+  if (concurrent) return concurrent;
+  throw new Error(error?.message ?? "session_open_failed");
+}
+
+/** Ouvre la journée en cours (fond par défaut). Clôture hier si encore ouverte. */
+export async function ensureTodayCashSession(
+  supabase: Db,
+  tenantId: string,
+): Promise<OpenCashSessionRow> {
+  const settings = await getPosSettings(supabase, tenantId);
+  const existing = await getOpenCashSession(supabase, tenantId);
+
+  if (existing && !isPreviousCalendarDay(existing.opened_at)) {
+    return existing;
+  }
+
+  if (existing && isPreviousCalendarDay(existing.opened_at)) {
+    const snapshot = await computeSessionSnapshot(
+      supabase,
+      tenantId,
+      existing.id,
+      "z",
+    );
+    await closeOpenCashSession(supabase, tenantId, {
+      countedCashCents: snapshot.expected_cash_cents,
+      notes: AUTO_DAY_CLOSE_NOTE,
+    });
+  }
+
+  return openCashSessionRecord(
+    supabase,
+    tenantId,
+    settings.default_opening_float_cents,
+  );
+}
+
 export function isCashSessionPaused(
   session: { status: string } | null | undefined,
 ): boolean {
@@ -119,7 +177,7 @@ export async function getPosSessionSummary(
   supabase: Db,
   tenantId: string,
 ): Promise<PosSessionSummary | null> {
-  const cashSession = await getOpenCashSession(supabase, tenantId);
+  const cashSession = await ensureTodayCashSession(supabase, tenantId);
   if (!cashSession) return null;
 
   const [snapshot, settings, lastSaleRes] = await Promise.all([
@@ -212,11 +270,8 @@ export async function requireOpenSessionIfNeeded(
   supabase: Db,
   tenantId: string,
 ): Promise<string | null> {
-  const settings = await getPosSettings(supabase, tenantId);
-  const session = await getOpenCashSession(supabase, tenantId);
+  const session = await ensureTodayCashSession(supabase, tenantId);
   if (isCashSessionPaused(session)) throw new Error("session_paused");
-  if (!settings.require_open_session) return session?.id ?? null;
-  if (!session) throw new Error("no_open_session");
   return session.id;
 }
 

@@ -4,7 +4,7 @@ import { WOO_PROVIDER } from "@/lib/woocommerce";
 import { listProductCategories } from "@/lib/institut/internal-products";
 import { buildCatalog, fetchPosSoldQuantities, type PosCatalogItem, type PosServiceCategory } from "@/lib/institut/pos";
 import { getPosSettings, type PosSettings } from "@/lib/institut/pos-settings";
-import { getOpenCashSession } from "@/lib/institut/pos-session";
+import { ensureTodayCashSession } from "@/lib/institut/pos-session";
 import { isPreviousCalendarDay } from "@/lib/date";
 
 type Db = SupabaseClient<Database>;
@@ -54,7 +54,8 @@ export async function loadMobilePosContext(
   tenantId: string,
   userId?: string | null,
 ): Promise<MobilePosContextLoaded> {
-  const [servicesRes, productsRes, clientsRes, staffRes, posSettings, cashSession, wooRes, categoriesRes, productCategories, soldQtyByKey] =
+  const cashSession = await ensureTodayCashSession(supabase, tenantId);
+  const [servicesRes, productsRes, clientsRes, staffRes, posSettings, wooRes, categoriesRes, productCategories, soldQtyByKey] =
     await Promise.all([
       supabase
         .from("inst_services")
@@ -85,7 +86,6 @@ export async function loadMobilePosContext(
         .eq("is_active", true)
         .order("full_name"),
       getPosSettings(supabase, tenantId),
-      getOpenCashSession(supabase, tenantId),
       supabase
         .from("connections")
         .select("status")

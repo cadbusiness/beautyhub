@@ -9,7 +9,7 @@ import { getStripeAccountForTenant } from "@/lib/stripe/index";
 import { buildCatalog, fetchPosSoldQuantities } from "@/lib/institut/pos";
 import { buildPosAppointmentOption } from "@/lib/institut/pos-appointment";
 import { getPosSettings } from "@/lib/institut/pos-settings";
-import { getOpenCashSession } from "@/lib/institut/pos-session";
+import { ensureTodayCashSession } from "@/lib/institut/pos-session";
 import { isPreviousCalendarDay, todayDateString, zonedDayBoundsUtc } from "@/lib/date";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,8 @@ export default async function CaissePage({
     todayDateString(),
   );
 
-  const [woo, stripeAccount, servicesRes, productsRes, clientsRes, posSettings, staffRes, apptsRes, cashSession, linkedApptRes, categoriesRes, productCategoriesRes, soldQtyByKey] =
+  const cashSession = await ensureTodayCashSession(supabase, tenantId);
+  const [woo, stripeAccount, servicesRes, productsRes, clientsRes, posSettings, staffRes, apptsRes, linkedApptRes, categoriesRes, productCategoriesRes, soldQtyByKey] =
     await Promise.all([
     getTenantConnectionStatus(tenantId, WOO_PROVIDER),
     getStripeAccountForTenant(tenantId),
@@ -70,7 +71,6 @@ export default async function CaissePage({
       .lt("starts_at", dayEnd.toISOString())
       .in("status", ["booked", "confirmed", "completed"])
       .order("starts_at"),
-    getOpenCashSession(supabase, tenantId),
     initialAppointmentId
       ? supabase
           .from("inst_appointments")

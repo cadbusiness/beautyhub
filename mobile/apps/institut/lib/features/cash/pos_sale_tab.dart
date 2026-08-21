@@ -1421,15 +1421,10 @@ int _parseEurosField(String raw) {
 }
 
 class _PayLine {
-  _PayLine({required this.method, required int amountCents})
-      : controller = TextEditingController(text: _eurosField(amountCents));
+  _PayLine({required this.method, required this.amountCents});
 
   String method;
-  final TextEditingController controller;
-
-  int get amountCents => _parseEurosField(controller.text);
-
-  void dispose() => controller.dispose();
+  int amountCents;
 }
 
 class _PaymentSplitEditor extends StatefulWidget {
@@ -1461,6 +1456,9 @@ class _PaymentSplitEditorState extends State<_PaymentSplitEditor> {
     ),
   ];
   int _lastPayable = -1;
+  int? _editingIndex;
+  String _pad = '';
+  bool _padDirty = false;
 
   @override
   void initState() {
@@ -1473,18 +1471,13 @@ class _PaymentSplitEditorState extends State<_PaymentSplitEditor> {
   void didUpdateWidget(covariant _PaymentSplitEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.payableCents != _lastPayable && _lines.length == 1) {
-      _lines[0].controller.text = _eurosField(widget.payableCents);
+      _lines[0].amountCents = widget.payableCents;
+      if (_editingIndex == 0 && !_padDirty) {
+        _pad = _eurosField(widget.payableCents);
+      }
     }
     _lastPayable = widget.payableCents;
     _emit();
-  }
-
-  @override
-  void dispose() {
-    for (final line in _lines) {
-      line.dispose();
-    }
-    super.dispose();
   }
 
   void _emit() {
@@ -1497,93 +1490,381 @@ class _PaymentSplitEditorState extends State<_PaymentSplitEditor> {
   int get _paid => _lines.fold<int>(0, (sum, line) => sum + line.amountCents);
   int get _remaining => widget.payableCents - _paid;
 
-  String _nextMethod() {
+  _PayLine? _lineFor(String method) {
+    for (final line in _lines) {
+      if (line.method == method) return line;
+    }
+    return null;
+  }
+
+  String _firstUnusedLabel() {
     final used = _lines.map((l) => l.method).toSet();
     for (final method in widget.methods) {
-      if (!used.contains(method.id)) return method.id;
+      if (!used.contains(method.id)) return method.label;
     }
-    return widget.methods.firstOrNull?.id ?? 'cash';
+    return '';
+  }
+
+  void _openPad(int index) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _editingIndex = index;
+      _pad = _eurosField(_lines[index].amountCents);
+      _padDirty = false;
+    });
+  }
+
+  void _closePad() {
+    setState(() {
+      _editingIndex = null;
+      _pad = '';
+      _padDirty = false;
+    });
+  }
+
+  void _commitPad() {
+    final i = _editingIndex;
+    if (i == null) return;
+    _lines[i].amountCents = _parseEurosField(_pad);
+    _emit();
+  }
+
+  void _appendDigit(String digit) {
+    setState(() {
+      if (!_padDirty) {
+        _pad = digit;
+        _padDirty = true;
+      } else if (_pad.contains(',')) {
+        final frac = _pad.split(',')[1];
+        if (frac.length < 2) _pad += digit;
+      } else if (_pad == '0') {
+        _pad = digit;
+      } else {
+        _pad += digit;
+      }
+      _commitPad();
+    });
+  }
+
+  void _appendComma() {
+    setState(() {
+      if (!_padDirty) {
+        _pad = '0,';
+        _padDirty = true;
+      } else if (!_pad.contains(',')) {
+        _pad = _pad.isEmpty ? '0,' : '$_pad,';
+      }
+      _commitPad();
+    });
+  }
+
+  void _backspace() {
+    setState(() {
+      if (!_padDirty) {
+        _pad = '';
+        _padDirty = true;
+      } else if (_pad.isNotEmpty) {
+        _pad = _pad.substring(0, _pad.length - 1);
+      }
+      _commitPad();
+    });
+  }
+
+  void _fillAll() {
+    final i = _editingIndex;
+    if (i == null) return;
+    final others = _lines.asMap().entries
+        .where((e) => e.key != i)
+        .fold<int>(0, (sum, e) => sum + e.value.amountCents);
+    final left = widget.payableCents - others;
+    setState(() {
+      _lines[i].amountCents = left > 0 ? left : 0;
+      _pad = _eurosField(_lines[i].amountCents);
+      _padDirty = true;
+    });
+    _emit();
+  }
+
+  void _tapMethod(String method) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final existing = _lineFor(method);
+    if (existing != null) {
+      _openPad(_lines.indexOf(existing));
+      return;
+    }
+    if (_remaining > 0) {
+      setState(() {
+        _lines.add(_PayLine(method: method, amountCents: _remaining));
+        _editingIndex = null;
+      });
+      if (_lines.length == 1) widget.onChanged(method);
+      _emit();
+      return;
+    }
+    if (_lines.length == 1) {
+      setState(() => _lines[0].method = method);
+      widget.onChanged(method);
+      _emit();
+    }
+  }
+
+  void _removeLine(int index) {
+    if (_lines.length <= 1) return;
+    setState(() {
+      _lines.removeAt(index);
+      if (_editingIndex == index) {
+        _editingIndex = null;
+      } else if (_editingIndex != null && _editingIndex! > index) {
+        _editingIndex = _editingIndex! - 1;
+      }
+    });
+    widget.onChanged(_lines.first.method);
+    _emit();
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.methods.isEmpty) return const SizedBox.shrink();
+    final unused = _firstUnusedLabel();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (var i = 0; i < _lines.length; i++) ...[
-          if (i > 0) const SizedBox(height: 10),
-          _MiniSegmented(
-            items: widget.methods,
-            selected: _lines[i].method,
-            onSelected: (method) {
-              setState(() => _lines[i].method = method);
-              if (i == 0) widget.onChanged(method);
-              _emit();
+        const Text(
+          'Paiement',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF404040),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _remaining > 0 && unused.isNotEmpty
+              ? 'Reste ${formatEuros(_remaining)} — touchez $unused'
+              : 'Touchez un montant pour le changer. Le reste se met sur l’autre moyen.',
+          style: TextStyle(
+            fontSize: 12,
+            height: 1.35,
+            color: _remaining > 0
+                ? const Color(0xFFB45309)
+                : const Color(0xFF737373),
+          ),
+        ),
+        const SizedBox(height: 10),
+        for (final method in widget.methods) ...[
+          _PaymentMethodRow(
+            label: method.label,
+            amountCents: _lineFor(method.id)?.amountCents,
+            selected: _lineFor(method.id) != null,
+            editing: _editingIndex != null &&
+                _lines[_editingIndex!].method == method.id,
+            canRemove: _lineFor(method.id) != null && _lines.length > 1,
+            remainingHint: _remaining > 0 && _lineFor(method.id) == null,
+            onTap: () => _tapMethod(method.id),
+            onRemove: () {
+              final line = _lineFor(method.id);
+              if (line != null) _removeLine(_lines.indexOf(line));
             },
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _lines[i].controller,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: _cartFieldDecoration(hint: '0,00'),
-                  onChanged: (_) => setState(_emit),
-                ),
-              ),
-              if (_lines.length > 1)
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _lines.removeAt(i).dispose();
-                    });
-                    _emit();
-                  },
-                  icon: const Icon(Icons.close, size: 18),
-                  color: const Color(0xFFB91C1C),
-                  visualDensity: VisualDensity.compact,
-                ),
-            ],
+        ],
+        if (_remaining < 0)
+          Text(
+            'Trop-perçu : ${formatEuros(-_remaining)}',
+            style: const TextStyle(fontSize: 13, color: Color(0xFFB91C1C)),
+          ),
+        if (_editingIndex != null) ...[
+          const SizedBox(height: 4),
+          _PosNumpad(
+            display: _padDirty ? (_pad.isEmpty ? '0' : _pad) : _pad,
+            onDigit: _appendDigit,
+            onComma: _appendComma,
+            onBackspace: _backspace,
+            onAll: _fillAll,
+            onDone: _closePad,
           ),
         ],
-        const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton(
-            onPressed: () {
-              final left = _remaining > 0 ? _remaining : 0;
-              setState(() {
-                _lines.add(_PayLine(method: _nextMethod(), amountCents: left));
-              });
-              _emit();
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF0A0A0A),
-              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-              visualDensity: VisualDensity.compact,
+      ],
+    );
+  }
+}
+
+class _PaymentMethodRow extends StatelessWidget {
+  const _PaymentMethodRow({
+    required this.label,
+    required this.amountCents,
+    required this.selected,
+    required this.editing,
+    required this.canRemove,
+    required this.remainingHint,
+    required this.onTap,
+    required this.onRemove,
+  });
+
+  final String label;
+  final int? amountCents;
+  final bool selected;
+  final bool editing;
+  final bool canRemove;
+  final bool remainingHint;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? const Color(0xFF0A0A0A) : const Color(0xFFF5F5F5),
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: editing
+                  ? (selected ? Colors.white : const Color(0xFF0A0A0A))
+                  : (selected ? const Color(0xFF0A0A0A) : const Color(0xFFE5E5E5)),
+              width: editing ? 1.5 : 1,
             ),
-            child: const Text(
-              '+ Ajouter un moyen de paiement',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: selected ? Colors.white : const Color(0xFF0A0A0A),
+                  ),
+                ),
+              ),
+              if (amountCents != null)
+                Text(
+                  formatEuros(amountCents!),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? Colors.white : const Color(0xFF0A0A0A),
+                  ),
+                )
+              else if (remainingHint)
+                Text(
+                  'Solde',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: selected ? Colors.white70 : const Color(0xFF737373),
+                  ),
+                ),
+              if (canRemove) ...[
+                const SizedBox(width: 4),
+                IconButton(
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.close, size: 18),
+                  color: selected ? Colors.white : const Color(0xFFB91C1C),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PosNumpad extends StatelessWidget {
+  const _PosNumpad({
+    required this.display,
+    required this.onDigit,
+    required this.onComma,
+    required this.onBackspace,
+    required this.onAll,
+    required this.onDone,
+  });
+
+  final String display;
+  final ValueChanged<String> onDigit;
+  final VoidCallback onComma;
+  final VoidCallback onBackspace;
+  final VoidCallback onAll;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget key(String label, VoidCallback onTap, {bool emphasis = false}) {
+      return Material(
+        color: emphasis ? const Color(0xFF0A0A0A) : const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            height: 44,
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: emphasis ? Colors.white : const Color(0xFF0A0A0A),
+                ),
+              ),
             ),
           ),
         ),
-        if (_remaining != 0)
-          Text(
-            _remaining > 0
-                ? 'Reste à payer : ${formatEuros(_remaining)}'
-                : 'Trop-perçu : ${formatEuros(-_remaining)}',
-            style: TextStyle(
-              fontSize: 13,
-              color: _remaining > 0
-                  ? const Color(0xFFB45309)
-                  : const Color(0xFFB91C1C),
-            ),
+      );
+    }
+
+    return Column(
+      children: [
+        Text(
+          '$display €',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0A0A0A),
           ),
+        ),
+        const SizedBox(height: 10),
+        for (final row in const [
+          ['1', '2', '3'],
+          ['4', '5', '6'],
+          ['7', '8', '9'],
+        ]) ...[
+          Row(
+            children: [
+              for (var i = 0; i < row.length; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(child: key(row[i], () => onDigit(row[i]))),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        Row(
+          children: [
+            Expanded(child: key(',', onComma)),
+            const SizedBox(width: 8),
+            Expanded(child: key('0', () => onDigit('0'))),
+            const SizedBox(width: 8),
+            Expanded(child: key('⌫', onBackspace)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(child: key('Tout', onAll)),
+            const SizedBox(width: 8),
+            Expanded(child: key('OK', onDone, emphasis: true)),
+          ],
+        ),
       ],
     );
   }
@@ -1972,7 +2253,10 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
         _loyalty?.rewards.where((r) => r.eligible).toList() ?? const [];
 
     final embedded = widget.embedded;
-    return Padding(
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      behavior: HitTestBehavior.translucent,
+      child: Padding(
       padding: EdgeInsets.only(
         left: embedded ? 16 : 20,
         right: embedded ? 16 : 20,
@@ -1980,6 +2264,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom + (embedded ? 16 : 20),
       ),
       child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2079,6 +2364,11 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
+                textInputAction: TextInputAction.done,
+                onEditingComplete: () =>
+                    FocusManager.instance.primaryFocus?.unfocus(),
+                onTapOutside: (_) =>
+                    FocusManager.instance.primaryFocus?.unfocus(),
                 decoration: _cartFieldDecoration(
                   hint: _discountKind == 'percent' ? '10' : '15,00',
                 ),
@@ -2125,6 +2415,11 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                 TextField(
                   controller: _discountReason,
                   textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.done,
+                  onEditingComplete: () =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
+                  onTapOutside: (_) =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
                   decoration: _cartFieldDecoration(
                     hint: 'Geste commercial, promotion…',
                   ),
@@ -2336,6 +2631,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -2537,6 +2833,9 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
                   controller: _price,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
+                  textInputAction: TextInputAction.done,
+                  onTapOutside: (_) =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                   ],
@@ -2714,6 +3013,9 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
                     controller: _lineDiscount,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
+                    textInputAction: TextInputAction.done,
+                    onTapOutside: (_) =>
+                        FocusManager.instance.primaryFocus?.unfocus(),
                     decoration: _cartFieldDecoration(
                       hint: _lineDiscountKind == 'percent' ? '10' : '5,00',
                     ),
@@ -3024,6 +3326,11 @@ class _CreditAmountFieldState extends State<_CreditAmountField> {
           child: TextField(
             controller: _controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            textInputAction: TextInputAction.done,
+            onEditingComplete: () =>
+                FocusManager.instance.primaryFocus?.unfocus(),
+            onTapOutside: (_) =>
+                FocusManager.instance.primaryFocus?.unfocus(),
             decoration: const InputDecoration(
               isDense: true,
               hintText: '0,00',

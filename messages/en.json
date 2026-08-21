@@ -3119,6 +3119,10 @@
       "creditNotePlaceholder": "Asset number (AV-…)",
       "discount": "Discount",
       "fillRemaining": "Pay",
+      "splitHint": "Tap a method. For a split, change the amount then tap the other method.",
+      "tapRemaining": "{amount} left — tap {method}",
+      "amountAll": "All",
+      "amountOk": "OK",
       "giftCodePlaceholder": "Voucher code",
       "methodAria": "Payment method",
       "methods": {

@@ -2763,6 +2763,10 @@
       "voucherCodePlaceholder": "Código voucher",
       "discount": "Descuento",
       "fillRemaining": "Pagar",
+      "splitHint": "Toque un método. Para mixto, cambie el importe y toque el otro.",
+      "tapRemaining": "Quedan {amount} — toque {method}",
+      "amountAll": "Todo",
+      "amountOk": "OK",
       "giftCodePlaceholder": "código de cupón",
       "methodAria": "Método de pago",
       "methods": {

@@ -141,6 +141,8 @@ class _PinnedCatalogSearch extends StatelessWidget {
             onChanged: onChanged,
             onSubmitted: onSubmitted,
             textInputAction: TextInputAction.search,
+            onTapOutside: (_) =>
+                FocusManager.instance.primaryFocus?.unfocus(),
             decoration: InputDecoration(
               hintText: 'Rechercher ou scanner un article…',
               hintStyle: const TextStyle(color: _muted, fontSize: 14),

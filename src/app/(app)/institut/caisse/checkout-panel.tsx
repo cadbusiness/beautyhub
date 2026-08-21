@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { formatPosMoney } from "@/lib/institut/pos-settings";
 import type { PosPaymentMethodsConfig, PosSettings } from "@/lib/institut/pos-settings";
 import type { ActionResult } from "../caisse-actions";
@@ -105,6 +105,9 @@ export function CheckoutPanel({
   const [payments, setPayments] = useState<PaymentRow[]>(() => [
     newRow(defaultMethod, eurosFromCents(totals.total_cents)),
   ]);
+  const [editingMethod, setEditingMethod] = useState<string | null>(null);
+  const [pad, setPad] = useState("");
+  const [padDirty, setPadDirty] = useState(false);
 
   useEffect(() => {
     setPayments((prev) => {
@@ -150,24 +153,86 @@ export function CheckoutPanel({
     );
   }
 
-  function addPaymentRow() {
-    const amount = remainingCents > 0 ? eurosFromCents(remainingCents) : "0.00";
-    setPayments((rows) => [...rows, newRow(defaultMethod, amount)]);
-  }
-
   function removeRow(id: string) {
     setPayments((rows) => (rows.length <= 1 ? rows : rows.filter((r) => r.id !== id)));
+    setEditingMethod(null);
   }
 
-  function fillRemaining(id: string) {
+  function rowFor(method: string) {
+    return payments.find((p) => p.method === method);
+  }
+
+  function firstUnusedLabel() {
+    const used = new Set(payments.map((p) => p.method));
+    const next = enabledMethods.find((m) => !used.has(m));
+    return next ? t(`methods.${next}`) : "";
+  }
+
+  function commitPad(raw: string) {
+    if (!editingMethod) return;
+    const existing = rowFor(editingMethod);
+    if (!existing) return;
+    const n = Number.parseFloat(raw.trim().replace(",", "."));
+    const cents = Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0;
+    updateRow(existing.id, { amountEuros: eurosFromCents(cents) });
+  }
+
+  function tapMethod(method: string) {
+    const existing = rowFor(method);
+    if (existing) {
+      setEditingMethod(method);
+      setPad(existing.amountEuros.replace(".", ","));
+      setPadDirty(false);
+      return;
+    }
+    if (remainingCents > 0) {
+      setPayments((rows) => [
+        ...rows,
+        newRow(method, eurosFromCents(remainingCents)),
+      ]);
+      setEditingMethod(null);
+      return;
+    }
+    if (payments.length === 1) {
+      updateRow(payments[0].id, { method });
+    }
+  }
+
+  function appendPad(token: string) {
+    let next = padDirty ? pad : "";
+    if (token === ",") {
+      if (!padDirty) next = "0,";
+      else if (!next.includes(",")) next = next.length === 0 ? "0," : `${next},`;
+    } else if (token === "back") {
+      next = padDirty ? next.slice(0, -1) : "";
+    } else if (next.includes(",")) {
+      const frac = next.split(",")[1] ?? "";
+      if (frac.length < 2) next += token;
+    } else if (next === "0") {
+      next = token;
+    } else {
+      next += token;
+    }
+    setPad(next);
+    setPadDirty(true);
+    commitPad(next);
+  }
+
+  function fillEditingAll() {
+    if (!editingMethod) return;
+    const existing = rowFor(editingMethod);
+    if (!existing) return;
     const others = payments
-      .filter((p) => p.id !== id)
+      .filter((p) => p.id !== existing.id)
       .reduce((s, p) => {
         const n = Number.parseFloat(p.amountEuros.replace(",", "."));
         return s + (Number.isFinite(n) ? Math.round(n * 100) : 0);
       }, 0);
     const left = Math.max(0, totals.total_cents - others);
-    updateRow(id, { amountEuros: eurosFromCents(left) });
+    const formatted = eurosFromCents(left);
+    updateRow(existing.id, { amountEuros: formatted });
+    setPad(formatted.replace(".", ","));
+    setPadDirty(true);
   }
 
   return (
@@ -199,78 +264,86 @@ export function CheckoutPanel({
         <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
           {t("payments")}
         </p>
-        {payments.map((row) => (
-          <div key={row.id} className="flex flex-wrap items-center gap-2">
-            <Select
-              value={row.method}
-              onChange={(e) => updateRow(row.id, { method: e.target.value })}
-              className="min-w-[7rem] flex-1"
-              aria-label={t("methodAria")}
-            >
-              {enabledMethods.map((m) => (
-                <option key={m} value={m}>
-                  {t(`methods.${m}`)}
-                </option>
-              ))}
-            </Select>
-            <Input
-              type="number"
-              min={0}
-              step="0.01"
-              value={row.amountEuros}
-              onChange={(e) => updateRow(row.id, { amountEuros: e.target.value })}
-              className="w-24"
-              aria-label={t("amountAria")}
-            />
-            {row.method === "gift_card" ? (
-              <Input
-                placeholder={t("giftCodePlaceholder")}
-                value={row.reference}
-                onChange={(e) => updateRow(row.id, { reference: e.target.value })}
-                className="min-w-[6rem] flex-1"
-              />
-            ) : null}
-            {row.method === "voucher" ? (
-              <Input
-                placeholder={t("voucherCodePlaceholder")}
-                value={row.reference}
-                onChange={(e) => updateRow(row.id, { reference: e.target.value })}
-                className="min-w-[6rem] flex-1"
-              />
-            ) : null}
-            {row.method === "credit_note" ? (
-              <Input
-                placeholder={t("creditNotePlaceholder")}
-                value={row.reference}
-                onChange={(e) => updateRow(row.id, { reference: e.target.value })}
-                className="min-w-[6rem] flex-1"
-              />
-            ) : null}
-            <button
-              type="button"
-              onClick={() => fillRemaining(row.id)}
-              className="text-xs text-slate-500 hover:text-slate-700"
-            >
-              {t("fillRemaining")}
-            </button>
-            {payments.length > 1 ? (
-              <button
-                type="button"
-                onClick={() => removeRow(row.id)}
-                className="text-xs text-red-500 hover:text-red-700"
-              >
-                ×
-              </button>
-            ) : null}
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={addPaymentRow}
-          className="inline-flex h-8 items-center rounded-lg border border-slate-300 px-3 text-xs font-medium text-slate-800 hover:bg-slate-50"
-        >
-          + {t("addPayment")}
-        </button>
+        <p className="text-xs text-slate-500">
+          {isPartial && firstUnusedLabel()
+            ? t("tapRemaining", {
+                amount: money(remainingCents),
+                method: firstUnusedLabel(),
+              })
+            : t("splitHint")}
+        </p>
+        {enabledMethods.map((method) => {
+          const row = rowFor(method);
+          const selected = Boolean(row);
+          return (
+            <div key={method} className="space-y-2">
+              <div className="flex items-stretch gap-2">
+                <button
+                  type="button"
+                  onClick={() => tapMethod(method)}
+                  aria-label={t("methodAria")}
+                  className={`flex min-h-11 flex-1 items-center justify-between px-3 text-left text-sm font-semibold ${
+                    selected
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-50 text-slate-900"
+                  }`}
+                >
+                  <span>{t(`methods.${method}`)}</span>
+                  {row ? (
+                    <span className="tabular-nums">{money(Math.round(Number.parseFloat(row.amountEuros.replace(",", ".")) * 100 || 0))}</span>
+                  ) : remainingCents > 0 ? (
+                    <span className={selected ? "text-white/70" : "text-xs font-medium text-slate-400"}>
+                      {t("fillRemaining")}
+                    </span>
+                  ) : null}
+                </button>
+                {row && payments.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => removeRow(row.id)}
+                    className="px-2 text-sm text-red-600"
+                    aria-label="×"
+                  >
+                    ×
+                  </button>
+                ) : null}
+              </div>
+              {row?.method === "gift_card" ? (
+                <Input
+                  placeholder={t("giftCodePlaceholder")}
+                  value={row.reference}
+                  onChange={(e) => updateRow(row.id, { reference: e.target.value })}
+                />
+              ) : null}
+              {row?.method === "voucher" ? (
+                <Input
+                  placeholder={t("voucherCodePlaceholder")}
+                  value={row.reference}
+                  onChange={(e) => updateRow(row.id, { reference: e.target.value })}
+                />
+              ) : null}
+              {row?.method === "credit_note" ? (
+                <Input
+                  placeholder={t("creditNotePlaceholder")}
+                  value={row.reference}
+                  onChange={(e) => updateRow(row.id, { reference: e.target.value })}
+                />
+              ) : null}
+            </div>
+          );
+        })}
+        {editingMethod ? (
+          <AmountPad
+            display={padDirty ? pad || "0" : pad}
+            onDigit={(d) => appendPad(d)}
+            onComma={() => appendPad(",")}
+            onBackspace={() => appendPad("back")}
+            onAll={fillEditingAll}
+            onDone={() => setEditingMethod(null)}
+            allLabel={t("amountAll")}
+            doneLabel={t("amountOk")}
+          />
+        ) : null}
       </div>
 
       {remainingCents !== 0 ? (
@@ -360,6 +433,92 @@ export function CheckoutPanel({
       ) : (
         <p className="text-[11px] text-slate-400">{t("pricesHtHint")}</p>
       )}
+    </div>
+  );
+}
+
+function AmountPad({
+  display,
+  onDigit,
+  onComma,
+  onBackspace,
+  onAll,
+  onDone,
+  allLabel,
+  doneLabel,
+}: {
+  display: string;
+  onDigit: (digit: string) => void;
+  onComma: () => void;
+  onBackspace: () => void;
+  onAll: () => void;
+  onDone: () => void;
+  allLabel: string;
+  doneLabel: string;
+}) {
+  const keys = [
+    ["1", "2", "3"],
+    ["4", "5", "6"],
+    ["7", "8", "9"],
+  ];
+  return (
+    <div className="space-y-2 pt-1">
+      <p className="text-center text-xl font-semibold tabular-nums text-slate-900">
+        {display} €
+      </p>
+      {keys.map((row) => (
+        <div key={row.join("")} className="grid grid-cols-3 gap-2">
+          {row.map((digit) => (
+            <button
+              key={digit}
+              type="button"
+              onClick={() => onDigit(digit)}
+              className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+            >
+              {digit}
+            </button>
+          ))}
+        </div>
+      ))}
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={onComma}
+          className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+        >
+          ,
+        </button>
+        <button
+          type="button"
+          onClick={() => onDigit("0")}
+          className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+        >
+          0
+        </button>
+        <button
+          type="button"
+          onClick={onBackspace}
+          className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+        >
+          ⌫
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onAll}
+          className="h-11 bg-slate-50 text-sm font-semibold text-slate-900"
+        >
+          {allLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="h-11 bg-slate-900 text-sm font-semibold text-white"
+        >
+          {doneLabel}
+        </button>
+      </div>
     </div>
   );
 }

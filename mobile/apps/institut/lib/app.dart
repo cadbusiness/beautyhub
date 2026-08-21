@@ -20,6 +20,7 @@ import 'features/team/team_audit_screen.dart';
 import 'features/team/team_screen.dart';
 import 'features/tenant/tenant_picker_screen.dart';
 import 'state/session_providers.dart';
+import 'widgets/keyboard_done_bar.dart';
 
 class InstitutApp extends StatelessWidget {
   const InstitutApp({
@@ -193,6 +194,9 @@ class _InstitutRouterAppState extends ConsumerState<_InstitutRouterApp> {
       title: bootstrap.appName,
       theme: institutAppTheme(bootstrap.branding),
       routerConfig: _router,
+      builder: (context, child) {
+        return KeyboardDoneHost(child: child ?? const SizedBox.shrink());
+      },
     );
   }
 }

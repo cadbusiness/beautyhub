@@ -153,6 +153,13 @@ class _CashScreenState extends ConsumerState<CashScreen> {
                                   const SizedBox(height: 16),
                                   TextField(
                                     controller: _floatController,
+                                    textInputAction: TextInputAction.done,
+                                    onEditingComplete: () =>
+                                        FocusManager.instance.primaryFocus
+                                            ?.unfocus(),
+                                    onTapOutside: (_) => FocusManager
+                                        .instance.primaryFocus
+                                        ?.unfocus(),
                                     keyboardType: const TextInputType.numberWithOptions(
                                       decimal: true,
                                     ),

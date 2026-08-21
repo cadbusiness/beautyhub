@@ -267,7 +267,7 @@ export function CheckoutPanel({
         <button
           type="button"
           onClick={addPaymentRow}
-          className="text-xs text-slate-500 hover:text-slate-700"
+          className="inline-flex h-8 items-center rounded-lg border border-slate-300 px-3 text-xs font-medium text-slate-800 hover:bg-slate-50"
         >
           + {t("addPayment")}
         </button>

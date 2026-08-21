@@ -521,7 +521,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
     String? loyaltyRewardId,
     int loyaltyCreditCents = 0,
     String? staffId,
-    String paymentMethod = 'cash',
+    List<Map<String, dynamic>> payments = const [],
   }) async {
     final cart = ref.read(posCartProvider);
     if (cart.isEmpty) return false;
@@ -620,9 +620,11 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             priceOverrides: overrides.isEmpty ? null : overrides,
             posCartId: ref.read(posCartSessionProvider).activeCartId,
             payments: totalCents > 0
-                ? [
-                    {'method': paymentMethod, 'amountCents': totalCents},
-                  ]
+                ? (payments.isNotEmpty
+                    ? payments
+                    : [
+                        {'method': 'cash', 'amountCents': totalCents},
+                      ])
                 : const [],
           );
       ref.invalidate(cashSessionProvider);
@@ -704,7 +706,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
         loyaltyRewardId,
         loyaltyCreditCents = 0,
         staffId,
-        paymentMethod = 'cash',
+        payments = const [],
       }) =>
           _checkout(
             ctx,
@@ -715,7 +717,7 @@ class _PosSaleTabState extends ConsumerState<PosSaleTab> {
             loyaltyRewardId: loyaltyRewardId,
             loyaltyCreditCents: loyaltyCreditCents,
             staffId: staffId,
-            paymentMethod: paymentMethod,
+            payments: payments,
           ),
       sessionBlocked: ctx.sessionPaused ||
           ctx.sessionIsPreviousDay ||
@@ -1406,6 +1408,187 @@ class _MiniSegmented extends StatelessWidget {
   }
 }
 
+String _eurosField(int cents) {
+  final whole = (cents / 100).truncate();
+  final frac = (cents.abs() % 100).toString().padLeft(2, '0');
+  return '$whole,$frac';
+}
+
+int _parseEurosField(String raw) {
+  final n = double.tryParse(raw.trim().replaceAll(',', '.')) ?? 0;
+  if (n <= 0) return 0;
+  return (n * 100).round();
+}
+
+class _PayLine {
+  _PayLine({required this.method, required int amountCents})
+      : controller = TextEditingController(text: _eurosField(amountCents));
+
+  String method;
+  final TextEditingController controller;
+
+  int get amountCents => _parseEurosField(controller.text);
+
+  void dispose() => controller.dispose();
+}
+
+class _PaymentSplitEditor extends StatefulWidget {
+  const _PaymentSplitEditor({
+    required this.payableCents,
+    required this.methods,
+    required this.initialMethod,
+    required this.onChanged,
+    required this.onLinesChanged,
+  });
+
+  final int payableCents;
+  final List<({String id, String label})> methods;
+  final String initialMethod;
+  final ValueChanged<String> onChanged;
+  final ValueChanged<List<Map<String, dynamic>>> onLinesChanged;
+
+  @override
+  State<_PaymentSplitEditor> createState() => _PaymentSplitEditorState();
+}
+
+class _PaymentSplitEditorState extends State<_PaymentSplitEditor> {
+  late final List<_PayLine> _lines = [
+    _PayLine(
+      method: widget.methods.any((m) => m.id == widget.initialMethod)
+          ? widget.initialMethod
+          : (widget.methods.firstOrNull?.id ?? 'cash'),
+      amountCents: widget.payableCents,
+    ),
+  ];
+  int _lastPayable = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastPayable = widget.payableCents;
+    _emit();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PaymentSplitEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.payableCents != _lastPayable && _lines.length == 1) {
+      _lines[0].controller.text = _eurosField(widget.payableCents);
+    }
+    _lastPayable = widget.payableCents;
+    _emit();
+  }
+
+  @override
+  void dispose() {
+    for (final line in _lines) {
+      line.dispose();
+    }
+    super.dispose();
+  }
+
+  void _emit() {
+    widget.onLinesChanged([
+      for (final line in _lines)
+        {'method': line.method, 'amountCents': line.amountCents},
+    ]);
+  }
+
+  int get _paid => _lines.fold<int>(0, (sum, line) => sum + line.amountCents);
+  int get _remaining => widget.payableCents - _paid;
+
+  String _nextMethod() {
+    final used = _lines.map((l) => l.method).toSet();
+    for (final method in widget.methods) {
+      if (!used.contains(method.id)) return method.id;
+    }
+    return widget.methods.firstOrNull?.id ?? 'cash';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.methods.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < _lines.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          _MiniSegmented(
+            items: widget.methods,
+            selected: _lines[i].method,
+            onSelected: (method) {
+              setState(() => _lines[i].method = method);
+              if (i == 0) widget.onChanged(method);
+              _emit();
+            },
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _lines[i].controller,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: _cartFieldDecoration(hint: '0,00'),
+                  onChanged: (_) => setState(_emit),
+                ),
+              ),
+              if (_lines.length > 1)
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _lines.removeAt(i).dispose();
+                    });
+                    _emit();
+                  },
+                  icon: const Icon(Icons.close, size: 18),
+                  color: const Color(0xFFB91C1C),
+                  visualDensity: VisualDensity.compact,
+                ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            onPressed: () {
+              final left = _remaining > 0 ? _remaining : 0;
+              setState(() {
+                _lines.add(_PayLine(method: _nextMethod(), amountCents: left));
+              });
+              _emit();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF0A0A0A),
+              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text(
+              '+ Ajouter un moyen de paiement',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+        if (_remaining != 0)
+          Text(
+            _remaining > 0
+                ? 'Reste à payer : ${formatEuros(_remaining)}'
+                : 'Trop-perçu : ${formatEuros(-_remaining)}',
+            style: TextStyle(
+              fontSize: 13,
+              color: _remaining > 0
+                  ? const Color(0xFFB45309)
+                  : const Color(0xFFB91C1C),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _PosChip extends StatelessWidget {
   const _PosChip({
     required this.label,
@@ -1548,7 +1731,7 @@ class _CartSheet extends ConsumerStatefulWidget {
   final ValueChanged<PickerItem?> onClientChanged;
   final ValueChanged<PickerItem?> onStaffChanged;
   final ValueChanged<String> onPaymentChanged;
-  final   Future<bool> Function({
+  final Future<bool> Function({
     int discountCents,
     int loyaltyDiscountCents,
     String? notes,
@@ -1556,7 +1739,7 @@ class _CartSheet extends ConsumerStatefulWidget {
     String? loyaltyRewardId,
     int loyaltyCreditCents,
     String? staffId,
-    String paymentMethod,
+    List<Map<String, dynamic>> payments,
   }) onCheckout;
   final bool sessionBlocked;
 
@@ -1568,6 +1751,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
   late PickerItem? _client = widget.selectedClient;
   late PickerItem? _staff = widget.selectedStaff;
   late String _paymentMethod = widget.paymentMethod;
+  List<Map<String, dynamic>> _payPayload = const [];
   bool _showDiscount = false;
   String _discountKind = 'percent';
   String? _pickedReason;
@@ -1685,6 +1869,18 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
         _loyaltyLoading = false;
       });
     }
+  }
+
+  List<Map<String, dynamic>> _checkoutPayments(int payable) {
+    final rows = _payPayload
+        .where((p) => ((p['amountCents'] as num?)?.toInt() ?? 0) > 0)
+        .toList();
+    if (rows.isEmpty && payable > 0) {
+      return [
+        {'method': _paymentMethod, 'amountCents': payable},
+      ];
+    }
+    return rows;
   }
 
   int _discountCents(int gross) {
@@ -2070,19 +2266,18 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
               ],
             ),
             const SizedBox(height: 14),
-            _MiniSegmented(
-              items: [
+            _PaymentSplitEditor(
+              payableCents: payable,
+              methods: [
                 if (ctx.settings.paymentMethods.cash)
                   (id: 'cash', label: 'Espèces'),
                 if (ctx.settings.paymentMethods.card) (id: 'card', label: 'CB'),
                 if (ctx.settings.paymentMethods.transfer)
                   (id: 'transfer', label: 'Virement'),
               ],
-              selected: _paymentMethod,
-              onSelected: (m) {
-                setState(() => _paymentMethod = m);
-                widget.onPaymentChanged(m);
-              },
+              initialMethod: _paymentMethod,
+              onChanged: (method) => widget.onPaymentChanged(method),
+              onLinesChanged: (lines) => _payPayload = lines,
             ),
             const SizedBox(height: 16),
             if (sessionBlocked) ...[
@@ -2109,7 +2304,7 @@ class _CartSheetState extends ConsumerState<_CartSheet> {
                           notes: reason.isEmpty ? null : 'Remise : $reason',
                           discountReason: reason.isEmpty ? null : reason,
                           staffId: _staff?.id,
-                          paymentMethod: _paymentMethod,
+                          payments: _checkoutPayments(payable),
                         );
                         if (ok && context.mounted && !embedded) {
                           Navigator.pop(context);

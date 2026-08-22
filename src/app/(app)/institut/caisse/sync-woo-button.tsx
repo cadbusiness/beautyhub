@@ -40,7 +40,7 @@ export function SyncWooButton() {
 
   return (
     <form onSubmit={onSubmit} className="flex items-center gap-2">
-      <Button variant="outline" type="submit" className="h-9" disabled={pending}>
+      <Button variant="outline" type="submit" className="h-8" disabled={pending}>
         {pending ? t("syncWooPending") : t("syncWoo")}
       </Button>
       {ok ? (

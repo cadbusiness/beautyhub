@@ -109,7 +109,7 @@ export function PosCartSwitcher({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1">
         {carts.map((cart) => {
           const selected = cart.id === activeCartId;
           const occupied = cart.lockedByOther;
@@ -119,7 +119,7 @@ export function PosCartSwitcher({
               key={cart.id}
               type="button"
               onClick={() => void handleSelect(cart)}
-              className={`min-w-[8.75rem] max-w-[16.5rem] rounded-xl border px-3 py-2 text-left ${
+              className={`inline-flex max-w-[11rem] items-center gap-1.5 rounded-md border px-2 py-1 text-left ${
                 selected
                   ? "border-slate-900 bg-slate-900 text-white"
                   : occupied
@@ -127,46 +127,34 @@ export function PosCartSwitcher({
                     : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
               }`}
             >
-              <span className="flex items-center justify-between gap-2">
-                <span className="text-[13px] font-semibold leading-snug">{title}</span>
-                {selected && !occupied ? (
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    className="text-[11px] opacity-80 hover:opacity-100"
-                    onClick={(ev) => {
-                      ev.stopPropagation();
-                      void handleAbandon(cart);
-                    }}
-                    onKeyDown={(ev) => {
-                      if (ev.key === "Enter" || ev.key === " ") {
-                        ev.stopPropagation();
-                        void handleAbandon(cart);
-                      }
-                    }}
-                    aria-label={t("abandon")}
-                  >
-                    ×
-                  </span>
-                ) : null}
-              </span>
+              <span className="min-w-0 truncate text-xs font-medium">{title}</span>
               <span
-                className={`mt-0.5 flex items-center gap-1.5 text-[11px] font-medium ${
-                  selected
-                    ? "text-white/75"
-                    : occupied
-                      ? "text-amber-800"
-                      : "text-slate-500"
+                className={`shrink-0 text-[10px] ${
+                  selected ? "text-white/70" : occupied ? "text-amber-800" : "text-slate-400"
                 }`}
               >
-                {occupied ? (
-                  <span className="size-1.5 rounded-full bg-amber-600" aria-hidden />
-                ) : null}
-                <span>
-                  {ownerLine(cart)}
-                  {cart.itemCount > 0 ? `  ·  ${cart.itemCount}` : ""}
-                </span>
+                {cart.itemCount > 0 ? cart.itemCount : ownerLine(cart)}
               </span>
+              {selected && !occupied ? (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="shrink-0 text-xs opacity-80 hover:opacity-100"
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    void handleAbandon(cart);
+                  }}
+                  onKeyDown={(ev) => {
+                    if (ev.key === "Enter" || ev.key === " ") {
+                      ev.stopPropagation();
+                      void handleAbandon(cart);
+                    }
+                  }}
+                  aria-label={t("abandon")}
+                >
+                  ×
+                </span>
+              ) : null}
             </button>
           );
         })}
@@ -174,7 +162,7 @@ export function PosCartSwitcher({
           <button
             type="button"
             onClick={() => void handleAdd()}
-            className="flex h-[52px] w-11 items-center justify-center rounded-xl border border-slate-200 text-lg font-medium text-slate-700 hover:border-slate-300"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 text-base font-medium text-slate-600 hover:border-slate-300"
             aria-label={t("add")}
           >
             +

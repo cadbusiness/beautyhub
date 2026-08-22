@@ -11,7 +11,6 @@ import { buildPosAppointmentOption } from "@/lib/institut/pos-appointment";
 import { getPosSettings } from "@/lib/institut/pos-settings";
 import { ensureTodayCashSession } from "@/lib/institut/pos-session";
 import { isPreviousCalendarDay, todayDateString, zonedDayBoundsUtc } from "@/lib/date";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PosTerminal } from "./pos-terminal";
 import { SyncWooButton } from "./sync-woo-button";
@@ -144,22 +143,9 @@ export default async function CaissePage({
   );
 
   return (
-    <div className="space-y-4 px-4 py-4 lg:px-6">
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        {canSettings ? (
-          <Link href="/compte/institut/caisse">
-            <Button variant="outline" className="h-9">
-              {t("settingsButton")}
-            </Button>
-          </Link>
-        ) : null}
-        {connected ? (
-          <SyncWooButton />
-        ) : null}
-      </div>
-
+    <div className="flex min-h-0 flex-1 flex-col">
       {!connected && catalog.length === 0 ? (
-        <Card className="space-y-3">
+        <div className="space-y-3 px-4 py-4 lg:px-6">
           <p className="text-sm text-slate-600">{t("emptyCatalog")}</p>
           <div className="flex flex-wrap gap-2">
             <Link href="/institut/prestations">
@@ -172,11 +158,11 @@ export default async function CaissePage({
               <Button>{t("linkSettings")}</Button>
             </Link>
           </div>
-        </Card>
+        </div>
       ) : (
         <>
           {!connected ? (
-            <p className="text-sm text-slate-500">
+            <p className="border-b border-slate-100 px-4 py-2 text-xs text-slate-500 lg:px-6">
               {t("wooNotConnected")}{" "}
               <Link href="/compte/institut/woocommerce" className="underline">
                 {t("connectShop")}
@@ -203,6 +189,18 @@ export default async function CaissePage({
             stripePublishableKey={stripePublishableKey}
             stripeAccountId={stripeAccount?.accountId}
             operatorStaffId={operatorStaffId}
+            catalogActions={
+              <>
+                {canSettings ? (
+                  <Link href="/compte/institut/caisse">
+                    <Button variant="outline" className="h-8">
+                      {t("settingsButton")}
+                    </Button>
+                  </Link>
+                ) : null}
+                {connected ? <SyncWooButton /> : null}
+              </>
+            }
           />
         </>
       )}

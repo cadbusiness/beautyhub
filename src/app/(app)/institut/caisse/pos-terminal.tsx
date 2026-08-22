@@ -1,13 +1,13 @@
 "use client";
 
-import { Check, ChevronDown, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { checkoutPos, type ActionResult } from "../caisse-actions";
-import { Card } from "@/components/ui/card";
-import { Input, Select, Textarea } from "@/components/ui/input";
+import { Input, Select } from "@/components/ui/input";
+import { SearchSelect } from "@/components/ui/search-select";
 import {
   applyPriceOverrides,
   createCustomPosKey,
@@ -52,11 +52,8 @@ import {
   applyPosAppointmentPrefill,
   type PosAppointmentOption,
 } from "@/lib/institut/pos-appointment";
-import { CheckoutPanel } from "./checkout-panel";
-import { PosCartSwitcher } from "./pos-cart-switcher";
+import { PosTicketPanel } from "./pos-ticket-panel";
 import { usePosCarts, type PosCartLocalState } from "./use-pos-carts";
-import { PosLoyaltyPicker } from "./pos-loyalty-picker";
-import { OpenSessionForm } from "./session/open-session-form";
 import { InternalProductForm } from "./produits/internal-product-form";
 import { ProductCategoriesDialog } from "./produits/product-categories-dialog";
 import { Button } from "@/components/ui/button";
@@ -89,6 +86,7 @@ export function PosTerminal({
   stripePublishableKey,
   stripeAccountId,
   operatorStaffId = "",
+  catalogActions,
 }: {
   catalog: PosCatalogItem[];
   serviceCategories?: PosServiceCategory[];
@@ -107,6 +105,7 @@ export function PosTerminal({
   stripePublishableKey?: string;
   stripeAccountId?: string;
   operatorStaffId?: string;
+  catalogActions?: ReactNode;
 }) {
   const t = useTranslations("pos.terminal");
   const locale = useLocale();
@@ -155,6 +154,8 @@ export function PosTerminal({
   const [lineDiscountKey, setLineDiscountKey] = useState<string | null>(null);
   const [lineDiscountKind, setLineDiscountKind] = useState<"percent" | "fixed">("percent");
   const [lineDiscountValue, setLineDiscountValue] = useState("");
+  const [expandedLineKey, setExpandedLineKey] = useState<string | null>(null);
+  const [ticketExtrasOpen, setTicketExtrasOpen] = useState(false);
   const [freeChargeOpen, setFreeChargeOpen] = useState(false);
   const [freeChargeAmount, setFreeChargeAmount] = useState("");
   const [freeChargeLabel, setFreeChargeLabel] = useState("");
@@ -761,34 +762,46 @@ export function PosTerminal({
     void message;
   }
 
-  const tCheckout = useTranslations("pos.checkout");
+  const ticketNotes = [
+    notes.trim(),
+    !promoCode && cartDiscountReason.trim()
+      ? `${t("cart.discountReasonPrefix")}: ${cartDiscountReason.trim()}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return (
     <>
-    <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          {tabs.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                setTab(item.id);
-                setFacet(POS_FACET_ALL);
-                setPage(1);
-              }}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                tab === item.id
-                  ? "bg-slate-100 text-slate-900"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+    <div className="grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_26rem] xl:grid-cols-[minmax(0,1fr)_28rem]">
+      <div className="flex min-h-0 flex-col overflow-y-auto">
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-2 lg:px-6">
+          <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+            {tabs.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setTab(item.id);
+                  setFacet(POS_FACET_ALL);
+                  setPage(1);
+                }}
+                className={`rounded-md px-2.5 py-1 text-sm font-medium transition-colors ${
+                  tab === item.id
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          {catalogActions ? (
+            <div className="flex shrink-0 flex-wrap items-center gap-2">{catalogActions}</div>
+          ) : null}
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-2 border-b border-slate-200 px-4 py-2 sm:flex-row sm:items-center lg:px-6">
           <div className="relative min-w-0 flex-1">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
@@ -814,21 +827,23 @@ export function PosTerminal({
               aria-label={t("searchAria")}
             />
           </div>
-          <CatalogCategorySelect
+          <SearchSelect
+            className="w-full shrink-0 sm:w-64"
             value={categorySelectValue}
             options={categoryOptions}
             onChange={(id) => {
               setFacet(id);
               setPage(1);
             }}
-            searchPlaceholder={t("filters.searchCategory")}
+            placeholder={t("filters.searchCategory")}
+            noResultsLabel={t("cart.searchNoResults")}
             ariaLabel={t("filters.categoryAria")}
           />
         </div>
-        <p className="text-xs text-slate-500">{t("scanHint")}</p>
+        <p className="px-4 pt-2 text-xs text-slate-400 lg:px-6">{t("scanHint")}</p>
 
         {wooGroup === "soins" && wooNav.soins.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5 px-4 pt-2 lg:px-6">
             {wooNav.soins.map((child) => (
               <CatalogFacetChip
                 key={child.id}
@@ -845,7 +860,7 @@ export function PosTerminal({
         ) : null}
 
         {wooGroup === "marques" && wooNav.marques.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5 px-4 pt-2 lg:px-6">
             {wooNav.marques.map((child) => (
               <CatalogFacetChip
                 key={child.id}
@@ -862,7 +877,7 @@ export function PosTerminal({
         ) : null}
 
         {wooGroup === "marques" && activeBrandChildren.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-1.5 pl-2">
+          <div className="flex flex-wrap items-center gap-1.5 px-4 pt-1 lg:px-6">
             {activeBrandChildren.map((child) => (
               <CatalogFacetChip
                 key={child.id}
@@ -878,7 +893,7 @@ export function PosTerminal({
           </div>
         ) : null}
 
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-2 text-xs text-slate-500 lg:px-6">
           <div className="flex items-center gap-2">
             <span>{t("pagination.showing", { from: pageFrom, to: pageTo, total: filtered.length })}</span>
           </div>
@@ -902,7 +917,7 @@ export function PosTerminal({
         </div>
 
         {tab === "internal" || tab === "service" ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 px-4 pt-2 lg:px-6">
             {tab === "service" ? (
               <Link href="/institut/prestations">
                 <Button type="button" variant="outline" className="h-8">
@@ -933,7 +948,7 @@ export function PosTerminal({
         ) : null}
 
         {scanNotice ? (
-          <p className="text-sm text-slate-600">
+          <p className="px-4 pt-2 text-sm text-slate-600 lg:px-6">
             {scanNotice}{" "}
             {pendingScanSku && !findCatalogItemByScanCode(catalog, pendingScanSku) ? (
               <button
@@ -948,7 +963,7 @@ export function PosTerminal({
         ) : null}
 
         {filtered.length === 0 ? (
-          <Card>
+          <div className="px-4 py-8 lg:px-6">
             <p className="text-sm text-slate-500">
               {query.trim()
                 ? t("noResults", { query: query.trim() })
@@ -999,27 +1014,27 @@ export function PosTerminal({
                 </Link>
               </div>
             ) : null}
-          </Card>
+          </div>
         ) : (
           <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 px-4 py-3 sm:grid-cols-3 lg:px-6 xl:grid-cols-4">
             {pagedItems.map((item) => (
               <button
                 key={item.key}
                 type="button"
                 onClick={() => add(item.key)}
-                className="rounded-xl border border-slate-200 bg-white p-3 text-left transition-colors hover:border-slate-400"
+                className="rounded-lg border border-slate-200 bg-white p-2.5 text-left transition-colors hover:border-slate-400"
               >
                 {item.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={item.image_url}
                     alt={item.name}
-                    className="mb-2 h-20 w-full rounded-lg object-cover"
+                    className="mb-2 h-16 w-full rounded-md object-cover"
                   />
                 ) : (
                   <div
-                    className="mb-2 flex h-20 w-full items-center justify-center rounded-lg text-2xl"
+                    className="mb-2 flex h-16 w-full items-center justify-center rounded-md text-xl"
                     style={{
                       backgroundColor: item.color ? `${item.color}22` : undefined,
                     }}
@@ -1040,7 +1055,7 @@ export function PosTerminal({
               </button>
             ))}
           </div>
-          <div className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+          <div className="flex items-center justify-between gap-2 px-4 py-2 text-xs text-slate-600 lg:px-6">
             <span>{t("pagination.page", { current: currentPage, total: totalPages })}</span>
             <div className="flex items-center gap-2">
               <button
@@ -1065,555 +1080,141 @@ export function PosTerminal({
         )}
       </div>
 
-      <Card className="h-fit space-y-4 lg:sticky lg:top-4">
-        {lastSale?.ok && lastSale.saleId ? (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-            <p>{lastSale.message}</p>
-            <Link
-              href={`/institut/caisse/ticket/${lastSale.saleId}`}
-              className="mt-1 inline-block underline"
-              target="_blank"
-            >
-              {tCheckout("viewTicket")}
-            </Link>
-          </div>
-        ) : null}
-
-        {!sessionOpen ? (
-          <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
-            <div>
-              <p className="text-sm font-medium text-amber-950">{t("sessionClosedTitle")}</p>
-              <p className="mt-0.5 text-sm text-amber-900/80">{t("sessionClosedBody")}</p>
-              <p className="mt-1 text-xs text-amber-900/70">{t("sessionClosedGuide")}</p>
-            </div>
-            <OpenSessionForm
-              defaultFloat={defaultOpeningFloatCents}
-              currency={settings.currency}
-              compact
-            />
-          </div>
-        ) : sessionPaused ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-            <p className="text-sm font-medium text-amber-950">{t("sessionPausedTitle")}</p>
-            <p className="mt-0.5 text-sm text-amber-900/80">{t("sessionPausedBody")}</p>
-            <Link
-              href="/institut/caisse/session"
-              className="mt-2 inline-flex h-8 items-center rounded-lg bg-amber-900 px-3 text-xs font-medium text-white hover:bg-amber-950"
-            >
-              {t("sessionPausedCta")}
-            </Link>
-          </div>
-        ) : sessionPreviousDay ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-            <p className="text-sm font-medium text-amber-950">{t("sessionPreviousDayTitle")}</p>
-            <p className="mt-0.5 text-sm text-amber-900/80">{t("sessionPreviousDayBody")}</p>
-            <Link
-              href="/institut/caisse/session"
-              className="mt-2 inline-flex h-8 items-center rounded-lg bg-amber-900 px-3 text-xs font-medium text-white hover:bg-amber-950"
-            >
-              {t("sessionPreviousDayCta")}
-            </Link>
-          </div>
-        ) : null}
-
-        {initialAppt && appointmentId === initialAppt.id ? (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
-            <p className="font-medium">{t("appointmentLinked")}</p>
-            <p className="mt-0.5 text-xs text-blue-800">{initialAppt.label}</p>
-          </div>
-        ) : null}
-
-        <PosCartSwitcher
-          carts={posCarts.carts}
-          activeCartId={posCarts.activeCartId}
-          onSelect={posCarts.switchTo}
-          onAdd={posCarts.createEmpty}
-          onAbandon={posCarts.abandon}
-          onApplied={applyPosCartSnapshot}
-        />
-
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            {t("cart.title")}
-          </h2>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setFreeChargeOpen((open) => !open)}
-              className="text-xs font-medium text-slate-700 hover:text-slate-900"
-            >
-              {t("cart.freeCharge")}
-            </button>
-            {!cartEmpty ? (
-              <button
-                type="button"
-                onClick={clearCart}
-                className="text-xs text-slate-500 hover:text-slate-700"
-              >
-                {t("cart.clear")}
-              </button>
-            ) : null}
-          </div>
-        </div>
-
-        {freeChargeOpen ? (
-          <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
-            <p className="text-xs font-medium text-slate-600">{t("cart.freeChargeHint")}</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Input
-                inputMode="decimal"
-                placeholder={t("cart.freeChargeAmount")}
-                value={freeChargeAmount}
-                onChange={(e) => setFreeChargeAmount(e.target.value)}
-              />
-              <Input
-                placeholder={t("cart.freeChargeLabel")}
-                value={freeChargeLabel}
-                onChange={(e) => setFreeChargeLabel(e.target.value)}
-              />
-            </div>
-            <Button
-              type="button"
-              className="w-full sm:w-auto"
-              disabled={!eurosToCents(freeChargeAmount)}
-              onClick={addFreeCharge}
-            >
-              {t("cart.freeChargeAdd")}
-            </Button>
-          </div>
-        ) : null}
-
-        {cartLines.length === 0 ? (
-          <p className="text-sm text-slate-500">{t("cart.empty")}</p>
-        ) : (
-          <ul className="max-h-64 space-y-3 overflow-y-auto pr-1">
-            {cartLines.map(({ item, key, qty }) => {
-              if (!item) return null;
-              const defaultCents = item.price_cents;
-              const currentCents = priceOverrides[key] ?? defaultCents;
-              const overridden = key in priceOverrides;
-              const editValue = priceEdits[key] ?? (currentCents / 100).toFixed(2);
-              const lineTotalCents = currentCents * qty;
-              return (
-                <li key={key} className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-2 text-sm">
-                    <span className="min-w-0 flex-1 truncate text-slate-700">
-                      {item.name}
-                      {item.visibility === "extra_only" ? (
-                        <span className="ml-1 text-[10px] font-medium uppercase text-violet-600">
-                          {t("cart.extraBadge")}
-                        </span>
-                      ) : null}
-                    </span>
-                    <div className="flex shrink-0 items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => remove(key)}
-                        className="h-7 w-7 rounded text-slate-500 hover:bg-slate-100"
-                        aria-label={t("cart.qtyDecrease")}
-                      >
-                        −
-                      </button>
-                      <span className="w-6 text-center">{qty}</span>
-                      <button
-                        type="button"
-                        onClick={() => add(key)}
-                        className="h-7 w-7 rounded text-slate-500 hover:bg-slate-100"
-                        aria-label={t("cart.qtyIncrease")}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <div className="relative">
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        step="0.01"
-                        value={editValue}
-                        onChange={(e) =>
-                          setPriceEdits((pe) => ({ ...pe, [key]: e.target.value }))
-                        }
-                        onFocus={(e) => e.currentTarget.select()}
-                        onBlur={() => commitPriceEdit(key, defaultCents)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.currentTarget.blur();
-                          } else if (e.key === "Escape") {
-                            setPriceEdits((pe) => {
-                              if (!(key in pe)) return pe;
-                              const next = { ...pe };
-                              delete next[key];
-                              return next;
-                            });
-                            e.currentTarget.blur();
-                          }
-                        }}
-                        aria-label={t("cart.unitPriceAria")}
-                        className={`h-8 w-24 rounded-md border bg-white pl-2 pr-6 text-sm tabular-nums text-slate-900 outline-none focus:ring-2 focus:ring-ring/20 ${
-                          overridden
-                            ? "border-violet-300 focus:border-violet-400"
-                            : "border-slate-200 focus:border-ring"
-                        }`}
-                      />
-                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
-                        €
-                      </span>
-                    </div>
-                    {overridden ? (
-                      <button
-                        type="button"
-                        onClick={() => resetPrice(key)}
-                        className="text-[11px] text-slate-500 underline decoration-dotted hover:text-slate-700"
-                        title={t("cart.resetPriceTitle", {
-                          price: money(defaultCents),
-                        })}
-                      >
-                        {t("cart.resetPrice")}
-                      </button>
-                    ) : null}
-                    <span className="ml-auto tabular-nums text-slate-500">
-                      {qty > 1 ? (
-                        <span className="font-medium text-slate-700">
-                          = {money(lineTotalCents)}
-                        </span>
-                      ) : null}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {overridden && defaultCents > currentCents ? (
-                      <span className="text-[11px] font-medium text-violet-700">
-                        {t("cart.lineDiscountApplied", {
-                          amount: money(defaultCents - currentCents),
-                        })}
-                      </span>
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLineDiscountKey(lineDiscountKey === key ? null : key);
-                        setLineDiscountKind("percent");
-                        setLineDiscountValue("");
-                      }}
-                      className="text-[11px] font-medium text-slate-600 underline decoration-dotted hover:text-slate-900"
-                    >
-                      {t("cart.lineDiscount")}
-                    </button>
-                    {item.type === "service" ? (
-                      <Select
-                        value={lineStaff[key] ?? ""}
-                        onChange={(e) => {
-                          const next = e.target.value;
-                          setLineStaff((ls) => {
-                            const copy = { ...ls };
-                            if (!next) delete copy[key];
-                            else copy[key] = next;
-                            return copy;
-                          });
-                        }}
-                        className="h-7 w-auto max-w-[11rem] text-[11px]"
-                        aria-label={t("cart.lineStaff")}
-                      >
-                        <option value="">{t("cart.lineStaffInherit")}</option>
-                        {staff.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.label}
-                          </option>
-                        ))}
-                      </Select>
-                    ) : null}
-                  </div>
-                  {lineDiscountKey === key ? (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Select
-                        value={lineDiscountKind}
-                        onChange={(e) =>
-                          setLineDiscountKind(e.target.value === "fixed" ? "fixed" : "percent")
-                        }
-                        className="h-8 w-auto text-xs"
-                        aria-label={t("cart.lineDiscountType")}
-                      >
-                        <option value="percent">{t("cart.lineDiscountPercent")}</option>
-                        <option value="fixed">{t("cart.lineDiscountFixed")}</option>
-                      </Select>
-                      <Input
-                        inputMode="decimal"
-                        className="h-8 w-20 text-xs"
-                        placeholder={lineDiscountKind === "percent" ? "10" : "5,00"}
-                        value={lineDiscountValue}
-                        onChange={(e) => setLineDiscountValue(e.target.value)}
-                        aria-label={t("cart.lineDiscountValue")}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => applyLineDiscount(key, defaultCents)}
-                        className="h-8 rounded-md bg-slate-900 px-2.5 text-[11px] font-medium text-white"
-                      >
-                        {t("cart.lineDiscountApply")}
-                      </button>
-                    </div>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        {!cartEmpty ? (
-          <div className="space-y-2">
-            <label className="block text-xs text-slate-500" htmlFor="promo-code">
-              {t("cart.promoCode")}
-            </label>
-            <div className="flex gap-2">
-              <Input
-                id="promo-code"
-                value={promoInput}
-                onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-                placeholder={t("cart.promoPlaceholder")}
-                className="uppercase"
-                disabled={Boolean(promoCode)}
-              />
-              {promoCode ? (
-                <button
-                  type="button"
-                  onClick={clearPromoCode}
-                  className="shrink-0 rounded-lg border border-slate-300 px-3 text-xs text-slate-600 hover:bg-slate-50"
-                >
-                  {t("cart.promoClear")}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={applyPromoCode}
-                  disabled={promoPending || !promoInput.trim()}
-                  className="shrink-0 rounded-lg border border-slate-300 px-3 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                >
-                  {promoPending ? t("cart.promoApplying") : t("cart.promoApply")}
-                </button>
-              )}
-            </div>
-            {promoCode && promoDiscountCents > 0 ? (
-              <p className="text-xs text-emerald-700">
-                {t("cart.promoApplied", {
-                  code: promoCode,
-                  amount: money(promoDiscountCents),
-                })}
-              </p>
-            ) : null}
-            {promoError ? (
-              <p className="text-xs text-red-600">
-                {t(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic error code from API
-                  `cart.promoErrors.${promoError}` as any,
-                )}
-              </p>
-            ) : null}
-            {!promoCode ? (
-              <div className="space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  {t("cart.discountAdd")}
-                </p>
-                <div className="flex gap-2">
-                  <Select
-                    id="cart-discount-kind"
-                    value={cartDiscountKind}
-                    onChange={(e) =>
-                      setCartDiscountKind(e.target.value === "fixed" ? "fixed" : "percent")
-                    }
-                    aria-label={t("cart.discountType")}
-                  >
-                    <option value="percent">{t("cart.discountPercent")}</option>
-                    <option value="fixed">{t("cart.discountFixed")}</option>
-                  </Select>
-                  <Input
-                    id="cart-discount"
-                    type="number"
-                    min={0}
-                    step={cartDiscountKind === "percent" ? "1" : "0.01"}
-                    max={cartDiscountKind === "percent" ? "100" : (grossCents / 100).toFixed(2)}
-                    value={cartDiscountValue}
-                    onChange={(e) => setCartDiscountValue(e.target.value)}
-                    placeholder={cartDiscountKind === "percent" ? "10" : "15"}
-                    aria-label={t("cart.discountValue")}
-                  />
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {settings.discount_reasons.map((reason) => {
-                    const selected = cartDiscountReason === reason;
-                    return (
-                      <button
-                        key={reason}
-                        type="button"
-                        onClick={() =>
-                          setCartDiscountReason(selected ? "" : reason)
-                        }
-                        className={
-                          selected
-                            ? "rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white"
-                            : "rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 hover:border-slate-300"
-                        }
-                      >
-                        {reason}
-                      </button>
-                    );
-                  })}
-                </div>
-                <Input
-                  value={
-                    settings.discount_reasons.includes(cartDiscountReason)
-                      ? ""
-                      : cartDiscountReason
-                  }
-                  onChange={(e) => setCartDiscountReason(e.target.value)}
-                  placeholder={t("cart.discountReasonOther")}
-                  aria-label={t("cart.discountReason")}
-                />
-                {discountCents > 0 ? (
-                  <p className="text-xs text-emerald-700">
-                    {t("cart.discountApplied", {
-                      amount: money(discountCents),
-                      total: money(Math.max(0, grossCents - discountCents)),
-                    })}
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        <Select
-          value={staffId}
-          onChange={(e) => setStaffId(e.target.value)}
-          aria-label={t("cart.staffAria")}
-        >
-          <option value="">{t("cart.noStaff")}</option>
-          {staff.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.label}
-            </option>
-          ))}
-        </Select>
-        {cartLines.some(
-          (l) =>
-            l.item?.type === "service" &&
-            !(lineStaff[l.key] || staffId),
-        ) ? (
-          <p className="text-xs text-amber-800">{t("cart.staffRequiredHint")}</p>
-        ) : null}
-
-        <Select
-          value={appointmentId}
-          onChange={(e) => {
-            const id = e.target.value;
-            if (!id) {
-              setAppointmentId("");
-              return;
-            }
-            selectAppointment(id);
-          }}
-          aria-label={t("cart.appointmentAria")}
-        >
-          <option value="">{t("cart.noAppointment")}</option>
-          {appointments.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.label}
-            </option>
-          ))}
-        </Select>
-
-        <Select
-          value={clientId}
-          onChange={(e) => {
-            setClientId(e.target.value);
-            setLoyaltyRewardId("");
-            setLoyaltyCreditCents(0);
-            setLoyaltyPreviewCents(0);
-          }}
-          aria-label={t("cart.clientAria")}
-        >
-          <option value="">{t("cart.noClient")}</option>
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.label}
-            </option>
-          ))}
-        </Select>
-
-        <Textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder={t("cart.notePlaceholder")}
-          rows={2}
-        />
-
-        {clientId ? (
-          <PosLoyaltyPicker
-            clientId={clientId}
-            subtotalCents={cartEmpty ? 0 : subtotalForLoyalty}
-            selectedRewardId={loyaltyRewardId}
-            selectedCreditCents={loyaltyCreditCents}
-            onRewardChange={handleLoyaltyChange}
-            onCreditChange={handleLoyaltyCreditChange}
-            currency={settings.currency}
-          />
-        ) : null}
-
-        {!cartEmpty ? (
-          <CheckoutPanel
-            cartJson={cartJson}
-            clientId={clientId}
-            staffId={staffId}
-            lineStaffJson={JSON.stringify(lineStaff)}
-            appointmentId={appointmentId}
-            notes={[
-              notes.trim(),
-              !promoCode && cartDiscountReason.trim()
-                ? `${t("cart.discountReasonPrefix")}: ${cartDiscountReason.trim()}`
-                : "",
-            ]
-              .filter(Boolean)
-              .join("\n")}
-            discountReason={!promoCode ? cartDiscountReason.trim() : ""}
-            cartDiscountEuros={(discountCents / 100).toFixed(2)}
-            loyaltyRewardId={loyaltyRewardId}
-            loyaltyCreditCents={loyaltyCreditCents}
-            promoCode={promoCode}
-            priceOverridesJson={priceOverridesJson}
-            posCartId={posCarts.activeCartId}
-            totals={totals}
-            settings={settings}
-            stripeEnabled={Boolean(stripeEnabled)}
-            stripePublishableKey={stripePublishableKey}
-            stripeAccountId={stripeAccountId}
-            disabled={
-              cartEmpty ||
-              sessionPaused ||
-              sessionPreviousDay ||
-              (requireSession && !sessionOpen) ||
-              Boolean(posCarts.active?.lockedByOther) ||
-              cartLines.some(
-                (l) =>
-                  l.item?.type === "service" && !(lineStaff[l.key] || staffId),
-              )
-            }
-            checkoutAction={checkoutAction}
-            checkoutPending={checkoutPending}
-            checkoutState={checkoutState}
-            onSuccess={handleStripeSuccess}
-          />
-        ) : (
-          <p className="text-sm text-slate-400">{t("cart.addToCheckout")}</p>
-        )}
-
-        <Link
-          href="/compte/institut/caisse"
-          className="block text-center text-xs text-slate-400 hover:text-slate-600"
-        >
-          {t("cart.settingsLink")}
-        </Link>
-      </Card>
+      <PosTicketPanel
+        lastSale={lastSale}
+        sessionOpen={sessionOpen}
+        sessionPaused={sessionPaused}
+        sessionPreviousDay={sessionPreviousDay}
+        defaultOpeningFloatCents={defaultOpeningFloatCents}
+        settings={settings}
+        initialAppt={initialAppt}
+        appointmentId={appointmentId}
+        onSelectAppointment={(id) => {
+          if (!id) {
+            setAppointmentId("");
+            return;
+          }
+          selectAppointment(id);
+        }}
+        carts={posCarts.carts}
+        activeCartId={posCarts.activeCartId}
+        onSelectCart={posCarts.switchTo}
+        onAddCart={posCarts.createEmpty}
+        onAbandonCart={posCarts.abandon}
+        onApplied={applyPosCartSnapshot}
+        cartEmpty={cartEmpty}
+        cartLines={cartLines}
+        priceOverrides={priceOverrides}
+        priceEdits={priceEdits}
+        onPriceDraft={(key, value) =>
+          setPriceEdits((pe) => ({ ...pe, [key]: value }))
+        }
+        onCommitPrice={commitPriceEdit}
+        onResetPrice={resetPrice}
+        onAdd={add}
+        onRemove={remove}
+        expandedLineKey={expandedLineKey}
+        onToggleLine={(key) =>
+          setExpandedLineKey((current) => (current === key ? null : key))
+        }
+        lineDiscountKey={lineDiscountKey}
+        lineDiscountKind={lineDiscountKind}
+        lineDiscountValue={lineDiscountValue}
+        onToggleLineDiscount={(key) => {
+          setLineDiscountKey(lineDiscountKey === key ? null : key);
+          setLineDiscountKind("percent");
+          setLineDiscountValue("");
+        }}
+        onLineDiscountKind={setLineDiscountKind}
+        onLineDiscountValue={setLineDiscountValue}
+        onApplyLineDiscount={applyLineDiscount}
+        lineStaff={lineStaff}
+        onLineStaff={(key, id) => {
+          setLineStaff((ls) => {
+            const copy = { ...ls };
+            if (!id) delete copy[key];
+            else copy[key] = id;
+            return copy;
+          });
+        }}
+        staff={staff}
+        staffId={staffId}
+        onStaffId={setStaffId}
+        clients={clients}
+        clientId={clientId}
+        onClientId={(id) => {
+          setClientId(id);
+          setLoyaltyRewardId("");
+          setLoyaltyCreditCents(0);
+          setLoyaltyPreviewCents(0);
+        }}
+        appointments={appointments}
+        notes={notes}
+        onNotes={setNotes}
+        freeChargeOpen={freeChargeOpen}
+        onToggleFreeCharge={() => setFreeChargeOpen((open) => !open)}
+        freeChargeAmount={freeChargeAmount}
+        freeChargeLabel={freeChargeLabel}
+        onFreeChargeAmount={setFreeChargeAmount}
+        onFreeChargeLabel={setFreeChargeLabel}
+        onAddFreeCharge={addFreeCharge}
+        canAddFreeCharge={Boolean(eurosToCents(freeChargeAmount))}
+        onClearCart={clearCart}
+        extrasOpen={ticketExtrasOpen}
+        onToggleExtras={() => setTicketExtrasOpen((open) => !open)}
+        promoInput={promoInput}
+        promoCode={promoCode}
+        promoDiscountCents={promoDiscountCents}
+        promoError={promoError}
+        promoPending={promoPending}
+        onPromoInput={setPromoInput}
+        onApplyPromo={() => void applyPromoCode()}
+        onClearPromo={clearPromoCode}
+        cartDiscountKind={cartDiscountKind}
+        cartDiscountValue={cartDiscountValue}
+        cartDiscountReason={cartDiscountReason}
+        onCartDiscountKind={setCartDiscountKind}
+        onCartDiscountValue={setCartDiscountValue}
+        onCartDiscountReason={setCartDiscountReason}
+        discountCents={discountCents}
+        grossCents={grossCents}
+        money={money}
+        loyaltyRewardId={loyaltyRewardId}
+        loyaltyCreditCents={loyaltyCreditCents}
+        onLoyaltyChange={handleLoyaltyChange}
+        onLoyaltyCreditChange={handleLoyaltyCreditChange}
+        subtotalForLoyalty={subtotalForLoyalty}
+        checkout={{
+          cartJson,
+          lineStaffJson: JSON.stringify(lineStaff),
+          notes: ticketNotes,
+          discountReason: !promoCode ? cartDiscountReason.trim() : "",
+          cartDiscountEuros: (discountCents / 100).toFixed(2),
+          loyaltyRewardId,
+          loyaltyCreditCents,
+          promoCode,
+          priceOverridesJson,
+          posCartId: posCarts.activeCartId,
+          totals,
+          stripeEnabled: Boolean(stripeEnabled),
+          stripePublishableKey,
+          stripeAccountId,
+          disabled:
+            cartEmpty ||
+            sessionPaused ||
+            sessionPreviousDay ||
+            (requireSession && !sessionOpen) ||
+            Boolean(posCarts.active?.lockedByOther) ||
+            cartLines.some(
+              (l) =>
+                l.item?.type === "service" && !(lineStaff[l.key] || staffId),
+            ),
+          checkoutAction,
+          checkoutPending,
+          checkoutState,
+          onSuccess: handleStripeSuccess,
+        }}
+      />
     </div>
     {productDialogOpen ? (
       <FormDialog
@@ -1645,109 +1246,6 @@ export function PosTerminal({
       />
     ) : null}
     </>
-  );
-}
-
-function CatalogCategorySelect({
-  value,
-  options,
-  onChange,
-  searchPlaceholder,
-  ariaLabel,
-}: {
-  value: string;
-  options: { id: string; label: string }[];
-  onChange: (id: string) => void;
-  searchPlaceholder: string;
-  ariaLabel: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const [q, setQ] = useState("");
-  const rootRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
-  const selected = options.find((option) => option.id === value) ?? options[0];
-  const filtered = options.filter((option) =>
-    option.label.toLocaleLowerCase().includes(q.trim().toLocaleLowerCase()),
-  );
-
-  useEffect(() => {
-    if (!open) return;
-    setQ("");
-    const frame = window.requestAnimationFrame(() => searchRef.current?.focus());
-    function onPointer(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    }
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      document.removeEventListener("mousedown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  return (
-    <div ref={rootRef} className="relative w-full shrink-0 sm:w-72">
-      <button
-        type="button"
-        aria-label={ariaLabel}
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        onClick={() => setOpen((current) => !current)}
-        className="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 text-left text-sm text-slate-900 outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-      >
-        <span className="min-w-0 truncate">{selected?.label ?? ariaLabel}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-      </button>
-      {open ? (
-        <div className="absolute right-0 z-30 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
-          <div className="border-b border-slate-100 p-1.5">
-            <Input
-              ref={searchRef}
-              type="search"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder={searchPlaceholder}
-              className="h-8"
-              aria-label={searchPlaceholder}
-            />
-          </div>
-          <ul role="listbox" className="max-h-64 overflow-y-auto py-1">
-            {filtered.length === 0 ? (
-              <li className="px-3 py-2 text-sm text-slate-500">{searchPlaceholder}</li>
-            ) : (
-              filtered.map((option) => {
-                const active = option.id === value;
-                return (
-                  <li key={option.id}>
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={active}
-                      onClick={() => {
-                        onChange(option.id);
-                        setOpen(false);
-                      }}
-                      className={`flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm ${
-                        active
-                          ? "bg-slate-900 text-white"
-                          : "text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="min-w-0 truncate">{option.label}</span>
-                      {active ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}
-                    </button>
-                  </li>
-                );
-              })
-            )}
-          </ul>
-        </div>
-      ) : null}
-    </div>
   );
 }
 

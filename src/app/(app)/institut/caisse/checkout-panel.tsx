@@ -236,7 +236,7 @@ export function CheckoutPanel({
   }
 
   return (
-    <div className="space-y-4 border-t border-slate-200 pt-4">
+    <div className="space-y-3 pt-3">
       <div className="space-y-1 text-sm">
         <div className="flex justify-between text-slate-500">
           <span>{t("subtotalHt")}</span>
@@ -272,17 +272,18 @@ export function CheckoutPanel({
               })
             : t("splitHint")}
         </p>
+      <div className="grid grid-cols-2 gap-1.5">
         {enabledMethods.map((method) => {
           const row = rowFor(method);
           const selected = Boolean(row);
           return (
-            <div key={method} className="space-y-2">
-              <div className="flex items-stretch gap-2">
+            <div key={method} className="space-y-1">
+              <div className="flex items-stretch gap-1">
                 <button
                   type="button"
                   onClick={() => tapMethod(method)}
                   aria-label={t("methodAria")}
-                  className={`flex min-h-11 flex-1 items-center justify-between px-3 text-left text-sm font-semibold ${
+                  className={`flex min-h-9 flex-1 items-center justify-between px-2.5 text-left text-xs font-semibold ${
                     selected
                       ? "bg-slate-900 text-white"
                       : "bg-slate-50 text-slate-900"
@@ -290,9 +291,11 @@ export function CheckoutPanel({
                 >
                   <span>{t(`methods.${method}`)}</span>
                   {row ? (
-                    <span className="tabular-nums">{money(Math.round(Number.parseFloat(row.amountEuros.replace(",", ".")) * 100 || 0))}</span>
+                    <span className="tabular-nums">
+                      {money(Math.round(Number.parseFloat(row.amountEuros.replace(",", ".")) * 100 || 0))}
+                    </span>
                   ) : remainingCents > 0 ? (
-                    <span className={selected ? "text-white/70" : "text-xs font-medium text-slate-400"}>
+                    <span className={selected ? "text-white/70" : "text-[10px] font-medium text-slate-400"}>
                       {t("fillRemaining")}
                     </span>
                   ) : null}
@@ -301,7 +304,7 @@ export function CheckoutPanel({
                   <button
                     type="button"
                     onClick={() => removeRow(row.id)}
-                    className="px-2 text-sm text-red-600"
+                    className="px-1.5 text-sm text-red-600"
                     aria-label="×"
                   >
                     ×
@@ -332,6 +335,7 @@ export function CheckoutPanel({
             </div>
           );
         })}
+      </div>
         {editingMethod ? (
           <AmountPad
             display={padDirty ? pad || "0" : pad}
@@ -473,7 +477,7 @@ function AmountPad({
               key={digit}
               type="button"
               onClick={() => onDigit(digit)}
-              className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+              className="h-9 bg-slate-50 text-base font-semibold text-slate-900"
             >
               {digit}
             </button>
@@ -484,21 +488,21 @@ function AmountPad({
         <button
           type="button"
           onClick={onComma}
-          className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+          className="h-9 bg-slate-50 text-base font-semibold text-slate-900"
         >
           ,
         </button>
         <button
           type="button"
           onClick={() => onDigit("0")}
-          className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+          className="h-9 bg-slate-50 text-base font-semibold text-slate-900"
         >
           0
         </button>
         <button
           type="button"
           onClick={onBackspace}
-          className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+          className="h-9 bg-slate-50 text-base font-semibold text-slate-900"
         >
           ⌫
         </button>
@@ -507,14 +511,14 @@ function AmountPad({
         <button
           type="button"
           onClick={onAll}
-          className="h-11 bg-slate-50 text-sm font-semibold text-slate-900"
+          className="h-9 bg-slate-50 text-sm font-semibold text-slate-900"
         >
           {allLabel}
         </button>
         <button
           type="button"
           onClick={onDone}
-          className="h-11 bg-slate-900 text-sm font-semibold text-white"
+          className="h-9 bg-slate-900 text-sm font-semibold text-white"
         >
           {doneLabel}
         </button>

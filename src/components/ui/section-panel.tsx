@@ -18,7 +18,7 @@ export function SectionPanel({
       <Suspense fallback={<TabLinksFallback />}>
         <PageTabLinks items={tabs} />
       </Suspense>
-      {children}
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </ListPanel>
   );
 }

@@ -3206,11 +3206,19 @@ class _LoyaltyPaymentCard extends StatelessWidget {
                         ? 'Bon ${formatEuros(loyalty.balance)}'
                         : '${loyalty.balance} ${loyalty.pointsLabel}',
                     style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF4C1D95),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0A0A0A),
                     ),
                   ),
+                  if (loyalty.creditEnabled)
+                    Text(
+                      '${loyalty.progressPoints} / ${loyalty.creditThresholdPoints} pts · encore ${loyalty.creditThresholdPoints - loyalty.progressPoints} € pour ${formatEuros(loyalty.nextTrancheCents)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF737373),
+                      ),
+                    ),
                   if (!loyalty.creditEnabled && loyalty.valueCents > 0)
                     Text(
                       'jusqu’à −${formatEuros(loyalty.valueCents)}',

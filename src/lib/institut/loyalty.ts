@@ -28,6 +28,7 @@ export interface LoyaltyProgram {
   birthday_auto_enabled: boolean;
   credit_enabled: boolean;
   credit_rate_bps: number;
+  credit_threshold_points: number;
 }
 
 export interface LoyaltyProgramListItem {
@@ -98,13 +99,37 @@ function normalizeLoyaltyProgram(row: LoyaltyProgramRow): LoyaltyProgram {
     birthday_auto_enabled: row.birthday_auto_enabled ?? false,
     credit_enabled: row.credit_enabled ?? false,
     credit_rate_bps: row.credit_rate_bps ?? 0,
+    credit_threshold_points: row.credit_threshold_points ?? 500,
   };
 }
 
-/** 350 bps = 3,5 % → 17,50 € pour 500 €. 1 point = 1 centime. */
+/** 350 bps = 3,5 % → 17,50 € pour 500 €. 1 point de bon = 1 centime. */
 export function creditCentsForSpend(amountCents: number, rateBps: number): number {
   if (amountCents <= 0 || rateBps <= 0) return 0;
   return Math.floor((amountCents * rateBps) / 10_000);
+}
+
+export function creditTrancheCents(
+  rateBps: number,
+  thresholdPoints = 500,
+): number {
+  return creditCentsForSpend(thresholdPoints * 100, rateBps);
+}
+
+/** 1 € dépensé = 1 point. Seules les tranches complètes deviennent un bon. */
+export function splitSpendIntoTranches(
+  spendPoints: number,
+  thresholdPoints = 500,
+  trancheCents = 1750,
+): { creditCents: number; progressPoints: number; tranches: number } {
+  const threshold = Math.max(1, thresholdPoints);
+  const spend = Math.max(0, Math.floor(spendPoints));
+  const tranches = Math.floor(spend / threshold);
+  return {
+    creditCents: tranches * Math.max(0, trancheCents),
+    progressPoints: spend % threshold,
+    tranches,
+  };
 }
 
 export function calcPointsForRule(
@@ -333,17 +358,17 @@ async function applyCreditEarn(
   },
 ): Promise<void> {
   if (!program.credit_enabled) return;
-  const cents = creditCentsForSpend(input.amountCents, program.credit_rate_bps);
-  if (cents <= 0) return;
-  await supabase.rpc("inst_loyalty_credit_bonus", {
+  const spendPoints = Math.floor(input.amountCents / 100);
+  if (spendPoints <= 0) return;
+  await supabase.rpc("inst_loyalty_add_progress", {
     p_tenant_id: tenantId,
     p_client_id: input.clientId,
     p_program_id: program.id,
-    p_points: cents,
+    p_points: spendPoints,
     p_source_type: input.sourceType,
     p_source_id: input.sourceId,
-    p_idempotency_key: `${input.idempotencyPrefix}:credit`,
-    p_notes: "Bon fidélité",
+    p_idempotency_key: `${input.idempotencyPrefix}:progress`,
+    p_notes: "Cumul historique (1 € = 1 point)",
   });
 }
 

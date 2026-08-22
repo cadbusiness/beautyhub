@@ -51,6 +51,9 @@ export function serializeLoyaltyCard(card: ClientLoyaltyCard) {
     valueCents: card.valueCents,
     creditEnabled: card.creditEnabled,
     creditRateBps: card.creditRateBps,
+    progressPoints: card.progressPoints,
+    creditThresholdPoints: card.creditThresholdPoints,
+    nextTrancheCents: card.nextTrancheCents,
     programs: card.programs.map(serializeProgramListItem),
   };
 }
@@ -77,6 +80,7 @@ export function serializeLoyaltyProgram(program: LoyaltyProgram) {
     birthdayAutoEnabled: program.birthday_auto_enabled,
     creditEnabled: program.credit_enabled,
     creditRateBps: program.credit_rate_bps,
+    creditThresholdPoints: program.credit_threshold_points,
   };
 }
 

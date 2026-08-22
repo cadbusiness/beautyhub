@@ -2915,8 +2915,15 @@
       "cost": "{count} {label}",
       "value": "hasta −{amount}",
       "creditBalance": "Bono: {amount}",
-      "creditHint": "Puede acumularlo o usarlo total o parcialmente al cobrar.",
-      "useAll": "Usar todo"
+      "creditHint": "Use todo, la mitad o el importe que ella quiera.",
+      "useAll": "Todo",
+      "useNone": "Nada",
+      "useHalf": "Mitad",
+      "useCustom": "Otro importe",
+      "usedOf": "Usado {used} · queda {left}",
+      "addItemsToUse": "Añada artículos para usar el bono.",
+      "amountOk": "OK",
+      "progress": "{current} / {threshold} puntos · faltan {missing} € para {reward}"
     },
     "products": {
       "columns": {

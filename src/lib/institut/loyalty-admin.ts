@@ -361,7 +361,7 @@ export async function duplicateLoyaltyProgramRecord(
   const { data: sourceProgram } = await supabase
     .from("inst_loyalty_programs")
     .select(
-      "id, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled, credit_enabled, credit_rate_bps",
+      "id, points_label, birthday_bonus_points, portal_visible, referral_points, same_day_rebook_points, birthday_auto_enabled, credit_enabled, credit_rate_bps, credit_threshold_points",
     )
     .eq("tenant_id", tenantId)
     .eq("id", sourceProgramId)
@@ -382,6 +382,7 @@ export async function duplicateLoyaltyProgramRecord(
       birthday_auto_enabled: sourceProgram.birthday_auto_enabled,
       credit_enabled: sourceProgram.credit_enabled,
       credit_rate_bps: sourceProgram.credit_rate_bps,
+      credit_threshold_points: sourceProgram.credit_threshold_points,
     })
     .select("id")
     .single();

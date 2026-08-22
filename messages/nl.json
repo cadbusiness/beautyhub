@@ -3131,8 +3131,15 @@
       "cost": "{count} {label}",
       "value": "tot −{amount}",
       "creditBalance": "Bon: {amount}",
-      "creditHint": "Ze kan sparen of het geheel of gedeeltelijk afrekenen.",
-      "useAll": "Alles gebruiken"
+      "creditHint": "Gebruik alles, de helft, of het bedrag dat zij wil.",
+      "useAll": "Alles",
+      "useNone": "Niets",
+      "useHalf": "Helft",
+      "useCustom": "Ander bedrag",
+      "usedOf": "Gebruikt {used} · rest {left}",
+      "addItemsToUse": "Voeg artikelen toe om de bon te gebruiken.",
+      "amountOk": "OK",
+      "progress": "{current} / {threshold} punten · nog {missing} € tot {reward}"
     },
     "stripe": {
       "paymentFailed": "Betaling mislukt.",

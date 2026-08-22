@@ -3287,8 +3287,15 @@
       "title": "Loyalty",
       "value": "up to −{amount}",
       "creditBalance": "Credit: {amount}",
-      "creditHint": "They can save it up or spend all or part of it at checkout.",
-      "useAll": "Use all"
+      "creditHint": "Use all of it, half, or the amount she wants.",
+      "useAll": "All",
+      "useNone": "None",
+      "useHalf": "Half",
+      "useCustom": "Other amount",
+      "usedOf": "Used {used} · left {left}",
+      "addItemsToUse": "Add items to spend the credit.",
+      "amountOk": "OK",
+      "progress": "{current} / {threshold} points · {missing} € left to reach {reward}"
     },
     "products": {
       "columns": {

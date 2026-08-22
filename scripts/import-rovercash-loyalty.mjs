@@ -2,10 +2,9 @@
 /**
  * Reprise des soldes fidélité Rovercash → bon euros BeautyHub.
  *
- * Ancien système : 1 point = 1 € dépensé, 500 € → 17,50 € (3,5 %).
- * BeautyHub (bon euros) : 1 point = 1 centime, donc
- *   crédit_centimes = floor(points_csv * 100 * 350 / 10_000)
- *                   = floor(points_csv * 3,5)
+ * Ancien système : 1 point = 1 € dépensé.
+ * Dès que l’historique atteint 500 points, ces 500 points deviennent 17,50 €.
+ * Le reliquat (ex. 104) reste en progression vers la prochaine tranche.
  *
  * Prérequis : .env.local (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY)
  *
@@ -21,8 +20,10 @@ import { parseArgs } from "node:util";
 import { createClient } from "@supabase/supabase-js";
 
 const RATE_BPS = 350;
-const IMPORT_KEY_PREFIX = "rovercash-import-v1:";
-const IMPORT_NOTES = "Reprise Rovercash · 3,5 % (500 € → 17,50 €)";
+const THRESHOLD = 500;
+const IMPORT_KEY_PREFIX = "rovercash-import-v2:";
+const LEGACY_KEY_PREFIX = "rovercash-import-v1:";
+const IMPORT_NOTES = "Reprise Rovercash · 500 pts → 17,50 €";
 
 const { values } = parseArgs({
   options: {
@@ -62,6 +63,17 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
 function creditCentsForSpend(amountCents, rateBps) {
   if (amountCents <= 0 || rateBps <= 0) return 0;
   return Math.floor((amountCents * rateBps) / 10_000);
+}
+
+function splitSpend(spendPoints) {
+  const trancheCents = creditCentsForSpend(THRESHOLD * 100, RATE_BPS);
+  const spend = Math.max(0, Math.floor(spendPoints));
+  const tranches = Math.floor(spend / THRESHOLD);
+  return {
+    creditCents: tranches * trancheCents,
+    progressPoints: spend % THRESHOLD,
+    tranches,
+  };
 }
 
 function parseCsv(raw) {
@@ -143,6 +155,7 @@ async function alignProgram(tenantId, dryRun) {
       .update({
         credit_enabled: true,
         credit_rate_bps: RATE_BPS,
+        credit_threshold_points: THRESHOLD,
         points_label: "€",
       })
       .eq("id", program.id)
@@ -185,27 +198,23 @@ for (const row of csvRows) {
     continue;
   }
   const client = clients.get(row.ref);
-  const creditCents = creditCentsForSpend(row.spendPoints * 100, RATE_BPS);
-  if (creditCents <= 0) {
-    skipped.push(row);
-    continue;
-  }
+  const split = splitSpend(row.spendPoints);
   if (!client) {
-    unmatched.push({ ...row, creditCents });
+    unmatched.push({ ...row, ...split });
     continue;
   }
-  matched.push({ ...row, creditCents, client });
+  matched.push({ ...row, ...split, client });
 }
 
 const totalCredit = matched.reduce((s, r) => s + r.creditCents, 0);
 console.log(
-  `${tenant.name} · ${dryRun ? "dry-run" : "import"} · 3,5 % (500 € → 17,50 €)`,
+  `${tenant.name} · ${dryRun ? "dry-run" : "import"} · 500 points → 17,50 €`,
 );
 console.log(
   `CSV ${csvRows.length} · match ${matched.length} · sans fiche ${unmatched.length} · ignorés (0/−) ${skipped.length}`,
 );
 console.log(
-  `Crédit total à poser : ${(totalCredit / 100).toFixed(2)} €`,
+  `Bons convertis : ${(totalCredit / 100).toFixed(2)} € · ${matched.filter((r) => r.tranches > 0).length} clientes avec au moins une tranche`,
 );
 const examples = matched
   .slice()
@@ -213,7 +222,7 @@ const examples = matched
   .slice(0, 5);
 for (const row of examples) {
   console.log(
-    `  ${row.ref} ${row.client.name} · ${row.spendPoints} € dépensés → ${(row.creditCents / 100).toFixed(2)} €`,
+    `  ${row.ref} ${row.client.name} · ${row.spendPoints} pts → ${row.tranches}×17,50 = ${(row.creditCents / 100).toFixed(2)} € + ${row.progressPoints} pts`,
   );
 }
 if (unmatched.length) {
@@ -225,48 +234,68 @@ if (dryRun) {
   process.exit(0);
 }
 
-let credited = 0;
-let already = 0;
+const { error: wipeErr } = await supabase
+  .from("inst_loyalty_transactions")
+  .delete()
+  .eq("tenant_id", tenant.id)
+  .like("idempotency_key", `${LEGACY_KEY_PREFIX}%`);
+if (wipeErr) throw new Error(wipeErr.message);
+
+let written = 0;
 let failed = 0;
-const chunkSize = 25;
+const chunkSize = 40;
 for (let i = 0; i < matched.length; i += chunkSize) {
   const chunk = matched.slice(i, i + chunkSize);
   const results = await Promise.all(
     chunk.map(async (row) => {
-      let lastError = "unknown";
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const { data, error } = await supabase.rpc("inst_loyalty_credit_bonus", {
-            p_tenant_id: tenant.id,
-            p_client_id: row.client.id,
-            p_program_id: program.id,
-            p_points: row.creditCents,
-            p_source_type: "pos_sale",
-            p_source_id: row.client.id,
-            p_idempotency_key: `${IMPORT_KEY_PREFIX}${row.ref}`,
-            p_notes: IMPORT_NOTES,
-          });
-          if (error) {
-            lastError = error.message;
-          } else {
-            return { ok: true, applied: data === true, ref: row.ref };
-          }
-        } catch (e) {
-          lastError = e instanceof Error ? e.message : String(e);
+      const { error: balErr } = await supabase.from("inst_loyalty_balances").upsert(
+        {
+          tenant_id: tenant.id,
+          client_id: row.client.id,
+          program_id: program.id,
+          points_balance: row.creditCents,
+          progress_points: row.progressPoints,
+          lifetime_earned: row.creditCents,
+        },
+        { onConflict: "tenant_id,client_id,program_id" },
+      );
+      if (balErr) return { ok: false, error: balErr.message, ref: row.ref };
+
+      const key = `${IMPORT_KEY_PREFIX}${row.ref}`;
+      const { data: existing } = await supabase
+        .from("inst_loyalty_transactions")
+        .select("id")
+        .eq("tenant_id", tenant.id)
+        .eq("idempotency_key", key)
+        .maybeSingle();
+      if (existing) return { ok: true, ref: row.ref };
+
+      if (row.creditCents > 0) {
+        const { error: txErr } = await supabase.from("inst_loyalty_transactions").insert({
+          tenant_id: tenant.id,
+          client_id: row.client.id,
+          program_id: program.id,
+          type: "earn",
+          points_delta: row.creditCents,
+          balance_after: row.creditCents,
+          source_type: "pos_sale",
+          source_id: row.client.id,
+          idempotency_key: key,
+          notes: `${IMPORT_NOTES} · ${row.progressPoints}/${THRESHOLD} pts`,
+        });
+        if (txErr && !txErr.message.includes("duplicate")) {
+          return { ok: false, error: txErr.message, ref: row.ref };
         }
-        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
       }
-      return { ok: false, error: lastError, ref: row.ref };
+      return { ok: true, ref: row.ref };
     }),
   );
   for (const result of results) {
     if (!result.ok) {
       failed += 1;
       console.error(`  échec ${result.ref}: ${result.error}`);
-    } else if (result.applied) {
-      credited += 1;
     } else {
-      already += 1;
+      written += 1;
     }
   }
   process.stdout.write(
@@ -274,7 +303,5 @@ for (let i = 0; i < matched.length; i += chunkSize) {
   );
 }
 
-console.log(
-  `\nTerminé · crédités ${credited} · déjà importés ${already} · échecs ${failed}`,
-);
+console.log(`\nTerminé · fiches à jour ${written} · échecs ${failed}`);
 if (failed) process.exit(1);

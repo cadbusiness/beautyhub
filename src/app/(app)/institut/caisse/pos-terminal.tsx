@@ -1548,10 +1548,10 @@ export function PosTerminal({
           rows={2}
         />
 
-        {!cartEmpty ? (
+        {clientId ? (
           <PosLoyaltyPicker
             clientId={clientId}
-            subtotalCents={subtotalForLoyalty}
+            subtotalCents={cartEmpty ? 0 : subtotalForLoyalty}
             selectedRewardId={loyaltyRewardId}
             selectedCreditCents={loyaltyCreditCents}
             onRewardChange={handleLoyaltyChange}

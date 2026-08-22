@@ -77,7 +77,7 @@ export function ClientLoyaltyPanel({
           </dt>
           <dd className="text-right text-sm text-slate-900">
             {card.creditEnabled
-              ? t("creditProgress")
+              ? `${card.progressPoints} / ${card.creditThresholdPoints} pts · encore ${Math.max(0, card.creditThresholdPoints - card.progressPoints)} € pour ${formatPrice(card.nextTrancheCents)}`
               : card.nextReward
                 ? t("nextReward", {
                     name: card.nextReward.name,

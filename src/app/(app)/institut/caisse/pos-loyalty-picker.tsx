@@ -26,6 +26,9 @@ type LoyaltySnapshot = {
   value_cents?: number;
   credit_enabled?: boolean;
   credit_rate_bps?: number;
+  progress_points?: number;
+  credit_threshold_points?: number;
+  next_tranche_cents?: number;
   rewards: LoyaltyRewardOption[];
 };
 
@@ -50,6 +53,8 @@ export function PosLoyaltyPicker({
   const locale = useLocale();
   const [snapshot, setSnapshot] = useState<LoyaltySnapshot | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editingCredit, setEditingCredit] = useState(false);
+  const [pad, setPad] = useState("");
 
   useEffect(() => {
     if (!clientId) {
@@ -121,80 +126,162 @@ export function PosLoyaltyPicker({
   const valueCents = snapshot.value_cents ?? 0;
   const creditEnabled = Boolean(snapshot.credit_enabled);
   const maxCredit = Math.max(0, Math.min(snapshot.balance, subtotalCents));
-  const creditEuros =
-    selectedCreditCents > 0 ? (selectedCreditCents / 100).toFixed(2) : "";
+  const halfCredit = Math.floor(maxCredit / 2);
+  const leftover = Math.max(0, snapshot.balance - selectedCreditCents);
+
+  function setCredit(cents: number) {
+    onRewardChange("", 0);
+    onCreditChange(Math.max(0, Math.min(maxCredit, cents)));
+    setEditingCredit(false);
+  }
+
+  function appendPad(token: string) {
+    let next = pad;
+    if (token === ",") {
+      if (!next.includes(",")) next = next.length === 0 ? "0," : `${next},`;
+    } else if (token === "back") {
+      next = next.slice(0, -1);
+    } else if (next.includes(",")) {
+      const frac = next.split(",")[1] ?? "";
+      if (frac.length < 2) next += token;
+    } else if (next === "0") {
+      next = token;
+    } else {
+      next += token;
+    }
+    setPad(next);
+    const n = Number.parseFloat(next.replace(",", "."));
+    const cents = Number.isFinite(n) ? Math.round(n * 100) : 0;
+    onRewardChange("", 0);
+    onCreditChange(Math.max(0, Math.min(maxCredit, cents)));
+  }
 
   return (
-    <div className="rounded-lg border border-violet-200 bg-violet-50/50 p-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-violet-800">
-            {t("title")}
+    <div className="space-y-2 border-b border-slate-200 py-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        {t("title")}
+      </p>
+      {creditEnabled ? (
+        <>
+          <p className="text-2xl font-semibold tabular-nums text-slate-900">
+            {formatPrice(snapshot.balance, currency, locale)}
           </p>
-          {snapshot.program_name ? (
-            <p className="mt-0.5 text-xs text-violet-700">{snapshot.program_name}</p>
-          ) : null}
-        </div>
-        <div className="text-right">
-          {creditEnabled ? (
-            <p className="text-sm font-semibold tabular-nums text-violet-950">
-              {t("creditBalance", {
-                amount: formatPrice(snapshot.balance, currency, locale),
-              })}
-            </p>
-          ) : (
-            <p className="text-xs tabular-nums text-violet-700">
-              {t("balance", { count: snapshot.balance, label: pointsLabel })}
-            </p>
-          )}
-          {!creditEnabled && valueCents > 0 ? (
-            <p className="mt-0.5 text-xs font-medium tabular-nums text-violet-900">
-              {t("value", { amount: formatPrice(valueCents, currency, locale) })}
-            </p>
-          ) : null}
-        </div>
-      </div>
+          {(() => {
+            const threshold = snapshot.credit_threshold_points || 500;
+            const progress = snapshot.progress_points ?? 0;
+            const reward = formatPrice(
+              snapshot.next_tranche_cents || 1750,
+              currency,
+              locale,
+            );
+            return (
+              <p className="text-xs text-slate-500">
+                {t("progress", {
+                  current: progress,
+                  threshold,
+                  missing: Math.max(0, threshold - progress),
+                  reward,
+                })}
+              </p>
+            );
+          })()}
+        </>
+      ) : (
+        <p className="text-sm tabular-nums text-slate-800">
+          {t("balance", { count: snapshot.balance, label: pointsLabel })}
+        </p>
+      )}
+      {!creditEnabled && valueCents > 0 ? (
+        <p className="text-xs tabular-nums text-slate-500">
+          {t("value", { amount: formatPrice(valueCents, currency, locale) })}
+        </p>
+      ) : null}
 
       {creditEnabled ? (
-        <div className="mt-2 space-y-2">
-          <p className="text-xs text-violet-700/80">{t("creditHint")}</p>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              max={(maxCredit / 100).toFixed(2)}
-              value={creditEuros}
-              onChange={(e) => {
-                const n = Number.parseFloat(e.target.value.replace(",", "."));
-                const cents = Number.isFinite(n) ? Math.round(n * 100) : 0;
-                onRewardChange("", 0);
-                onCreditChange(Math.max(0, Math.min(maxCredit, cents)));
-              }}
-              placeholder="0,00"
-              className="h-8 w-28 rounded-md border border-violet-200 bg-white px-2 text-sm tabular-nums"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                onRewardChange("", 0);
-                onCreditChange(maxCredit);
-              }}
-              disabled={maxCredit <= 0}
-              className="text-xs font-medium text-violet-800 hover:underline disabled:opacity-40"
-            >
-              {t("useAll")}
-            </button>
-            {selectedCreditCents > 0 ? (
-              <button
-                type="button"
-                onClick={() => onCreditChange(0)}
-                className="text-xs text-violet-700 hover:underline"
-              >
-                {t("none")}
-              </button>
-            ) : null}
-          </div>
+        <div className="space-y-2">
+          <p className="text-xs text-slate-500">{t("creditHint")}</p>
+          {subtotalCents <= 0 ? (
+            <p className="text-xs text-slate-500">{t("addItemsToUse")}</p>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCredit(0)}
+                  className={`h-9 px-3 text-sm font-semibold ${
+                    selectedCreditCents === 0
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-50 text-slate-900"
+                  }`}
+                >
+                  {t("useNone")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCredit(halfCredit)}
+                  disabled={halfCredit <= 0}
+                  className={`h-9 px-3 text-sm font-semibold disabled:opacity-40 ${
+                    selectedCreditCents === halfCredit && halfCredit > 0
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-50 text-slate-900"
+                  }`}
+                >
+                  {t("useHalf")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCredit(maxCredit)}
+                  disabled={maxCredit <= 0}
+                  className={`h-9 px-3 text-sm font-semibold disabled:opacity-40 ${
+                    selectedCreditCents === maxCredit && maxCredit > 0
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-50 text-slate-900"
+                  }`}
+                >
+                  {t("useAll")} · {formatPrice(maxCredit, currency, locale)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingCredit(true);
+                    setPad(
+                      selectedCreditCents > 0
+                        ? (selectedCreditCents / 100).toFixed(2).replace(".", ",")
+                        : "",
+                    );
+                  }}
+                  className={`h-9 px-3 text-sm font-semibold ${
+                    editingCredit ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-900"
+                  }`}
+                >
+                  {t("useCustom")}
+                </button>
+              </div>
+              {selectedCreditCents > 0 ? (
+                <p className="text-xs tabular-nums text-slate-600">
+                  {t("usedOf", {
+                    used: formatPrice(selectedCreditCents, currency, locale),
+                    left: formatPrice(leftover, currency, locale),
+                  })}
+                </p>
+              ) : null}
+              {editingCredit ? (
+                <LoyaltyAmountPad
+                  display={pad || "0"}
+                  onDigit={(d) => appendPad(d)}
+                  onComma={() => appendPad(",")}
+                  onBackspace={() => appendPad("back")}
+                  onAll={() => {
+                    setPad((maxCredit / 100).toFixed(2).replace(".", ","));
+                    setCredit(maxCredit);
+                  }}
+                  onDone={() => setEditingCredit(false)}
+                  allLabel={t("useAll")}
+                  doneLabel={t("amountOk")}
+                />
+              ) : null}
+            </>
+          )}
         </div>
       ) : null}
 
@@ -242,6 +329,92 @@ export function PosLoyaltyPicker({
           })}
         </ul>
       ) : null}
+    </div>
+  );
+}
+
+function LoyaltyAmountPad({
+  display,
+  onDigit,
+  onComma,
+  onBackspace,
+  onAll,
+  onDone,
+  allLabel,
+  doneLabel,
+}: {
+  display: string;
+  onDigit: (digit: string) => void;
+  onComma: () => void;
+  onBackspace: () => void;
+  onAll: () => void;
+  onDone: () => void;
+  allLabel: string;
+  doneLabel: string;
+}) {
+  const keys = [
+    ["1", "2", "3"],
+    ["4", "5", "6"],
+    ["7", "8", "9"],
+  ];
+  return (
+    <div className="space-y-2 pt-1">
+      <p className="text-center text-xl font-semibold tabular-nums text-slate-900">
+        {display} €
+      </p>
+      {keys.map((row) => (
+        <div key={row.join("")} className="grid grid-cols-3 gap-2">
+          {row.map((digit) => (
+            <button
+              key={digit}
+              type="button"
+              onClick={() => onDigit(digit)}
+              className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+            >
+              {digit}
+            </button>
+          ))}
+        </div>
+      ))}
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={onComma}
+          className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+        >
+          ,
+        </button>
+        <button
+          type="button"
+          onClick={() => onDigit("0")}
+          className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+        >
+          0
+        </button>
+        <button
+          type="button"
+          onClick={onBackspace}
+          className="h-11 bg-slate-50 text-base font-semibold text-slate-900"
+        >
+          ⌫
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onAll}
+          className="h-11 bg-slate-50 text-sm font-semibold text-slate-900"
+        >
+          {allLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="h-11 bg-slate-900 text-sm font-semibold text-white"
+        >
+          {doneLabel}
+        </button>
+      </div>
     </div>
   );
 }

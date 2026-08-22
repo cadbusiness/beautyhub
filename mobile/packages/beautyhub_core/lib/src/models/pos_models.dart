@@ -319,6 +319,9 @@ class PosClientLoyalty {
     this.pointsLabel = 'points',
     this.valueCents = 0,
     this.creditEnabled = false,
+    this.progressPoints = 0,
+    this.creditThresholdPoints = 500,
+    this.nextTrancheCents = 1750,
     this.rewards = const [],
   });
 
@@ -328,6 +331,9 @@ class PosClientLoyalty {
   final String pointsLabel;
   final int valueCents;
   final bool creditEnabled;
+  final int progressPoints;
+  final int creditThresholdPoints;
+  final int nextTrancheCents;
   final List<PosLoyaltyReward> rewards;
 
   factory PosClientLoyalty.fromJson(Map<String, dynamic> json) {
@@ -338,6 +344,10 @@ class PosClientLoyalty {
       pointsLabel: json['points_label'] as String? ?? 'points',
       valueCents: (json['value_cents'] as num?)?.toInt() ?? 0,
       creditEnabled: json['credit_enabled'] as bool? ?? false,
+      progressPoints: (json['progress_points'] as num?)?.toInt() ?? 0,
+      creditThresholdPoints:
+          (json['credit_threshold_points'] as num?)?.toInt() ?? 500,
+      nextTrancheCents: (json['next_tranche_cents'] as num?)?.toInt() ?? 1750,
       rewards: (json['rewards'] as List? ?? const [])
           .whereType<Map>()
           .map((e) => PosLoyaltyReward.fromJson(Map<String, dynamic>.from(e)))

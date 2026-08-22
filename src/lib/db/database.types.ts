@@ -1176,6 +1176,7 @@ export type Database = {
           lifetime_earned: number
           lifetime_redeemed: number
           points_balance: number
+          progress_points: number
           program_id: string
           tenant_id: string
           updated_at: string
@@ -1186,6 +1187,7 @@ export type Database = {
           lifetime_earned?: number
           lifetime_redeemed?: number
           points_balance?: number
+          progress_points?: number
           program_id: string
           tenant_id: string
           updated_at?: string
@@ -1196,6 +1198,7 @@ export type Database = {
           lifetime_earned?: number
           lifetime_redeemed?: number
           points_balance?: number
+          progress_points?: number
           program_id?: string
           tenant_id?: string
           updated_at?: string
@@ -1291,6 +1294,7 @@ export type Database = {
           created_at: string
           credit_enabled: boolean
           credit_rate_bps: number
+          credit_threshold_points: number
           id: string
           is_active: boolean
           name: string
@@ -1307,6 +1311,7 @@ export type Database = {
           created_at?: string
           credit_enabled?: boolean
           credit_rate_bps?: number
+          credit_threshold_points?: number
           id?: string
           is_active?: boolean
           name?: string
@@ -1323,6 +1328,7 @@ export type Database = {
           created_at?: string
           credit_enabled?: boolean
           credit_rate_bps?: number
+          credit_threshold_points?: number
           id?: string
           is_active?: boolean
           name?: string
@@ -4137,6 +4143,19 @@ export type Database = {
           p_points: number
           p_program_id: string
           p_rule_id: string
+          p_source_id: string
+          p_source_type: string
+          p_tenant_id: string
+        }
+        Returns: boolean
+      }
+      inst_loyalty_add_progress: {
+        Args: {
+          p_client_id: string
+          p_idempotency_key: string
+          p_notes?: string
+          p_points: number
+          p_program_id: string
           p_source_id: string
           p_source_type: string
           p_tenant_id: string

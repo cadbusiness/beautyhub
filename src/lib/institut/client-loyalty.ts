@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/database.types";
 import { computeRewardDiscountCents } from "./loyalty-redeem";
 import {
+  creditTrancheCents,
   resolveLoyaltyProgramForClient,
   type LoyaltyProgramListItem,
   type LoyaltyReward,
@@ -27,6 +28,9 @@ export type ClientLoyaltyCard = {
   valueCents: number;
   creditEnabled: boolean;
   creditRateBps: number;
+  progressPoints: number;
+  creditThresholdPoints: number;
+  nextTrancheCents: number;
   programs: LoyaltyProgramListItem[];
 };
 
@@ -87,6 +91,9 @@ export async function loadClientLoyaltyCard(
       valueCents: 0,
       creditEnabled: false,
       creditRateBps: 0,
+      progressPoints: 0,
+      creditThresholdPoints: 500,
+      nextTrancheCents: 0,
       programs,
     };
   }
@@ -94,7 +101,7 @@ export async function loadClientLoyaltyCard(
   const [{ data: balanceRow }, { data: rewardRows }] = await Promise.all([
     supabase
       .from("inst_loyalty_balances")
-      .select("points_balance, lifetime_earned, lifetime_redeemed")
+      .select("points_balance, lifetime_earned, lifetime_redeemed, progress_points")
       .eq("tenant_id", tenantId)
       .eq("client_id", clientId)
       .eq("program_id", program.id)
@@ -129,6 +136,12 @@ export async function loadClientLoyaltyCard(
       : null,
     creditEnabled: program.credit_enabled,
     creditRateBps: program.credit_rate_bps,
+    progressPoints: balanceRow?.progress_points ?? 0,
+    creditThresholdPoints: program.credit_threshold_points || 500,
+    nextTrancheCents: creditTrancheCents(
+      program.credit_rate_bps,
+      program.credit_threshold_points || 500,
+    ),
     valueCents: program.credit_enabled
       ? balance
       : estimateLoyaltyValueCents(balance, rewards),
